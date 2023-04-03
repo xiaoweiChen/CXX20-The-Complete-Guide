@@ -1,11 +1,66 @@
 
-\subsubsection*{\zihao{3} 0.4.1\hspace{0.2cm}Initializations}
-\addcontentsline{toc}{subsubsection}{0.4.1\hspace{0.2cm}Initializations}
+Note the following hints about the way I write code and comments in this book
+
+\subsubsection*{\zihao{3} Initializations}
+\addcontentsline{toc}{subsubsection}{Initializations}
+
+I usually use the modern form of initialization (introduced in C++11 as uniform initialization) with curly braces or with = in trivial cases:
+
+\begin{lstlisting}[style=styleCXX]
+int i = 42;
+std::string s{"hello"};
+\end{lstlisting}
+
+The brace initialization has the following advantages:
+
+\begin{itemize}
+\item
+It can be used with fundamental types, class types, aggregates, enumeration types, and auto
+
+\item
+It can be used to initialize containers with multiple values
+
+\item
+It can detect narrowing errors (e.g., initialization of an int by a floating-point value)
+
+\item
+It cannot be confused with function declarations or calls
+\end{itemize}
+
+If the braces are empty, the default constructors of (sub)objects are called and fundamental data types are guaranteed to be initialized with 0/false/nullptr.
 
 
-\subsubsection*{\zihao{3} 0.4.2\hspace{0.2cm}Error Terminology}
-\addcontentsline{toc}{subsubsection}{0.4.2\hspace{0.2cm}Error Terminology}
+\subsubsection*{\zihao{3} Error Terminology}
+\addcontentsline{toc}{subsubsection}{Error Terminology}
 
+I often talk about programming errors. If there is no special hint, the term error or a comment such as
 
-\subsubsection*{\zihao{3} 0.4.3\hspace{0.2cm}Code Simplifications}
-\addcontentsline{toc}{subsubsection}{0.4.3\hspace{0.2cm}Code Simplifications}
+\begin{lstlisting}[style=styleCXX]
+... // ERROR
+\end{lstlisting}
+
+means a compile-time error. The corresponding code should not compile (with a conforming compiler).
+
+If I use the term runtime error, the program might compile but not behave correctly or result in undefined behavior (thus, it might or might not do what is expected)
+
+\subsubsection*{\zihao{3} Code Simplifications}
+\addcontentsline{toc}{subsubsection}{Code Simplifications}
+
+I try to explain all features with helpful examples. However, to concentrate on the key aspects to be taught, I might often skip other details that should be part of the code.
+
+\begin{itemize}
+\item
+Most of the time I use an ellipsis (“...”) to signal additional code that is missing. Note that I do not use code font here. If you see an ellipsis with code font, code must have these three dots as a language feature (such as for “typename...”).
+
+\item
+In header files, I usually skip the preprocessor guards. All header files should have something like the following:
+
+\begin{lstlisting}[style=styleCXX]
+#ifndef MYFILE_HPP
+#define MYFILE_HPP
+...
+#endif // MYFILE_HPP
+\end{lstlisting}
+
+Therefore, please beware and fix the code when using these header files in your projects.
+\end{itemize}

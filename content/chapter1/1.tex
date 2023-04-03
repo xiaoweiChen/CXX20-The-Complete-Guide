@@ -1,0 +1,368 @@
+Let us look first at the motivation for the new way comparisons are handled since C++20 and the new operator <=>.
+
+\subsubsection*{\zihao{3} 1.1.1\hspace{0.2cm}Defining Comparison Operators Before C++20}
+\addcontentsline{toc}{subsubsection}{1.1.1\hspace{0.2cm}Defining Comparison Operators Before C++20}
+
+Before C++20, you had to define six operators for a type to provide full support for all possible comparisons of its objects.
+
+For example, if you wanted to compare objects of a type Value (having an integral ID), you had to implement the following:
+
+\begin{lstlisting}[style=styleCXX]
+class Value {
+private:
+	long id;
+	...
+public:
+	...
+	// equality operators:
+	bool operator== (const Value& rhs) const {
+		return id == rhs.id; // basic check for equality
+	}
+	bool operator!= (const Value& rhs) const {
+		return !(*this == rhs); // derived check
+	}
+	// relational operators:
+	bool operator< (const Value& rhs) const {
+		return id < rhs.id; // basic check for ordering
+	}
+	bool operator<= (const Value& rhs) const {
+		return !(rhs < *this); // derived check
+	}
+	bool operator> (const Value& rhs) const {
+		return rhs < *this; // derived check
+	}
+	bool operator>= (const Value& rhs) const {
+		return !(*this < rhs); // derived check
+	}
+};
+\end{lstlisting}
+
+This enables you to call any of the six comparison operators for a Value (the object the operator is defined for) with another Value (passed as parameter rhs). For example:
+
+\begin{lstlisting}[style=styleCXX]
+Value v1, v2;
+... ;
+if (v1 <= v2) { // calls v1.operator<=(v2)
+	...
+}
+\end{lstlisting}
+
+The operators might also be called indirectly (e.g., by calling sort()):
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<Value> coll;
+... ;
+std::sort(coll.begin(), coll.end()); // uses operator < to sort
+\end{lstlisting}
+
+Since C++20 , the call might alternatively use ranges:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::sort(coll); // uses operator < to sort
+\end{lstlisting}
+
+The problem is that even though most of the operators are defined in terms of other operators (they are all based on either operator == or operator <), the definitions are tedious and they add a lot of visual clutter.
+
+In addition, for a well-implemented type, you might need more:
+
+\begin{itemize}
+\item
+Declare the operators with noexcept if they cannot throw
+
+\item
+Declare the operators with constexpr if they can be used at compile time
+
+\item
+Declare the operators as “hidden friends” (declare them with friend inside the class structure so that both operands become parameters and support implicit type conversions) if the constructors are not explicit
+
+\item
+Declare the operators with [[nodiscard]] to force warnings if the return value is not used
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+// lang/valueold.hpp
+
+class Value {
+private:
+	long id;
+	...
+public:
+	constexpr Value(long i) noexcept // supports implicit type conversion
+	: id{i} {
+	}
+	...
+	// equality operators:
+	[[nodiscard]] friend constexpr
+	bool operator== (const Value& lhs, const Value& rhs) noexcept {
+		return lhs.id == rhs.id; // basic check for equality
+	}
+	[[nodiscard]] friend constexpr
+	bool operator!= (const Value& lhs, const Value& rhs) noexcept {
+		return !(lhs == rhs); // derived check for inequality
+	}
+	// relational operators:
+	[[nodiscard]] friend constexpr
+	bool operator< (const Value& lhs, const Value& rhs) noexcept {
+		return lhs.id < rhs.id; // basic check for ordering
+	}
+	[[nodiscard]] friend constexpr
+	bool operator<= (const Value& lhs, const Value& rhs) noexcept {
+		return !(rhs < lhs); // derived check
+	}
+	[[nodiscard]] friend constexpr
+	bool operator> (const Value& lhs, const Value& rhs) noexcept {
+		return rhs < lhs; // derived check
+	}
+	[[nodiscard]] friend constexpr
+	bool operator>= (const Value& lhs, const Value& rhs) noexcept {
+		return !(lhs < rhs); // derived check
+	}
+};
+\end{lstlisting}
+
+\subsubsection*{\zihao{3} 1.1.2\hspace{0.2cm}Defining Comparison Operators Since C++20}
+\addcontentsline{toc}{subsubsection}{1.1.2\hspace{0.2cm}Defining Comparison Operators Since C++20}
+
+Since C++20, a couple of things have changed regarding comparison operators.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Operator == Implies Operator !=}
+
+To check for inequality, it is now enough to define operator ==.
+
+When the compiler finds no matching declaration for an expression a!=b, the compiler rewrites the expressions and looks for !(a==b) instead. If that does not work, the compiler also tries to change the order of the operands, so it also tries !(b==a):
+
+\begin{lstlisting}[style=styleCXX]
+a != b // tries: a!=b, !(a==b), and !(b==a)
+\end{lstlisting}
+
+Therefore, for a of TypeA and b of TypeB, the compiler will be able to compile
+
+\begin{lstlisting}[style=styleCXX]
+a != b
+\end{lstlisting}
+
+It can do this if there is
+
+\begin{itemize}
+\item
+A free-standing operator!=(TypeA, TypeB)
+
+\item
+A free-standing operator==(TypeA, TypeB)
+
+\item
+A free-standing operator==(TypeB, TypeA)
+
+\item
+A member function TypeA::operator!=(TypeB)
+
+\item
+A member function TypeA::operator==(TypeB)
+
+\item
+A member function TypeB::operator==(TypeA)
+\end{itemize}
+
+Directly calling a defined operator != is preferred (but the order of the types has to fit). Changing the order of the operands has the lowest priority. Having both a free-standing and a member function is an ambiguity error.
+
+Thus, with
+
+\begin{lstlisting}[style=styleCXX]
+bool operator==(const TypeA&, const TypeB&);
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[style=styleCXX]
+class TypeA {
+public:
+	...
+	bool operator==(const TypeB&) const;
+};
+\end{lstlisting}
+
+the compiler will be able to compile:
+
+\begin{lstlisting}[style=styleCXX]
+MyType a;
+MyType b;
+...
+a == b; // OK: fits perfectly
+b == a; // OK, rewritten as: a == b
+a != b; // OK, rewritten as: !(a == b)
+b != a; // OK, rewritten as: !(a == b)
+\end{lstlisting}
+
+Note that thanks to rewriting, implicit type conversions for the first operand are also possible when rewriting converts the operand so that it becomes the parameter of the defined member function.
+
+See the example sentinel1.cpp for how to benefit from this feature by only defining a member operator == when != with a different order of operands is called.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Operator <=>}
+
+There is no equivalent rule that for all relational operators it is enough to have operator < defined. However, you only have to define the new operator <=>.
+
+In fact, the following is enough to enable programmers to use all possible comparators:
+
+\begin{lstlisting}[style=styleCXX]
+// lang/value20.hpp
+
+#include <compare>
+class Value {
+private:
+	long id;
+	...
+public:
+	constexpr Value(long i) noexcept
+	: id{i} {
+	}
+	...
+	// enable use of all equality and relational operators:
+	auto operator<=> (const Value& rhs) const = default;
+};
+\end{lstlisting}
+
+In general, operator == handles the equality of objects by defining == and !=, while operator <=> handles the order of objects by defining the relational operators. However, by declaring an operator<=> with =default, we use a special rule that a defaulted member operator<=>:
+
+\begin{lstlisting}[style=styleCXX]
+class Value {
+	...
+	auto operator<=> (const Value& rhs) const = default;
+};
+\end{lstlisting}
+
+generates a corresponding member operator==, so that we effectively get:
+
+\begin{lstlisting}[style=styleCXX]
+class Value {
+	...
+	auto operator<=> (const Value& rhs) const = default;
+	auto operator== (const Value& rhs) const = default; // implicitly generated
+};
+\end{lstlisting}
+
+The effect is that both operators use their default implementation, which compares objects member by member. This means that the order of the members in the class matters.
+
+Thus, with
+
+\begin{lstlisting}[style=styleCXX]
+class Value {
+	...
+	auto operator<=> (const Value& rhs) const = default;
+};
+\end{lstlisting}
+
+we get all we need to be able to use all six comparison operators.
+
+In addition, even when declaring the operator as a member function, the following applies for the generated operators:
+
+\begin{itemize}
+\item
+They are noexcept if comparing the members never throws
+
+\item
+They are constexpr if comparing the members is possible at compile time
+
+\item
+Thanks to rewriting, implicit type conversions for the first operand are also supported
+\end{itemize}
+
+This reflects that, in general, operator== and operator<=> handle different but related things:
+
+\begin{itemize}
+\item
+operator== defines equality and can be used by the equality operators == and !=.
+
+\item
+operator<=> defines the ordering and can be used by the relational operators <, <=, >, and >=.
+\end{itemize}
+
+Note that you have to include header <compare> when defaulting or using operator <=>.
+
+\begin{lstlisting}[style=styleCXX]
+#include <compare>
+\end{lstlisting}
+
+However, most header files for standard types (strings, containers, <utility>) include this header anyway.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Implementing Operator <=>}
+
+To have more control over the generated comparison operators, you can define operator== and operator<=> yourself. For example:
+
+\begin{lstlisting}[style=styleCXX]
+// lang/value20def.hpp
+
+#include <compare>
+class Value {
+private:
+	long id;
+	...
+public:
+	constexpr Value(long i) noexcept
+	: id{i} {
+	}
+	...
+	// for equality operators:
+	bool operator== (const Value& rhs) const {
+		return id == rhs.id; // defines equality (== and !=)
+	}
+	// for relational operators:
+	auto operator<=> (const Value& rhs) const {
+		return id <=> rhs.id; // defines ordering (<, <=, >, and >=)
+	}
+};
+\end{lstlisting}
+
+This means that you can specify which members in which order matter or implement special behavior.
+
+The way these basic operators work is that if an expression uses one of the comparison operators and does not find a matching direct definition, the expression is rewritten so that it can use these operators.
+
+Corresponding to rewriting calls of equality operators, rewriting might also change the order of relational operands, which might enable implicit type conversion for the first operand. For example, if
+
+\begin{lstlisting}[style=styleCXX]
+x <= y
+\end{lstlisting}
+
+does not find a matching definition of operator<=, it might be rewritten as
+
+\begin{lstlisting}[style=styleCXX]
+(x <=> y) <= 0
+\end{lstlisting}
+
+or even
+
+\begin{lstlisting}[style=styleCXX]
+0 <= (y <=> x)
+\end{lstlisting}
+
+As you can see by this rewriting, the new operator<=> performs a three-way comparison, which yields a value you can compare with 0:
+
+\begin{itemize}
+\item
+If the value of x<=>y is equal to 0, x and y are equal or equivalent.
+
+\item
+If the value of x<=>y is less than 0, x is less than y.
+
+\item
+If the value of x<=>y is greater than 0, x is greater than y.
+\end{itemize}
+
+However, note that the return type of operator<=> is not an integral value. The return type is a type that signals the comparison category, which could be strong ordering, weak ordering, or partial ordering. These types support the comparison with 0 to deal with the result.
+
+
+
+
+
+
+
+
+
+
