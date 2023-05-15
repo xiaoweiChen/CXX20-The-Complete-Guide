@@ -1,12 +1,232 @@
 
 
+Both operator<=> and operator== can be defined for your data types:
+
+\begin{itemize}
+\item
+Either as a member function taking one parameter
+
+\item
+Or as a free-standing function taking two parameters
+\end{itemize}
+
+
+\begin{table}[H]
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Function Object in std::} & \textbf{Effect}                                             \\ \hline
+	strong\_order()                   & Maps to a strong order value also for floating-point values \\ \hline
+	weak\_order()                     & Maps to a weak order value also for floating-point values   \\ \hline
+	partial\_order()                  & Maps to a partial order value                               \\ \hline
+	compare\_strong\_order\_fallback()  & Maps to a strong order value even if only == and \textless are defined  \\ \hline
+	compare\_weak\_order\_fallback()    & Maps to a weak order value even if only == and \textless are defined    \\ \hline
+	compare\_partial\_order\_fallback() & Maps to a partial order value even if only == and \textless are defined \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 1.1. Function objects for mapping comparison category types
+\end{center}
+
+
 \subsubsection*{\zihao{3} 1.3.1\hspace{0.2cm}Defaulted operator== and operator<=>}
 \addcontentsline{toc}{subsubsection}{1.3.1\hspace{0.2cm}Defaulted operator== and operator<=>}
+
+Inside a class or data structure (as a member or friend function), all comparison operators can be declared as defaulted with =default. However, this usually only makes sense for operator== and operator<=>. The member functions have to take the second parameter as const lvalue reference (const \&). Friend functions might alternatively take both parameters by value.
+
+The defaulted operators require the support of the members and possible base classes:
+
+\begin{itemize}
+\item
+Defaulted operators == require the support of == in the members and base classes.
+
+\item
+Defaulted operators <=> require the support of == and either an implemented operator < or a defaulted operator <=> in the members and base classes (for details, see below).
+\end{itemize}
+
+For the generated defaulted operators, the following then applies:
+
+\begin{itemize}
+\item
+The operator is noexcept if comparing the members guarantees not to throw.
+
+\item
+The operator is constexpr if comparing the members is possible at compile time.
+\end{itemize}
+
+For empty classes, the defaulted operators compare all objects as equal: operators ==, <=, and >= yield true, operators !=, <, and > yield false, and <=> yields std::strong\_ordering::equal.
 
 
 \subsubsection*{\zihao{3} 1.3.2\hspace{0.2cm}Defaulted operator<=> Implies Defaulted operator==}
 \addcontentsline{toc}{subsubsection}{1.3.2\hspace{0.2cm}Defaulted operator<=> Implies Defaulted operator==}
 
+If and only if an operator<=> member is defined as defaulted, then by definition a corresponding operator== member is also defined if no defaulted operator== is provided. All aspects (visibility, virtual, attributes, requirements, etc.) are adopted. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Type {
+	...
+	public:
+		[[nodiscard]] virtual std::strong_ordering
+			operator<=>(const Type&) const requires(!std::same_as<T,bool>) = default;
+};
+\end{lstlisting}
+
+is equivalent to the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class Type {
+	...
+	public:
+	[[nodiscard]] virtual std::strong_ordering
+		operator<=> (const Type&) const requires(!std::same_as<T,bool>) = default;
+	
+	[[nodiscard]] virtual bool
+		operator== (const Type&) const requires(!std::same_as<T,bool>) = default;
+};
+\end{lstlisting}
+
+For example, the following is enough to support all six comparison operators for objects of the type Coord:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lang/coord.hpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <compare>
+struct Coord {
+	double x{};
+	double y{};
+	double z{};
+	auto operator<=>(const Coord&) const = default;
+};
+\end{lstlisting}
+
+Note again that the member function must be const and that the parameter must be declared to be a const lvalue reference (const \&).
+
+You can use this data structure as follows:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lang/coord.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include "coord.hpp"
+#include <iostream>
+#include <algorithm>
+int main()
+{
+	std::vector<Coord> coll{ {0, 5, 5}, {5, 0, 0}, {3, 5, 5},
+							 {3, 0, 0}, {3, 5, 7} };
+							 
+	std::sort(coll.begin(), coll.end());
+	for (const auto& elem : coll) {
+		std::cout << elem.x << '/' << elem.y << '/' << elem.z << '\n';
+	}
+}
+\end{lstlisting}
+
+The program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+0/5/5
+3/0/0
+3/5/5
+3/5/7
+5/0/0
+\end{tcblisting}
 
 \subsubsection*{\zihao{3} 1.3.3\hspace{0.2cm}Implementation of the Defaulted operator<=>}
 \addcontentsline{toc}{subsubsection}{1.3.3\hspace{0.2cm}Implementation of the Defaulted operator<=>}
+
+If operator<=> is defaulted and you have members or base classes and you call one of the relational operators, then the following happens:
+
+\begin{itemize}
+\item
+If operator<=> is defined for a member or base class, that operator is called.
+
+\item
+Otherwise, operator== and operator< are called to decide whether (from the point of view of the members or base classes)
+
+\begin{itemize}
+\item
+The objects are equal/equivalent (operator== yields true)
+
+\item
+The objects are less or greater
+
+\item
+The objects are unordered (only when partial ordering is checked)
+\end{itemize}
+
+In that case, the return type of the defaulted operator<=> calling these operators cannot be auto.
+\end{itemize}
+
+For example, consider the following declarations:
+
+\begin{lstlisting}[style=styleCXX]
+struct B {
+	bool operator==(const B&) const;
+	bool operator<(const B&) const;
+};
+
+struct D : public B {
+	std::strong_ordering operator<=> (const D&) const = default;
+};
+\end{lstlisting}
+
+Then:
+
+\begin{lstlisting}[style=styleCXX]
+D d1, d2;
+d1 > d2; // calls B::operator== and possibly B::operator<
+\end{lstlisting}
+
+If operator== yields true, we know that the result of > is false and that is it. Otherwise, operator< is called to find out whether the expression is true or false.
+
+With
+
+\begin{lstlisting}[style=styleCXX]
+struct D : public B {
+	std::partial_ordering operator<=> (const D&) const = default;
+};
+\end{lstlisting}
+
+the compiler might even call operator< twice to find out whether there is any order at all.
+
+With
+
+\begin{lstlisting}[style=styleCXX]
+struct B {
+	bool operator==(const B&) const;
+	bool operator<(const B&) const;
+};
+
+struct D : public B {
+	auto operator<=> (const D&) const = default;
+};
+\end{lstlisting}
+
+the compiler does not compile any call with relational operators because it cannot decide which ordering category the base class has. In that case, you need operator<=> in the base class too.
+
+However, checks for equality work, because in D, operator== is automatically declared equivalent to the following:
+
+\begin{lstlisting}[style=styleCXX]
+struct D : public B {
+	auto operator<=> (const D&) const = default;
+	bool operator== (const D&) const = default;
+};
+\end{lstlisting}
+
+This means that we have the following behavior:
+
+\begin{lstlisting}[style=styleCXX]
+D d1, d2;
+d1 > d2; // ERROR: cannot deduce comparison category of operator<=>
+d1 != d2; // OK (note: only tries operator<=> and B::operator== of a base class)
+\end{lstlisting}
+
+Equality checks always use only operator== of a base class (which might be generated according to a defaulted operator<=> though). Any operator< or operator!= in the base class is ignored.
+
+The same applies, if D has a member of type B.

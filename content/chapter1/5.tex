@@ -1,9 +1,101 @@
 
-
+In generic code, the new operator <=> provides some challenges. This is because there might be types that provide operator <=> and there might be types that provide some or all of the basic comparison operators.
 
 \subsubsection*{\zihao{3} 1.5.1\hspace{0.2cm}compare\_three\_way}
 \addcontentsline{toc}{subsubsection}{1.5.1\hspace{0.2cm}compare\_three\_way}
 
+std::compare\_three\_way is a new function object type for calling operator <=>, just like std::less is a function object type for calling operator <.
+
+You can use it as follows:
+
+\begin{itemize}
+\item
+To compare values of a generic type
+
+\item
+As a default type when you have to specify the type of a function object
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct Value {
+	T val{};
+	...
+	auto operator<=> (const Value& v) const noexcept(noexcept(val<=>val)) {
+		return std::compare_three_way{}(val<=>v.val);
+	}
+};
+\end{lstlisting}
+
+Using std::compare\_three\_way has (like std::less) the benefit that it even defines a total order for raw pointers (which is not the case for operators <=> or <). Therefore, you should use it when generic types are used that can be raw pointer types.
+
+To allow programmers to forward declare operator<=>(), C++20 also introduces the type trait std::compare\_three\_way\_result with the alias template std::compare\_three\_way\_result\_t:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+struct Value {
+	T val{};
+	...
+	std::compare_three_way_result_t<T,T>
+		operator<=> (const Value& v) const noexcept(noexcept(val<=>val));
+};
+\end{lstlisting}
 
 \subsubsection*{\zihao{3} 1.5.2\hspace{0.2cm}Algorithm lexicographical\_compare\_three\_way()}
 \addcontentsline{toc}{subsubsection}{1.5.2\hspace{0.2cm}Algorithm lexicographical\_compare\_three\_way()}
+
+To be able to compare two ranges and yield a value of the matching comparison category, C++20 also introduced the algorithm lexicographical\_compare\_three\_way(). This algorithm is particularly helpful for implementing operator<=> for members that are collections.
+
+For example:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lib/lexicothreeway.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+std::ostream& operator<< (std::ostream& strm, std::strong_ordering val)
+{
+	if (val < 0) return strm << "less";
+	if (val > 0) return strm << "greater";
+	return strm << "equal";
+}
+
+int main()
+{
+	std::vector v1{0, 8, 15, 47, 11};
+	std::vector v2{0, 15, 8};
+	
+	auto r1 = std::lexicographical_compare(v1.begin(), v1.end(),
+										   v2.begin(), v2.end());
+										   
+	auto r2 = std::lexicographical_compare_three_way(v1.begin(), v1.end(),
+													 v2.begin(), v2.end());
+													 
+	std::cout << "r1: " << r1 << '\n';
+	std::cout << "r2: " << r2 << '\n';
+}
+\end{lstlisting}
+
+The program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+r1: 1
+r2: less
+\end{tcblisting}
+
+Note that there is no ranges support (yet) for lexicographical\_compare\_three\_way(). You can neither pass a range as a single argument nor pass projection parameters:
+
+\begin{lstlisting}[style=styleCXX]
+auto r3 = std::ranges::lexicographical_compare(v1, v2); // OK
+auto r4 = std::ranges::lexicographical_compare_three_way(v1, v2); // ERROR
+\end{lstlisting}
+
+
+
+

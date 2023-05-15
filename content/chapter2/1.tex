@@ -1,0 +1,94 @@
+Since C++14, lambdas can use placeholders such as auto to declare/define their parameters:
+
+\begin{lstlisting}[style=styleCXX]
+auto printColl = [] (const auto& coll) { // generic lambda
+	for (const auto& elem : coll) {
+		std::cout << elem << '\n';
+	}
+}
+\end{lstlisting}
+
+These placeholders allow us to pass arguments of any type, provided the operations inside the lambda are supported:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector coll{1, 2, 4, 5};
+...
+printColl(coll); // compiles the lambda for vector<int>
+
+printColl(std::string{"hello"}); // compiles the lambda for std::string
+\end{lstlisting}
+
+Since C++20, you can use placeholders such as auto for all functions (including member functions and operators):
+
+\begin{lstlisting}[style=styleCXX]
+void printColl(const auto& coll) // generic function
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << '\n';
+	}
+}
+\end{lstlisting}
+
+Such a declaration is just a shortcut for declaring a template such as the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void printColl(const T& coll) // equivalent generic function
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << '\n';
+	}
+}
+\end{lstlisting}
+
+The only difference is that by using auto, you no longer have a name for the template parameter T. For this reason, this feature is also called the abbreviated function template syntax.
+
+Because functions with auto are function templates, all rules of using function templates apply. This means especially that you cannot implement a function with auto parameters in one translation unit (CPP file) while calling it in a different translation unit. For functions with auto parameters, the whole implementation belongs in a header file so that they can be used in multiple CPP files (otherwise, you have to explicitly instantiate the function in one translation unit). On the other hand, they do not need to be declared as inline because function templates are always inline.
+
+In addition, you can specify the template parameters explicitly:
+
+\begin{lstlisting}[style=styleCXX]
+void print(auto val)
+{
+	std::cout << val << '\n';
+}
+
+print(64); // val has type int
+print<char>(64); // val has type char
+\end{lstlisting}
+
+
+\subsubsection*{\zihao{3} 2.1.1\hspace{0.2cm}auto for Parameters of Member Functions}
+\addcontentsline{toc}{subsubsection}{2.1.1\hspace{0.2cm}auto for Parameters of Member Functions}
+
+You can also use this feature to define member functions:
+
+\begin{lstlisting}[style=styleCXX]
+class MyType {
+	...
+	void assign(const auto& newVal);
+};
+\end{lstlisting}
+
+That declaration is equivalent to (with the difference that there is no type T defined):
+
+\begin{lstlisting}[style=styleCXX]
+class MyType {
+	...
+	template<typename T>
+	void assign(const T& newVal);
+};
+\end{lstlisting}
+
+Note that templates may not be declared inside functions. With member functions using auto parameters, you can no longer define the class or data structure locally inside a function:
+
+\begin{lstlisting}[style=styleCXX]
+void foo()
+{
+	struct Data {
+		void mem(auto); // ERROR can’t declare templates inside functions
+	};
+}
+\end{lstlisting}
+
+See sentinel1.cpp for an example of a member operator == with auto.

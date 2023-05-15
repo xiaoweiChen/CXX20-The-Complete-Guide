@@ -1,0 +1,130 @@
+
+Let us look at some aspects of abbreviated function templates in detail.
+
+\subsubsection*{\zihao{3} 2.3.1\hspace{0.2cm}Basic Constraints for auto Parameters}
+\addcontentsline{toc}{subsubsection}{2.3.1\hspace{0.2cm}Basic Constraints for auto Parameters}
+
+Using auto to declare a function parameter follows the same rules as using it to declare a parameter of a lambda:
+
+\begin{itemize}
+\item
+For each parameter declared with auto, the function has an implicit template parameter.
+
+\item
+The parameters can be a parameter pack:
+\begin{lstlisting}[style=styleCXX]
+void foo(auto... args);
+\end{lstlisting}
+
+This is equivalent to the following (without introducing Types):
+\begin{lstlisting}[style=styleCXX]
+template<typename... Types>
+void foo(Types... args);
+\end{lstlisting}
+
+\item
+Using decltype(auto) is not allowed.
+\end{itemize}
+
+Abbreviated function templates can still be called with (partially) explicitly specified template parameters. The template parameters have the order of the call parameters.
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(auto x, auto y)
+{
+	...
+}
+
+foo("hello", 42); // x has type const char*, y has type int
+foo<std::string>("hello", 42); // x has type std::string, y has type int
+foo<std::string, long>("hello", 42); // x has type std::string, y has type long
+\end{lstlisting}
+
+\subsubsection*{\zihao{3} 2.3.2\hspace{0.2cm}Combining Template and auto Parameters}
+\addcontentsline{toc}{subsubsection}{2.3.2\hspace{0.2cm}Combining Template and auto Parameters}
+
+Abbreviated function templates can still have explicitly specified template parameters. The generated template parameters for the placeholder types are added after the specified parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(auto x, T y, auto z)
+{
+	...
+}
+
+foo("hello", 42, '?'); // x has type const char*, T and y are int, z is char
+foo<long>("hello", 42, '?'); // x has type const char*, T and y are long, z is char
+\end{lstlisting}
+
+Therefore, the following declarations are equivalent (except that you have no name for the types where auto is used):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(auto x, T y, auto z);
+
+template<typename T, typename T2, typename T3>
+void foo(T2 x, T y, T3 z);
+\end{lstlisting}
+
+As we introduce later, by using concepts as type constraints, you can constrain placeholder parameters as well as template parameters. Template parameters may then be used for such a qualification.
+
+For example, the following declaration ensures that the second parameter y has an integral type and that the third parameter z has a type that can be converted to the type of y:
+
+\begin{lstlisting}[style=styleCXX]
+template<std::integral T>
+void foo(auto x, T y, std::convertible_to<T> auto z)
+{
+	...
+}
+
+foo(64, 65, 'c'); // OK, x is int, T and y are int, z is char
+foo(64, 65, "c"); // ERROR: "c" cannot be converted to type int (type of 65)
+foo<long,char>(64, 65, 'c'); // NOTE: x is char, T and y are long, z is char
+\end{lstlisting}
+
+Note that the last statement specifies the type of the parameters in the wrong order.
+
+The fact that the order of template parameters is not as expected might lead to subtle bugs. Consider the following example:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lang/tmplauto.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <vector>
+#include <ranges>
+
+void addValInto(const auto& val, auto& coll)
+{
+	coll.insert(val);
+}
+
+template<typename Coll> // Note: different order of template parameters
+requires std::ranges::random_access_range<Coll>
+void addValInto(const auto& val, Coll& coll)
+{
+	coll.push_back(val);
+}
+
+int main()
+{
+	std::vector<int> coll;
+	addValInto(42, coll); // ERROR: ambiguous
+}
+\end{lstlisting}
+
+Due to using auto only for the first parameter in the second declaration of addValInto(), the order of the template parameters differs. Due to \url{http://wg21.link/p2113r0}, which was accepted for C++20, this means that overload resolution does not prefer the second declaration over the first one and we get an ambiguity error.[Not all compilers handle this correctly, yet.]
+
+For this reason, be careful when mixing template and auto parameters. Ideally, make the declarations consistent.
+
+
+
+
+
+
+
+
+
+
+
