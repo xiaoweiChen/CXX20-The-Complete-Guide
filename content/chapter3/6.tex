@@ -1,0 +1,9 @@
+ince C++98, C++ language designers have been exploring how to constrain the parameters of templates with concepts. There have been multiple approaches for introducing concepts in the C++ programming language (e.g., see \url{http://wg21.link/n1510} by Bjarne Stroustrup). However, the C++ standards committee has not been able to agree on an appropriate mechanism before C++20.
+
+For the C++11 working draft, there was even a very rich concept approach adopted, which was later dropped because it turned out to be too complex. After that, based on \url{http://wg21.link/n3351} a new approach called Concepts Lite was proposed by Andrew Sutton, Bjarne Stroustrup, and Gabriel Dos Reis in \url{http://wg21.link/n3580}. As a consequence, a Concepts Technical Specification was opened starting with \url{http://wg21.link/n4549}.
+
+Over time, various improvement were made especially according to the experience of implementing the ranges library.
+
+\url{http://wg21.link/p0724r0} proposed to apply the Concepts TS to the C++20 working draft. The finally accepted wording was formulated by Andrew Sutton in \url{http://wg21.link/p0734r0}.
+
+Various fixes and improvement were proposed and accepted afterwards. The most visible one was the switch to “standard case” (only lowercase letters and underscores) for the names of the standard concepts as proposed in \url{http://wg21.link/p1754r1}.
