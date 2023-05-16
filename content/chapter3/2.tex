@@ -1,25 +1,231 @@
+
+
+You can use requires clauses or concepts to constrain almost all forms of generic code:
+
+\begin{itemize}
+\item
+Function templates:
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires ...
+void print(const T&) {
+	...
+}
+\end{lstlisting}
+
+\item
+Class templates
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires ...
+class MyType {
+	...
+}
+\end{lstlisting}
+
+\item
+Alias templates
+
+\item
+Variable templates
+
+\item
+You can even constrain member functions
+\end{itemize}
+
+For these templates, you can constrain both type and value parameters.
+
+However, note that you cannot constrain concepts:
+
+\begin{lstlisting}[style=styleCXX]
+template<std::ranges::sized_range T> // ERROR
+concept IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
+\end{lstlisting}
+
+Instead, you have to specify this as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept IsIntegralValType = std::ranges::sized_range<T> &&
+							std::integral<std::ranges::range_value_t<T>>;
+\end{lstlisting}
+
+
 \subsubsection*{\zihao{3} 3.2.1\hspace{0.2cm}Constraining Alias Templates}
 \addcontentsline{toc}{subsubsection}{3.2.1\hspace{0.2cm}Constraining Alias Templates}
 
+Here is an example of constraining alias templates (generic using declarations):
 
+\begin{lstlisting}[style=styleCXX]
+template<std::ranges::range T>
+using ValueType = std::ranges::range_value_t<T>;
+\end{lstlisting}
 
+The declaration is equivalent to the following:
 
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires std::ranges::range<T>
+using ValueType = std::ranges::range_value_t<T>;
+\end{lstlisting}
 
+Type ValueType<> is now defined only for types that are ranges:
 
+\begin{lstlisting}[style=styleCXX]
+ValueType<int> vt1; // ERROR
+ValueType<std::vector<int>> vt2; // int
+ValueType<std::list<double>> vt3; // double
+\end{lstlisting}
 
 \subsubsection*{\zihao{3} 3.2.2\hspace{0.2cm}Constraining Variable Templates}
 \addcontentsline{toc}{subsubsection}{3.2.2\hspace{0.2cm}Constraining Variable Templates}
 
+Here is an example of constraining variable templates:
+
+\begin{lstlisting}[style=styleCXX]
+template<std::ranges::range T>
+constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
+\end{lstlisting}
+
+Again, this is equivalent to the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires std::ranges::range<T>
+constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
+\end{lstlisting}
+
+The Boolean variable template is now defined only for ranges:
+
+\begin{lstlisting}[style=styleCXX]
+bool b1 = IsIntegralValType<int>; // ERROR
+bool b2 = IsIntegralValType<std::vector<int>>; // true
+bool b3 = IsIntegralValType<std::list<double>>; // false
+\end{lstlisting}
 
 
 \subsubsection*{\zihao{3} 3.2.3\hspace{0.2cm}Constraining Member Functions}
 \addcontentsline{toc}{subsubsection}{3.2.3\hspace{0.2cm}Constraining Member Functions}
 
+Requires clauses can also be part of the declaration of member functions. That way, programmers can specify different APIs based on requirements and concepts.
 
+Consider the following example:
 
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lang/valorcoll.hpp}
 
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <ranges>
 
+template<typename T>
+class ValOrColl {
+	T value;
+	public:
+	ValOrColl(const T& val)
+	: value{val} {
+	}
+	ValOrColl(T&& val)
+	: value{std::move(val)} {
+	}
+	
+	void print() const {
+		std::cout << value << '\n';
+	}
+	
+	void print() const requires std::ranges::range<T> {
+		for (const auto& elem : value) {
+			std::cout << elem << ' ';
+		}
+		std::cout << '\n';
+	}
+};
+\end{lstlisting}
+
+Here, we define a class ValOrColl that can hold a single value or a collection of values as value of type T. Two print() member functions are provided and the class uses the standard concept std::ranges::range to decided which one to call:
+
+\begin{itemize}
+\item
+If type T is a collection, the constraint is satisfied so that both print() member functions are available. However, the second print(), which iterates over the elements of the collection, is preferred by overload resolution, because this member function has a constraint.
+
+\item
+If type T is not a collection, only the first print() is available and therefore used.
+\end{itemize}
+
+For example, you can use the class as follows:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lang/valorcoll.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include "valorcoll.hpp"
+#include <vector>
+
+int main()
+{
+	ValOrColl o1 = 42;
+	o1.print();
+	ValOrColl o2 = std::vector{1, 2, 3, 4};
+	o2.print();
+}
+\end{lstlisting}
+
+The program has the following output:
+
+\begin{tcblisting}{commandshell={}}
+42
+1 2 3 4
+\end{tcblisting}
+
+Note that you can constrain only templates this way. You cannot use requires to constrain ordinary functions:
+
+\begin{lstlisting}[style=styleCXX]
+void foo() requires std::numeric_limits<char>::is_signed // ERROR
+{
+	...
+}
+\end{lstlisting}
+
+One example of a constraining member function inside the C++standard library is the conditional availability of begin() for const views.
 
 
 \subsubsection*{\zihao{3} 3.2.4\hspace{0.2cm}Constraining Non-Type Template Parameters}
 \addcontentsline{toc}{subsubsection}{3.2.4\hspace{0.2cm}Constraining Non-Type Template Parameters}
+
+It is not only types that you can constrain. You can also constrain values that are template parameters (non-type template parameters (NTTP)). For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<int Val>
+concept LessThan10 = Val < 10;
+\end{lstlisting}
+
+Or more generic:
+
+\begin{lstlisting}[style=styleCXX]
+template<auto Val>
+concept LessThan10 = Val < 10;
+\end{lstlisting}
+
+This concept can be used as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, int Size>
+requires LessThan10<Size>
+class MyType {
+	...
+};
+\end{lstlisting}
+
+We will discuss more examples later.
+
+
+
+
+
+
+
+
+
+

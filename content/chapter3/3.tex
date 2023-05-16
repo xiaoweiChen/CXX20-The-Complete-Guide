@@ -1,23 +1,420 @@
+
+
+There are multiple reasons why using requirements as constraints can be useful:
+
+\begin{itemize}
+\item
+Constraints help us to understand the restrictions on templates and to get more understandable error messages when requirements are broken.
+
+\item
+Constraints can be used to disable generic code for cases where the code does not make sense:
+\begin{itemize}
+\item
+For some types, generic code might compile but not do the right thing.
+
+\item
+We might have to fix overload resolution, which decides which operation to call if there are multiple valid options.
+\end{itemize}
+
+\item
+Constraints can be used to overload or specialize generic code so that different code is compiled for different types.
+\end{itemize}
+
+Let us take a closer look at these reasons by developing another example step by step. This way, we can also introduce a couple of additional details about constraints, requirements, and concepts.
+
+
 \subsubsection*{\zihao{3} 3.3.1\hspace{0.2cm}Using Concepts to Understand Code and Error Messages}
 \addcontentsline{toc}{subsubsection}{3.3.1\hspace{0.2cm}Using Concepts to Understand Code and Error Messages}
 
+Assume we want to write generic code that inserts the value of an object into a collection. Thanks to templates, we can implement it once as generic code that is compiled for the types of passed objects once we know them:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+void add(Coll& coll, const T& val)
+{
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+This code does not always compile. There is an implicit requirement for the types of the passed arguments: the call to push\_back() for the value of type T has to be supported for the container of type Coll.
+
+You could also argue that this is a combination of multiple basic requirements:
+
+\begin{itemize}
+\item
+Type Coll has to support push\_back().
+
+\item
+There has to be a conversion from type T to the type of the elements of Coll.
+
+\item
+If the passed argument has the element type of Coll, that type has to support copying (because a new element is initialized with the passed value).
+\end{itemize}
+
+If any of these requirements are broken, the code does not compile. For example:
 
 
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> vec;
+add(vec, 42); // OK
+add(vec, "hello"); // ERROR: no conversion from string literal to int
+
+std::set<int> coll;
+add(coll, 42); // ERROR: no push_back() supported by std::set<>
+
+std::vector<std::atomic<int>> aiVec;
+std::atomic<int> ai{42};
+add(aiVec, ai); // ERROR: cannot copy/move atomics
+\end{lstlisting}
 
 
+When compilation fails, error messages can be very clear, such as when the member push\_back() is not found on the top level of a template:
 
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+prog.cpp: In instantiation of ’void add(Coll&, const T&)
+             [with Coll = std::__debug::set<int>; T = int]’:
+prog.cpp:17:18:     required from here
+prog.cpp:11:8: error: ’class std::set<int>’ has no member named ’push_back’
+  11 | coll.push_back(val);
+      | ~~~~~^~~~~~~~~
+\end{tcblisting}
+}
+
+However, generic error messages can also be very tough to read and understand. For example, when the compiler has to deal with the broken requirement that copying is not supported, the problem is detected in the deep darkness of the implementation of std::vector<>. We get between 40 and 90 lines of error messages where we have to look carefully for the broken requirement:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+...
+prog.cpp:11:17: required from ’void add(Coll&, const T&)
+                    [with Coll = std::vector<std::atomic<int> >; T = std::atomic<int>]’
+prog.cpp:25:18:     required from here
+.../include/bits/stl_construct.h:96:17:
+    error: use of deleted function
+’std::atomic<int>::atomic(const std::atomic<int>&)’
+    96 | -> decltype(::new((void*)0) _Tp(std::declval<_Args>()...))
+        |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+...
+\end{tcblisting}
+}
+
+
+You might think that you can improve the situation by defining and using a concept that checks whether you can perform the push\_back() call:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+concept SupportsPushBack = requires(Coll c, T v) {
+	c.push_back(v);
+};
+
+template<typename Coll, typename T>
+requires SupportsPushBack<Coll, T>
+void add(Coll& coll, const T& val)
+{
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+The error message for not finding push\_back() might now be as follows:
+
+{\scriptsize
+\begin{tcblisting}{commandshell={}}
+prog.cpp:27:4: error: no matching function for call to ’add(std::set<int>&, int)’
+    27 | add(coll, 42);
+        | ~~~^~~~~~~~~~
+prog.cpp:14:6: note: candidate: ’template<class Coll, class T> requires ...’
+     14 | void add(Coll& coll, const T& val)
+         |      ^~~
+prog.cpp:14:6: note: template argument deduction/substitution failed:
+prog.cpp:14:6: note: constraints not satisfied
+prog.cpp: In substitution of ’template<class Coll, class T> requires ...
+           [with Coll = std::set<int>; T = int]’:
+prog.cpp:27:4: required from here
+prog.cpp:8:9: required for the satisfaction of ’SupportsPushBack<Coll, T>’
+                  [with Coll = std::set<int, std::less<int>, std::allocator<int> >; T = int]
+prog.cpp:8:28: in requirements with ’Coll c’, ’T v’
+                      [with T = int; Coll = std::set<int, std::less<int>, std::allocator<int> >]
+prog.cpp:9:16: note: the required expression ’c.push_back(v)’ is invalid
+      9 | c.push_back(v);
+         | ~~~~~~~~~~~^~~
+\end{tcblisting}
+}
+
+However, when passing atomics, the check for being copyable is still detected in the deep darkness of the code for std::vector<> (this time when the concept is checked, instead of when the code is compiled).
+
+In that case, the situation improves when we specify the basic constraint for the use of push\_back() as a requirement instead:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+requires std::convertible_to<T, typename Coll::value_type>
+void add(Coll& coll, const T& val)
+{
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+Here, we use the standard concept std::convertible\_to to require that the type of the passed argument T can be (implicitly or explicitly) converted to the element type of the collection.
+
+Now, if the requirement is broken, we can get an error message with the broken concept and the location where it is broken. For example[This is just one example of a possible message, not necessarily matching the situation of a specific compiler]:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+...
+prog.cpp:11:17: In substitution of ’template<class Coll, class T>
+                 requires convertible_to<T, typename Coll::value_type>
+                 void add(Coll&, const T&)
+                [with Coll = std::vector<std::atomic<int> >; T = std::atomic<int>]’:
+prog.cpp:25:18: required from here
+.../include/concepts:72:13: required for the satisfaction of
+                 ’convertible_to<T, typename Coll::value_type>
+                  [with T = std::atomic<int>;
+                      Coll = std::vector<std::atomic<int>,
+                                              std::allocator<std::atomic<int> > >]’
+.../include/concepts:72:30: note: the expression ’is_convertible_v<_From, _To>
+                      [with _From = std::atomic<int>; _To = std::atomic<int>]’
+                      evaluated to ’false’
+    72 | concept convertible_to = is_convertible_v<_From, _To>
+        |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+...
+\end{tcblisting}
+}
+
+See rangessort.cpp for another example of algorithms that check the constraints of their parameters.
 
 \subsubsection*{\zihao{3} 3.3.2\hspace{0.2cm}Using Concepts to Disable Generic Code}
 \addcontentsline{toc}{subsubsection}{3.3.2\hspace{0.2cm}Using Concepts to Disable Generic Code}
 
+Assume we want to provide a special implementation for an add() function template like the one introduced above. When dealing with floating-point values, something different or extra should happen.
 
+A naive approach might be to overload the function template for double:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+void add(Coll& coll, const T& val) // for generic value types
+{
+	coll.push_back(val);
+}
+
+template<typename Coll>
+void add(Coll& coll, double val) // for floating-point value types
+{
+	... // special code for floating-point values
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+As expected, when we pass a double as a second argument, the second function is called; otherwise, the generic argument is used:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> iVec;
+add(iVec, 42); // OK: calls add() for T being int
+
+std::vector<double> dVec;
+add(dVec, 0.7); // OK: calls 2nd add() for double
+\end{lstlisting}
+
+When passing a double, both function overloads match. The second overload is preferred because it is a perfect match for the second argument.
+
+However, if we pass a float, we have the following effect:
+
+\begin{lstlisting}[style=styleCXX]
+float f = 0.7;
+add(dVec, f); // OOPS: calls 1st add() for T being float
+\end{lstlisting}
+
+The reason lies in the sometimes subtle details of overload resolution. Again, both functions could be called. Overload resolution has some general rules, such as:
+
+\begin{itemize}
+\item
+Calls with no type conversion are preferred over calls having a type conversion.
+
+\item
+Calls of ordinary functions are preferred over calls of function templates.
+\end{itemize}
+
+Here, however, overload resolution has to decide between a call with a type conversion and a call of a function template. By rule, in that case, the version with the template parameter is preferred.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Fixing Overload Resolution}
+
+The fix for the wrong overload resolution is pretty simple. Instead of declaring the second parameter with a specific type, we should just require that the value to be inserted has a floating-point type. For this, we can constrain the function template for floating-point values by using the new standard concept std::floating\_point:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+requires std::floating_point<T>
+void add(Coll& coll, const T& val)
+{
+	... // special code for floating-point values
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+Because we use a concept that applies to a single template parameter we can also use the shorthand notation:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, std::floating_point T>
+void add(Coll& coll, const T& val)
+{
+	... // special code for floating-point values
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+Alternatively, we can use auto parameters:
+
+\begin{lstlisting}[style=styleCXX]
+void add(auto& coll, const std::floating_point auto& val)
+{
+	... // special code for floating-point values
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+For add(), we now have two function templates that can be called: one without and one with a specific requirement:
+
+\begin{lstlisting}[style=styleCXX]
+uirement:
+template<typename Coll, typename T>
+void add(Coll& coll, const T& val) // for generic value types
+{
+	coll.push_back(val);
+}
+
+template<typename Coll, std::floating_point T>
+void add(Coll& coll, const T& val) // for floating-point value types
+{
+	... // special code for floating-point values
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+This is enough because overload resolution also prefers overloads or specializations that have constraints over those that have fewer or no constraints:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> iVec;
+add(iVec, 42); // OK: calls add() for generic value types
+
+std::vector<double> dVec;
+add(dVec, 0.7); // OK: calls add() for floating-point types
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Do Not Differ More Than Necessary}
+
+If two overloads or specializations have constraints, it is important that overload resolution can decide which one is better. To support this, the signatures should not differ more than necessary.
+
+If the signatures differ too much, the more constrained overload might not be preferred. For example, if we declare the overload for floating-point values to take the argument by value, passing a floating-point value becomes ambiguous:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+void add(Coll& coll, const T& val) // note: pass by const reference
+{
+	coll.push_back(val);
+}
+
+template<typename Coll, std::floating_point T>
+void add(Coll& coll, T val) // note: pass by value
+{
+	... // special code for floating-point values
+	coll.push_back(val);
+}
+
+std::vector<double> dVec;
+add(dVec, 0.7); // ERROR: both templates match and no preference
+\end{lstlisting}
+
+The latter declaration is no longer a special case of the former declaration. We just have two different function templates that could both be called.
+
+If you really want to have different signatures, you have to constrain the first function template not to be available for floating-point values.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Restrictions on Narrowing}
+
+We have another interesting issue in this example: both function templates allow us to pass a double to add it into a collection of int:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> iVec;
+
+add(iVec, 1.9); // OOPS: add 1
+\end{lstlisting}
+
+The reason is that we have implicit type conversions from double to int (due to being compatible with the programming language C). Such an implicit conversion where we might lose parts of the value is called narrowing. It means that the code above compiles and converts the value 1.9 to 1 before it is inserted.
+
+If you do not want to support narrowing, you have multiple options. One option is to disable type conversions completely by requiring that the passed value type matches the element type of the collection:
+
+\begin{lstlisting}[style=styleCXX]
+requires std::same_as<typename Coll::value_type, T>
+\end{lstlisting}
+
+However, this would also disable useful and safe type conversions.
+
+For that reason, it is better to define a concept that yields whether a type can be converted to another type without narrowing, which is possible in a short tricky requirement[Thanks to Giuseppe D’Angelo and Zhihao Yuan for the trick to check for narrowing conversions introduced in \url{http://wg21.link/p0870}.]:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename From, typename To>
+concept ConvertsWithoutNarrowing =
+	std::convertible_to<From, To> &&
+	requires (From&& x) {
+		{ std::type_identity_t<To[]>{std::forward<From>(x)} }
+		-> std::same_as<To[1]>;
+	};
+\end{lstlisting}
+
+We can then use this concept to formulate a corresponding constraint:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+requires ConvertsWithoutNarrowing<T, typename Coll::value_type>
+void add(Coll& coll, const T& val)
+{
+	...
+}
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Subsuming Constraints}
+
+It would probably be enough to define the concept for narrowing conversions above without requiring the concept std::convertible\_to, because the rest checks this implicitly:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename From, typename To>
+concept ConvertsWithoutNarrowing = requires (From&& x) {
+	{ std::type_identity_t<To[]>{std::forward<From>(x)} } -> std::same_as<To[1]>;
+};
+\end{lstlisting}
+
+However, there is an important benefit if the concept ConvertsWithoutNarrowing also checks for the concept std::convertible\_to. In that case, the compiler can detect that ConvertsWithoutNarrowing is more constrained than std::convertible\_to. The terminology is that ConvertsWithoutNarrowing subsumes std::convertible\_to.
+
+That allows a programmer to do the following:
+
+\begin{lstlisting}[style=styleCXX]
+emplate<typename F, typename T>
+requires std::convertible_to<F, T>
+void foo(F, T)
+{
+	std::cout << "may be narrowing\n";
+}
+
+template<typename F, typename T>
+requires ConvertsWithoutNarrowing<F, T>
+void foo(F, T)
+{
+	std::cout << "without narrowing\n";
+}
+\end{lstlisting}
+
+Without specifying that ConvertsWithoutNarrowing subsumes std::convertible\_to, the compiler would raise an ambiguity error here when calling foo() with two parameters that convert to each other without narrowing.
+
+In the same way, concepts can subsume other concepts, which means that they count as more specialized for overload resolution. In fact, the C++ standard concepts build a pretty complex subsumption graph.
+
+We will discuss details of subsumption later.
 
 \subsubsection*{\zihao{3} 3.3.3\hspace{0.2cm}Using Requirements to Call Different Functions}
 \addcontentsline{toc}{subsubsection}{3.3.3\hspace{0.2cm}Using Requirements to Call Different Functions}
-
-
-
-
 
 
 

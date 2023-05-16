@@ -1,18 +1,377 @@
 
 
+Consider the following function template that returns the maximum of two values:
 
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T maxValue(T a, T b) {
+	return b < a ? a : b;
+}
+\end{lstlisting}
 
+This function template can be called for two arguments that have the same type, provided the operations performed for the parameters (comparing with operator< and copying) are valid.
 
-
+However, passing two pointers would compare their addresses instead of the values they refer to.
 
 \subsubsection*{\zihao{3} 3.1.1\hspace{0.2cm}Improving the Template Step by Step}
 \addcontentsline{toc}{subsubsection}{3.1.1\hspace{0.2cm}Improving the Template Step by Step}
 
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Using a requires Clause}
 
 
+To fix that, we can equip the template with a constraint so that it is not available if raw pointers are passed:
 
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires (!std::is_pointer_v<T>)
+T maxValue(T a, T b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
 
+Here, the constraint is formulated in a requires clause, which is introduced with the keyword requires (there are other ways to formulate constraints).
 
+To specify the constraint that the template cannot be used for raw pointers, we use the standard type trait std::is\_pointer\_v<> (which yields the value member of the standard type trait std::is\_pointer<>)[Type traits were introduced as standard type functions with C++11 and the ability to call them with an \_v suffix was introduced with C++17.]. With this constraint, we can no longer use the function template for raw pointers:
+
+\begin{lstlisting}[style=styleCXX]
+int x = 42;
+int y = 77;
+std::cout << maxValue(x, y) << '\n'; // OK: maximum value of ints
+std::cout << maxValue(&x, &y) << '\n'; // ERROR: constraint not met
+\end{lstlisting}
+
+The requirement is a compile-time check and has no impact on the performance of the compiled code. It merely means that the template cannot be used for raw pointers. When raw pointers are passed, the compiler behaves as if the template were not there.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Defining and Using a concept}
+
+Probably, we will need a constraint for pointers more than once. For this reason, we can introduce a concept for the constraint:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept IsPointer = std::is_pointer_v<T>;
+\end{lstlisting}
+
+A concept is a template that introduces a name for one or more requirements that apply to the passed template parameters so that we can use these requirements as constraints. After the equal sign (you cannot use braces here), we have to specify the requirements as a Boolean expression that is evaluated at compile time. In this case, we require that the template argument used to specialize IsPointer<> has to be a raw pointer.
+
+We can use this concept to constrain the maxValue() template as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires (!IsPointer<T>)
+T maxValue(T a, T b)
+{
+	return b < a ? a : b;
+}
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Overloading with Concepts}
+
+By using constraints and concepts, we can even overload the maxValue() template to have one implementation for pointers and one for other types:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires (!IsPointer<T>)
+T maxValue(T a, T b) // maxValue() for non-pointers
+{
+	return b < a ? a : b; // compare values
+}
+
+template<typename T>
+requires IsPointer<T>
+auto maxValue(T a, T b) // maxValue() for pointers
+{
+	return maxValue(*a, *b); // compare values the pointers point to
+}
+\end{lstlisting}
+
+Note that requires clauses that just constrain a template with a concept (or multiple concepts combined with \&\&) no longer need parentheses. A negated concept always needs parentheses.
+
+We now have two function templates with the same name, but only one of them is available for each type:
+
+\begin{lstlisting}[style=styleCXX]
+int x = 42;
+int y = 77;
+std::cout << maxValue(x, y) << '\n'; // calls maxValue() for non-pointers
+std::cout << maxValue(&x, &y) << '\n'; // calls maxValue() for pointers
+\end{lstlisting}
+
+Because the implementation for pointers delegates the computations of the return value to the objects the pointers refer to, the second call uses both maxValue() templates. When passing pointers to int, we instantiate the template for pointers with T as int*, and the basic maxValue() template that is for nonpointers with T as int.
+
+This even works recursively now. We can ask for the maximum value of a pointer to a pointer to an int:
+
+\begin{lstlisting}[style=styleCXX]
+int* xp = &x;
+int* yp = &y;
+std::cout << maxValue(&xp, &yp) << '\n'; // calls maxValue() for int**
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Overload Resolution with Concepts}
+
+Overload resolution considers templates with constraints as more specialized than templates without constraints. Therefore, it is enough to constrain the implementation only for pointers:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+T maxValue(T a, T b) // maxValue() for a value of type T
+{
+	return b < a ? a : b; // compare values
+}
+
+template<typename T>
+requires IsPointer<T>
+auto maxValue(T a, T b) // maxValue() for pointers (higher priority)
+{
+	return maxValue(*a, *b); // compare values the pointers point to
+}
+\end{lstlisting}
+
+However, be careful: overloading once using references and once using non-references might cause ambiguities.
+
+By using concepts, we can even prefer some constraints over others. However, this requires the use of concepts that subsume other concepts.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Type Constraints}
+
+If a constraint is a single concept that is applied to a parameter, there are ways to shortcut the specification of the constraint. First, you can specify it directly as a type constraint when declaring the template parameter:
+
+\begin{lstlisting}[style=styleCXX]
+template<IsPointer T> // only for pointers
+auto maxValue(T a, T b)
+{
+	return maxValue(*a, *b); // compare values the pointers point to
+}
+\end{lstlisting}
+
+In addition, you can use the concept as a type constraint when declaring parameters with auto:
+
+\begin{lstlisting}[style=styleCXX]
+auto maxValue(IsPointer auto a, IsPointer auto b)
+{
+	return maxValue(*a, *b); // compare values the pointers point to
+}
+\end{lstlisting}
+
+This also works for parameters passed by reference:
+
+\begin{lstlisting}[style=styleCXX]
+auto maxValue3(const IsPointer auto& a, const IsPointer auto& b)
+{
+	return maxValue(*a, *b); // compare values the pointers point to
+}
+\end{lstlisting}
+
+Note that by constraining both parameters directly, we changed the specification of the template: we no longer require that a and b have to have the same type. We require only that both are pointer-like objects of an arbitrary type.
+
+When using the template syntax, the equivalent code looks as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<IsPointer T1, IsPointer T2> // only for pointers
+auto maxValue(T1 a, T2 b)
+{
+	return maxValue(*a, *b); // compare values the pointers point to
+}
+\end{lstlisting}
+
+We should probably also allow different types for the basic function template that compares the values. One way to do that is to specify two template parameters:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T1, typename T2>
+auto maxValue(T1 a, T2 b) // maxValue() for values
+{
+	return b < a ? a : b; // compare values
+}
+\end{lstlisting}
+
+The other option would be to also use auto parameters:
+
+\begin{lstlisting}[style=styleCXX]
+auto maxValue(auto a, auto b) // maxValue() for values
+{
+	return b < a ? a : b; // compare values
+}
+\end{lstlisting}
+
+We could now pass a pointer to an int and a pointer to a double.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Trailing requires Clauses}
+
+Consider the pointer version of maxValue():
+
+\begin{lstlisting}[style=styleCXX]
+auto maxValue(IsPointer auto a, IsPointer auto b)
+{
+	return maxValue(*a, *b); // compare values the pointers point to
+}
+\end{lstlisting}
+
+There is still an implicit requirement that is not obvious: after dereferencing, the values have to be comparable.
+
+Compilers detect that requirement when (recursively) instantiating the maxValue() templates. However, the error message might be a problem because the error occurs late and the requirement is not visible in the declaration of maxValue() for pointers.
+
+To let the pointer version directly require in its declaration that the values the pointers point to have to be comparable, we can add another constraint to the function:
+
+\begin{lstlisting}[style=styleCXX]
+auto maxValue(IsPointer auto a, IsPointer auto b)
+requires IsComparableWith<decltype(*a), decltype(*b)>
+{
+	return maxValue(*a, *b);
+}
+\end{lstlisting}
+
+Here, we use a trailing requires clause, which can be specified after the parameter list. It has the benefit that it can use the name of a parameter or combine even multiple parameter names to formulate constraints.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Standard Concepts}
+
+In the previous example, we did not define the concept IsComparableWith. We could do that using a requires expression (which we introduce in a moment); however, we could also use a concept of the C++ standard library, For example, we could declare the following:
+
+\begin{lstlisting}[style=styleCXX]
+auto maxValue(IsPointer auto a, IsPointer auto b)
+requires std::totally_ordered_with<decltype(*a), decltype(*b)>
+{
+	return maxValue(*a, *b);
+}
+\end{lstlisting}
+
+The concept std::totally\_ordered\_with takes two template parameters to check whether the values of the passed types are comparable with the operators ==, !=, <, <=, >, and >=.
+
+The standard library has many standard concepts for common constraints. They are provided in the namespace std (sometimes a subnamespace is used).
+
+For example, we could also use the concept std::three\_way\_comparable\_with, which in addition requires that the new operator <=> (which gives the concept the name) is supported. To check support for comparisons of two objects of the same type, we can use the concept std::totally\_ordered.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{requires Expressions}
+
+So far, the maxValue() templates do not work for pointer-like types that are not raw pointers, such as smart pointers. If the code should also compile for those types, we should better define that pointers are objects for which we can call operator*.
+
+Such a requirement is easy to specify since C++20:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept IsPointer = requires(T p) { *p; }; // expression *p has to be well-formed
+\end{lstlisting}
+
+Instead of using the type trait for raw pointers, the concept formulates a simple requirement: the expression *p has to be valid for an object p of the passed type T.
+
+Here, we are using the requires keyword again to introduce a requires expression, which can define one or more requirements for types and parameters. By declaring a parameter p of type T, we can simply specify which operations for such an object have to be supported.
+
+We can also require multiple operations, type members, and that expressions yield constrained types. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept IsPointer = requires(T p) {
+	*p; // operator * has to be valid
+	p == nullptr; // can compare with nullptr
+	{p < p} -> std::same_as<bool>; // operator < yields bool
+};
+\end{lstlisting}
+
+We specify three requirements, which all apply to a parameter p of the type T that we define this concept for:
+
+\begin{itemize}
+\item
+The type has to support the operator *.
+
+\item
+The type has to support the operator <, which has to yield type bool.
+
+\item
+Objects of that type have to be comparable with nullptr.
+\end{itemize}
+
+Note that we do not need two parameters of type T to check whether < can be called. The runtime value does not matter. However, note that there are some restrictions for how to specify what an expression yields (e.g., you cannot specify just bool without std::same\_as<> there).
+
+Note also that we do not require p to be a pointer that is equal to nullptr here. We require only that we can compare p with nullptr. However, that rules out iterators, because in general, they cannot be compared with nullptr (except when they happen to be implemented as raw pointers, which, for example, is typically the case for type std::array<>).
+
+Again, this is a compile-time constraint that has no impact on the generated code; we only decide for which types the code compiles. Therefore, it does not matter whether we declare the parameter p as a value or as a reference.
+
+You could also use the requires expression as an ad-hoc constraint directly in the requires clause (which looks a bit funny but makes total sense once you understand the difference between a requires clause and a requires expression and that both need the keyword requires):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires requires(T p) { *p; } // constrain template with ad-hoc requirement
+auto maxValue(T a, T b)
+{
+	return maxValue(*a, *b);
+}
+\end{lstlisting}
 
 \subsubsection*{\zihao{3} 3.1.2\hspace{0.2cm}A Complete Example with Concepts}
 \addcontentsline{toc}{subsubsection}{3.1.2\hspace{0.2cm}A Complete Example with Concepts}
+
+We have now introduced everything necessary to look at a complete example program for concepts that computes the maximum value for plain values and pointer-like objects:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lang/maxvalue.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+// concept for pointer-like objects:
+template<typename T>
+concept IsPointer = requires(T p) {
+	*p; // operator * has to be valid
+	p == nullptr; // can compare with nullptr
+	{p < p} -> std::convertible_to<bool>; // < yields bool
+};
+
+// maxValue() for plain values:
+auto maxValue(auto a, auto b)
+{
+	return b < a ? a : b;
+}
+
+// maxValue() for pointers:
+auto maxValue(IsPointer auto a, IsPointer auto b)
+requires std::totally_ordered_with<decltype(*a), decltype(*b)>
+{
+	return maxValue(*a, *b); // return maximum value of where the pointers refer to
+}
+int main()
+{
+	int x = 42;
+	int y = 77;
+	std::cout << maxValue(x, y) << '\n'; // maximum value of ints
+	std::cout << maxValue(&x, &y) << '\n'; // maximum value of where the pointers point to
+	
+	int* xp = &x;
+	int* yp = &y;
+	std::cout << maxValue(&xp, &yp) << '\n'; // maximum value of pointer to pointer
+	
+	double d = 49.9;
+	std::cout << maxValue(xp, &d) << '\n'; // maximum value of int and double pointer
+}
+\end{lstlisting}
+
+Note that we cannot use maxValue() to check for the maximum of two iterator values:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector coll{0, 8, 15, 11, 47};
+auto pos = std::find(coll.begin(), coll.end(), 11); // find specific value
+if (pos != coll.end()) {
+	// maximum of first and found value:
+	auto val = maxValue(coll.begin(), pos); // ERROR
+}
+\end{lstlisting}
+
+The reason is that we require the parameters to be comparable with nullptr, which is not required to be supported by iterators. Whether or not this is what you want is a design question. However, this example demonstrates that it is important to think carefully about the definition of general concepts.
+
+
+
+
+
+
+
