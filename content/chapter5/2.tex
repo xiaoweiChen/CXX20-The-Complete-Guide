@@ -6,28 +6,215 @@ This section lists the concepts that apply to objects and types in general.
 
 \subsubsection*{\zihao{3} 5.2.1\hspace{0.2cm}Arithmetic Concepts}
 \addcontentsline{toc}{subsubsection}{5.2.2\hspace{0.2cm}Arithmetic Concepts}
-\subsubsection*{\zihao{3} 5.2.2\hspace{0.2cm}Object Concepts}
-\addcontentsline{toc}{subsubsection}{5.2.2\hspace{0.2cm}Object Concepts}
+
 
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::integral<T>}
 
+\begin{itemize}
+\item
+Guarantees that type T is an integral type (including bool and all character types).
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::is\_integral\_v<T> yields true
+\end{itemize}
+\end{itemize}
+
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::signed\_integral<T>}
 
+\begin{itemize}
+\item
+Guarantees that type T is a signed integral type (including signed character types, which char might be).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::integral<T> is satisfied
+
+\item
+The type trait std::is\_signed\_v<T> yields true
+\end{itemize}
+\end{itemize}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::unsigned\_integral<T>}
 
+\begin{itemize}
+\item
+Guarantees that type T is an unsigned integral type (including bool and unsigned character types, which char might be).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::integral<T> is satisfied
+
+\item
+The type trait std::is\_signed\_v<T> yields true
+\end{itemize}
+\end{itemize}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::floating\_point<T>}
+
+\begin{itemize}
+\item
+Guarantees that type T is a floating-point type (float, double, or long double).
+
+\item
+The concept was introduced to enable the definition of the mathematical constants.
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::is\_floating\_point\_v<T> yields true
+\end{itemize}
+\end{itemize}
+
+
+\subsubsection*{\zihao{3} 5.2.2\hspace{0.2cm}Object Concepts}
+\addcontentsline{toc}{subsubsection}{5.2.2\hspace{0.2cm}Object Concepts}
+
+For objects (types that are neither references nor functions nor void) there is a hierarchy of required basic operations.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::movable<T>}
+
+\begin{itemize}
+\item
+Guarantees that type T is movable and swappable. That is, you can move construct, move assign, and swap with another object of the type.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::move\_constructible<T> is satisfied
+
+\item
+std::assignable\_from<T\&, T> is satisfied
+
+\item
+std::swappable<T> is satisfied
+
+\item
+T is neither a reference nor a function nor void
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::copyable<T>}
+
+\begin{itemize}
+\item
+Guarantees that type T is copyable (which implies movable and swappable).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::movable<T> is satisfied
+
+\item
+std::copy\_constructible<T> is satisfied
+
+\item
+std::assignable\_from for any T, T\&, const T, and const T\& to T\&
+
+\item
+std::swappable<T> is satisfied
+
+\item
+T is neither a reference nor a function nor void
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::semiregular<T>}
+
+\begin{itemize}
+\item
+Guarantees that type T is semiregular (can default initialize, copy, move, and swap).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::copyable<T> is satisfied
+
+\item
+std::default\_initializable<T> is satisfied
+
+\item
+std::movable<T> is satisfied
+
+\item
+std::copy\_constructible<T> is satisfied
+
+\item
+std::assignable\_from for any T, T\&, const T, and const T\& to T\&
+
+\item
+std::swappable<T> is satisfied
+
+\item
+T is neither a reference nor a function nor void
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::regular<T>}
+
+\begin{itemize}
+\item
+Guarantees that type T is regular (can default initialize, copy, move, swap, and check for equality).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::semiregular<T> is satisfied
+
+\item
+std::equality\_comparable<T> is satisfied
+
+\item
+std::copyable<T> is satisfied
+
+\item
+std::default\_initializable<T> is satisfied
+
+\item
+std::movable<T> is satisfied
+
+\item
+std::copy\_constructible<T> is satisfied
+
+\item
+std::assignable\_from for any T, T\&, const T, and const T\& to T\&
+
+\item
+std::swappable<T> is satisfied
+
+\item
+T is neither a reference nor a function nor void
+\end{itemize}
+\end{itemize}
 
 \subsubsection*{\zihao{3} 5.2.3\hspace{0.2cm}Concepts for Relationships between Types}
 \addcontentsline{toc}{subsubsection}{5.2.3\hspace{0.2cm}Concepts for Relationships between Types}
