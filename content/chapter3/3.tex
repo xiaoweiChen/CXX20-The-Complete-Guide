@@ -416,18 +416,403 @@ We will discuss details of subsumption later.
 \subsubsection*{\zihao{3} 3.3.3\hspace{0.2cm}Using Requirements to Call Different Functions}
 \addcontentsline{toc}{subsubsection}{3.3.3\hspace{0.2cm}Using Requirements to Call Different Functions}
 
+Finally, we should make our add() function template more flexible:
 
+\begin{itemize}
+\item
+We might also want to support collections that provide only insert() instead of push\_back() for inserting new elements.
+
+\item
+We might want to support passing a collection (container or range) to insert multiple values.
+\end{itemize}
+
+Yes, you can argue that these are different functions and that they should have different names and if that works, it is often better to use different names. However, the C++ standard library is a good example of the benefits you can get if different APIs are harmonized. For example, you can use the same generic code to iterate over all containers, although internally, containers use very different ways to go to the next element and access its value.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Using Concepts to Call Different Functions}
+
+Having just introduced concepts, the “obvious” approach might be to introduce a concept to find out whether a certain function call is supported:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+concept SupportsPushBack = requires(Coll c, T v) {
+	c.push_back(v);
+};
+\end{lstlisting}
+
+Note that we can also define a concept that needs only the collection as a template parameter:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll>
+concept SupportsPushBack = requires(Coll coll, Coll::value_type val) {
+	coll.push_back(val);
+};
+\end{lstlisting}
+
+Note that we do not have to use typename here to use Coll::value\_type. Since C++20, typename is no longer required when it is clear by the context that a qualified member must be a type.
+
+There are various other ways to declare this concept:
+
+\begin{itemize}
+\item
+You can use std::declval<>() to get a value of the element type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll>
+concept SupportsPushBack = requires(Coll coll) {
+	coll.push_back(std::declval<typename Coll::value_type&>());
+};
+\end{lstlisting}
+
+Here, you can see that the definition of concepts and requirements does not create code. It is an unevaluated context where we can use std::declval<>() for “assume we have an object of this type” and it does not matter whether we declare coll as a value or as a non-const reference.
+
+Note that the \& is important here. Without \&, we would only require that we can insert an rvalue (such as a temporary object) using move semantics. With \&, we create an lvalue so that we require that push\_back() copies.
+
+\item
+You could use std::ranges::range\_value\_t instead of the value\_type member:
+
+You can use std::declval<>() to get a value of the element type:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll>
+concept SupportsPushBack = requires(Coll coll) {
+	coll.push_back(std::declval<std::ranges::range_value_t<Coll>>());
+};
+\end{lstlisting}
+
+In general, using std::ranges::range\_value\_t<> makes code more generic when the element type of a collection is needed (e.g., it also works with raw array). However, because we require the member push\_back() here, also requiring the member value\_type does not hurt.
+
+\end{itemize}
+
+With the concept SupportPushBack for one parameter, we can provide two implementations:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+requires SupportsPushBack<Coll>
+void add(Coll& coll, const T& val)
+{
+	coll.push_back(val);
+}
+
+template<typename Coll, typename T>
+void add(Coll& coll, const T& val)
+{
+	coll.insert(val);
+}
+\end{lstlisting}
+
+In this case, we not need a named requirement SupportsInsert here because the add() with the additional requirement is more special, which means that overload resolution prefers it. However, there are only a few containers that support calling insert() with only one argument. To avoid problems with other overloads and calls of add(), we should probably better also have a constraint here.
+
+Because we define the requirement as a concept, we can even use it as a type constraint for the template parameter:
+
+\begin{lstlisting}[style=styleCXX]
+template<SupportsPushBack Coll, typename T>
+void add(Coll& coll, const T& val)
+{
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+As a concept, we can also use it as a type constraint for auto as parameter types:
+
+\begin{lstlisting}[style=styleCXX]
+void add(SupportsPushBack auto& coll, const auto& val)
+{
+	coll.push_back(val);
+}
+
+template<typename Coll, typename T>
+void add(auto& coll, const auto& val)
+{
+	coll.insert(val);
+}
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Concepts for if constexpr}
+
+We can also use the concept SupportsPushBack directly in an if constexpr condition:
+
+\begin{lstlisting}[style=styleCXX]
+if constexpr (SupportsPushBack<decltype(coll)>) {
+	coll.push_back(val);
+}
+else {
+	coll.insert(val);
+}
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Combining requires with if constexpr}
+
+We can even skip introducing a concept and pass the requires expression directly as a condition to the compile-time if:
+
+\begin{lstlisting}[style=styleCXX]
+if constexpr (requires { coll.push_back(val); }) {
+	coll.push_back(val);
+}
+else {
+	coll.insert(val);
+}
+\end{lstlisting}
+
+This is a nice way to switch between two different function calls in generic code. It is especially recommended when introducing a concept is not worthwhile.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Concepts versus Variable Templates}
+
+You might wonder why using concepts is better than using a variable template of type bool (like type traits do) such as the following:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+constexpr bool SupportsPushBack = requires(T coll) {
+	coll.push_back(std::declval<typename T::value_type>());
+};
+\end{lstlisting}
+
+Concepts have the following benefits:
+
+\begin{itemize}
+\item
+They subsume.
+
+\item
+They can be used as type constraints directly in front of template parameters or auto.
+
+\item
+They can be used with a compile-time if when using ad-hoc requirements.
+\end{itemize}
+
+If you do not need any of these benefits, the question of whether to prefer the definition of a concept or a variable template of type bool becomes interesting and this is discussed later in detail.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Inserting Single and Multiple Values}
+
+To provide an overload that deals with multiple values passed as one collection, we can simply add constraints for them. The standard concept std::ranges::input\_range can be used for that:
+
+\begin{lstlisting}[style=styleCXX]
+template<SupportsPushBack Coll, std::ranges::input_range T>
+void add(Coll& coll, const T& val)
+{
+	coll.insert(coll.end(), val.begin(), val.end());
+}
+
+template<typename Coll, std::ranges::input_range T>
+void add(Coll& coll, const T& val)
+{
+	coll.insert(val.begin(), val.end());
+}
+\end{lstlisting}
+
+Again, as long as the overload has this as an additional constraint, these functions will be preferred.
+
+The concept std::ranges::input\_range is a concept introduced to deal with ranges, which are collections you can iterate over with begin() and end(). However, ranges are not required to have begin() and end() as member functions. Code that deals with ranges should therefore use the helpers std::ranges::begin() and std::ranges::end() that the ranges library provides:
+
+\begin{lstlisting}[style=styleCXX]
+template<SupportsPushBack Coll, std::ranges::input_range T>
+void add(Coll& coll, const T& val)
+{
+	coll.insert(coll.end(), std::ranges::begin(val), std::ranges::end(val));
+}
+template<typename Coll, std::ranges::input_range T>
+void add(Coll& coll, const T& val)
+{
+	coll.insert(std::ranges::begin(val), std::ranges::end(val));
+}
+\end{lstlisting}
+
+These helpers are function objects so that using them avoids ADL problems.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Dealing with Multiple Constraints}
+
+By bringing together all useful concepts and requirements, we could place them all in one function at different locations.
+
+\begin{lstlisting}[style=styleCXX]
+template<SupportsPushBack Coll, std::ranges::input_range T>
+requires ConvertsWithoutNarrowing<std::ranges::range_value_t<T>,
+typename Coll::value_type>
+void add(Coll& coll, const T& val)
+{
+	coll.insert(coll.end(),
+				std::ranges::begin(val), std::ranges::end(val));
+}
+\end{lstlisting}
+
+To disable narrowing conversions, we use std::ranges::range\_value\_t to pass the element type of the ranges to ConvertsWithoutNarrowing. std::ranges::range\_value\_t is another ranges utility for getting the element type of ranges when iterating over them.
+
+We could also formulate them together in the requires clause:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+requires SupportsPushBack<Coll> &&
+			std::ranges::input_range<T> &&
+			ConvertsWithoutNarrowing<std::ranges::range_value_t<T>,
+							typename Coll::value_type>
+void add(Coll& coll, const T& val)
+{
+	coll.insert(coll.end(),
+				std::ranges::begin(val), std::ranges::end(val));
+}
+\end{lstlisting}
+
+Both ways of declaring the function template are equivalent.
 
 \subsubsection*{\zihao{3} 3.3.4\hspace{0.2cm}The Example as a Whole}
 \addcontentsline{toc}{subsubsection}{3.3.4\hspace{0.2cm}The Example as a Whole}
 
+The previous subsections provided a huge amount of flexibility. So, let us bring all options together to have at least one full example as a whole:
 
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lang/add.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <set>
+#include <ranges>
+#include <atomic>
+
+// concept for container with push_back():
+template<typename Coll>
+concept SupportsPushBack = requires(Coll coll, Coll::value_type val) {
+	coll.push_back(val);
+};
+
+// concept to disable narrowing conversions:
+template<typename From, typename To>
+concept ConvertsWithoutNarrowing =
+	std::convertible_to<From, To> &&
+	requires (From&& x) {
+		{ std::type_identity_t<To[]>{std::forward<From>(x)} }
+		-> std::same_as<To[1]>;
+	};
+
+
+// add() for single value:
+template<typename Coll, typename T>
+requires ConvertsWithoutNarrowing<T, typename Coll::value_type>
+void add(Coll& coll, const T& val)
+{
+	if constexpr (SupportsPushBack<Coll>) {
+		coll.push_back(val);
+	}
+	else {
+		coll.insert(val);
+	}
+}
+// add() for multiple values:
+template<typename Coll, std::ranges::input_range T>
+requires ConvertsWithoutNarrowing<std::ranges::range_value_t<T>,
+									typename Coll::value_type>
+void add(Coll& coll, const T& val)
+{
+	if constexpr (SupportsPushBack<Coll>) {
+		coll.insert(coll.end(),
+					std::ranges::begin(val), std::ranges::end(val));
+	}
+	else {
+		coll.insert(std::ranges::begin(val), std::ranges::end(val));
+	}
+}
+
+int main()
+{
+	std::vector<int> iVec;
+	add(iVec, 42); // OK: calls push_back() for T being int
+	
+	std::set<int> iSet;
+	add(iSet, 42); // OK: calls insert() for T being int
+	
+	short s = 42;
+	add(iVec, s); // OK: calls push_back() for T being short
+	
+	long long ll = 42;
+	// add(iVec, ll); // ERROR: narrowing
+	// add(iVec, 7.7); // ERROR: narrowing
+	
+	std::vector<double> dVec;
+	add(dVec, 0.7); // OK: calls push_back() for floating-point types
+	add(dVec, 0.7f); // OK: calls push_back() for floating-point types
+	// add(dVec, 7); // ERROR: narrowing
+	
+	// insert collections:
+	add(iVec, iSet); // OK: insert set elements into a vector
+	add(iSet, iVec); // OK: insert vector elements into a set
+	
+	// can even insert raw array:
+	int vals[] = {0, 8, 18};
+	add(iVec, vals); // OK
+	// add(dVec, vals); // ERROR: narrowing
+}
+\end{lstlisting}
+
+As you can see, I decided to use the concept SupportsPushBack for one template parameter inside the various function templates with if constexpr.
 
 \subsubsection*{\zihao{3} 3.3.5\hspace{0.2cm}Former Workarounds}
 \addcontentsline{toc}{subsubsection}{3.3.5\hspace{0.2cm}Former Workarounds}
 
+Constraining templates was already possible before C++20. However, the approaches for doing this were often not easy to use and could provide significant drawbacks.
 
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{SFINAE}
 
+The major approach for disabling the availability of templates before C++20 was SFINAE. The term “SFINAE” (pronounced like sfee-nay) stands for “substitution failure is not an error” and means the rule that we simply ignore generic code if its declaration is not well-formed instead of raising a compile-time error.
+
+For example, to switch between push\_back() and insert(), we could declare the function templates before C++20 as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+auto add(Coll& coll, const T& val) -> decltype(coll.push_back(val))
+{
+	return coll.push_back(val);
+}
+
+template<typename Coll, typename T>
+auto add(Coll& coll, const T& val) -> decltype(coll.insert(val))
+{
+	return coll.insert(val);
+}
+\end{lstlisting}
+
+Because we make the call to push\_back() here part of the first template declaration, this template is ignored if push\_back() is not supported. The corresponding declaration is necessary in the second template for insert() (overload resolution does ignore return types and would complain if both function templates can be used).
+
+However, that is a very subtle way to place a requirement and programmers might overlook it easily.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::enable\_if<>}
+
+For more complicated cases of disabling generic code, since C++11, the C++ standard library provides std::enable\_if<>.
+
+This is a type trait that takes a Boolean condition that yields invalid code if false. By using the std::enable\_if<> somewhere inside a declaration, this could also “SFINAE out” generic code.
+
+For example, you could use the std::enable\_if<> type trait to exclude types from calling the add() function template in the following way:
+
+\begin{lstlisting}[style=styleCXX]
+// disable the template for floating-point values:
+template<typename Coll, typename T,
+typename = std::enable_if_t<!std::is_floating_point_v<T>>>
+void add(Coll& coll, const T& val)
+{
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+The trick is to insert an additional template parameter to be able to use the trait std::enable\_if<>. The trait yields void if it does not disable the template (you can specify that it yields another type as an optional second template parameter).
+
+Code like this is also hard to write and read and has subtle drawbacks. For example, to provide another overload of add() with a different constraint, you would need yet another template parameter. Otherwise, you would have two different overloads of the same function because for the compiler std::enable\_if<> does not change the signature. In addition, you have to take care that for each call exactly one of the different overloads is available.
+
+Concepts provide a far more readable way of formulating constraints. This includes that overloads of a template with different constraints do not violate the one definition rule as long as only one constraint is met and that even multiple constraints can be met provided one constraint subsumes another constraint.
 
 
 

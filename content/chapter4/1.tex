@@ -1,0 +1,39 @@
+To specify requirements for generic parameters you need constraints, which are used at compile time to decide whether to instantiate and compile a template or not.
+
+You can constrain function templates, class templates, variable templates, and alias templates.
+
+An ordinary constraint is usually specified by using a requires clause. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+void foo(const T& arg)
+requires MyConcept<T>
+...
+\end{lstlisting}
+
+In front of a template parameter or auto you can also use a concept as a type constraint directly:
+
+\begin{lstlisting}[style=styleCXX]
+template<MyConcept T>
+void foo(const T& arg)
+...
+\end{lstlisting}
+
+Alternatively:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(const MyConcept auto& arg)
+...
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+

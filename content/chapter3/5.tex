@@ -1,18 +1,127 @@
 
+Let us look at some guidelines for how to use concepts. Note that concepts are new and we are still learning how to use them best. In addition, improved support for concepts might change some guidelines over time.
 
 \subsubsection*{\zihao{3} 3.5.1\hspace{0.2cm}Concepts Should Group Requirements}
 \addcontentsline{toc}{subsubsection}{3.5.1\hspace{0.2cm}Concepts Should Group Requirements}
 
 
+Introducing a concept for each attribute or functionality of types is certainly too fine-grained. As a consequence, we would get far too many concepts that a compiler has to deal with and that we would all have to specify as constraints.
 
+Therefore, concepts should provide common and typical aspects that separate different categories of requirements or types. However, there are corner cases.
 
+The C++ standard library provides a good example of a design that might follow this approach. Most concepts are provided to categorize types such as ranges, iterators, functions, and so on as a whole. However, to support subsumption and ensure that concepts are consistent, several basic concepts (such as std::movable) are provided.
 
+The consequence is a pretty complex subsumption graph. The chapter that describes the C++ standard concepts groups the concepts accordingly.
 
 
 \subsubsection*{\zihao{3} 3.5.2\hspace{0.2cm}Define Concepts with Care}
 \addcontentsline{toc}{subsubsection}{3.5.2\hspace{0.2cm}Define Concepts with Care}
 
+Concepts subsume, which means that a concept can be a subset of another concept, so that in overload resolution the more constrained concept is preferred.
 
+However, requirements and constraints can be defined in various ways. For a compiler, it might not be easy to find out whether a set of requirements is a subset of another set of requirements.
+
+For example, when a concept for two template parameters is commutative (so that the order of two parameters should not matter), a concept needs careful design. For details and an example, see the discussion of how the concept std::same\_as is defined.
 
 \subsubsection*{\zihao{3} 3.5.3\hspace{0.2cm}Concepts versus Type Traits and Boolean Expressions}
 \addcontentsline{toc}{subsubsection}{3.5.3\hspace{0.2cm}Concepts versus Type Traits and Boolean Expressions}
+
+Concepts are more than just expressions that evaluate Boolean results at compile time. You should usually prefer them over type traits and other compile-time expressions.
+
+However, concepts have a couple of benefits:
+
+\begin{itemize}
+\item
+They subsume.
+
+\item
+They can be used as type constraints directly in front of template parameters or auto.
+
+\item
+They can be used with the compile-time if (if constexpr) as introduced before.
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Benefit From Subsumption}
+
+
+The main benefit of concepts is that they subsume. Type traits do not subsume.
+
+Consider the following example, where we overload a function foo() with two requirements defined as
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{type traits:}
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+requires std::is_same_v<T, U> // using traits
+void foo(T, U)
+{
+	std::cout << "foo() for parameters of same type" << '\n';
+}
+
+template<typename T, typename U>
+requires std::is_same_v<T, U> && std::is_integral_v<T>
+void foo(T, U)
+{
+	std::cout << "foo() for integral parameters of same type" << '\n';
+}
+
+foo(1, 2); // ERROR: ambiguity: both requirements are true
+\end{lstlisting}
+
+The problem is that if both requirements evaluate to true, both overloads fit and there is no rule that one of them has priority over the other. Therefore, the compiler stops compiling with an ambiguity error.
+
+If we use the corresponding concepts instead, the compiler finds out that the second requirement is a specialization and prefers it if both requirements are met:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+requires std::same_as<T, U> // using concepts
+void foo(T, U)
+{
+	std::cout << "foo() for parameters of same type" << '\n';
+}
+
+template<typename T, typename U>
+requires std::same_as<T, U> && std::integral<T>
+void foo(T, U)
+{
+	std::cout << "foo() for integral parameters of same type" << '\n';
+}
+
+foo(1, 2); // OK: second foo() preferred
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Benefit From Using Concepts with if constexpr}
+
+C++17 introduced a compile-time if that allows us to switch between code depending on certain compiletime conditions.
+
+For example (as introduced before):
+
+\begin{lstlisting}[style=styleCXX]
+template<typename Coll, typename T>
+void add(Coll& coll, const T& val) // for floating-point value types
+{
+	if constexpr(std::is_floating_point_v<T>) {
+		... // special code for floating-point values
+	}
+	coll.push_back(val);
+}
+\end{lstlisting}
+
+When generic code must provide different implementations for different kinds of arguments, but the signature is the same, using this approach can be way more readable than providing overloaded or specialized templates.
+
+However, you cannot use if constexpr to provide different APIs, to allow others to add other overloads or specializations later on, or to disable this template in some cases completely. However, remember that you can constrain member functions to enable or disable parts of an API based on requirements.
+
+
+
+
+
+
+
+

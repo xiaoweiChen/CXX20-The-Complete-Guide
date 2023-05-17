@@ -1,0 +1,84 @@
+A requires clause uses the keyword requires with a compile-time Boolean expression to restrict the availability of the template. The Boolean expression can be:
+
+\begin{itemize}
+\item
+An ad-hoc Boolean compile-time expression
+
+\item
+A concept
+
+\item
+A requires expression
+\end{itemize}
+
+All constraints can also be used wherever a Boolean expression can be used (especially as an if constexpr condition).
+
+
+\subsubsection*{\zihao{3} 4.2.1\hspace{0.2cm}Using \&\& and || in requires Clauses}
+\addcontentsline{toc}{subsubsection}{4.2.1\hspace{0.2cm}Using \&\& and || in requires Clauses}
+
+To combine multiple constraints in requires clauses, we can use the operator \&\&. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires (sizeof(T) > 4) // ad-hoc Boolean expression
+			&& requires { typename T::value_type; } // requires expression
+			&& std::input_iterator<T> // concept
+void foo(T x) {
+	...
+}
+\end{lstlisting}
+
+The order of the constraints does not matter.
+
+We can also express “alternative” constraints using the operator ||. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires std::integral<T> || std::floating_point<T>
+T power(T b, T p);
+\end{lstlisting}
+
+Specifying alternative constraints is rarely necessary and should not be done casually because excessive use of the operator || in requires clauses may potentially tax compilation resources (i.e., make compilation noticeably slower).
+
+A single constraint can also involve multiple template parameters. That way, constraints can impose a relationship between multiple types (or values). For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+requires std::convertible_to<T, U>
+auto f(T x, U y) {
+	...
+}
+\end{lstlisting}
+
+The operators \&\& and || are the only operators you can use to combine multiple constraints without having to use parentheses. For everything else, use parentheses (which formally pass an ad-hoc Boolean expression to the requires clause).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

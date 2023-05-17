@@ -1,0 +1,326 @@
+
+Two concepts can have a subsuming relationship. That is, one concept can be specified such that it restricts one or more other concepts. The benefit is that overload resolution then prefers the more constrained generic code over the less constrained generic code when both constraints are satisfied.
+
+For example, assume that we introduce the following two concepts:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept GeoObject = requires(T obj) {
+	{ obj.width() } -> std::integral;
+	{ obj.height() } -> std::integral;
+	obj.draw();
+};
+
+template<typename T>
+concept ColoredGeoObject =
+	GeoObject<T> && // subsumes concept GeoObject
+	requires(T obj) { // additional constraints
+		obj.setColor(Color{});
+		{ obj.getColor() } -> std::convertible_to<Color>;
+	};
+\end{lstlisting}
+
+The concept ColoredGeoObject explicitly subsumes the concept GeoObject because it explicitly formulates the constraint that type T also has to satisfy the concept GeoObject.
+
+As a consequence, we do not get an ambiguity error, when we overload templates for both concepts and both concepts are satisfied, Overload resolution prefers the concept that subsumes the other(s):
+
+\begin{lstlisting}[style=styleCXX]
+template<GeoObject T>
+void process(T) // called for objects that do not provide setColor() and getColor()
+{
+	...
+}
+
+template<ColoredGeoObject T>
+void process(T) // called for objects that provide setColor() and getColor()
+{
+	...
+}
+\end{lstlisting}
+
+Constraint subsumption works only when concepts are used. There is no automatic subsumption when one concept/constraint is more special than another.
+
+Constraints and concepts do not subsume based only on requirements. Consider the following example:
+
+\begin{lstlisting}[style=styleCXX]
+// declared in a header file:
+template<typename T>
+concept GeoObject = requires(T obj) {
+						obj.draw();
+					};
+					
+// declared in another header file:
+template<typename T>
+concept Cowboy = requires(T obj) {
+					obj.draw();
+					obj = obj;
+				};
+\end{lstlisting}
+
+Assume that we overload a function template for both GeoObject and Cowboy:
+
+\begin{lstlisting}[style=styleCXX]
+template<GeoObject T>
+void print(T) {
+	...
+}
+
+template<Cowboy T>
+void print(T) {
+	...
+}
+\end{lstlisting}
+
+We do not want that for a Circle or Rectangle, which both have a draw() member function, the call to print() prefers the print() for cowboys just because the Cowboy concept is more special. We want to see that there are two possible print() functions that in this case collide.
+
+The effort to check for subsumptions is evaluated only for concepts. Overloading with different constraints is ambiguous if no concepts are used:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires std::is_convertible_v<T, int>
+void print(T) {
+	...
+}
+
+template<typename T>
+requires (std::is_convertible_v<T, int> && sizeof(int) >= 4)
+void print(T) {
+	...
+}
+
+print(42); // ERROR: ambiguous (if both constraints are true)
+\end{lstlisting}
+
+When using concepts instead, this code works:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+requires std::convertible_to<T, int>
+void print(T) {
+	...
+}
+
+template<typename T>
+requires (std::convertible_to<T, int> && sizeof(int) >= 4)
+void print(T) {
+	...
+}
+
+print(42); // OK
+\end{lstlisting}
+
+One reason for this behavior is that it takes compile time to process dependencies between concepts in detail.
+
+The concepts provided by the C++ standard library are carefully designed to subsume other concepts when this makes sense. In fact, the standard concepts build a pretty complex subsumption graph. For example:
+
+\begin{itemize}
+\item
+std::random\_access\_range subsumes std::bidirectional\_range, both subsume the concept std::forward\_range, all three subsume std::input\_range, and all of them subsume std::range.
+
+However, std::sized\_range only subsumes std::range and none of the others.
+
+\item
+std::regular subsumes std::semiregular, while both subsume std::copyable and std::default\_initializable (which subsume several other concepts such as std::movable, std::copy\_constructible, and std::destructible).
+
+\item
+std::sortable subsumes std::permutable and both subsume std::indirectly\_swappable for both parameters being the same type.
+\end{itemize}
+
+
+\subsubsection*{\zihao{3} 4.7.1\hspace{0.2cm}Indirect Subsumptions}
+\addcontentsline{toc}{subsubsection}{4.7.1\hspace{0.2cm}Indirect Subsumptions}
+
+Constraints can even subsume indirectly.3 This means that overload resolution can still prefer one overload
+or specialization over the other, even though their constraints are not defined in terms of each other.
+
+For example, assume that you have defined the following two concepts:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept RgSwap = std::ranges::input_range<T> && std::swappable<T>;
+
+template<typename T>
+concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
+\end{lstlisting}
+
+When we now overload two functions for these two concepts and pass an object that fits both concepts, this is not ambiguous:
+
+\begin{lstlisting}[style=styleCXX]
+template<RgSwap T>
+void foo1(T) {
+	std::cout << "foo1(RgSwap)\n";
+}
+
+template<ContCopy T>
+void foo1(T) {
+	std::cout << "foo1(ContCopy)\n";
+}
+
+foo1(std::vector<int>{}); // OK: both fit, ContCopy is more constrained
+\end{lstlisting}
+
+The reason is that ContCopy subsumes RgSwap because:
+
+\begin{itemize}
+\item
+The concept contiguous\_range is defined in terms of the concept input\_range.
+
+(It implies random\_access\_range, which implies bidirectional\_range, which implies forward\_range, which implies input\_range.)
+
+\item
+The concept copyable is defined in terms of the concept swappable.
+
+(It implies movable, which implies swappable.)
+\end{itemize}
+
+However, with the following declarations, we get an ambiguity when both concepts fit:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept RgSwap = std::ranges::sized_range<T> && std::swappable<T>;
+
+template<typename T>
+concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
+\end{lstlisting}
+
+The reason for is that neither of the concepts contiguous\_range or sized\_range imply the other.
+
+Also, for the following declarations, no concept subsumes the other:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+concept RgCopy = std::ranges::input_range<T> && std::copyable<T>;
+
+template<typename T>
+concept ContMove = std::ranges::contiguous_range<T> && std::movable<T>;
+\end{lstlisting}
+
+On the one hand, ContMove is more constrained because contiguous\_range implies input\_range; however, on the other hand, RgCopy is more constrained because copyable implies movable.
+
+To avoid confusion, do not make too many assumptions about concepts subsuming each other. When in doubt, specify all the concepts you require.
+
+\subsubsection*{\zihao{3} 4.7.2\hspace{0.2cm}Defining Commutative Concepts}
+\addcontentsline{toc}{subsubsection}{4.7.2\hspace{0.2cm}Defining Commutative Concepts}
+
+To implement subsumptions correctly, you have to be careful. A good example is the implementation of the concept std::same\_as, which checks whether two template parameters have the same type.
+
+To understand why defining the concept is not trivial, let us assume that we define our own concept SameAs just as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+concept SameAs = std::is_same_v<T, U>; // define concept SameAs
+\end{lstlisting}
+
+This definition is good enough for cases like this:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+concept SameAs = std::is_same_v<T, U>; // define concept SameAs
+
+template<typename T, typename U>
+requires SameAs<T, U> // use concept SameAs
+void foo(T, U)
+{
+	std::cout << "foo() for parameters of same type" << '\n';
+}
+
+template<typename T, typename U>
+requires SameAs<T, U> && std::integral<T> // use concept SameAs again
+void foo(T, U)
+{
+	std::cout << "foo() for integral parameters of same type" << '\n';
+}
+
+foo(1, 2); // OK: second foo() preferred
+\end{lstlisting}
+
+Here, the second definition of foo() subsumes the first one, which means that the second foo() is called when two arguments of the same integral type are passed and for both foo() the constraints are satisfied.
+
+However, note what happens if we slightly modify the parameters when we call SameAs<> in the constraints of the second foo():
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+requires SameAs<T, U> // use concept SameAs
+void foo(T, U)
+{
+	std::cout << "foo() for parameters of same type" << '\n';
+}
+
+template<typename T, typename U>
+requires SameAs<U, T> && std::integral<T> // use concept SameAs with other order
+void foo(T, U)
+{
+	std::cout << "foo() for integral parameters of same type" << '\n';
+}
+
+foo(1, 2); // ERROR: ambiguity: both constraints are satisfied without one subsuming the other
+\end{lstlisting}
+
+The problem is that the compiler cannot detect that SameAs<> is commutative. For the compiler, the order of the template parameters matters, and therefore, the first requirement is not necessarily a subset of the second requirement.
+
+To solve this problem, we have to design the concept SameAs in a way that the order of the arguments does not matter. This requires a helper concept:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+concept SameAsHelper = std::is_same_v<T, U>;
+
+template<typename T, typename U>
+concept SameAs = SameAsHelper<T, U> && SameAsHelper<U, T>; // make commutative
+\end{lstlisting}
+
+Now, the order of the parameters no longer matters for IsSame<>:
+
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+requires SameAs<T, U> // use SameAs
+void foo(T, U)
+{
+	std::cout << "foo() for parameters of same type" << '\n';
+}
+
+template<typename T, typename U>
+requires SameAs<U, T> && std::integral<T> // use SameAs with other order
+void foo(T, U)
+{
+	std::cout << "foo() for integral parameters of same type" << '\n';
+}
+
+foo(1, 2); // OK: second foo() preferred
+\end{lstlisting}
+
+The compiler can find out that the first building block SameAs<U,T> is part of a sub-concept of the definition of SameAs so that the other building blocks SameAs<T,U> and std::integral<T> are an extension. Therefore, the second foo() now has preference.
+
+Tricky details like this are designed into the concepts that the C++20 standard library provides (see std::same\_as). Therefore, you should use them when they fit your needs instead of providing your own concepts.
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T, typename U>
+requires std::same_as<T, U> // standard same_as<> is commutative
+void foo(T, U)
+{
+	std::cout << "foo() for parameters of same type" << '\n';
+}
+
+template<typename T, typename U>
+requires std::same_as<U, T> && std::integral<T> // so different order does not matter
+void foo(T, U)
+{
+	std::cout << "foo() for integral parameters of same type" << '\n';
+}
+
+foo(1, 2); // OK: second foo() preferred
+\end{lstlisting}
+
+For your own concepts, take as many uses (and abuses) as possible into account. The more the better. Just like any good piece of software, concepts also require good design and test cases.
+
+
+
+
+
+
+
+
+
+
+
+
