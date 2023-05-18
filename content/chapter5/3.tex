@@ -1,16 +1,411 @@
 
+This section lists all basic concepts for iterators and ranges, which are useful in algorithms and similar functions.
 
+Note that the concepts for ranges are provided in the namespace std::ranges instead of std. They are declared in the header file <ranges>.
+
+Concepts for iterators are declared in the header file <iterator>.
 
 
 \subsubsection*{\zihao{3} 5.3.1\hspace{0.2cm}Concepts for Ranges and Views}
 \addcontentsline{toc}{subsubsection}{5.3.1\hspace{0.2cm}Concepts for Ranges and Views}
 
+Several concepts are defined to constrain ranges. They correspond with the concepts for iterators and deal with the fact that we have new iterator categories since C++20.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a valid range.
+
+\item
+This concept is defined in the header file <compare>.
+
+\item
+This means that objects of type Rg support iteration over the elements by using std::ranges::begin() and std::ranges::end().
+
+This is the case if the range is either an array or provides begin() and end() members or can be used with free-standing begin() and end() functions.
+
+\item
+In addition, for std::ranges::begin() and std::ranges::end(), the following constraints apply:
+
+\begin{itemize}
+\item
+They have to operate in (amortized) constant time.
+
+\item
+They do not modify the range.
+
+\item
+begin() yields the same position when called multiple times (unless the range does not provide at least forward iterators).
+\end{itemize}
+
+That all means that we can iterate over all elements with good performance (even multiple times unless we have pure input iterators).
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+For an object rg of type Rg, std::ranges::begin(rg) is supported and std::ranges::end(rg) is supported
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::output\_range<Rg, T>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range that provides at least output iterators (iterators that you can use to write) that accept values of type T.
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::range<Rg> is satisfied
+
+\item
+std::output\_iterator is satisfied for the iterator type and T
+\end{itemize}
+\end{itemize}
 
 
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::input\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range that provides at least input iterators (iterators that you can use to read).
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::range<Rg> is satisfied
+
+\item
+std::input\_iterator is satisfied for the iterator type
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::forward\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range that provides at least forward iterators (iterators that you can use to read and write and to iterate over multiple times).
+
+\item
+Note that the iterator\_category member of the iterators may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::input\_range<Rg> is satisfied
+
+\item
+std::forward\_iterator is satisfied for the iterator type
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::bidirectional\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range that provides at least bidirectional iterators (iterators that you can use to read and write and to iterate over also backward).
+
+\item
+Note that the iterator\_category member of the iterators may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::forward\_range<Rg> is satisfied
+
+\item
+std::bidirectional\_iterator is satisfied for the iterator type
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::random\_access\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range that provides random-access iterators (iterators that you can use to read and write, jump back and forth, and compute the distance).
+
+\item
+Note that the iterator\_category member of the iterators may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::bidirectional\_range<Rg> is satisfied
+
+\item
+std::random\_access\_iterator is satisfied for the iterator type
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::contiguous\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range that provides random-access iterators with the additional constraint that the elements are stored in contiguous memory.
+
+\item
+Note that the iterator\_category member of the iterators does not match. If the category member is defined, it is only std::random\_access\_iterator\_tag, or even only std::input\_iterator\_tag if the values are prvalues.
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::random\_access\_range<Rg> is satisfied
+
+\item
+std::contiguous\_iterator is satisfied for the iterator type
+
+\item
+Calling std::ranges::data() yields a raw pointer to the first element
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::sized\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range where the number of elements can be computed in constant time (either by calling the member size() or by computing the difference between the beginning and the end).
+
+\item
+If this concept is satisfied, std::ranges::size() is fast and well-defined for objects of type Rg.
+
+\item
+Note that the performance aspect of this concept is a semantic constraint, which cannot be checked at compile time. To signal that a type does not satisfy this concept even though it provides size(), you can define that std::disable\_sized\_range<Rg> yields true.
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::range<Rg> is satisfied
+
+\item
+Calling std::ranges::size() is supported
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::common\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range where the begin iterator and the sentinel (end iterator) have the same type.
+
+\item
+The guarantee is always given by:
+
+\begin{itemize}
+\item
+All standard containers (vector, list, etc.)
+
+\item
+empty\_view
+
+\item
+single\_view
+
+\item
+common\_view
+\end{itemize}
+
+The guarantee is not given by:
+
+\begin{itemize}
+\item
+take views
+
+\item
+const drop views
+
+\item
+iota views with no end value or an end value of a different type
+\end{itemize}
+
+For other views, it depends on the type of the underlying ranges.
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::range<Rg> is satisfied
+
+\item
+std::ranges::iterator\_t<Rg> and std::ranges::sentinel\_t<Rg> have the same type
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::borrowed\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that the passed range Rg in the current context yields iterators that can be used even when the range no longer exists. The concept is satisfied if an lvalue is passed or the passed range is always a borrowed range.
+
+\item
+If the concept is satisfied, iterators of the range are not tied to the lifetime of the range. This means that iterators cannot dangle when the range they were created from is destroyed. However, they can still dangle if the iterators of the range refer to an underlying range and the underlying range is no longer there.
+
+\item
+Formally, the concept is met if Rg is an lvalue (such as an object with a name) or if the variable template std::ranges::enable\_borrowed\_range<Rg> is true, which is the case for the following views: subrange, ref\_view, string\_view, span, iota\_view, and empty\_view.
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::range<Rg> is satisfied
+
+\item
+Rg is an lvalue or enable\_borrowed\_range<Rg> yields true
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::view<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a view (a range that is cheap to copy or move, assign, and destroy).
+
+\item
+A view has the following requirements:
+
+\begin{itemize}
+\item
+It has to be a range (support iteration over the elements).
+
+\item
+It has to be movable.
+
+\item
+The move constructor and, if available, the copy constructor have to have constant complexity.
+
+\item
+The move assignment operator and, if available, the copy assignment operator have to be cheap (constant complexity or not worse than destruction plus creation).
+\end{itemize}
+
+All but the last requirements are checked by corresponding concepts. The last requirement is a semantic constraint and has to be guaranteed by the implementer of a type by deriving publicly from std::ranges::view\_interface or by specializing std::ranges::enable\_view<Rg> to yield true.
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::range<Rg> is satisfied
+
+\item
+std::movable<Rg> is satisfied
+
+\item
+The variable template std::ranges::enable\_view<Rg> is true
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::ranges::viewable\_range<Rg>}
+
+\begin{itemize}
+\item
+Guarantees that Rg is a range that can be safely converted to a view with the std::views::all() adaptor.
+
+\item
+The concept is satisfied if Rg is either already a view or an lvalue of a range or a movable rvalue or a range but not an initializer list.
+
+\item
+Requires:
+
+\begin{itemize}
+\item
+std::range<Rg> is satisfied
+
+\end{itemize}
+\end{itemize}
 
 \subsubsection*{\zihao{3} 5.3.2\hspace{0.2cm}Concepts for Pointer-Like Objects}
 \addcontentsline{toc}{subsubsection}{5.3.2\hspace{0.2cm}Concepts for Pointer-Like Objects}
 
+This section lists all standard concepts for objects for which you can use the operator * to deal with a value they point to. This usually applies to raw pointers, smart pointers, and iterators. Therefore, these concepts are usually used as base constraints for concepts that deal with iterators and algorithms.
+
+Note that support of the operator -> is not required for these concepts.
+
+These concepts are declared in the header file <iterator>.
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Basic Concepts for Indirect Support}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_writable<P, Val>}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_readable<P>}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Concepts for Indirectly Readable Objects}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_movable<InP,OutP>}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_movable\_storable<InP,OutP>}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_copyable<InP, OutP>}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_copyable\_storable<InP, OutP>}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_swappable<P>, std::indirectly\_swappable<P1, P2>}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::indirectly\_comparable<P1, P2, Comp>, std::indirectly\_comparable<P1, P2, Comp, Proj1>, std::indirectly\_comparable<P1, P2, Comp, Proj1, Proj2>}
 
 
 

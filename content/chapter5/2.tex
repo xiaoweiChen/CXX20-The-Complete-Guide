@@ -219,8 +219,339 @@ T is neither a reference nor a function nor void
 \subsubsection*{\zihao{3} 5.2.3\hspace{0.2cm}Concepts for Relationships between Types}
 \addcontentsline{toc}{subsubsection}{5.2.3\hspace{0.2cm}Concepts for Relationships between Types}
 
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::same\_as<T1, T2>}
+
+\begin{itemize}
+\item
+Guarantees that the types T1 and T2 are the same.
+
+\item
+The concept calls the std::is\_same\_v type trait twice to ensure that the order of the parameters does not matter.
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::is\_same\_v<T1, T2> yields true
+
+\item
+The order of T1 and T2 does not matter
+\end{itemize}
+\end{itemize}
 
 
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::convertible\_to<From, To>}
+
+\begin{itemize}
+\item
+Guarantees that objects of type From are both implicitly and explicitly convertible to objects of type To.
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::is\_convertible\_v<From, To> yields true
+
+\item
+A static\_cast from From to To is supported
+
+\item
+You can return an object of type From as a To
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::derived\_from<D, B>}
+
+\begin{itemize}
+\item
+Guarantees that type D is publicly derived from type B (or D and B are the same) so that any pointer of type D can be converted to a pointer of type B. In other words: the concept guarantees that a D reference/pointer can be used as a B reference/pointer.
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::is\_base\_of\_v<B, D> yields true
+
+\item
+The type trait std::is\_convertible\_v for a const pointer of type D to B yields true
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::constructible\_from<T, Args...>}
+
+\begin{itemize}
+\item
+Guarantees that you can initialize an object of type T with parameters of types Args...
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::destructible<T> is satisfied
+
+\item
+The type trait std::is\_constructible\_v<T, Args...> yields true
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::assignable\_from<To, From>}
+
+\begin{itemize}
+\item
+Guarantees that you can move or copy assign a value of type From to a value of type To.
+
+The assignment also has to yield the original To object.
+
+\item
+Requires:
+\begin{itemize}
+\item
+To has to be an lvalue reference
+
+\item
+std::common\_reference\_with<To, From> is satisfied for const lvalue references of the types
+
+\item
+The operator = has to be supported and yield the same type as To
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::swappable\_with<T1, T2>}
+
+\begin{itemize}
+\item
+Guarantees that values of types T1 and T2 can be swapped.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::common\_reference\_with<T1, T2> is satisfied
+
+\item
+Any two objects of types T1 and T2 can swap values with each other by using std::ranges::swap()
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::common\_with<T1, T2>}
+
+\begin{itemize}
+\item
+Guarantees that types T1 and T2 share a common type to which they can be explicitly converted.
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::common\_type\_t<T1, T2> yields a type
+
+\item
+A static\_cast is supported to their common type
+
+\item
+References of both types share a common\_reference type
+
+\item
+The order of T1 and T2 does not matter
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::common\_reference\_with<T1, T2>}
+
+\begin{itemize}
+\item
+Guarantees that types T1 and T2 share a common\_reference type to which they can be explicitly and implicitly converted.
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::common\_reference\_t<T1, T2> yields a type
+
+\item
+Both types are std::convertible\_to their common reference type
+
+\item
+The order of T1 and T2 does not matter
+\end{itemize}
+\end{itemize}
 
 \subsubsection*{\zihao{3} 5.2.4\hspace{0.2cm}Comparison Concepts}
 \addcontentsline{toc}{subsubsection}{5.2.4\hspace{0.2cm}Comparison Concepts}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::equality\_comparable<T>}
+
+\begin{itemize}
+\item
+Guarantees that objects of type T are comparable with the operators == and !=. The order should not matter.
+
+\item
+The operator == for T should be symmetric and transitive:
+\begin{itemize}
+\item
+t1==t2 is true if and only if t2==t1
+
+\item
+If t1==t2 and t2==t3 are true, then t1==t3 is true
+\end{itemize}
+
+However, this a semantic constraint that cannot be checked at compile time.
+
+\item
+Requires:
+\begin{itemize}
+\item
+Both == and != are supported and yield a value convertible to bool
+\end{itemize}
+\end{itemize}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::equality\_comparable\_with<T1, T2>}
+
+\begin{itemize}
+\item
+Guarantees that objects of types T1 and T2 are comparable using the operators == and !=.
+
+\item
+Requires:
+\begin{itemize}
+\item
+== and != are supported for all comparisons where objects of T1 and/or T2 are involved and yield a value of the same type convertible to bool
+\end{itemize}
+\end{itemize}
+
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::totally\_ordered<T>}
+
+\begin{itemize}
+\item
+Guarantees that objects of type T are comparable with the operators ==, !=, <, <=, >, and >= so that two values are always either equal to, or less than, or greater than each other.
+
+\item
+The concept does not claim that type T has a total order for all values. In fact, the expression std::totally\_ordered<double> yields true even though floating-point values do not have a total order:
+
+\begin{lstlisting}[style=styleCXX]
+std::totally_ordered<double> // true
+std::totally_ordered<std::pair<double, double>> // true
+std::totally_ordered<std::complex<int>> // false
+\end{lstlisting}
+
+This concept is therefore provided to check the formal requirements to be able to sort elements. It is used by std::ranges::less, which is the default sorting criterion for sorting algorithms. That way, sorting algorithms do not fail to compile if types do not have a total order for all values. Supporting all six basic comparison operators is enough. The values to be sorted should have a total or weak order. However, this a semantic constraint that cannot be checked at compile time.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::equality\_comparable<T> is satisfied
+
+\item
+All comparisons with the operators ==, !=, <, <=, >, and >= yield a value convertible to bool
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::totally\_ordered\_with<T>}
+
+\begin{itemize}
+\item
+Guarantees that objects of types T1 and T2 are comparable with the operators ==, !=, <, <=, >, and >= so that two values are always either equal to, or less than, or greater than each other.
+
+\item
+Requires:
+\begin{itemize}
+\item
+==, !=, <, <=, >, and >= are supported for all comparisons where objects of T1 and/or T2 are involved and yield a value of the same type convertible to bool
+\end{itemize}
+\end{itemize}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::three\_way\_comparable<T>, std::three\_way\_comparable<T, Cat>}
+
+
+\begin{itemize}
+\item
+Guarantees that objects of type T are comparable with the operators ==, !=, <, <=, >, >=, and the operator <=> (and have at least the comparison category type Cat). If no Cat is passed, std::partial\_ordering is required.
+
+\item
+This concept is defined in the header file <compare>.
+
+\item
+Note that this concept does not imply and subsume std::equality\_comparable because the latter requires that the operator == yields true only for two objects that are equal. With a weak or partial order, this might not be the case.
+
+\item
+Note that this concept does not imply and subsume std::totally\_ordered because the latter requires that the comparison category is std::strong\_ordering or std::weak\_ordering.
+
+\item
+Requires:
+\begin{itemize}
+\item
+All comparisons with the operators ==, !=, <, <=, >, and >= yield a value convertible to bool
+
+\item
+Any comparison with the operator <=> yields a comparison category (which is at least Cat)
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::three\_way\_comparable\_with<T1, T2>, 	std::three\_way\_comparable\_with<T1, T2, Cat>}
+
+\begin{itemize}
+\item
+Guarantees that any two objects of types T1 and T2 are comparable with the operators ==, !=, <, <=, >, >=, and the operator <=> (and have at least the comparison category type Cat). If no Cat is passed, std::partial\_ordering is required.
+
+\item
+This concept is defined in the header file <compare>.
+
+\item
+Note that this concept does not imply and subsume std::equality\_comparable\_with because the latter requires that the operator == yields true only for two objects that are equal. With a weak or partial order, this might not be the case.
+
+\item
+Note that this concept does not imply and subsume std::totally\_ordered\_with because the latter requires that the comparison category is std::strong\_ordering or std::weak\_ordering.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::three\_way\_comparable is satisfied for values and common references of T1 and T2 (and Cat)
+
+\item
+All comparisons with the operators ==, !=, <, <=, >, and >= yield a value convertible to bool
+
+\item
+Any comparison with the operator <=> yields a comparison category (which is at least Cat)
+
+\item
+The order of T1 and T2 does not matter
+\end{itemize}
+\end{itemize}
+
+
+
+
