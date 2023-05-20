@@ -1,0 +1,40 @@
+Since the first C++ standard, the way to deal with the elements of containers and other sequences has always been to use iterators for the position of the first element (the begin) and the position behind the last element (the end). Therefore, algorithms that operate on ranges usually take two parameters to process all elements of a container and containers provide functions like begin() and end() to provide these parameters.
+
+C++20 provides a new way to deal with ranges. It provides support for defining and using ranges and subranges as single objects, such as passing them as a whole as single arguments instead of dealing with two iterators.
+
+The change sounds pretty simple, but as you will see, it has a lot of consequences. The way to deal with algorithms changes dramatically for both the caller and the implementor. Therefore, C++20 provides several new features and utilities for dealing with ranges:
+
+
+\begin{itemize}
+\item
+New overloads or variations of standard algorithms that take a range as a single argument
+
+\item
+Several utilities for dealing with range objects:
+\begin{itemize}
+\item
+Helper functions for creating range objects
+
+\item
+Helper functions for dealing with range objects
+
+\item
+Helper types for dealing with range objects
+
+\item
+Concepts for ranges
+\end{itemize}
+
+\item
+Lightweight ranges, called views, to refer to (a subset of) a range with optional transformation of the values
+
+\item
+Pipelines as a flexible way to compose the processing of ranges and views
+\end{itemize}
+
+This chapter introduces the basic aspects and features of ranges and views. The following chapters discuss details.
+
+
+
+
+

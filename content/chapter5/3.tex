@@ -369,51 +369,567 @@ These concepts are declared in the header file <iterator>.
 \hspace*{\fill} \\ %插入空行
 \textbf{Basic Concepts for Indirect Support}
 
-
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_writable<P, Val>}
+
+\begin{itemize}
+\item
+Guarantees that P is a pointer-like object supporting the operator * to assign a Val.
+	
+\item
+Satisfied by non-const raw pointers, smart pointers, and iterators provided Val can be assigned to where P refers to.
+\end{itemize}
+
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_readable<P>}
 
+\begin{itemize}
+\item
+Guarantees that P is a pointer-like object supporting the operator * for read access.
+
+\item
+Satisfied by raw pointers, smart pointers, and iterators.
+
+
+\item
+Requires:
+\begin{itemize}
+\item
+The resulting value has the same reference type for both const and non-const objects (which rules out std::optional<>). This ensures that the constness of P does not propagate to where it points to (which is usually not the case when the operator returns a reference to a member).
+
+\item
+std::iter\_value\_t<P> must be valid. The type does not have to support the operator ->.
+\end{itemize}
+\end{itemize}
+
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{Concepts for Indirectly Readable Objects}
+
+For pointer-like concepts that are indirectly readable, you can check additional constraints:
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_movable<InP,OutP>}
 
+\begin{itemize}
+\item
+Guarantees that values of InP can be move assigned directly to values of OutP.
+
+\item
+With this concept, the following code is valid:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(InP inPos, OutP, outPos) {
+	*outPos = std::move(*inPos);
+}
+\end{lstlisting}
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::indirectly\_readable<InP> is satisfied
+
+\item
+std::indirectly\_writable is satisfied for rvalue references of the values of InP to (the values of) OutP
+\end{itemize}
+\end{itemize}
+
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_movable\_storable<InP,OutP>}
+
+\begin{itemize}
+\item
+Guarantees that values of InP can be move assigned indirectly to values of OutP even when using a (temporary) object of the type to where OutP points to.
+
+\item
+With this concept, the following code is valid:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(InP inPos, OutP, outPos) {
+	OutP::value_type tmp = std::move(*inPos);
+	*outPos = std::move(tmp);
+}
+\end{lstlisting}
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::indirectly\_movable<InP, OutP> is satisfied
+
+\item
+std::indirectly\_writable is satisfied for the InP value to the objects OutP refers to
+
+\item
+std::movable is satisfied for the values InP refers to
+
+\item
+Rvalues that InP refers to are copy/move constructible and assignable
+\end{itemize}
+\end{itemize}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_copyable<InP, OutP>}
 
+\begin{itemize}
+\item
+Guarantees that values of InP can be assigned directly to values of OutP.
+
+\item
+With this concept, the following code is valid:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(InP inPos, OutP outPos) {
+	*outPos = *inPos;
+}
+\end{lstlisting}
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::indirectly\_readable<InP> is satisfied
+
+\item
+std::indirectly\_writable is satisfied for references of the values of InP to (the values of) OutP assignable
+\end{itemize}
+\end{itemize}
+
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_copyable\_storable<InP, OutP>}
+
+\begin{itemize}
+\item
+Guarantees that values of InP can be assigned indirectly to values of OutP even when using a (temporary) object of the type to where OutP points to.
+
+\item
+With this concept, the following code is valid:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(InP inPos, OutP outPos) {
+	OutP::value_type tmp = *inPos;
+	*outPos = tmp;
+}
+\end{lstlisting}
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::indirectly\_copyable<InP, OutP> is satisfied
+
+\item
+std::indirectly\_writable is satisfied for const lvalue and rvalue references of the InP value to the objects OutP refers to
+
+\item
+std::copyable is satisfied for the values InP refers to
+
+\item
+The values InP refers to are copy/move constructible and assignable
+\end{itemize}
+\end{itemize}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_swappable<P>, std::indirectly\_swappable<P1, P2>}
 
+\begin{itemize}
+\item
+Guarantees that values of P or P1 and P2 can be swapped (using std::ranges::iter\_swap()).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::indirectly\_readable<P1> (and std::indirectly\_readable<P2>) is satisfied
+
+\item
+For any two objects of types P1 and P2, std::ranges::iter\_swap() is supported
+\end{itemize}
+\end{itemize}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
 \textbf{std::indirectly\_comparable<P1, P2, Comp>, std::indirectly\_comparable<P1, P2, Comp, Proj1>, std::indirectly\_comparable<P1, P2, Comp, Proj1, Proj2>}
 
+\begin{itemize}
+\item
+Guarantees that you can compare the elements (optionally transformed with Proj1 and Proj2) to where P1 and P2 refer.
 
+\item
+Requires:
+\begin{itemize}
+\item
+std::indirect\_binary\_predicate for Comp
+
+\item
+std::projected<P1, Proj1> and std::projected<P2, Proj2> are satisfied with std::identity as default projections
+\end{itemize}
+\end{itemize}
 
 \subsubsection*{\zihao{3} 5.3.3\hspace{0.2cm}Concepts for Iterators}
 \addcontentsline{toc}{subsubsection}{5.3.3\hspace{0.2cm}Concepts for Iterators}
 
+This section lists the concepts for requiring different types of iterators. They deal with the fact that we have new iterator categories since C++20 and they correspond with the concepts for ranges.
 
+These concepts are provided in the header file <iterator>.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::input\_output\_iterator<Pos>}
+
+\begin{itemize}
+\item
+Guarantees that Pos supports the basic interface of all iterators: operator++ and operator*, where operator* has to refer to a value.
+
+The concept does not require that the iterator is copyable (thus, this is less than the basic requirements for iterators used by algorithms).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::weakly\_incrementable<pos> is satisfied
+
+\item
+The operator * yields a reference
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::output\_iterator<Pos, T>}
+
+\begin{itemize}
+\item
+Guarantees that Pos is an output iterator (an iterator where you can assign values to the elements) to whose values you can assign values of typeT.
+
+\item
+Iterators of type Pos can be used to assign a value val of type T with:
+
+\begin{lstlisting}[style=styleCXX]
+*i++ = val;
+\end{lstlisting}
+
+\item
+These iterators are only good for single-pass iterations.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::input\_or\_output\_iterator<Pos> is satisfied
+
+\item
+std::indirectly\_writable<Pos, I> is satisfied
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::input\_iterator<Pos>}
+
+\begin{itemize}
+\item
+Guarantees that Pos is an input iterator (an iterator where you can read values from the elements).
+
+\item
+These iterators are only good for single-pass iterations if std::forward\_iterator is not also satisfied.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::input\_or\_output\_iterator<Pos> is satisfied
+
+\item
+std::indirectly\_readable<Pos> is satisfied
+
+\item
+Pos has an iterator category derived from std::input\_iterator\_tag
+\end{itemize}
+\end{itemize}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::forward\_iterator<Pos>}
+
+\begin{itemize}
+\item
+Guarantees that Pos is a forward iterator (a reading iterator with which you can iterate forward multiple times over elements).
+
+\item
+Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::input\_iterator<Pos> is satisfied
+
+\item
+std::incrementable<Pos> is satisfied
+
+\item
+Pos has an iterator category derived from std::forward\_iterator\_tag
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::bidirectional\_iterator<Pos>}
+
+\begin{itemize}
+\item
+Guarantees that Pos is a bidirectional iterator (a reading iterator with which you can iterate forward and backward multiple times over elements).
+
+\item
+Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::forward\_iterator<Pos> is satisfied
+
+\item
+Support to iterate backward with the operator -{}-
+
+\item
+Pos has an iterator category derived from std::bidirectional\_iterator\_tag
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::random\_access\_iterator<Pos>}
+
+\begin{itemize}
+\item
+Guarantees that Pos is a random-access iterator (a reading iterator with which you can jump back and forth over the elements).
+
+\item
+Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::bidirectional\_iterator<Pos> is satisfied
+
+\item
+std::totally\_ordered<Pos> is satisfied
+
+\item
+std::sized\_sentinel\_for<Pos, Pos> is satisfied
+
+\item
+Support for +, +=, -, -=, []
+
+\item
+Pos has an iterator category derived from std::random\_access\_iterator\_tag
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::contiguous\_iterator<Pos>}
+
+\begin{itemize}
+\item
+Guarantees that Pos is an iterator that iterates over elements in contiguous memory.
+
+\item
+Note that the iterator\_category member of the iterator does not match. If the category member is defined, it is only std::random\_access\_iterator\_tag, or even only std::input\_iterator\_tag if the values are prvalues.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::random\_access\_iterator<Pos> is satisfied
+
+\item
+Pos has an iterator category derived from std::contiguous\_iterator\_tag
+
+\item
+to\_address() for an element is a raw pointer to the element
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::sentinel\_for<S, Pos>}
+
+\begin{itemize}
+\item
+Guarantees that S can be used as a sentinel (end iterator of maybe a different type) for Pos.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::semiregular<S> is satisfied
+
+\item
+std::input\_or\_output\_iterator<Pos> is satisfied
+
+\item
+Can compare Pos and S using the operators == and !=
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::sized\_sentinel\_for<S, Pos>}
+
+\begin{itemize}
+\item
+Guarantees that S can be used as a sentinel (end iterator of maybe a different type) for Pos and you can compute the distance between them in constant time.
+
+\item
+To signal that you cannot compute the distance in constant time (even though you can compute the distance), you can define that std::disable\_sized\_sentinel\_for<Rg> yields true.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::sentinel\_for<S, Pos> is satisfied
+
+\item
+Calling the operator - for a Pos and S yields a value of the difference type of the iterator
+
+\item
+std::disable\_sized\_sentinel\_for<S, Pos> is not defined to yield true
+\end{itemize}
+\end{itemize}
 
 
 \subsubsection*{\zihao{3} 5.3.4\hspace{0.2cm}Iterator Concepts for Algorithms}
 \addcontentsline{toc}{subsubsection}{5.3.4\hspace{0.2cm}Iterator Concepts for Algorithms}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::permutable<Pos>}
+
+\begin{itemize}
+\item
+Guarantees that you can iterate forward by using the operator ++ and reorder elements by moving and swapping them
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::forward\_iterator<Pos> is satisfied
+
+\item
+std::indirectly\_movable\_storable<Pos> is satisfied
+
+\item
+std::indirectly\_swappable<Pos> is satisfied
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::mergeable<Pos1, Pos2, ToPos>,
+std::mergeable<Pos1, Pos2, ToPos, Comp>,
+std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1>,
+std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1, Proj2>,}
+
+\begin{itemize}
+\item
+Guarantees that you can merge the elements of two sorted sequences to where Pos1 and Pos2 refer by copying them into a sequence to where ToPos refers. The order is defined by the operator < or Comp (applied to the values optionally transformed with projections Proj1 and Proj2).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::input\_iterator is satisfied for both Pos1 and Pos2
+
+\item
+std::weakly\_incrementable<ToPos> is satisfied
+
+\item
+std::indirectly\_copyable<PosN, ToPos> is satisfied for both Pos1 and Pos2
+
+\item
+std::indirect\_strict\_weak\_order of Comp as well as std::projected<Pos1, Proj1> and std::projected<Pos2, Proj2> are satisfied (with < as the default comparison and std::identity as the default projection), which implies:
+
+\begin{itemize}
+\item
+std::indirectly\_readable is satisfied for Pos1 and Pos2
+
+\item
+std::copy\_constructible<Comp> is satisfied
+
+\item
+std::strict\_weak\_order<Comp> is satisfied for Comp\& and the (projected) value/reference types
+\end{itemize}
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::sortable<Pos>
+	std::sortable<Pos, Comp>
+	std::sortable<Pos, Comp, Proj>}
+
+\begin{itemize}
+\item
+Guarantees that you can sort the elements that the iterator Pos refers to with the operator < or Comp (after optionally applying the projection Proj to the values).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::permutable<Pos> is satisfied
+
+\item
+std::indirect\_strict\_weak\_order of Comp and the (projected) values is satisfied (with < as the default comparison and std::identity as the default projection), which implies:
+
+\begin{itemize}
+\item
+std::indirectly\_readable<Pos> is satisfied
+
+\item
+std::copy\_constructible<Comp> is satisfied
+
+\item
+std::strict\_weak\_order<Comp> is satisfied for Comp\& and the (projected) value/reference types
+\end{itemize}
+\end{itemize}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

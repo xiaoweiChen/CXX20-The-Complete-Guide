@@ -1,0 +1,215 @@
+
+
+This section describes some standardized concepts that are mainly specified to implement other concepts. You should usually not use them in application code.
+
+
+\subsubsection*{\zihao{3} 5.5.1\hspace{0.2cm}Concepts for Specific Type Attributes}
+\addcontentsline{toc}{subsubsection}{5.5.1\hspace{0.2cm}Concepts for Specific Type Attributes}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::default\_initializable<T>}
+
+\begin{itemize}
+\item
+Guarantees that the type T supports default construction (declaration/construction without an initial value).
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::constructible\_from<T> is satisfied
+
+\item
+std::destructible<T> is satisfied
+
+\item
+T\{\}; is valid
+
+\item
+T x; is valid
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::move\_constructible<T>}
+
+\begin{itemize}
+\item
+Guarantees that objects of type T can be initialized with rvalues of their type.
+
+\item
+That means the following operation is valid (although it might copy instead of move):
+
+\begin{lstlisting}[style=styleCXX]
+T t2{std::move(t1)} // for any t1 of type T
+\end{lstlisting}
+
+Afterwards, t2 shall have the former value of t1, which is a semantic constraint that cannot be checked at compile time.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::constructible\_from<T, T> is satisfied
+
+\item
+std::convertible<T, T> is satisfied
+
+\item
+std::destructible<T> is satisfied
+\end{itemize}
+\end{itemize}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::copy\_constructible<T>}
+
+\begin{itemize}
+\item
+Guarantees that objects of type T can be initialized with lvalues of their type.
+
+\item
+That means the following operation is valid:
+
+\begin{lstlisting}[style=styleCXX]
+T t2{t1} // for any t1 of type T
+\end{lstlisting}
+
+Afterwards, t2 shall be equal to t1, which is a semantic constraint that cannot be checked at compile time.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::move\_constructible<T> is satisfied
+
+\item
+std::constructible\_from and std::convertible\_to are satisfied for any T, T\&, const T, and const T\& to T
+
+\item
+std::destructible<T> is satisfied
+\end{itemize}
+\end{itemize}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::destructible<T>}
+
+\begin{itemize}
+\item
+Guarantees that objects of type T are destructible without throwing an exception.
+
+Note that even implemented destructors automatically guarantee not to throw unless you explicitly mark them with noexcept(false).
+
+\item
+Requires:
+\begin{itemize}
+\item
+The type trait std::is\_nothrow\_destructible\_v<T> yields true
+\end{itemize}
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::swappable<T>}
+
+\begin{itemize}
+\item
+Guarantees that you can swap the values of two objects of type T.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::ranges::swap() can be called for two objects of type T
+\end{itemize}
+\end{itemize}
+
+
+\subsubsection*{\zihao{3} 5.5.2\hspace{0.2cm}Concepts for Incrementable Types}
+\addcontentsline{toc}{subsubsection}{5.5.2\hspace{0.2cm}Concepts for Incrementable Types}
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::weakly\_incrementable<T>}
+
+\begin{itemize}
+\item
+Guarantees that type T supports increment operators.
+
+\item
+Note that this concept does not require that two increments of the same value yield equal results. Therefore, this is a requirement for single-pass iterations only.
+
+\item
+In contrast to std::incrementable, the concept is also satisfied if:
+
+\begin{itemize}
+\item
+The type is not default constructible, not copyable, or not equality comparable
+
+\item
+The postfix increment operator returns void (or any other type)
+
+\item
+Two increments of the same value give different results
+\end{itemize}
+
+\item
+Note that the differences to concept std::incrementable are purely semantic differences so that types for which increments yield different results might still technically satisfy the concept incrementable. To implement different behavior for this semantic difference, you should use iterator concepts instead.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::default\_initializable<T> is satisfied
+
+\item
+std::movable<T> is satisfied
+
+\item
+std::iter\_difference\_t<T> is a valid signed integral type
+\end{itemize}
+\end{itemize}
+
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{std::incrementable<T>}
+
+\begin{itemize}
+\item
+Guarantees that type T is an incrementable type, so that you can iterate multiple times over the same sequence of values.
+
+\item
+In contrast to std::weakly\_incrementable, the concept requires that:
+
+\begin{itemize}
+\item
+Two increments of the same value yield the same results (as is the case for forward iterators)
+
+\item
+Type T is default constructible, copyable, and equality comparable
+
+\item
+The postfix increment operator returns a copy of the iterator (has return type T)
+\end{itemize}
+
+\item
+Note that the differences to concept std::weakly\_incrementable are purely semantic differences so that types for which increments yield different results might still technically satisfy the concept incrementable. To implement different behavior for this semantic difference, you should use iterator concepts instead.
+
+\item
+Requires:
+\begin{itemize}
+\item
+std::weakly\_incrementable<T> is satisfied
+
+\item
+std::regular<T> is satisfied so that the type is default constructible, copyable, and equality comparable
+\end{itemize}
+\end{itemize}
