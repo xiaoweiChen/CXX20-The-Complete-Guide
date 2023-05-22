@@ -1,22 +1,687 @@
 
+As introduced, views are lightweight ranges that can be used as building blocks to deal with the (modified) values of all or some elements of other ranges and views.
 
+C++20 provides several standard views. They can be used to convert a range into a view or yield a view to a range/view where the elements are modified in various ways:
+
+\begin{itemize}
+\item
+Filter out elements
+
+\item
+Yield transformed values of elements
+
+\item
+Change the order of iterating over elements
+
+\item
+Split or merge ranges
+\end{itemize}
+
+In addition, there are some views that generate values themselves.
+
+For almost every view type, there is a corresponding customization point object (usually a function object) that allows programmers to create a view by calling a function. Such a function object is called a range adaptor if the function creates a view from a passed range, or a range factory if the function creates a view without passing an existing range. Most of the time, these function objects have the name of the view without the \_view suffix. However, some more general function objects might create different views depending on the passed arguments. These function objects are all defined in the special namespace std::views, which is an alias to the namespace std::ranges::views.
+
+Table Source views lists the standard views of C++20 that create a view from an external resource or generate values themselves. These views especially can serve as the starting building blocks in a pipeline of views. You can also see which range adaptors or factories may create them (if there are any). If available, you should prefer using them rather than the raw view types.
+
+If not specified differently, the adaptors and factories are available in the namespace std::views and the view types are available in the namespace std::ranges. std::string\_view was already introduced with C++17. All other views were introduced with C++20 and usually end with \_view. The only view types not ending with \_view are std::subrange and std::span.
+
+Table Adapting views lists the range adaptors and standard views of C++20 that process ranges and other views. They can serve as a building block anywhere in a pipeline of views, including at their beginning. Again, you should prefer to use the adaptors.
+
+All of the views provide move (and optional copy) operations with constant complexity (the time these operations take does not depend on the number of elements)[The original C++20 standard also required views to have a default constructor and a destructor with constant complexity. However, these requirements were removed later with http://wg21.link/P2325R3 and http://wg21.link/p2415r2.]. The concept std::ranges::view checks the corresponding requirements.
+
+The range factories/adaptors all(), counted(), and common() are described in a special section. Details of all view types and the other adaptors and factories are described in the chapter about View Types in Detail.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{Adaptor/Factory} &
+	\textbf{Type} &
+	\textbf{Effect} \\ \hline
+	all(rg) &
+	\begin{tabular}[c]{@{}l@{}}Varies:\\ type of rg\\ ref\_view\\ owning\_view\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Yields rang rg as view\\ - Yields rg if it is already a view\\ - Yields a ref\_view if rg is an lvalue\\ - Yields an owning\_view if rg is an rvalue\end{tabular} \\ \hline
+	counted(beg, sz) &
+	\begin{tabular}[c]{@{}l@{}}Vaires:\\ std::span\\ subrange\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Yields a view from a begin iterator and a count\\ - Yields a span if rg is contiguous and common\\ - Yields a subrange otherwise(if valid)\end{tabular} \\ \hline
+	iota(val) &
+	iota\_view &
+	Yields an endless view with an incrementing sequence of values starting with val \\ \hline
+	iota(val, endVal) &
+	iota\_view &
+	Yields a view with an incrementing sequence of values from val up to (but not including) endVal \\ \hline
+	single(val) &
+	signle\_view &
+	Yields a view with val as the only element \\ \hline
+	\begin{tabular}[c]{@{}l@{}}empty\textless{}T\textgreater\\ -\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}empty\_view\\ basic\_istream\_view\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Yields an empty view of elements of type T\\ Yields a view that reads Ts elements of type T\end{tabular} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}istream\textless{}T\textgreater{}(s)\\ -\\ -\\ -\\ -\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}istream\_view\\ wistream\_view\\ std::basic\_string\_view\\ std::span\\ subrange\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Yields a view that reads Ts from char stream s\\ Yields a view that reads Ts from wchar\_t stream s\\ Yields a read-only view to a character array\\ Yields a view to elements in contiguous memory\\ Yields a view for a begin iterator and a sentinel\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 6.3. Source views
+\end{center}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{Adaptor} & \textbf{Type}   & \textbf{Effect}                                       \\ \hline
+	take(num)        & Varies          & The frist(up to) num elements                         \\ \hline
+	take\_while(pred)                    & take\_while\_view & All leading elements that match a predicate                        \\ \hline
+	drop(num)        & Varies          & All except the first num elements                     \\ \hline
+	drop\_while(pred)                    & drop\_while\_view & All except leading elements that match a predicate                 \\ \hline
+	filter(pred)     & filter\_view    & All elements that match a predicate                   \\ \hline
+	transform(func)  & transform\_view & The transformed values of all elements                \\ \hline
+	elements\textless{}idx\textgreater{} & elements\_view    & the idxth member/attribute of all elements                         \\ \hline
+	keys             & elements\_view  & The first member of all elements                      \\ \hline
+	values           & elements\_view  & The second member of all elements                     \\ \hline
+	reverse          & Varies          & All elements in reverse order                         \\ \hline
+	join             & join\_view      & All elements of a range of multiple ranges            \\ \hline
+	split(sep)       & split\_view     & All elements of a range split info multiple ranges    \\ \hline
+	lazy\_split(sep)                     & lazy\_split\_view & All elements of an input or const range split into multiple ranges \\ \hline
+	common           & Varies          & All elements with same type for iterator and sentinel \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 6.4. Adapting views
+\end{center}
 
 \subsubsection*{\zihao{3} 6.3.1\hspace{0.2cm}Views on Ranges}
 \addcontentsline{toc}{subsubsection}{6.3.1\hspace{0.2cm}Views on Ranges}
 
+Containers and strings are not views. This is because they are not lightweight enough: they provide no cheap copy constructors because they have to copy the elements.
 
+However, you can easily use containers as views:
+
+\begin{itemize}
+\item
+You can explicitly convert a container to a view by passing it to the range adaptor std::views::all().
+
+\item
+You can explicitly convert elements of a container to a view by passing a begin iterator and an end (sentinel) or a size to a std::ranges::subrange or std::views::counted().
+
+\item
+You can implicitly convert a container to a view by passing it to one of the adapting views. These views usually take a container by converting it implicitly to a view.
+\end{itemize}
+
+Usually, the latter option is and should be used. There are multiple ways of implementing this option. For example, you have the following options for passing a range coll to a take view:
+
+\begin{itemize}
+\item
+You can pass the range as a parameter to the constructor of the view:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::take_view first4{coll, 4};
+\end{lstlisting}
+
+\item
+You can pass the range as a parameter to the corresponding adaptor:
+
+\begin{lstlisting}[style=styleCXX]
+auto first4 = std::views::take(coll, 4);
+\end{lstlisting}
+
+\item
+You can pipe the range into the corresponding adaptor:
+
+\begin{lstlisting}[style=styleCXX]
+auto first4 = coll | std::views::take(4);
+\end{lstlisting}
+\end{itemize}
+
+In any case, the view first4 iterates over only the first four elements of coll (or fewer if there are not enough elements). However, what happens exactly here depends on what coll is:
+
+\begin{itemize}
+\item
+If coll is already a view, take() just takes the view as it is.
+
+\item
+If coll is a container, take() uses a view to the container that is automatically created with the adaptor std::views::all(). This adaptor yields a ref\_view that refers to all elements of the container if the container is passed by name (as an lvalue).
+
+\item
+If an rvalue is passed (a temporary range such as a container returned by a function or a container marked with std::move()), the range is moved into an owning\_view, which then holds a range of the passed type with all moved elements directly.[The support of temporary objects (rvalues) for views was added after C++20 was published with \url{http://wg21.link/p2415r2}.]
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<std::string> coll{"just", "some", "strings", "to", "deal", "with"};
+
+auto v1 = std::views::take(coll, 4); // iterates over a ref_view to coll
+
+auto v2 = std::views::take(std::move(coll), 4); // iterates over an owning_view
+// to a local vector<string>
+
+auto v3 = std::views::take(v1, 2); // iterates over v1
+\end{lstlisting}
+
+In all cases, std::views::take() creates a new take view that finally iterates over the values initialized in coll. However, the resulting types and exact behavior differ as follows:
+
+\begin{itemize}
+\item
+v1 is a take\_view<ref\_view<vector<string>{}>{}>.
+
+Because we pass the container coll as lvalue (named object), the take view iterates over a ref view to the container.
+
+\item
+v2 is a take\_view<owning\_view<vector<string>{}>{}>.
+
+Because we pass coll as an rvalue (temporary object or object marked with std::move()), the take view iterates over an owning view that holds its own vector of strings move-initialized with the passed collection.
+
+\item
+v3 is a take\_view<take\_view<ref\_view<vector<string>{}>{}>{}>.
+
+Because we pass the view v1, the take view iterates over this view. The effect is that we finally iterate over coll (for which the elements were moved away with the second statement, so do not do that after the second statement).
+\end{itemize}
+
+Internally, the initialization uses the deduction guides and the type utility std::views::all\_t<>, which is explained later in detail.
+
+Note that this behavior allows a range-based for loop to iterate on temporary ranges:
+
+\begin{lstlisting}[style=styleCXX]
+for (const auto& elem : getColl() | std::views::take(5)) {
+	std::cout << "- " << elem << '\n';
+}
+
+for (const auto& elem : getColl() | std::views::take(5) | std::views::drop(2)) {
+	std::cout << "- " << elem << '\n';
+}
+\end{lstlisting}
+
+This is remarkable, because in general, it is a fatal runtime error to use a reference to a temporary as a collection a range-based for loop iterates over (a bug that the C++ standards committee has not been willing to fix for years now; see \url{http://wg21.link/p2012}). Because passing a temporary range object (rvalue) moves the range into an owning\_view, the view does not refer to an external container and therefore there is no runtime error.
 
 \subsubsection*{\zihao{3} 6.3.2\hspace{0.2cm}Lazy Evaluation}
 \addcontentsline{toc}{subsubsection}{6.3.2\hspace{0.2cm}Lazy Evaluation}
 
+It is important to understand when exactly views are processed. Views do not start processing when they are defined; instead, they run on demand:
 
+\begin{itemize}
+\item
+If we need the next element of a view, we compute which one it is by performing the necessary iteration(s).
+
+\item
+If we need the value of an element of a view, we compute its value by performing the defined transformation(s).
+\end{itemize}
+
+Consider the following program:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{ranges/filttrans.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <ranges>
+namespace vws = std::views;
+
+int main()
+{
+	std::vector<int> coll{ 8, 15, 7, 0, 9 };
+	
+	// define a view:
+	auto vColl = coll
+				| vws::filter([] (int i) {
+					std::cout << " filter " << i << '\n';
+					return i % 3 == 0;
+				})
+				| vws::transform([] (int i) {
+					std::cout << " trans " << i << '\n';
+					return -i;
+				});
+				
+	// and use it:
+	std::cout << "*** coll | filter | transform:\n";
+	for (int val : vColl) {
+		std::cout << "val: " << val << "\n\n";
+	}
+}
+\end{lstlisting}
+
+We define a view vColl that only filters and transforms the elements of the range coll:
+
+\begin{itemize}
+\item
+By using std::views::filter(), we process only those elements that are a multiple of 3.
+
+\item
+By using std::views::transform(), we negate each value.
+\end{itemize}
+
+The program has the following output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+*** coll | filter | transform:
+filter 8
+filter 15
+trans 15
+val: -15
+
+filter 7
+filter 0
+trans 0
+
+val: 0
+filter 9
+trans 9
+val: -9
+\end{tcblisting}
+}
+
+First, note that neither filter() nor transform() are called when or after we define the view vColl. The processing starts when we use the view (here: iterating over vColl). This means that views use lazy evaluation. A view is just the description of a processing. The processing is performed when we need the next element or value.
+
+Let us assume that we do the iteration over vColl more manually, calling begin() and ++ to get the next value and * to get its value:
+
+\begin{lstlisting}[style=styleCXX]
+std::cout << "pos = vColl.begin():\n";
+auto pos = vColl.begin();
+std::cout << "*pos:\n";
+auto val = *pos;
+std::cout << "val: " << val << "\n\n";
+
+std::cout << "++pos:\n";
+++pos;
+std::cout << "*pos:\n";
+val = *pos;
+std::cout << "val: " << val << "\n\n";
+\end{lstlisting}
+
+For this code, we get the following output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+pos = vColl.begin():
+filter 8
+filter 15
+*pos:
+trans 15
+val: -15
+
+++pos:
+filter 7
+filter 0
+*pos:
+trans 0
+val: 0
+\end{tcblisting}
+}
+
+Let us look at what happens step by step:
+
+\begin{itemize}
+\item
+When we call begin(), the following happens:
+
+\begin{itemize}
+\item
+The request to get the first element of vColl is passed to the transform view, which passes it to the filter view, which passes it to coll, which yields an iterator to the first element 8.
+
+\item
+The filter view looks at the value of the first element and rejects it. As a consequence, it asks coll for the next element by calling ++ there. The filter gets the position of the second element 15 and passes its position to the transform view.
+
+\item
+As a result, pos is initialized as an iterator with the position to the second element.
+\end{itemize}
+
+\item
+When calling *pos, the following happens:
+
+\begin{itemize}
+\item
+Because we need the value, the transform view is now called for the current element and yields its negated value.
+
+\item
+As a result, val is initialized with the negated value of the current element.
+\end{itemize}
+
+\item
+When calling ++pos, the same happens again:
+
+\begin{itemize}
+\item
+The request to get the next element is passed to the filter, which passes the request to coll until an element fits (or we are at the end of coll).
+
+\item
+As a result, pos gets the position of the fourth element.
+\end{itemize}
+
+\item
+By calling *pos again, we perform the transformation and yield the next value for the loop.
+\end{itemize}
+
+This iteration continues until the range or one of the views signals that we are at the end.
+
+This pull model has a big benefit: we do not process elements that we never need. For example, assume that we use the view to find the first resulting value that is 0:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::find(vColl, 0);
+\end{lstlisting}
+
+The output would then be only:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+filter 8
+filter 15
+trans 15
+filter 7
+filter 0
+trans 0
+\end{tcblisting}
+}
+
+Another benefit of the pull model is that sequences or pipelines of views can even operate on infinite ranges. We do not compute an unlimited number of values not knowing how many are used; we compute as many values as requested by the user of the view.
 
 \subsubsection*{\zihao{3} 6.3.3\hspace{0.2cm}Caching in Views}
 \addcontentsline{toc}{subsubsection}{6.3.3\hspace{0.2cm}Caching in Views}
 
+Assume that we want to iterate over a view multiple times. It seems a waste of performance if we compute the first valid element again and again. And indeed, views that might skip leading elements cache the begin() once it is called.
 
+Let us change the program above so that it iterates twice over the elements of the view vColl:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{ranges/filttrans2.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <ranges>
+namespace vws = std::views;
+
+int main()
+{
+	std::vector<int> coll{ 8, 15, 7, 0, 9 };
+	// define a view:
+	auto vColl = coll
+	| vws::filter([] (int i) {
+		std::cout << " filter " << i << '\n';
+		return i % 3 == 0;
+	})
+	| vws::transform([] (int i) {
+		std::cout << " trans " << i << '\n';
+		return -i;
+	});
+	
+	// and use it:
+	std::cout << "*** coll | filter | transform:\n";
+	for (int val : vColl) {
+		...
+	}
+	std::cout << "-------------------\n";
+	
+	// and use it again:
+	std::cout << "*** coll | filter | transform:\n";
+	for (int val : vColl) {
+		std::cout << "val: " << val << "\n\n";
+	}
+}
+\end{lstlisting}
+
+The program has the following output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+*** coll | filter | transform:
+filter 8
+filter 15
+trans 15
+filter 7
+filter 0
+trans 0
+filter 9
+trans 9
+-------------------
+*** coll | filter | transform:
+trans 15
+val: -15
+
+filter 7
+filter 0
+trans 0
+val: 0
+
+filter 9
+trans 9
+val: -9
+\end{tcblisting}
+}
+
+As you can see, when used for the second time, calling vColl.begin() no longer tries to find the first element because it was cached with the first iteration over the elements of the filter.
+
+Note that this caching of begin() has good and bad and maybe unexpected consequences. First, it is better to initialize a caching view once and use it twice:
+
+\begin{lstlisting}[style=styleCXX]
+// better:
+auto v1 = coll | std::views::drop(5);
+check(v1);
+process(v1);
+\end{lstlisting}
+
+than to initialize and use it twice:
+
+\begin{lstlisting}[style=styleCXX]
+// worse:
+check(coll | std::views::drop(5));
+process(coll | std::views::drop(5));
+\end{lstlisting}
+
+In addition, modifying leading elements of ranges (changing their value or inserting/deleting elements) may invalidate views if and only if begin() has already been called before the modification.
+
+That means:
+
+\begin{itemize}
+\item
+If we do not call begin() before a modification, the view is usually valid and works fine when we use it later:
+
+\begin{lstlisting}[style=styleCXX]
+std::list coll{1, 2, 3, 4, 5};
+auto v = coll | std::views::drop(2);
+coll.push_front(0); // coll is now: 0 1 2 3 4 5
+print(v); // initializes begin() with 2 and prints: 2 3 4 5
+\end{lstlisting}
+
+\item
+However, if we do call begin() before the modification (e.g., by printing the elements), we can easily get wrong elements. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::list coll{1, 2, 3, 4, 5};
+auto v = coll | std::views::drop(2);
+print(v); // init begin() with 3
+coll.push_front(0); // coll is now: 0 1 2 3 4 5
+print(v); // begin() is still 3, so prints: 3 4 5
+\end{lstlisting}
+
+Here, begin() is cached as an iterator so that the view no longer operates on all elements of the underlying range if new elements are added to or removed from the range.
+
+However, we might also get invalid values. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector vec{1, 2, 3, 4};
+
+auto biggerThan2 = [](auto v){ return v > 2; };
+auto vVec = vec | std::views::filter(biggerThan2);
+
+print(vVec); // OK: 3 4
+
+++vec[1];
+vec[2] = 0; // vec becomes 1 3 0 4
+
+print(vVec); // OOPS: 0 4;
+\end{lstlisting}
+
+\end{itemize}
+
+Note that this means that an iteration, even if it only reads, may count as a write access. Therefore, iterating over the elements of a view might invalidate a later use if its referred range has been modified in the meantime.
+
+The effect depends on when and how caching is done. See the remarks about caching views in their specific sections:
+
+\begin{itemize}
+\item
+Filter views, which cache begin() as an iterator or offset
+
+\item
+Drop views, which cache begin() as an iterator or offset
+
+\item
+Drop-while views, which cache begin() as an iterator or offset
+
+\item
+Reverse views, which cache begin() as an iterator or offset
+\end{itemize}
+
+Here, you see again that C++ cares about performance:
+
+\begin{itemize}
+\item
+Caching at initialization time would have unnecessary performance cost if we never iterate over the elements of a view at all.
+
+\item
+Not caching at all would have unnecessary performance cost if we iterate a second or more times over the elements of the view (applying a reverse view over a drop-while view might even have quadratic complexity in some cases).
+\end{itemize}
+
+However, due to caching, using a view not ad hoc can have pretty surprising consequences. Care must be taken when modifying ranges used by views.
+
+As another consequence, caching might require that a view cannot be const while iterating over its elements. The consequences are even more severe and are discussed later.
 
 \subsubsection*{\zihao{3} 6.3.4\hspace{0.2cm}Performance Issues with Filters}
 \addcontentsline{toc}{subsubsection}{6.3.4\hspace{0.2cm}Performance Issues with Filters}
 
+The pull model also has its drawbacks. To demonstrate that, let us change the order of the two views involved (above) so that we first call transform() and then filter():
 
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{ranges/transfilt.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <ranges>
+namespace vws = std::views;
+
+int main()
+{
+	std::vector<int> coll{ 8, 15, 7, 0, 9 };
+	
+	// define a view:
+	auto vColl = coll
+	| vws::transform([] (int i) {
+		std::cout << " trans: " << i << '\n';
+		return -i;
+	})
+	| vws::filter([] (int i) {
+		std::cout << " filt: " << i << '\n';
+		return i % 3 == 0;
+	});
+	
+	// and use it:
+	std::cout << "*** coll | transform | filter:\n";
+	for (int val : vColl) {
+	std::cout << "val: " << val << "\n\n";
+	}
+}
+\end{lstlisting}
+
+Now, the output of the program is as follows:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+*** coll | transform | filter:
+trans: 8
+filt: -8
+trans: 15
+filt: -15
+trans: 15
+val: -15
+
+trans: 7
+filt: -7
+trans: 0
+filt: 0
+trans: 0
+val: 0
+
+trans: 9
+filt: -9
+trans: 9
+val: -9
+\end{tcblisting}
+}
+
+We have additional calls of the transform view:
+
+\begin{itemize}
+\item
+We now call transform() for each element.
+
+\item
+For elements that pass the filter, we even perform the transformation twice.
+\end{itemize}
+
+Calling the transformation for each element is necessary because the filter view comes afterwards and now looks at the transformed values. In this case, the negation does not impact the filter; therefore, putting it to the front looks better.
+
+However, why do we call the transformations for elements that pass the filter twice? The reason lies in the nature of a pipeline that uses the pull model and the fact that we use iterators.
+
+\begin{itemize}
+\item
+First, the filter needs the transformed value to check it; therefore, the leading transformation has to be performed before the filter can use the resulting value.
+	
+\item
+Remember that ranges and views iterate in two steps over the elements of a range: they first compute the position/iterator (with begin() and ++), and then as a separate step, use * to get the value. This means that for each filter, we have to perform all previous transformations once to be able check the value of the element. However, if true, the filter delivers only the position of the element, not its value. Therefore, when a user of the filter needs the value, it has to perform the transformations once again.
+\end{itemize}
+
+In fact, each filter adds one more call of all leading transformations on each element that pass the filter and for which the value is used afterwards.
+
+Given the following pipeline of transformations t1, t2, t3 and filters f1, f2:
+
+\begin{lstlisting}[style=styleCXX]
+t1 | t2 | f1 | t3 | f2
+\end{lstlisting}
+
+we have the following behavior:
+
+\begin{itemize}
+\item
+For elements where f1 yields false, we call:
+
+\begin{lstlisting}[style=styleCXX]
+t1 t2 f1
+\end{lstlisting}
+
+\item
+For elements where f1 yields true but f2 yields false, we call:
+
+\begin{lstlisting}[style=styleCXX]
+t1 t2 f1 t1 t2 t3 f2
+\end{lstlisting}
+
+\item
+For elements where f1 and f2 yield true, we call:
+
+\begin{lstlisting}[style=styleCXX]
+t1 t2 f1 t1 t2 t3 f2 t1 t2 t3
+\end{lstlisting}
+\end{itemize}
+
+See ranges/viewscalls.cpp for a complete example.
+
+If this makes you worry about the performance of pipelines, take the following into account: yes, you should avoid expensive transformations before you use a filter. However, remember that all views provide functionality that is usually optimized in such a way that only the expressions inside the transformations and filters remain. In trivial cases such as the one here, where a filter checks for a multiple of 3 and the transformation negates, the resulting difference in behavior is effectively like calling
+
+\begin{lstlisting}[style=styleCXX]
+if (-x % 3 == 0) return -x; // first transformation then filter
+\end{lstlisting}
+
+instead of
+
+\begin{lstlisting}[style=styleCXX]
+if (x % 3 == 0) return -x; // first filter then transformation
+\end{lstlisting}
+
+For more details about filters, see the section about the filter view.

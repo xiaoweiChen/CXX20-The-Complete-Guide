@@ -1,0 +1,43 @@
+As documented in this chapter, several idioms that we we can count on when using containers are broken by views. Here is a quick summary you should always take into account when using generic code for both containers and views:
+
+\begin{itemize}
+\item
+You might not be able to iterate over the elements of a standard view when it is const.
+
+As a consequence, generic code for all kinds of ranges (containers and views) has to declare the parameters as universal/forwarding references.
+
+However, do not use universal/forwarding references when you have concurrent iterations. In that case, const is your friend.
+
+\item
+Standard views on lvalue ranges do not propagate constness.
+
+This means that declaring such a view as const does not declare the elements to be const.
+
+\item
+Concurrent iterations over standard views might cause data races (a runtime error due to undefined behavior) even if they only read.
+
+\item
+Reading iterations might affect later functional behavior or even invalidate later iterations.
+
+Use standard views ad hoc.
+
+\item
+Copying a view might create a view with different states and behavior than the source view.
+
+Avoid copying standard views.
+
+\item
+cbegin() and cend() might not make elements const.
+
+This will partially be fixed with C++23 by providing cbegin() and cend() member functions and fixing std::ranges::cbegin() and std::ranges::cend(). Unfortunately, std::cbegin() and std::cend() will still be broken.
+
+\item
+Type const\_iterator is usually not available.
+
+\item
+For C++23, the following breakage is planned: for some standard views, declaring the elements as const might have no effect. You might be able to modify the members of a const element of a view.
+\end{itemize}
+
+This means that a standard view is not always a pure subset that restricts or deals with the elements of a range; it might provide options and operations that are not allowed for when using the range as a whole instead.
+
+As a consequence, use views ad hoc and with care and forget about any temporary constness. Honestly, you might consider avoiding standard views and using something with a safer design instead.

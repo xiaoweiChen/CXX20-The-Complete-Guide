@@ -1,22 +1,226 @@
 
-
+Views usually have reference semantics. Often, they refer to ranges that exist outside themselves. This means that care must be taken because you can only use views as long as the underlying ranges exist and references to them stored in the views or its iterators are valid.
 
 \subsubsection*{\zihao{3} 6.4.1\hspace{0.2cm}Lifetime Dependencies Between Views and Their Ranges}
 \addcontentsline{toc}{subsubsection}{6.4.1\hspace{0.2cm}Lifetime Dependencies Between Views and Their Ranges}
 
+All views that operate on a range passed as an lvalue (as a first constructor argument or using a pipe) store a reference to the passed range internally.
 
+This means that the underlying range still has to exist when the view is used. Code like this causes undefined behavior:
+
+\begin{lstlisting}[style=styleCXX]
+auto getValues()
+{
+	std::vector coll{1, 2, 3, 4, 5};
+	...
+	return coll | std::views::drop(2); // ERROR: return reference to local range
+}
+\end{lstlisting}
+
+What we return here is a drop view by value. However, internally, it refers to coll, which is destroyed with the end of getValues().
+
+This code is as bad as returning a reference or pointer to a local object. It might work accidentally or cause a fatal runtime error. Unfortunately, compilers do not warn about this (yet).
+
+Using views on range objects that are rvalues works fine. You can return a view to a temporary range object:
+
+\begin{lstlisting}[style=styleCXX]
+auto getValues()
+{
+	...
+	return std::vector{1, 2, 3, 4, 5} | std::views::drop(2); // OK
+}
+\end{lstlisting}
+
+Or you can mark the underlying range with std::move():
+
+\begin{lstlisting}[style=styleCXX]
+auto getValues()
+{
+	std::vector coll{1, 2, 3, 4, 5};
+	...
+	return std::move(coll) | std::views::drop(2); // OK
+}
+\end{lstlisting}
 
 \subsubsection*{\zihao{3} 6.4.2\hspace{0.2cm}Views with Write Access}
 \addcontentsline{toc}{subsubsection}{6.4.2\hspace{0.2cm}Views with Write Access}
 
+Views should never modify a passed argument or call a non-const operation for it. That way, views and their copies have the same behavior for the same input.
 
+For views that use helper functions to check or transform values, this means that these helper functions should never modify the elements. Ideally, they should take the values either by value or by const reference. If you modify the argument passed as a non-const reference, you have undefined behavior:
+
+\begin{lstlisting}[style=styleCXX]
+coll | std::views::transform([] (auto& val) { // better declare val as const&
+	++val; // ERROR: undefined behavior
+})
+
+coll | std::views::drop([] (auto& val) { // better declare val as const&
+	return ++val > 0; // ERROR: undefined behavior
+})
+\end{lstlisting}
+
+Note that compilers cannot check whether a helper function or predicate modifies the passed value. The views require that the passed functions or predicates are std::regular\_invocable (which is implicitly required by std::predicate). However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. Therefore, it is up to you to make it right.
+
+However, there is support for using views to restrict the subset of elements you want to modify. For example:
+
+\begin{lstlisting}[style=styleCXX]
+// assign 0 to all but the first five elements of coll:
+for (auto& elem : coll | vws::drop(5)) {
+	elem = 0;
+}
+\end{lstlisting}
 
 \subsubsection*{\zihao{3} 6.4.3\hspace{0.2cm}Views on Ranges That Change}
 \addcontentsline{toc}{subsubsection}{6.4.3\hspace{0.2cm}Views on Ranges That Change}
 
+Views that cache begin() may run into significant problems if they are not used ad hoc and the underlying ranges change (note that I am writing about problems that occur when both the range and calling begin() for it are still valid).
 
+Consider the following program:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{ranges/viewslazy.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <vector>
+#include <list>
+#include <ranges>
+
+void print(auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << ' ' << elem;
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector vec{1, 2, 3, 4, 5};
+	std::list lst{1, 2, 3, 4, 5};
+	
+	auto over2 = [](auto v) { return v > 2; };
+	auto over2vec = vec | std::views::filter(over2);
+	auto over2lst = lst | std::views::filter(over2);
+	
+	std::cout << "containers and elements over 2:\n";
+	print(vec); // OK: 1 2 3 4 5
+	print(lst); // OK: 1 2 3 4 5
+	print(over2vec); // OK: 3 4 5
+	print(over2lst); // OK: 3 4 5
+	
+	// modify underlying ranges:
+	vec.insert(vec.begin(), {9, 0, -1});
+	lst.insert(lst.begin(), {9, 0, -1});
+	
+	std::cout << "containers and elements over 2:\n";
+	print(vec); // vec now: 9 0 -1 1 2 3 4 5
+	print(lst); // lst now: 9 0 -1 1 2 3 4 5
+	print(over2vec); // OOPS: -1 3 4 5
+	print(over2lst); // OOPS: 3 4 5
+	
+	// copying might eliminate caching:
+	auto over2vec2 = over2vec;
+	auto over2lst2 = over2lst;
+	std::cout << "elements over 2 after copying the view:\n";
+	print(over2vec2); // OOPS: -1 3 4 5
+	print(over2lst2); // OK: 9 3 4 5
+	}
+\end{lstlisting}
+
+It has the following output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+containers and elements over 2:
+1 2 3 4 5
+1 2 3 4 5
+3 4 5
+3 4 5
+containers and elements over 2:
+9 0 -1 1 2 3 4 5
+9 0 -1 1 2 3 4 5
+-1 3 4 5
+3 4 5
+elements over 2 after copying the view:
+-1 3 4 5
+9 3 4 5
+\end{tcblisting}
+}
+
+The problem is the caching of the filter view. With the first iteration, both views cache the beginning of the view. Note that this happens in different ways:
+
+\begin{itemize}
+\item
+For a random-access range like a vector, the view caches the offset to the first element. That way, a reallocation that invalidates begin() does not cause undefined behavior when the view is used again.
+
+\item
+For other ranges like a list, the view really caches the result of calling begin(). This can be a severe problem if the cached element is removed meaning that the cached begin() is no longer valid. However, it can also create confusion if new elements are inserted ahead.
+\end{itemize}
+
+The overall effect of caching is that further modifications of the underlying range might invalidate the view in various ways:
+
+\begin{itemize}
+\item
+A cached begin() may no longer be valid.
+
+\item
+A cached offset may be after the end of the underlying range.
+
+\item
+New elements that fit the predicate might not be used by later iterations.
+
+\item
+New elements that do not fit might be used by later iterations.
+\end{itemize}
 
 \subsubsection*{\zihao{3} 6.4.4\hspace{0.2cm}Copying Views Might Change Behavior}
 \addcontentsline{toc}{subsubsection}{6.4.4\hspace{0.2cm}Copying Views Might Change Behavior}
 
+Finally, note that the previous example demonstrates that copying a view may sometimes invalidate the cache:
+
+\begin{itemize}
+\item
+The views that have cached begin() have this output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+-1 3 4 5
+3 4 5
+\end{tcblisting}
+}
+
+\item
+The copies of these views have a different output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+-1 3 4 5
+9 3 4 5
+\end{tcblisting}
+}
+\end{itemize}
+
+he cached offset for the view to the vector is still used after copying, while the cached begin() for the view to the list (begin()) was removed.
+
+This means that caching has the additional consequence that a copy of a view might not have the same state as its source. For this reason, you should think twice before making a copy of a view (although one design goal was to make copying cheap to pass them by value).
+
+If there is one consequence of this behavior, it is the following: use views ad hoc (immediately after you define them).
+
+This is a little bit sad, because the lazy evaluation of views, in principle, would allow some incredible use cases, which cannot be implemented in practice because the behavior of code is hard to predict if views are not used ad hoc and underlying ranges might change.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Write Access with Filter Views}
+
+When using filter views, there are important additional restrictions on write access:
+
+\begin{itemize}
+\item
+First, as described before, because filter views cache, modified elements might pass the filter even though they should not.
+
+\item
+In addition, you have to ensure that the modified value still fulfills the predicate passed to the filter. Otherwise, you get undefined behavior (which sometimes yields the correct results, though). See the description of the filter view for details and an example.
+\end{itemize}
 

@@ -1,0 +1,9 @@
+After adopting the Standard Template Llibrary for the first C++ standard, which introduced a pair of iterators as abstraction for containers/collections to deal with them in algorithms, there was always an ongoing discussion about how to deal with a single range object instead of passing begin iterators and end iterators. The Boost.Range library and the Adobe Source Libraries (ASL) were two early approaches that came up with concrete libraries.
+
+The first proposal for ranges becoming a C++ standard was in 2005 by Thorsten Ottosen in \url{http://wg21.link/n1871}. Eric Niebler took on the task of driving this forward over years (supported by many other people), which resulted in another proposal in 2014 by Eric Niebler, Sean Parent, and Andrew Sutton in \url{http://wg21.link/n4128} (this document contains the rationale for many key design decisions). As a consequence, in October 2015, a Ranges Technical Specification was opened starting with \url{http://wg21.link/n4560}. 
+
+The ranges library was finally adopted by merging the Ranges TS into the C++ standard as proposed by Eric Niebler, Casey Carter, and Christopher Di Bella in \url{http://wg21.link/p0896r4}.
+
+After adoption, several proposals, papers, and even defects against C++20 changed significant aspects, especially for views. See, for example, \url{http://wg21.link/p2210r2} (fixing split views), \url{http://wg21.link/p2325r3} (fixing the definition of views), \url{http://wg21.link/p2415r2} (introducing owning views for rvalue ranges), and \url{http://wg21.link/p2432r1} (fixing istream views) proposed by Barry Revzin, Tim Song, and Nicolai Josuttis.
+
+In addition, note that at least some of the several const issues with views will probably be fixed in C++23 with \url{http://wg21.link/p2278r4}. Hopefully, vendors will provide that fix before C++23 because otherwise, C++20 code might not be compatible with C++23 here.
