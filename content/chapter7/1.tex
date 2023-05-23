@@ -1,12 +1,319 @@
 
+As introduced with views and the way they are used, C++ provides several range adaptors and range factories so that you can easily create views with the best performance.
+
+Several of these adaptors apply to specific view types. However, some of them might create different things depending on the characteristics of the passed ranges. For example, adaptors might just yield the passed ranges if they already have the characteristics of the result.
+
+There are a few key range adaptors and factories that make it easy to create views or convert ranges into views with specific characteristics (independently of the content):
+
+\begin{itemize}
+\item
+std::views::all() is the primary range adaptor for converting a passed range into a view.
+
+\item
+std::views::counted() is the primary range factory for converting a passed begin and count/size into a view.
+
+\item
+std::views::common() is a range adaptor that converts a range with different types for the (begin) iterator and the sentinel (end iterator) into a view with harmonized types for begin and end.
+\end{itemize}
+
+These adaptors are described in this section.
 
 \subsubsection*{\zihao{3} 7.1.1\hspace{0.2cm}std::views::all()}
 \addcontentsline{toc}{subsubsection}{7.1.1\hspace{0.2cm}std::views::all()}
 
+The range adaptor std::views::all() is the adaptor for converting any range that is not a view yet into a view. That way, you guarantee that you have a cheap handle for dealing with the elements of a range.
+
+all(rg) yields the following[C++20 originally stated that all() might yield a subrange but not an owning view. However, that was fixed after C++20 came out (see \url{http://wg21.link/p2415})]:
+
+\begin{itemize}
+\item
+A copy of rg if it is already a view
+
+\item
+Otherwise, a std::ranges::ref\_view of rg if it is an lvalue (range object with a name)
+
+\item
+Otherwise, a std::ranges::owning\_view of rg if it is an rvalue (unnamed temporary range object or range object marked with std::move())
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> getColl(); // function returning a tmp. container
+std::vector coll{1, 2, 3}; // a container
+std::ranges::iota_view aView{1}; // a view
+
+auto v1 = std::views::all(aView); // decltype(coll)
+auto v2 = std::views::all(coll); // ref_view<decltype(coll)>
+auto v3 = std::views::all(std::views::all(coll)); // ref_view<decltype(coll)>
+auto v4 = std::views::all(getColl()); // owning_view<decltype(coll)>
+auto v5 = std::views::all(std::move(coll)); // owning_view<decltype(coll)>
+\end{lstlisting}
+
+The all() adaptor is usually used to pass a range as a lightweight object. Converting a range into a view can be useful for two reasons:
+
+\begin{itemize}
+\item
+Performance:
+
+When ranges are copied (e.g., because the parameter takes the argument by value), it is much cheaper to use a view instead. The reason for this is that moving or (if supported) copying a view is guaranteed to be cheap. Therefore, passing the range as a view makes the call cheap.
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(std::ranges::input_range auto coll) // NOTE: takes range by value
+{
+	for (const auto& elem : coll) {
+		...
+	}
+}
+
+std::vector<std::string> coll{ ... };
+
+foo(coll); // OOPS: copies coll
+foo(std::views::all(coll)); // OK: passes coll by reference
+\end{lstlisting}
+
+Using all() here is a bit like using reference wrappers (created with std::ref() or std::cref()).
+
+However, all() has the benefit that what is passed still supports the usual interface of ranges.
+
+Passing a container to a coroutine (a coroutine usually has to take parameters by value) may be another application of this technique.
+
+\item
+Supporting requirements for a view: 
+
+Another reason to use all() is to meet constraints that require a view. One reason for the requirement might be to ensure that passing the argument is not expensive (which leads to the benefit above).
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(std::ranges::view auto coll) // NOTE: takes view by value
+{
+	for (const auto& elem : coll) {
+		...
+	}
+}
+
+std::vector<std::string> coll{ ... };
+
+foo(coll); // ERROR
+foo(std::views::all(coll)); // OK (passes coll by reference)
+\end{lstlisting}
+
+Using all() might happen implicitly. The example of implicit conversions with all() is the initialization of view types with containers.
+\end{itemize}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Type std::views::all\_t<>}
+
+C++20 also defines type std::views::all\_t<> as the type that all() yields. It follows the rules of perfect forwarding, meaning that both a value type and an rvalue reference type can be used to specify the type of an rvalue:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> v{0, 8, 15, 47, 11, -1, 13};
+...
+std::views::all_t<decltype(v)> a1{v}; // ERROR
+std::views::all_t<decltype(v)&> a2{v}; // ref_view<vector<int>>
+std::views::all_t<decltype(v)&&> a3{v}; // ERROR
+std::views::all_t<decltype(v)> a4{std::move(v)}; // owning_view<vector<int>>
+std::views::all_t<decltype(v)&> a5{std::move(v)}; // ERROR
+std::views::all_t<decltype(v)&&> a6{std::move(v)}; // owning_view<vector<int>>
+\end{lstlisting}
+
+Views that take a range usually use type std::views::all\_t<> to ensure that the passed range is really a view. For that reason, if you pass a range that is not a view yet, a view is implicitly created. For example, calling:
+
+\begin{lstlisting}[style=styleCXX]
+std::views::take(coll, 3)
+\end{lstlisting}
+
+has the same effect as calling:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::take_view{std::ranges::ref_view{coll}, 3};
+\end{lstlisting}
+
+The way this works is as follows (using a take view as an example):
+
+\begin{itemize}
+\item
+The view type requires that a view is passed:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std::ranges {
+	template<view V>
+	class take_view : public view_interface<take_view<V>> {
+		public:
+		constexpr take_view(V base, range_difference_t<V> count);
+		...
+	};
+}
+\end{lstlisting}
+
+\item
+A deduction guide requires that the element type of the view is of type std::views::all\_t:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std::ranges {
+	// deduction guide to force the conversion to a view:
+	template<range R>
+	take_view(R&&, range_difference_t<R>) -> take_view<views::all_t<R>>;
+}
+\end{lstlisting}
+
+\item
+Now when a container is passed, the range type of the view has to have type std::views::all\_t<>. Therefore, the container is implicitly converted to a ref\_view (if it is an lvalue) or an owning\_view (if it is an rvalue). The effect is as if we had called the following:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::ref_view rv{coll}; // convert to a ref_view<>
+std::ranges::take_view tv(rv, 3); // and use view and count to initialize the take_view<>
+\end{lstlisting}
+\end{itemize}
+
+The concept viewable\_range can be used to check whether a type can be used for all\_t<> (and therefore corresponding objects can be passed to all())[For lvalues of move-only view types, there is an issue that all() is ill-formed although viewable\_range is satisfied.]:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::viewable_range<std::vector<int>> // true
+std::ranges::viewable_range<std::vector<int>&> // true
+std::ranges::viewable_range<std::vector<int>&&> // true
+std::ranges::viewable_range<std::ranges::iota_view<int>> // true
+std::ranges::viewable_range<std::queue<int>> // false
+\end{lstlisting}
 
 \subsubsection*{\zihao{3} 7.1.2\hspace{0.2cm}std::views::counted()}
 \addcontentsline{toc}{subsubsection}{7.1.2\hspace{0.2cm}std::views::counted()}
 
+The range factory std::views::counted() provides the most flexible way to create a view from a begin iterator and a count. By calling
+
+\begin{lstlisting}[style=styleCXX]
+std::views::counted(beg, sz)
+\end{lstlisting}
+
+it creates a view to the first sz elements of the range starting with beg.
+
+It is up to the programmer to ensure that the begin and count are valid when the view is used. Otherwise, the program has undefined behavior.
+
+The count may be 0, which means that the range is empty.
+
+The count is stored in the view and is therefore stable. Even if new elements are inserted in the range that the view refers to, the count does not change. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
+
+auto c = std::views::counted(lst.begin(), 5);
+print(c); // 1 2 3 4 5
+
+lst.insert(++lst.begin(), 0); // insert new second element in lst
+print(c); // 1 0 2 3 4
+\end{lstlisting}
+
+Note that if you want to have a view to the first num elements of a range, the take view provides a more convenient and safer way to get it:
+
+\begin{lstlisting}[style=styleCXX]
+std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
+auto v1 = std::views::take(lst, 3); // view to first three elements (if they exist)
+\end{lstlisting}
+
+The take view does check whether there are enough elements and yields fewer elements if there are not.
+
+By also using the drop view, you could even skip a specific number of leading elements:
+
+\begin{lstlisting}[style=styleCXX]
+std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
+auto v2 = std::views::drop(lst, 2) | std::views::take(3); // 3rd to 5th element (if exist)
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Type of counted()}
+
+counted(beg, sz) yields different types depending on the characteristics of the range it is called for:
+
+\begin{itemize}
+\item
+It yields a std::span if the passed begin iterator is a contiguous\_iterator (refers to elements that are stored in contiguous memory). This applies to raw pointers, raw arrays, and iterators of std::vector<> or std::array<>.
+
+\item
+Otherwise, it yields a std::ranges::subrange if the passed begin iterator is a random\_access\_iterator (supports jumping back and forth between elements). This applies to iterators of std::deque<>.
+
+\item
+Otherwise, it yields a std::ranges::subrange with a std::counted\_iterator as the begin and a dummy sentinel of type std::default\_sentinel\_t as the end. This means that the iterator in the subrange counts while iterating. This applies to iterators of lists, associative containers, and unordered containers (hash tables).
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
+auto vec5 = std::ranges::find(vec, 5);
+auto v1 = std::views::counted(vec5, 3); // view to element 5 and two more elems in vec
+	// v1 is std::span<int>
+std::deque<int> deq{1, 2, 3, 4, 5, 6, 7, 8, 9};
+auto deq5 = std::ranges::find(deq, 5);
+auto v2 = std::views::counted(deq5, 3); // view to element 5 and two more elems in deq
+	// v2 is std::ranges::subrange<std::deque<int>::iterator>
+std::list<int> lst{1, 2, 3, 4, 5, 6, 7, 8, 9};
+auto lst5 = std::ranges::find(lst, 5);
+auto v3 = std::views::counted(lst5, 3); // view to element 5 and two more elems in lst
+	// v3 is std::ranges::subrange<std::counted_iterator<std::list<int>::iterator>,
+	// std::default_sentinel_t>
+\end{lstlisting}
+
+Note that this code is at risk because it creates undefined behavior if there is no 5 in the collection with two elements behind it. Therefore, you should check this if you are not sure that this is the case.
 
 \subsubsection*{\zihao{3} 7.1.3\hspace{0.2cm}std::views::common()}
 \addcontentsline{toc}{subsubsection}{7.1.3\hspace{0.2cm}std::views::common()}
+
+The range adaptor std::views::common() yields a view with harmonized types for the begin iterator and the sentinel (end iterator) for the passed range. It acts like the range adaptor std::views::all(), with the additional behavior of creating a std::ranges::common\_view from the passed argument if its iterators have different types.
+
+For example, assume we want to call a traditional algorithm algo() that requires the same type for both the begin iterator and the end iterator. We can then call it for iterators of potentially different types as follows:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename BegT, typename EndT>
+void callAlgo(BegT beg, EndT end)
+{
+	auto v = std::views::common(std::ranges::subrange(beg,end));
+	algo(v.begin(), v.end()); // assume algo() requires iterators with the same type
+}
+\end{lstlisting}
+
+common(rg) yields
+
+\begin{itemize}
+\item
+A copy of rg if it is already a view with the same begin and end iterator type
+
+\item
+Otherwise, a std::ranges::ref\_view of rg if it is a range object with the same begin and end iterator type
+
+\item
+Otherwise, a std::ranges::common\_view of rg
+\end{itemize}
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::list<int> lst;
+std::ranges::iota_view iv{1, 10};
+...
+auto v1 = std::views::common(lst); // std::ranges::ref_view<decltype(lst)>
+auto v2 = std::views::common(iv); // decltype(iv)
+auto v3 = std::views::common(std::views::all(vec));
+			// std::ranges::ref_view<decltype(lst)>
+			
+std::list<int> lst {1, 2, 3, 4, 5, 6, 7, 8, 9};
+auto vt = std::views::take(lst, 5); // begin() and end() have different types
+auto v4 = std::views::common(vt); // std::ranges::common_view<decltype(vt)>
+\end{lstlisting}
+
+Note that both the constructors of a std::ranges::common\_view and the helper type std::common:iterator require that passed iterators have different types. Therefore, you should use this adaptor if you do not know whether iterator types differ.
+
+
+
+
+
+
+
+
+
+
+

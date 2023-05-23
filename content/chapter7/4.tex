@@ -1,17 +1,287 @@
 
+The ranges library provides several generic helper functions in the namespaces std::ranges and std.
 
+Several of them already existed before C++20 with the same name or a slightly different name in the namespace std (and are still provided for backward compatibility). However, the range utilities usually provide better support for the specified functionality. They might fix flaws that the old versions have or use concepts to constrain their use.
+
+These “functions” are required to be function objects or functors or even Customization Point Objects (CPOs are function objects that are required to be semiregular and guarantee that all instances are equal).
+
+This means that they do not support argument-dependent lookup (ADL).[You can argue that it is not correct to call function objects just functions. However, because they are used like functions, I still tend to do so. The rest are implementation details.]
+
+For this reason, you should prefer std::ranges utilities over std utilities.
 
 \subsubsection*{\zihao{3} 7.4.1\hspace{0.2cm}Functions for Dealing with the Elements of Ranges (and Arrays)}
 \addcontentsline{toc}{subsubsection}{7.4.1\hspace{0.2cm}Functions for Dealing with the Elements of Ranges (and Arrays)}
+
+Table Generic functions for dealing with the elements of ranges lists the new free-standing functions for dealing with ranges and their elements. They also work for raw arrays.
+
+Almost all corresponding utility functions were also available before C++20 directly in the namespace std. The only exceptions are:
+
+\begin{itemize}
+\item
+ssize(), which is introduced with C++20 as std::ssize()
+
+\item
+cdata(), which did not and does not exist in the namespace std at all
+\end{itemize}
+
+You might wonder why there are new functions in the namespace std::ranges instead of fixing the existing functions in the namespace std. Well, the argument is that if we fix the existing functions, existing code might be broken and backward compatibility is an important goal of C++.
+
+The next question is then which function to use when. The guideline here is pretty simple: prefer the functions/utilities in the namespace std::ranges over those in the namespace std.
+
+The reason is not only that the functions/utilities in the namespace std::ranges use concepts, which helps to find problems and bugs at compile time; another reason to prefer the new functions in the namespace std::ranges is that the functions in the namespace std sometimes have flaws, which the new implementation in std::ranges fixes:
+
+\begin{itemize}
+\item
+One problem is argument-dependent lookup (ADL).
+
+\item
+Another problem is const correctness.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::ranges::empty(rg)\\ std::ranges::size(rg)\\ std::ranges::ssize(rg)\\ std::ranges::begin(rg)\\ std::ranges::end(rg)\\ std::ranges::cbegin(rg)\\ std::ranges::cend(rg)\\ std::ranges::rbegin(rg)\\ std::ranges::rend(rg)\\ std::ranges::crbegin(rg)\\ std::ranges::crend(rg)\\ std::ranges::data(rg)\\ std::ranges::cdata(rg)\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Yields whether the range is empty\\ Yields the size of the range\\ Yields the size of the range as the value of a signed type\\ Yields an iterator to the first element of the range\\ Yields a sentinel (an iterator to the end) of the range\\ Yields a constant iterator to the first element of the range\\ Yields a constant sentinel (a constant iterator to the end) of the range\\ Yields a reverse iterator to the first element of the range\\ Yields a reverse sentinel (am iterator to the end) of the range\\ Yields a reverse constant iterator to the first element of the range\\ Yields a reverse constant sentinel (a constant iterator to the end) of the range\\ Yields the raw data of the range\\ Yields the raw data of the range with const elements\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.3. Generic functions for dealing with the elements of ranges
+\end{center}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{How std::ranges::begin() Solves ADL Problems}
+
+Let us look at why using std::ranges::begin() is better than using std::begin() to deal with ranges in generic code. The problem is that argument-dependent lookup does not always work for std::begin() if you do not use it in a tricky way.
+
+Assume you want to write generic code that calls the begin() function defined for a range object obj of an arbitrary type. The issue we have with std::begin() is as follows:
+
+\begin{itemize}
+\item
+To support range types like containers that have a begin() member function, we can always call the member function begin():
+
+\begin{lstlisting}[style=styleCXX]
+obj.begin(); // only works if a member function begin() is provided
+\end{lstlisting}
+
+However, that does not work for types that have only a free-standing begin() (such as raw arrays).
+
+\item
+Unfortunately, if we use the free-standing begin(), we have a problem:
+
+\begin{itemize}
+\item
+The standard free-standing std::begin() for raw arrays needs the full qualification with std::.
+
+\item
+Other non-standard ranges cannot deal with the full qualification std::. For example:
+
+\begin{lstlisting}[style=styleCXX]
+class MyColl {
+	...
+};
+... begin(MyColl); // declare free-standing begin() for MyColl
+
+MyColl obj;
+std::begin(obj); // std::begin() does not find ::begin(MyType)
+\end{lstlisting}
+\end{itemize}
+
+\item
+The necessary workaround is to put an additional using declaration in front of the begin() call and not qualify the call itself:
+
+\begin{lstlisting}[style=styleCXX]
+using std::begin;
+begin(obj); // OK, works in all these cases
+\end{lstlisting}
+\end{itemize}
+
+The new std::ranges::begin() does not have this problem:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::begin(obj); // OK, works in all these cases
+\end{lstlisting}
+
+The trick is that begin is not a function that uses argument-dependent lookup, but rather a function object that implements all possible lookups. See lib/begin.cpp for a complete example.
+
+And that applies to all utilities that are defined in std::ranges. Therefore, code that uses std::ranges utilities generally supports more types and more complex use cases.
 
 
 \subsubsection*{\zihao{3} 7.4.2\hspace{0.2cm}Functions for Dealing with Iterators}
 \addcontentsline{toc}{subsubsection}{7.4.2\hspace{0.2cm}Functions for Dealing with Iterators}
 
+Table Generic functions for dealing with iterators lists all generic functions for moving iterators, looking ahead or back, and computing the distance between iterators. Note that the next subsection describes functions for swapping and moving elements that iterators refer to.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::ranges::distance(from, to)\\ std::ranges::distance(rg)\\ std::ranges::next(pos)\\ std::ranges::next(pos, n)\\ std::ranges::next(pos, to)\\ std::ranges::next(pos, n, maxpos)\\ std::ranges::prev(pos)\\ std::ranges::prev(pos, n)\\ std::ranges::prev(pos, n, minpos)\\ std::ranges::advance(pos, n)\\ std::ranges::advance(pos, to)\\ std::ranges::advance(pos, n, maxpos)\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Yields the distance (number of elements) between from and to\\ Yields the number of elements in rg (size even for ranges that have no size())\\ Yields the position of the next element behind pos\\ Yields the position of the n-th next element behind pos\\ Yields the postition to behind pos\\ Yields the position of the n-th element after pos but not behind maxpos\\ Yields the position of the element before pos\\ Yields the position of the n-th element before pos\\ Yields the position of the n-th element before pos but not before minpos\\ Advances pos forward/backward n elements\\ Advances pos forward to to\\ Advances pos forward/backward n elements but not further than maxpos\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.4. Generic functions for dealing with iterators
+\end{center}
+
+Again, you should prefer these utilities over the corresponding traditional utilities in the namespace std. For example, in contrast to std::ranges::next(), the old utility std::next() requires to provide std::iterator\_traits<It>::difference\_type for a passed iterator It. However, some internal iterators of view types do not support iterator traits, so that code might not compile, if you use std::next().
 
 \subsubsection*{\zihao{3} 7.4.3\hspace{0.2cm}Functions for Swapping and Moving Elements/Values}
 \addcontentsline{toc}{subsubsection}{7.4.3\hspace{0.2cm}Functions for Swapping and Moving Elements/Values}
 
+The ranges library also provides functions for swapping and moving values. These functions are listed in table Generic functions for swapping and moving elements/values. They cannot only be used for ranges.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::ranges::swap(val1, val2)\\ std::ranges::iter\_swap(pos1, pos2)\\ std::ranges::iter\_move(pos)\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Swaps the values val1 and val2 (using move semantics)\\ Swaps the values that iterators pos1 and pos2 refer to (using move semantics)\\ Yields the value that iterator pos refers to for a move\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.5. Generic functions for swapping and moving elements/values
+\end{center}
+
+The function std::ranges::swap() is defined in <concepts> (std::swap() is defined in <utility>) because the standard concepts std::swappable and std::swappable\_with use it. The functions std::ranges::iter\_swap() and std::ranges::iter\_move() are defined in <iterator>.
+
+std::ranges::swap() fixes the problem that calling std::swap() in generic code might not find the best swap function provided for certain types (similar to the problems that begin() and cbegin() have).
+
+However, because there is a generic fallback, this fix does not fix code that does not compile. Instead, it may just create better performance.
+
+Consider the following example:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{lib/swap.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <utility> // for std::swap()
+#include <concepts> // for std::ranges::swap()
+
+struct Foo {
+	Foo() = default;
+	Foo(const Foo&) {
+		std::cout << " COPY constructor\n";
+	}
+	Foo& operator=(const Foo&) {
+		std::cout << " COPY assignment\n";
+		return *this;
+	}
+	void swap(Foo&) {
+		std::cout << " efficient swap()\n"; // swaps pointers, no data
+	}
+};
+
+void swap(Foo& a, Foo& b) {
+	a.swap(b);
+}
+
+int main()
+{
+	Foo a, b;
+	std::cout << "--- std::swap()\n";
+	std::swap(a, b); // generic swap called
+	
+	std::cout << "--- swap() after using std::swap\n";
+	using std::swap;
+	swap(a, b); // efficient swap called
+	
+	std::cout << "--- std::ranges::swap()\n";
+	std::ranges::swap(a, b); // efficient swap called
+}
+\end{lstlisting}
+
+The program has the following output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+--- std::swap()
+COPY constructor
+COPY assignment
+COPY assignment
+--- swap() after using std::swap
+efficient swap()
+--- std::ranges::swap()
+efficient swap()
+\end{tcblisting}
+}
+
+Note that using std::ranges::swap() is counter-productive when swap functions are defined in the namespace std for types not defined in std (which is formally not allowed):
+
+\begin{lstlisting}[style=styleCXX]
+class Foo {
+	...
+};
+
+namespace std {
+	void swap(Foo& a, Foo& b) { // not found by std::ranges::swap()
+		...
+	}
+}
+\end{lstlisting}
+
+You should change this code. The best option is to use a “hidden friend:”
+
+\begin{lstlisting}[style=styleCXX]
+class Foo {
+	...
+	friend void swap(Foo& a, Foo& b) { // found by std::ranges::swap()
+		...
+	}
+};
+\end{lstlisting}
+
+The functions std::ranges::iter\_move() and std::ranges::iter\_swap() have one benefit over dereferencing the iterators and calling std::move() or swap(): they work fine with proxy iterators. Therefore, to support proxy iterators in generic code, use:
+
+\begin{lstlisting}[style=styleCXX]
+auto val = std::ranges::iter_move(it);
+std::ranges::iter_swap(it1, it2);
+\end{lstlisting}
+
+rather than:
+
+\begin{lstlisting}[style=styleCXX]
+auto val = std::move(*it);
+using std::swap;
+swap(*it1, *it2);
+\end{lstlisting}
 
 \subsubsection*{\zihao{3} 7.4.4\hspace{0.2cm}Functions for Comparisons of Values}
 \addcontentsline{toc}{subsubsection}{7.4.4\hspace{0.2cm}Functions for Comparisons of Values}
+
+Table Generic functions for comparison criteria lists all range utilities that you can use as comparison criteria now. They are defined in <functional>.
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::ranges::equal\_to(val1, val2)\\ std::ranges::not\_equal\_to(val1, val2)\\ std::ranges::less(val1, val2)\\ std::ranges::greater(val1, val2)\\ std::ranges::less\_equal(val1, val2)\\ std::ranges::greater\_equal(val1, val2)\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Yields whether val1 is equal to val2\\ Yields whether val1 is not equal to val2\\ Yields whether val1 is less than val2\\ Yields whether val1 is greater than val2\\ Yields whether val1 is less than or equal to val2\\ Yields whether val1 is greater than or equal to val2\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.6. Generic functions for comparison criteria
+\end{center}
+
+When checking for equality, the concept std::equality\_comparable\_with is used.
+
+When checking for an order, the concept std::totally\_ordered\_with is used. Note that this does not require that operator<=> has to be supported. Note also that the type does not have to support a total order. It is enough if you can compare the values with <, >, <=, and >=. However, this is a semantic constraint that cannot be checked at compile time.
+
+Note that C++20 also introduces the function object type std::compare\_three\_way, which you can use to call the new operator <=>.

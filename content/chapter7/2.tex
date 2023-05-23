@@ -1,0 +1,110 @@
+Iterators have different abilities. These abilities are important because some algorithms require special iterator abilities. For example, sorting algorithms require iterators that can perform random access because otherwise, the performance would be poor. For this reason, iterators have different categories, which were extended in C++20 by a new category: contiguous iterator. The abilities of these categories are listed in table Iterator categories.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{Iterator Category} &
+	\textbf{Ability} &
+	\textbf{Providers} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}Output\\ Input\\ Forward\\ Bidirectional\\ Random-access\\ Contiguous\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Writes forward\\ Reads forward once\\ Reads forward\\ Reads forward and backward\\ Reads with random access\\ Reads elements stored in contiguous memory\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}osteram iterator, inserter\\ istream iterator\\ std::forward\_list\textless{}\textgreater{}, unordered containers\\ list\textless{}\textgreater{}, set\textless{}\textgreater{}, multset\textless{}\textgreater{}, map\textless{}\textgreater{}, multimap\textless{}\textgreater\\ deque\textless{}\textgreater\\ array\textless{}\textgreater{}, vector\textless{}\textgreater{}, string, C-style array\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.1. Iterator categories
+\end{center}
+
+Note that significant details of the categories changed with C++20. The most important changes are:
+
+\begin{itemize}
+\item
+The new iterator category contiguous. For this category, a new iterator tag type is defined: std::contiguous\_iterator\_tag.
+
+\item
+Iterators that yield temporary objects (prvalues) can now have a stronger category than input iterators. The requirement to yield references no longer applies to forward iterators.
+
+\item
+Input iterators are no longer guaranteed to be copyable. You should only move them around.
+
+\item
+Postfix increment operators of input iterators are no longer required to yield anything. For an input iterator pos, you should no longer use pos++. Use ++pos instead.
+\end{itemize}
+
+These changes are not backward compatible:
+
+\begin{itemize}
+\item
+A check whether an iterator is a random-access iterator is no longer true for iterators of containers like std::vector or arrays. Instead, you have to check whether the iterator supports random access.
+
+\item
+The assumption that the values of forward, bidirectional, or random-access iterators are references no longer always applies.
+\end{itemize}
+
+For that reason, C++20 introduces a new optional iterator attribute, iterator\_concept, and defines that this attribute may be set to signal a C++20 category that differs from the traditional category. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector vec{1, 2, 3, 4};
+auto pos1 = vec.begin();
+decltype(pos1)::iterator_category // type std::random_access_iterator_tag
+decltype(pos1)::iterator_concept // type std::contiguous_iterator_tag
+
+auto v = std::views::iota(1);
+auto pos2 = v.begin();
+decltype(pos2)::iterator_category // type std::input_iterator_tag
+decltype(pos2)::iterator_concept // type std::random_access_iterator_tag
+\end{lstlisting}
+
+Note that std::iterator\_traits do not provide a member iterator\_concept and that for iterators, a member iterator\_category may not always be defined.
+
+The iterator concepts and the range concepts take the new C++20 categorization into account. For code that has to deal with iterator categories, this has the following consequences since C++20:
+
+\begin{itemize}
+\item
+Use iterator concepts and range concepts instead of std::iterator\_traits<I>::iterator\_category to check the category.
+
+\item
+Think about providing iterator\_category and/or iterator\_concept according to the hints in \url{http://wg21.link/p2259} if you implement your own iterator types.
+\end{itemize}
+
+Note also that valid C++20 input iterators may not be C++17 iterators at all (e.g., by not providing copying). For these iterators, the traditional iterator traits do not work. For this reason, since C++20:
+
+\begin{itemize}
+\item
+Use std::iter\_value\_t instead of
+
+iterator\_traits<>::value\_type.
+
+\item
+Use std::iter\_reference\_t
+
+instead of iterator\_traits<>::reference.
+
+\item
+Use std::iter\_difference\_t
+
+instead of iterator\_traits<>::difference\_type.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
