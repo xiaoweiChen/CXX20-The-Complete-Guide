@@ -1,17 +1,153 @@
 
+This section lists all new auxiliary type functions and utilities provided by the ranges library as part of C++20.
 
+As for the generic helper functions, several of these utilities already existed before C++20 with the same name or a slightly different name in the namespace std (and are still provided for backward compatibility). However, the range utilities usually provide better support for the specified functionality. They might fix flaws that the old versions have or use concepts to constrain their use.
 
 \subsubsection*{\zihao{3} 7.5.1\hspace{0.2cm}Generic Types of Ranges}
 \addcontentsline{toc}{subsubsection}{7.5.1\hspace{0.2cm}Generic Types of Ranges}
 
+Table Generic functions that yield the types involved when using ranges lists all generic type definitions for ranges. They are defined as alias templates.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Type Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::ranges::iterator\_t\textless{}Rg\textgreater\\ std::ranges::sentinel\_t\textless{}Rg\textgreater\\ std::ranges::range\_value\_t\textless{}Rg\textgreater\\ std::ranges::range\_reference\_t\textless{}Rg\textgreater\\ std::ranges::range\_difference\_t\textless{}Rg\textgreater\\ std::ranges::range\_size\_t\textless{}Rg\textgreater\\ std::ranges::range\_rvalue\_reference\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_iterator\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_subrange\_t\textless{}Rg\textgreater{}\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Type of an iterator that iterates over Rg (what begin() yields)\\ Type of an end iterator for Rg (what end() yields)\\ Type of the element in the range\\ Type of a reference to the element type\\ Type of the difference between two iterators\\ Type of what the size() function returns\\ Type of an rvalue reference to the element type\\ std::ranges::iterator\_t\textless{}Rg\textgreater for a borrowed range, otherwise std::ranges::dangling\\ The subrange type of the iterator type for a borrowed range, otherwise std::ranges::dangling\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.7. Generic functions that yield the types involved when using ranges
+\end{center}
+
+As mentioned in the introduction to ranges, the key benefit of these type functions is that they work generically for all types of ranges and views. This applies even to raw arrays.
+
+Note that std::ranges::range\_value\_t<Rg> is just a shortcut for:
+
+\begin{lstlisting}[style=styleCXX]
+std::iter_value_t<std::ranges::iterator_t<Rg>>
+\end{lstlisting}
+
+It should be preferred over Rg::value\_type.
 
 \subsubsection*{\zihao{3} 7.5.2\hspace{0.2cm}Generic Types of Iterators}
 \addcontentsline{toc}{subsubsection}{7.5.2\hspace{0.2cm}Generic Types of Iterators}
+
+The ranges library also introduced new type traits for iterators. Note that these traits are not defined in the namespace std::ranges, but rather in the namespace std.
+
+Table Generic functions that yield the types involved when using iterators lists all generic type traits for iterators. They are defined as alias templates.
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Type Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::iter\_value\_t\textless{}It\textgreater\\ std::iter\_reference\_t\textless{}It\textgreater\\ std::iter\_rvalue\_reference\_t\textless{}It\textgreater\\ std::iter\_common\_reference\_t\textless{}It\textgreater\\ std::iter\_difference\textless{}It\textgreater{}\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Type of the value that the iterator refers to\\ Type of a reference to the value type\\ Type of an rvalue reference to the value type\\ The common type of the reference type and a reference to the value type\\ Type of the difference between two iterators\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{center}
+Table 7.8. Generic functions that yield the types involved when using iterators
+\end{center}
+
+Note that due to better support for the new iterator categories, you should prefer these utilities over traditional iterator traits (std::iterator\_traits<>).
+
+These functions are described in detail in the section about iterator traits.
+
+
 
 
 \subsubsection*{\zihao{3} 7.5.3\hspace{0.2cm}New Functional Types}
 \addcontentsline{toc}{subsubsection}{7.5.3\hspace{0.2cm}New Functional Types}
 
+Table New functional types lists the new types that can be used as helper functions. They are defined in <functional>.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Type Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::identity\\ std::compare\_three\_way\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}A function object that returns itself\\ A function object to call the operator \textless{}=\textgreater{}\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{center}
+Table 7.9. New functional types
+\end{center}
+
+The function object std::identity is usually used to pass no projection where a projection can be passed. If an algorithm supports passing a projection:
+
+\begin{lstlisting}[style=styleCXX]
+auto pos = std::ranges::find(coll, 25, // find value 25
+							[](auto x) {return x*x;}); // for squared elements
+\end{lstlisting}
+
+using std::identity enables programmers to pass “no projection:”
+
+\begin{lstlisting}[style=styleCXX]
+auto pos = std::ranges::find(coll, 25, // find value 25
+							std::identity{}); // for elements as they are
+\end{lstlisting}
+
+The function object is used as a default template parameter to declare an algorithm where the projection can be skipped:
+
+\begin{lstlisting}[style=styleCXX]
+template<std::ranges::input_range R,
+		typename T,
+		typename Proj = std::identity>
+constexpr std::ranges::borrowed_iterator_t<R>
+find(R&& r, const T& value, Proj proj = {});
+\end{lstlisting}
+
+The function object type std::compare\_three\_way is a new function object type for specifying that the new operator <=> shall be called/used (just like std::less or std::ranges::less stand for calling the operator <). It is described in the chapter about the operator <=>.
 
 \subsubsection*{\zihao{3} 7.5.4\hspace{0.2cm}Other New Types for Dealing with Iterators}
 \addcontentsline{toc}{subsubsection}{7.5.4\hspace{0.2cm}Other New Types for Dealing with Iterators}
+
+Table Other new types for iterators lists all new types for dealing with iterators. They are defined in <iterator>.
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+	\hline
+	\textbf{Type Function} &
+	\textbf{Meaning} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::incrementable\_traits\textless{}It\textgreater\\ std::projected\textless{}It1, It2\textgreater{}\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}A helper type to yield the difference\_type of two iterator\\ A type to formulate constraints for projections\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.10. Other new types for iterators
+\end{center}
+
+Note also the new iterator and sentinel types.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

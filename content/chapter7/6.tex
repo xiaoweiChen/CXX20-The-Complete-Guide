@@ -1,9 +1,339 @@
 
+With the support to pass ranges as one argument and be able to process sentinels (end iterators) with a different type, new ways of calling algorithms are now available in C++20.
 
+However, they come with some restrictions and not all algorithms support passing ranges as a whole yet.
 
 \subsubsection*{\zihao{3} 7.6.1\hspace{0.2cm}Benefits and Restrictions for Range Algorithms}
 \addcontentsline{toc}{subsubsection}{7.6.1\hspace{0.2cm}Benefits and Restrictions for Range Algorithms}
 
+For some algorithms, there are no range versions that allow programmers to pass ranges as a single argument yet:
+
+\begin{itemize}
+\item
+Range algorithms do not support parallel execution (introduced with C++17). There are no APIs that take range parameters as single objects and an execution policy.
+
+\item
+There are no numeric algorithms for single-object ranges yet. To call algorithms like std::accumulate(), you still have to pass both the begin and the end of the range. C++23 will probably provide numeric range algorithms.
+\end{itemize}
+
+If there is range support for algorithms, they use concepts to find possible errors at compile time:
+
+\begin{itemize}
+\item
+Concepts for iterators and ranges ensure that you pass valid iterators and ranges.
+
+\item
+Concepts for callables ensure that you pass valid helper functions.
+\end{itemize}
+
+In addition, return types may differ because:
+
+\begin{itemize}
+\item
+They support and might return iterators of different types, for which special return types are defined. These types are listed in table New return types for range algorithms.
+
+\item
+They might return borrowed iterators, signaling that the iterator is no valid iterator because a temporary range (rvalue) was passed.
+\end{itemize}
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{Type} &
+	\textbf{Meaning} &
+	\textbf{Members} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::ranges::in\_in\_result\\ std::ranges::in\_out\_result\\ std::ranges::in\_in\_out\_result\\ std::ranges::in\_out\_out\_result\\ std::ranges::in\_fun\_result\\ std::ranges::min\_max\_result\\ std::ranges::in\_found\_result\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}For the positions of two input ranges\\ For one position of an input range and one position of an output range\\ For the positions of two input ranges and one position of an output range\\ For one position of an input range and the position of two output ranges\\ For one position of an input range and a function\\ For one maximum and one minimum position/value\\ For one position of an input range and a Boolean value\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}in1, in2\\ in, out\\ in1, in2, out\\ in, out1, out2\\ in, out\\ min, max\\ in, found\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.11. New return types for range algorithms
+\end{center}
+
+The following program demonstrates how to use these return types:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{ranges/results.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <string_view>
+#include <vector>
+#include <algorithm>
+
+void print(std::string_view msg, auto beg, auto end)
+{
+	std::cout << msg;
+	for(auto pos = beg; pos != end; ++pos) {
+		std::cout << ' ' << *pos;
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector inColl{1, 2, 3, 4, 5, 6, 7};
+	std::vector outColl{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	
+	auto result = std::ranges::transform(inColl, outColl.begin(),
+	[] (auto val) {
+		return val*val;
+	});
+	
+	print("processed in:", inColl.begin(), result.in);
+	print("rest of in: ", result.in, inColl.end());
+	print("written out: ", outColl.begin(), result.out);
+	print("rest of out: ", result.out, outColl.end());
+}
+\end{lstlisting}
+
+The program has the following output:
+
+{\footnotesize
+\begin{tcblisting}{commandshell={}}
+processed in: 1 2 3 4 5 6 7
+rest of in:
+written out: 1 4 9 16 25 36 49
+rest of out: 8 9 10
+\end{tcblisting}
+}
 
 \subsubsection*{\zihao{3} 7.6.2\hspace{0.2cm}Algorithm Overview}
 \addcontentsline{toc}{subsubsection}{7.6.2\hspace{0.2cm}Algorithm Overview}
+
+The situation of all algorithms becomes more and more complex. Some of them can be used in parallel, some not. Some of them are supported by the ranges library, some not. This section gives an overview of which algorithms are available in which form (without going into detail about what each algorithm does).
+
+The last three columns have the following meaning:
+
+\begin{itemize}
+\item
+Ranges signals whether the algorithm is supported by the range library
+
+\item
+\_result signals whether and which \_result types are used (e.g., in\_out stands for in\_out\_result)
+
+\item
+Borrowed signals whether the algorithm returns borrowed iterators
+\end{itemize}
+
+Table Non-modifying algorithms lists the available non-modifying standard algorithms of C++20.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+	\hline
+	\textbf{Name}                          & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	for\_each()                & C++98 & yes & yes       & in\_fun  & yes \\ \hline
+	for\_each\_n()             & C++17 & yes & yes       & in\_fun  &     \\ \hline
+	count()                    & C++98 & yes & yes       &          &     \\ \hline
+	count\_if()                & C++98 & yes & yes       &          &     \\ \hline
+	min\_element()             & C++98 & yes & yes       & yes      &     \\ \hline
+	max\_element()             & C++98 & yes & yes       & yes      &     \\ \hline
+	minmax\_element()          & C++11 & yes & yes       & min\_max & yes \\ \hline
+	min()                      & C++20 & no  & yes(only) &          &     \\ \hline
+	max()                      & C++20 & no  & yes(only) &          &     \\ \hline
+	minmax()                   & C++20 & no  & yes(only) & min\_max &     \\ \hline
+	find()                     & C++98 & yes & yes       &          & yes \\ \hline
+	find\_if()                 & C++98 & yes & yes       &          & yes \\ \hline
+	find\_if\_not()            & C++11 & yes & yes       &          & yes \\ \hline
+	search()                   & C++98 & yes & yes       &          & yes \\ \hline
+	search\_n()                & C++98 & yes & yes       &          & yes \\ \hline
+	find\_end()                & C++98 & yes & yes       &          & yes \\ \hline
+	find\_first\_of()          & C++98 & yes & yes       &          & yes \\ \hline
+	adjacent\_find()           & C++98 & yes & yes       &          & yes \\ \hline
+	equal()                    & C++98 & yes & yes       &          & yes \\ \hline
+	is\_permutation()          & C++11 & no  & yes       &          &     \\ \hline
+	mismatch()                 & C++98 & yes & yes       & in\_in   & yes \\ \hline
+	lexicographical\_compare() & C++98 & yes & yes       &          &     \\ \hline
+	lexicographical\_compare\_three\_way() & C++20          & no                & no              &                   &                   \\ \hline
+	is\_sorted()               & C++11 & yes & yes       &          &     \\ \hline
+	is\_sorted\_until()        & C++11 & yes & yes       &          & yes \\ \hline
+	is\_partitioned()          & C++11 & yes & yes       &          &     \\ \hline
+	partition\_point()         & C++11 & no  & yes       &          &     \\ \hline
+	is\_heap()                 & C++11 & yes & yes       &          &     \\ \hline
+	is\_heap\_until()          & C++11 & yes & yes       &          & yes \\ \hline
+	all\_of()                  & C++11 & yes & yes       &          &     \\ \hline
+	any\_of()                  & C++11 & yes & yes       &          &     \\ \hline
+	none\_of()                 & C++11 & yes & yes       &          &     \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.12. Non-modifying algorithms
+\end{center}
+
+Note that the algorithms std::ranges::min(), std::ranges::max(), and std::ranges::minmax() have only counterparts in std that take two values or a std::initializer\_list<>.
+
+Table Modifying algorithms lists the available modifying standard algorithms in C++20.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+	\hline
+	\textbf{Name}              & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	for\_each()         & C++98 & yes & yes & in\_fun & yes \\ \hline
+	for\_each\_n()      & C++17 & yes & yes & in\_fun &     \\ \hline
+	copy()              & C++98 & yes & yes & in\_out & yes \\ \hline
+	copy\_if()          & C++11 & yes & yes & in\_out &     \\ \hline
+	copy\_n()           & C++11 & yes & yes & in\_out & yes \\ \hline
+	copy\_backward()    & C++11 & no  & yes & in\_out & yes \\ \hline
+	move()              & C++11 & yes & yes & in\_out & yes \\ \hline
+	move\_backward()    & C++11 & no  & yes & in\_out & yes \\ \hline
+	transform() for one range  & C++98          & yes               & yes             & in\_out           & yes               \\ \hline
+	transform() for two ranges & C++98          & yes               & yes             & in\_in\_out       & yes               \\ \hline
+	merge()             & C++98 & yes & yes &         &     \\ \hline
+	swap\_ranges()      & C++98 & yes & yes & in\_in  & yes \\ \hline
+	fill()              & C++98 & yes & yes &         & yes \\ \hline
+	fill\_n()           & C++98 & yes & yes &         &     \\ \hline
+	generate()          & C++98 & yes & yes &         & yes \\ \hline
+	generate\_n()       & C++98 & yes & yes &         &     \\ \hline
+	iota()              & C++11 & no  & no  &         &     \\ \hline
+	replace()           & C++98 & yes & yes &         & yes \\ \hline
+	replace\_if()       & C++98 & yes & yes &         & yes \\ \hline
+	replcae\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
+	replace\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.13. Modifying algorithms
+\end{center}
+
+Table Removing algorithms lists the available “removing” standard algorithms in C++20. Note that algorithms never really remove elements. This still applies when they take whole ranges as single arguments. They change the order so that the elements not removed are packed to the front and return the new end.
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+	\hline
+	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	remove()           & C++98 & yes & yes &         & yes \\ \hline
+	remove\_if()       & C++98 & yes & yes &         & yes \\ \hline
+	remove\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
+	remove\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
+	unique()           & C++98 & yes & yes &         & yes \\ \hline
+	unique\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.14. Removing algorithms
+\end{center}
+
+Table Mutating algorithms lists the available mutating standard algorithms in C++20.
+
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+	\hline
+	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	reverse()           & C++98 & yes & yes &           & yes \\ \hline
+	reverse\_copy()     & C++98 & yes & yes & in\_out   & yes \\ \hline
+	rotate()            & C++98 & yes & yes &           & yes \\ \hline
+	rotate\_copy()      & C++98 & yes & yes & in\_out   & yes \\ \hline
+	shift\_left()       & C++20 & yes & no  &           &     \\ \hline
+	shift\_right()      & C++20 & yes & no  &           &     \\ \hline
+	sample()            & C++17 & no  & yes &           &     \\ \hline
+	next\_permutation() & C++98 & no  & yes & in\_found & yes \\ \hline
+	prev\_permutation() & C++98 & no  & yes & in\_found & yes \\ \hline
+	shuffle()           & C++11 & no  & yes &           & yes \\ \hline
+	random\_shuffle()   & C++98 & no  & no  &           &     \\ \hline
+	partition()         & C++98 & yes & yes &           &     \\ \hline
+	stable\_partition() & C++98 & yes & yes &           &     \\ \hline
+	partition\_copy()   & C++11 & yes & yes &           &     \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.15. Mutating algorithms
+\end{center}
+
+Table Sorting algorithms lists the available sorting standard algorithms in C++20.
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+	\hline
+	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	sort()                & C++98 & yes & yes &              & yes \\ \hline
+	stable\_sort()        & C++98 & yes & yes &              & yes \\ \hline
+	partial\_sort()       & C++98 & yes & yes &              & yes \\ \hline
+	partial\_sort\_copy() & C++98 & yes & yes & in\_out      & yes \\ \hline
+	nth\_element()        & C++98 & yes & yes &              & yes \\ \hline
+	partition()           & C++98 & yes & yes &              & yes \\ \hline
+	stable\_partition()   & C++98 & yes & yes &              & yes \\ \hline
+	partition\_copy()     & C++11 & yes & yes & in\_out\_out & yes \\ \hline
+	make\_heap()          & C++98 & no  & yes &              & yes \\ \hline
+	push\_heap()          & C++98 & no  & yes &              & yes \\ \hline
+	pop\_heap()           & C++98 & no  & yes &              & yes \\ \hline
+	sort\_heap()          & C++98 & no  & yes &              & yes \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.16. Sorting algorithms
+\end{center}
+
+Table Algorithms for sorted ranges lists the available standard algorithms for sorted ranges in C++20.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+	\hline
+	\textbf{Name}                & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	binary\_search()    & C++98 & no  & yes &             &     \\ \hline
+	includes()          & C++98 & yes & yes &             &     \\ \hline
+	lower\_bound()      & C++98 & no  & yes &             & yes \\ \hline
+	upper\_bound()      & C++98 & no  & yes &             & yes \\ \hline
+	equal\_range()      & C++98 & no  & yes &             & yes \\ \hline
+	merge()             & C++98 & yes & yes & in\_in\_out & yes \\ \hline
+	inplace\_merge()    & C++98 & yes & yes &             & yes \\ \hline
+	set\_union()        & C++98 & yes & yes & in\_in\_out & yes \\ \hline
+	set\_intersection() & C++98 & yes & yes & in\_in\_out & yes \\ \hline
+	set\_difference()   & C++98 & yes & yes & in\_out     & yes \\ \hline
+	set\_symmetric\_difference() & C++98          & yes               & yes             & in\_in\_out       & yes               \\ \hline
+	partition\_point()  & C++11 & no  & yes &             & yes \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{center}
+Table 7.17. Algorithms for sorted ranges
+\end{center}
+
+Table Numeric algorithms lists the available numeric standard algorithms in C++20.
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+\hline
+\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+accumulate()                 & C++98 & no  & no &  &  \\ \hline
+reduce()                     & C++17 & yes & no &  &  \\ \hline
+transform\_reduce()          & C++17 & yes & no &  &  \\ \hline
+inner\_product()             & C++98 & no  & no &  &  \\ \hline
+adjacent\_difference()       & C++98 & no  & no &  &  \\ \hline
+partial\_sum()               & C++98 & no  & no &  &  \\ \hline
+inclusive\_scan()            & C++17 & yes & no &  &  \\ \hline
+exclusive\_scan()            & C++17 & yes & no &  &  \\ \hline
+transform\_inclusive\_scan() & C++17 & yes & no &  &  \\ \hline
+transform\_exclusive\_scan() & C++17 & yes & no &  &  \\ \hline
+iota                         & C++11 & no  & no &  &  \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 7.18. Numeric algorithms
+\end{center}
+
+
+
