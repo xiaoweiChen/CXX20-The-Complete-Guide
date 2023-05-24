@@ -1,8 +1,108 @@
 
+Views have a common type that provides most of their member functions, which is discussed in this section.
+
+This section also discusses, why range adaptors and factories use a special namespace.
 
 \subsubsection*{\zihao{3} 8.2.1\hspace{0.2cm}Base Class for Views}
 \addcontentsline{toc}{subsubsection}{8.2.1\hspace{0.2cm}Base Class for Views}
 
+All standard views are derived from the class std::ranges::view\_interface<viewType>.[In the published C++20 standard, view\_interface<> was also derived from an empty base class std::ranges::view\_base. However, that was fixed with \url{http://wg21.link/lwg3549}.]
+
+The class template std::ranges::view\_interface<> introduces several basic member functions based on the definitions of begin() and end() of a derived view type that had to be passed to this base class as a template parameter. Table Operations of std::ranges::view\_interface<> lists the API the class provides for views.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{Operation} & \textbf{Effect}                             & \textbf{Provided if}                       \\ \hline
+	r.empty()          & Yields whether r is empty(begin() == end()) & At least forward iterators                 \\ \hline
+	if (r)             & true if r is not empty                      & At least forward iterators                 \\ \hline
+	r.size()           & Yields the number of elements               & Can compute the difference between and end \\ \hline
+	r.front()          & Yields the first element                    & At least forward iterators                 \\ \hline
+	r.back() & Yields the last element                            & At least bidirectional iterators and end() yields the same type as begin() \\ \hline
+	r{[}idx{]}         & Yields the n-th element                     & At least random-access iterators           \\ \hline
+	r.data() & Yields a raw pointer to the memory of the elements & Elements are in contiguous memory                                          \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{center}
+Table 8.3. Operations of std::ranges::view\_interface<>
+\end{center}
+
+The class view\_interface<> also initializes std::ranges::enable\_view<> for each type derived from it with true, which means that for these types, the concept std::ranges::view is satisfied.
+
+Whenever you define your own view type, you should derive it from view\_interface<> with your own type passed as an argument. For example:
+
+\begin{lstlisting}[style=styleCXX]
+template<typename T>
+class MyView : public std::ranges::view_interface<MyView<T>> {
+	public:
+	... begin() ... ;
+	... end() ... ;
+	...
+};
+\end{lstlisting}
+
+Based on the return types of begin() and end(), your type then automatically provides the member functions listed in table Operations of std::ranges::view\_interface<> if the preconditions for their availability fit. The const versions of these member functions require that the const version of the view type is a valid range.
+
+C++23 will add the members cbegin() and cend(), which map to std::ranges::cbegin() and std::ranges::cend() (they were added with \url{http://wg21.link/p2278r4}).
 
 \subsubsection*{\zihao{3} 8.2.2\hspace{0.2cm}Why Range Adaptors/Factories Have Their Own Namespace}
 \addcontentsline{toc}{subsubsection}{8.2.2\hspace{0.2cm}Why Range Adaptors/Factories Have Their Own Namespace}
+
+Range adaptors and factories have their own namespace, std::ranges::views, for which the namespace alias std::views is defined:
+
+\begin{lstlisting}[style=styleCXX]
+namespace std {
+	namespace views = ranges::views;
+}
+\end{lstlisting}
+
+That way, we can use names for views that may be used in other namespaces (even in another standard namespace).
+
+As a consequence, you can (and have to) qualify views when using them:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::views::reverse // full qualification
+std::views::reverse // shortcut
+\end{lstlisting}
+
+Usually, it is not possible to use a view without qualification. ADL does not kick in because there is no range (container or view) defined in the namespace std::views:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> v;
+...
+take(v, 3) | drop(2); // ERROR: can’t find views (may find different symbol)
+\end{lstlisting}
+
+Even views yield an object that is not part of the namespace for views (they are in std::ranges), which means that you still have to qualify views when using them:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> values{ 0, 1, 2, 3, 4 };
+auto v1 = std::views::all(values);
+auto v2 = take(v1, 3); // ERROR
+auto v3 = std::views::take(v1, 3); // OK
+\end{lstlisting}
+
+There is one important thing to note: never use a using declaration to skip the qualification of range adaptors:
+
+\begin{lstlisting}[style=styleCXX]
+using namespace std::views; // do not do this
+\end{lstlisting}
+
+Taking the composers example, we would be in trouble if we just filtered out values with a local values object defined:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<int> values;
+...
+std::map<std::string, int> composers{ ... };
+
+using namespace std::views; // do not do this
+
+for (const auto& elem : composers | values) { // OOPS: finds wrong values
+	...
+}
+\end{lstlisting}
+
+In this example, we would use the local vector values instead of the view. You are lucky here, because you get a compile-time error. If you are not lucky, unqualified views find different symbols, which might have the effect that you run into undefined behavior that uses or even overwrites memory of other objects.

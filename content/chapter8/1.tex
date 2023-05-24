@@ -1,8 +1,105 @@
 
+C++20 provides a significant number of different views. Some of them wrap elements of existing sources, some of them generate values themselves, and many of them operate on elements or their values (filtering or transforming them).
+
+This chapter gives a brief overview of all view types available in C++20. Note that for almost all of these types, there are auxiliary range adaptors/factories that allow programmers to create the views by calling a function or piping into them. In general, you should use these adaptors and factories instead of directly initializing views because the adaptors and factories perform additional optimizations (such as choosing the best among different views), work in more situations, double check requirements, and are just easier to use.
 
 \subsubsection*{\zihao{3} 8.1.1\hspace{0.2cm}Overview of Wrapping and Generating Views}
 \addcontentsline{toc}{subsubsection}{8.1.1\hspace{0.2cm}Overview of Wrapping and Generating Views}
 
+Table Wrapping and generating views lists the standard views that can only be source elements of a pipeline.
+These views might be
+
+\begin{itemize}
+\item
+Wrapping views, which operate on a sequence of elements of an external resource (such as a container or elements read from an input stream)
+
+\item
+Factory views, which generate elements themselves
+\end{itemize}
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{Type}             & \textbf{Adaptor/Factory}                                              & \textbf{Effect}                                \\ \hline
+	std::ranges::red\_view    & all(rg)                                                               & Reference to a range                           \\ \hline
+	std::ranges::owning\_view & all(rg)                                                               & View containing a range                        \\ \hline
+	std::ranges::subrange     & counted(beg, sz)                                                      & Begin iterator and sentinel                    \\ \hline
+	std::span                 & counted(beg, sz)                                                      & Begin iterator to contiguous memory and a size \\ \hline
+	std::ranges::iota\_view   & \begin{tabular}[c]{@{}l@{}}iota(val)\\ iota(val, endVal)\end{tabular} & Generator of incremented values                \\ \hline
+	std::ranges::single\_view & single(val)                                                           & View owning exactly one value                  \\ \hline
+	std::ranges::empty\_view  & empty\textless{}T\textgreater{}                                       & View with no elements                          \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::ranges::basic\_istream\_view\\   std::ranges::istream\_view\textless{}\textgreater\\   std::ranges::wistream\_view\textless{}\textgreater{}\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}istream\textless{}T\textgreater{}(strm)\\ -\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Reads elements from a stream\\   From a char stream\\   From a wchar\_t stream\end{tabular} \\ \hline
+	\begin{tabular}[c]{@{}l@{}}std::basic\_string\_view\\   std::string\_view\\   std::u8string\_view\\   std::u16string\_view\\   std::u32string\_view\\   std::wstring\_view\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}-\\ -\\ -\\ -\\ -\\ -\end{tabular} &
+	\begin{tabular}[c]{@{}l@{}}Read-only view to characters\\   To a char sequence\\   To a char8\_t sequence\\   To a char16\_t sequence\\   To a char32\_t sequence\\   To a wchar\_t sequence\end{tabular} \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 8.1. Wrapping and generating views
+\end{center}
+
+The table lists both the types of the views and the name of the range adaptors/factories you can use to create them (if there are any).
+
+For string views, which were introduced with C++17 as type std::basic\_string\_view<>, C++ provides the alias types std::string\_view, std::u8string\_view, std::u16string\_view, std::u32string\_view, and std::wstring\_view.
+
+For istream views, which have type std::basic\_istream\_view<>, C++ provides the alias types std::istream\_view and std::wistream\_view.
+
+Note that the view types use different namespaces:
+
+\begin{itemize}
+\item
+span and string\_view are in the namespace std.
+
+\item
+All range adaptors and factories are provided in the namespace std::views (which is an alias for std::ranges::views).
+
+\item
+All other view types are provided in the namespace std::ranges.
+\end{itemize}
+
+In general, it is better to use the range adaptors and factories. For example, you should always favor the adaptor std::views::all() instead of using the types std::ranges::ref\_view<> and std::ranges::owning\_view<> directly. However, in some situations, there is no adaptor/factory provided, which means that you have to use the view types directly. The most important example is when you have to create a view from a pair of iterators. In that case, you have to initialize a std::ranges::subrange directly.
 
 \subsubsection*{\zihao{3} 8.1.2\hspace{0.2cm}Overview of Adapting Views}
 \addcontentsline{toc}{subsubsection}{8.1.2\hspace{0.2cm}Overview of Adapting Views}
+
+Table Adapting views lists the standard views that adapt, in some way, elements of given ranges (filter out elements, modify the values of elements, change the order of elements, or combine or create sub-ranges). They can especially be used inside pipelines of views.
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+	\hline
+	\textbf{Type}                & \textbf{Adaptor} & \textbf{Effect}                               \\ \hline
+	std::ranges::ref\_view       & all(rg)          & Reference to a range                          \\ \hline
+	std::ranges::owning\_view    & all(rg)          & View containing a range                       \\ \hline
+	std::ranges::take\_view      & take(num)        & The first (up to) num elements                \\ \hline
+	std::ranges::take\_while\_view & take\_while(pred)                    & All leading elements that match a predicate                   \\ \hline
+	std::ranges::drop\_view      & drop(num)        & All except the first num elements             \\ \hline
+	std::ranges::drop\_while\_view & drop\_while(pred)                    & All except leading elements that match a predicate            \\ \hline
+	std::ranges::filter\_view    & filter(pred)     & All elements that match a predicate           \\ \hline
+	std::ranges::transform\_view & transform(func)  & The transformed values of all elements        \\ \hline
+	std::ranges::elements\_view    & elements\textless{}idx\textgreater{} & The idxth member/attribute of all elems                       \\ \hline
+	std::ranges::keys\_view      & keys             & The first member of all elements              \\ \hline
+	std::ranges::values\_view    & values           & The second member of all elements             \\ \hline
+	std::ranges::reverse\_view   & reverse          & All elements in reverse order                 \\ \hline
+	std::ranges::split\_view     & split(sep)       & All elements of a range split into sub-ranges \\ \hline
+	std::ranges::lazy\_split\_view & lazy\_split(sep)                     & All elements of an input or const range split into sub-rnages \\ \hline
+	std::ranges::join\_view      & join             & All elements of a range of multiple ranges    \\ \hline
+	std::ranges::common\_view      & common()                             & All elements with same type for iterator and sentiel          \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{center}
+Table 8.2. Adapting views
+\end{center}
+
+Again, you should prefer to use the range adaptors over using the view types directly. For example, you should always prefer to use the adaptor std::views::take() over the type std::ranges::take\_view<>, because the adaptor might not create a take view at all when you can simply jump to the n-th element of the underlying range. As another example, you should always prefer to use the adaptor std::views::common() over the type std::ranges::common\_view<>, because only the adaptor allows you to pass ranges that are already common (to just take them as they are). Wrapping a common range with the common\_view results in a compile-time error.
+
+
+
+
