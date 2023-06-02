@@ -370,9 +370,351 @@ The effect is similar to type std::reference\_wrapper<> (introduced with C++11),
 
 The major use case of the ref\_view is to convert a container into a lightweight object that is cheap to copy. For example:
 
+\begin{lstlisting}[style=styleCXX]
+void foo(std::ranges::input_range auto coll) // NOTE: takes range by value
+{
+	for (const auto& elem : coll) {
+		...
+	}
+}
+
+std::vector<std::string> coll{ ... };
+
+foo(coll); // copies coll
+foo(std::ranges::ref_view{coll}); // pass coll by reference
+\end{lstlisting}
+
+Passing a container to a coroutine, which usually has to take parameters by value, may be one application of this technique.
+
+Note that you can only create a ref view to an lvalue (a range that has a name):
+
+\begin{lstlisting}[style=styleCXX]
+std::vector coll{0, 8, 15};
+...
+std::ranges::ref_view v1{coll}; // OK, refers to coll
+std::ranges::ref_view v2{std::move(coll)}; // ERROR
+std::ranges::ref_view v3{std::vector{0, 8, 15}}; // ERROR
+\end{lstlisting}
+
+For an rvalue, you have to use an owning view.
+
+Here is a complete example using a ref view:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{ranges/refview.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void printByVal(std::ranges::input_range auto coll) // NOTE: takes range by value
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector<std::string> coll{"love", "of", "my", "life"};
+	
+	printByVal(coll); // copies coll
+	printByVal(std::ranges::ref_view{coll}); // pass coll by reference
+	printByVal(std::views::all(coll)); // ditto (using a range adaptor)
+}
+\end{lstlisting}
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Range Adaptors for Ref Views}
+
+Ref views can also (and usually should) be created with a range factory:
+
+\begin{lstlisting}[style=styleCXX]
+std::views::all(rg)
+\end{lstlisting}
+
+std::views::all() creates a ref\_view to the passed range rg provided rg is an lvalue and not a view yet (all() yields rg if it is already a view and an owning view if otherwise an rvalue is passed).
+
+In addition, almost all other range adaptors also create a ref view if an lvalue is passed that is not a view yet.
+
+The example program above uses this indirect way for creating a ref view with the last call of printByVal(). It passes a std::ranges::ref\_view<std::vector<std::string>{}>{}>:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector<std::string> coll{"love", "of", "my", "life"};
+...
+printByVal(std::views::all(coll));
+\end{lstlisting}
+
+Note that all other views that take a range indirectly call all() for that passed range (by using std::views::all\_t<>). For that reason, a ref view is almost always created automatically if you pass an lvalue that is not a view to one of the views. For example, calling:
+
+\begin{lstlisting}[style=styleCXX]
+std::views::take(coll, 3)
+\end{lstlisting}
+
+basically has the same effect as calling the following:
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::take_view{std::ranges::ref_view{coll}, 3};
+\end{lstlisting}
+
+However, using the adaptor, some optimizations might apply.
+
+For more details, see the description of std::views::all().
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Special Characteristics of Ref Views}
+
+The ref view stores a reference to the underlying range. Therefore, the ref view is a borrowed range. It can be used as long as the referred view is valid. For example, if the underlying view is a vector, a reallocation does not invalidate this view. However, note that iterators can still dangle when the underlying range is no longer there.
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Interface of Ref Views}
+
+Table Operations of the class std::ranges::ref\_view<> lists the API of a ref\_view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+	\hline
+	\textbf{Operation} & \textbf{Effect}                                                \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
+	ref\_view r\{rg\}  & Creates a ref\_view that refers to range rg                    \\ \hline
+	r.begin()          & Yields the begin iterator                                      \\ \hline
+	r.end()            & Yields the sentinel (end iterator)                             \\ \hline
+	r.empty()          & Yields whether r is empty (available if the range supports it) \\ \hline
+	if(r)              & true if r is not empty(available if empty() is defined)        \\ \hline
+	r.size() & Yields the number of elements (available if it refers to a sized range)                            \\ \hline
+	r.front()          & Yields the first element(available if forwarding)              \\ \hline
+	r.back()           & Yields the last element(available if bidirectional and common) \\ \hline
+	r{[}idx{]}         & Yields the n-th element(available if random access)            \\ \hline
+	r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+	r.base()           & Yields a reference to the range that r refers to               \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.5. Operations of the class std::ranges::ref\_view<>
+\end{center}
+
+Note that there is no default constructor provided for this view.
+
 \subsubsection*{\zihao{3} 8.3.3\hspace{0.2cm}Owning View}
 \addcontentsline{toc}{subsubsection}{8.3.3\hspace{0.2cm}Owning View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::owning\_view\textless{}\textgreater{}  \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All elements of a moved range                       \\ \hline
+\textbf{Adaptors:}             & std::views::all() and all other adaptors on rvalues \\ \hline
+\textbf{Element type:}         & Same type as passed range                           \\ \hline
+\textbf{Requires:}             & At least input range                                \\ \hline
+\textbf{Category:}             & Same as passed                                      \\ \hline
+\textbf{Is sized range:}       & If on sized range                                   \\ \hline
+\textbf{Is common range:}      & If on common range                                  \\ \hline
+\textbf{Is borrowed range:}    & If on borrowed range                                \\ \hline
+\textbf{Caches:}               & Nothing                                             \\ \hline
+\textbf{Const iterable:}       & If on const-iterable range                          \\ \hline
+\textbf{Propagates constness:} & Always                                              \\ \hline
+\end{longtable}
+
+The class template std::ranges::owning\_view<> defines a view that takes ownership of the elements of another range.[Originally, C++20 did not have an owning view. The view was introduced with a later fix (see \url{http://wg21.link/p2415}).]
+
+This is the only view (so far) that might own multiple elements. However, construction is still cheap, because an initial range has to be an rvalue (temporary object or object marked with std::move()). The constructor will then move the range to an internal member of the view.
+
+For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector vec{0, 8, 15};
+std::ranges::owning_view v0{vec}; // ERROR
+std::ranges::owning_view v1{std::move(vec)}; // OK
+print(v1); // 0 8 15
+print(vec); // unspecified value (was moved away)
+
+std::array<std::string, 3> arr{"tic", "tac", "toe"};
+std::ranges::owning_view v2{arr}; // ERROR
+std::ranges::owning_view v2{std::move(arr)}; // OK
+print(v2); // "tic" "tac" "toe"
+print(arr); // "" "" ""
+\end{lstlisting}
+
+This is the only standard view of C++20 that does not support copying at all. You can only move it. For example:
+
+\begin{lstlisting}[style=styleCXX]
+std::vector coll{0, 8, 15};
+std::ranges::owning_view v0{std::move(coll)};
+
+auto v3 = v0; // ERROR
+auto v4 = std::move(v0); // OK (range in v0 moved to v4)
+\end{lstlisting}
+
+The major use case of the owning\_view is to create a view from a range without depending on the lifetime of the range anymore. For example:
+
+\begin{lstlisting}[style=styleCXX]
+void foo(std::ranges::view auto coll) // NOTE: takes range by value
+{
+	for (const auto& elem : coll) {
+		...
+	}
+}
+
+std::vector<std::string> coll{ ... };
+
+foo(coll); // ERROR: no view
+foo(std::move(coll)); // ERROR: no view
+foo(std::ranges::owning_view{coll}); // ERROR: must pass rvalue
+foo(std::ranges::owning_view{std::move(coll)}); // OK: move coll as view
+\end{lstlisting}
+
+Converting a range to an owning view is usually done implicitly by passing a temporary container to a range adaptor (see below).
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Range Adaptors for Owning Views}
+
+Owning views can also (and usually should) be created with a range factory:
+
+\begin{lstlisting}[style=styleCXX]
+std::views::all(rg)
+\end{lstlisting}
+
+std::views::all() creates an owning\_view to the passed range rg provided rg is an rvalue and not a view yet (all() yields rg if it is already a view and a ref view if otherwise an lvalue is passed).
+
+In addition, almost all other range adaptors also create an owning view if an rvalue is passed that is not a view yet.
+
+The example above can therefore implement the call of foo() as follows:
+
+\begin{lstlisting}[style=styleCXX]
+foo(std::views::all(std::move(coll))); // move coll as view
+\end{lstlisting}
+
+To create an owning view, the adaptor all() requires an rvalue (for an lvalue, all() creates a ref view). This means that you have to pass a temporary range or a named range marked with std::move() (all() yields a ref view if an lvalue is passed).
+
+Here is a complete example:
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textit{ranges/owningview.cpp}
+
+\begin{lstlisting}[style=styleCXX]
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+auto getColl()
+{
+	return std::vector<std::string>{"you", "don't", "fool", "me"};
+}
+
+int main()
+{
+	std::ranges::owning_view v1 = getColl(); // view owning a vector of strings
+	auto v2 = std::views::all(getColl()); // ditto
+	static_assert(std::same_as<decltype(v1), decltype(v2)>);
+	
+	// iterate over drop view of owning view of vector<string>:
+	for (const auto& elem : getColl() | std::views::drop(1)) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+\end{lstlisting}
+
+Here, v1 and v2 both have type std::ranges::owning\_view<std::vector<std::string>>>. However, the usual way to create an owning view is demonstrated the range-based for loop at the end of the program: it creates an owning view indirectly when we pass the a temporary container to a range adaptor.
+
+The expression
+
+\begin{lstlisting}[style=styleCXX]
+getColl() | std::views::drop(1)
+\end{lstlisting}
+
+creates a
+
+\begin{lstlisting}[style=styleCXX]
+std::ranges::drop_view<std::ranges::owning_view<std::vector<std::string>>>
+\end{lstlisting}
+
+The way this happens is that the drop view indirectly calls all() for the passed temporary range (by using std::views::all\_t<>).
+
+For more details, see the description of std::views::all().
+
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Special Characteristics of Owning Views}
+
+The owning view moves the passed range into itself. Therefore, the owning view is a borrowed range if the range it owns is a borrowed range.
+
+\noindent
+\hspace*{\fill} \\ %插入空行
+\textbf{Interface of Owning Views}
+
+Table Operations of the class std::ranges::owning\_view<> lists the API of an owning\_view.
+
+The default constructor is provided only if the iterator is default initializable.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+	\hline
+	\textbf{Operation}   & \textbf{Effect}                                                \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
+	owning\_view r\{\}   & Creates an owning\_view that is empty                          \\ \hline
+	owning\_view r\{rg\} & Craetes an owning\_view that owns the elements of rg           \\ \hline
+	r.begin()            & Yields the begin iterator                                      \\ \hline
+	r.end()              & Yields the sentinel(end iterator)                              \\ \hline
+	r.empty()            & Yields whether r is empty(available if the range supports it)  \\ \hline
+	if(r)                & true if r is not empty (available if empty() is defined)       \\ \hline
+	r.size() & Yields the number of elements(available if it refers to a sized range)                             \\ \hline
+	r.front()            & Yields the first element(available if forwarfing)              \\ \hline
+	r.back()             & Yields the last element(available if bidirectional and common) \\ \hline
+	r{[}idx{]}           & Yields the n-th element(available if random access)            \\ \hline
+	r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+	r.base()             & Yields a reference to the range that r owns                    \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.6. Operations of the class std::ranges::owning\_view<>
+\end{center}
 
 
 \subsubsection*{\zihao{3} 8.3.4\hspace{0.2cm}Common View}
 \addcontentsline{toc}{subsubsection}{8.3.4\hspace{0.2cm}Common View}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
