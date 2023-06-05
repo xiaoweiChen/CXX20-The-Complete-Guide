@@ -27,9 +27,9 @@ As mentioned in the introduction to ranges, the key benefit of these type functi
 
 Note that std::ranges::range\_value\_t<Rg> is just a shortcut for:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::iter_value_t<std::ranges::iterator_t<Rg>>
-\end{lstlisting}
+\end{cpp}
 
 It should be preferred over Rg::value\_type.
 
@@ -87,27 +87,27 @@ Table 7.9. New functional types
 
 The function object std::identity is usually used to pass no projection where a projection can be passed. If an algorithm supports passing a projection:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto pos = std::ranges::find(coll, 25, // find value 25
 							[](auto x) {return x*x;}); // for squared elements
-\end{lstlisting}
+\end{cpp}
 
 using std::identity enables programmers to pass “no projection:”
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto pos = std::ranges::find(coll, 25, // find value 25
 							std::identity{}); // for elements as they are
-\end{lstlisting}
+\end{cpp}
 
 The function object is used as a default template parameter to declare an algorithm where the projection can be skipped:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::input_range R,
 		typename T,
 		typename Proj = std::identity>
 constexpr std::ranges::borrowed_iterator_t<R>
 find(R&& r, const T& value, Proj proj = {});
-\end{lstlisting}
+\end{cpp}
 
 The function object type std::compare\_three\_way is a new function object type for specifying that the new operator <=> shall be called/used (just like std::less or std::ranges::less stand for calling the operator <). It is described in the chapter about the operator <=>.
 

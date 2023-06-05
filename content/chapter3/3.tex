@@ -28,13 +28,13 @@ Let us take a closer look at these reasons by developing another example step by
 
 Assume we want to write generic code that inserts the value of an object into a collection. Thanks to templates, we can implement it once as generic code that is compiled for the types of passed objects once we know them:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 void add(Coll& coll, const T& val)
 {
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 This code does not always compile. There is an implicit requirement for the types of the passed arguments: the call to push\_back() for the value of type T has to be supported for the container of type Coll.
 
@@ -54,7 +54,7 @@ If the passed argument has the element type of Coll, that type has to support co
 If any of these requirements are broken, the code does not compile. For example:
 
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> vec;
 add(vec, 42); // OK
 add(vec, "hello"); // ERROR: no conversion from string literal to int
@@ -65,26 +65,26 @@ add(coll, 42); // ERROR: no push_back() supported by std::set<>
 std::vector<std::atomic<int>> aiVec;
 std::atomic<int> ai{42};
 add(aiVec, ai); // ERROR: cannot copy/move atomics
-\end{lstlisting}
+\end{cpp}
 
 
 When compilation fails, error messages can be very clear, such as when the member push\_back() is not found on the top level of a template:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 prog.cpp: In instantiation of ’void add(Coll&, const T&)
              [with Coll = std::__debug::set<int>; T = int]’:
 prog.cpp:17:18:     required from here
 prog.cpp:11:8: error: ’class std::set<int>’ has no member named ’push_back’
   11 | coll.push_back(val);
       | ~~~~~^~~~~~~~~
-\end{tcblisting}
+\end{shell}
 }
 
 However, generic error messages can also be very tough to read and understand. For example, when the compiler has to deal with the broken requirement that copying is not supported, the problem is detected in the deep darkness of the implementation of std::vector<>. We get between 40 and 90 lines of error messages where we have to look carefully for the broken requirement:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 ...
 prog.cpp:11:17: required from ’void add(Coll&, const T&)
                     [with Coll = std::vector<std::atomic<int> >; T = std::atomic<int>]’
@@ -95,13 +95,13 @@ prog.cpp:25:18:     required from here
     96 | -> decltype(::new((void*)0) _Tp(std::declval<_Args>()...))
         |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ...
-\end{tcblisting}
+\end{shell}
 }
 
 
 You might think that you can improve the situation by defining and using a concept that checks whether you can perform the push\_back() call:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 concept SupportsPushBack = requires(Coll c, T v) {
 	c.push_back(v);
@@ -113,12 +113,12 @@ void add(Coll& coll, const T& val)
 {
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 The error message for not finding push\_back() might now be as follows:
 
 {\scriptsize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 prog.cpp:27:4: error: no matching function for call to ’add(std::set<int>&, int)’
     27 | add(coll, 42);
         | ~~~^~~~~~~~~~
@@ -137,28 +137,28 @@ prog.cpp:8:28: in requirements with ’Coll c’, ’T v’
 prog.cpp:9:16: note: the required expression ’c.push_back(v)’ is invalid
       9 | c.push_back(v);
          | ~~~~~~~~~~~^~~
-\end{tcblisting}
+\end{shell}
 }
 
 However, when passing atomics, the check for being copyable is still detected in the deep darkness of the code for std::vector<> (this time when the concept is checked, instead of when the code is compiled).
 
 In that case, the situation improves when we specify the basic constraint for the use of push\_back() as a requirement instead:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 requires std::convertible_to<T, typename Coll::value_type>
 void add(Coll& coll, const T& val)
 {
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, we use the standard concept std::convertible\_to to require that the type of the passed argument T can be (implicitly or explicitly) converted to the element type of the collection.
 
 Now, if the requirement is broken, we can get an error message with the broken concept and the location where it is broken. For example[This is just one example of a possible message, not necessarily matching the situation of a specific compiler]:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 ...
 prog.cpp:11:17: In substitution of ’template<class Coll, class T>
                  requires convertible_to<T, typename Coll::value_type>
@@ -176,7 +176,7 @@ prog.cpp:25:18: required from here
     72 | concept convertible_to = is_convertible_v<_From, _To>
         |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ...
-\end{tcblisting}
+\end{shell}
 }
 
 See rangessort.cpp for another example of algorithms that check the constraints of their parameters.
@@ -188,7 +188,7 @@ Assume we want to provide a special implementation for an add() function templat
 
 A naive approach might be to overload the function template for double:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 void add(Coll& coll, const T& val) // for generic value types
 {
@@ -201,26 +201,26 @@ void add(Coll& coll, double val) // for floating-point value types
 	... // special code for floating-point values
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 As expected, when we pass a double as a second argument, the second function is called; otherwise, the generic argument is used:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> iVec;
 add(iVec, 42); // OK: calls add() for T being int
 
 std::vector<double> dVec;
 add(dVec, 0.7); // OK: calls 2nd add() for double
-\end{lstlisting}
+\end{cpp}
 
 When passing a double, both function overloads match. The second overload is preferred because it is a perfect match for the second argument.
 
 However, if we pass a float, we have the following effect:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 float f = 0.7;
 add(dVec, f); // OOPS: calls 1st add() for T being float
-\end{lstlisting}
+\end{cpp}
 
 The reason lies in the sometimes subtle details of overload resolution. Again, both functions could be called. Overload resolution has some general rules, such as:
 
@@ -240,7 +240,7 @@ Here, however, overload resolution has to decide between a call with a type conv
 
 The fix for the wrong overload resolution is pretty simple. Instead of declaring the second parameter with a specific type, we should just require that the value to be inserted has a floating-point type. For this, we can constrain the function template for floating-point values by using the new standard concept std::floating\_point:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 requires std::floating_point<T>
 void add(Coll& coll, const T& val)
@@ -248,32 +248,32 @@ void add(Coll& coll, const T& val)
 	... // special code for floating-point values
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 Because we use a concept that applies to a single template parameter we can also use the shorthand notation:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, std::floating_point T>
 void add(Coll& coll, const T& val)
 {
 	... // special code for floating-point values
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 Alternatively, we can use auto parameters:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void add(auto& coll, const std::floating_point auto& val)
 {
 	... // special code for floating-point values
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 For add(), we now have two function templates that can be called: one without and one with a specific requirement:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 uirement:
 template<typename Coll, typename T>
 void add(Coll& coll, const T& val) // for generic value types
@@ -287,17 +287,17 @@ void add(Coll& coll, const T& val) // for floating-point value types
 	... // special code for floating-point values
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 This is enough because overload resolution also prefers overloads or specializations that have constraints over those that have fewer or no constraints:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> iVec;
 add(iVec, 42); // OK: calls add() for generic value types
 
 std::vector<double> dVec;
 add(dVec, 0.7); // OK: calls add() for floating-point types
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -307,7 +307,7 @@ If two overloads or specializations have constraints, it is important that overl
 
 If the signatures differ too much, the more constrained overload might not be preferred. For example, if we declare the overload for floating-point values to take the argument by value, passing a floating-point value becomes ambiguous:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 void add(Coll& coll, const T& val) // note: pass by const reference
 {
@@ -323,7 +323,7 @@ void add(Coll& coll, T val) // note: pass by value
 
 std::vector<double> dVec;
 add(dVec, 0.7); // ERROR: both templates match and no preference
-\end{lstlisting}
+\end{cpp}
 
 The latter declaration is no longer a special case of the former declaration. We just have two different function templates that could both be called.
 
@@ -335,25 +335,25 @@ If you really want to have different signatures, you have to constrain the first
 
 We have another interesting issue in this example: both function templates allow us to pass a double to add it into a collection of int:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> iVec;
 
 add(iVec, 1.9); // OOPS: add 1
-\end{lstlisting}
+\end{cpp}
 
 The reason is that we have implicit type conversions from double to int (due to being compatible with the programming language C). Such an implicit conversion where we might lose parts of the value is called narrowing. It means that the code above compiles and converts the value 1.9 to 1 before it is inserted.
 
 If you do not want to support narrowing, you have multiple options. One option is to disable type conversions completely by requiring that the passed value type matches the element type of the collection:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 requires std::same_as<typename Coll::value_type, T>
-\end{lstlisting}
+\end{cpp}
 
 However, this would also disable useful and safe type conversions.
 
 For that reason, it is better to define a concept that yields whether a type can be converted to another type without narrowing, which is possible in a short tricky requirement[Thanks to Giuseppe D’Angelo and Zhihao Yuan for the trick to check for narrowing conversions introduced in \url{http://wg21.link/p0870}.]:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename From, typename To>
 concept ConvertsWithoutNarrowing =
 	std::convertible_to<From, To> &&
@@ -361,18 +361,18 @@ concept ConvertsWithoutNarrowing =
 		{ std::type_identity_t<To[]>{std::forward<From>(x)} }
 		-> std::same_as<To[1]>;
 	};
-\end{lstlisting}
+\end{cpp}
 
 We can then use this concept to formulate a corresponding constraint:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 requires ConvertsWithoutNarrowing<T, typename Coll::value_type>
 void add(Coll& coll, const T& val)
 {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -380,18 +380,18 @@ void add(Coll& coll, const T& val)
 
 It would probably be enough to define the concept for narrowing conversions above without requiring the concept std::convertible\_to, because the rest checks this implicitly:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename From, typename To>
 concept ConvertsWithoutNarrowing = requires (From&& x) {
 	{ std::type_identity_t<To[]>{std::forward<From>(x)} } -> std::same_as<To[1]>;
 };
-\end{lstlisting}
+\end{cpp}
 
 However, there is an important benefit if the concept ConvertsWithoutNarrowing also checks for the concept std::convertible\_to. In that case, the compiler can detect that ConvertsWithoutNarrowing is more constrained than std::convertible\_to. The terminology is that ConvertsWithoutNarrowing subsumes std::convertible\_to.
 
 That allows a programmer to do the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 emplate<typename F, typename T>
 requires std::convertible_to<F, T>
 void foo(F, T)
@@ -405,7 +405,7 @@ void foo(F, T)
 {
 	std::cout << "without narrowing\n";
 }
-\end{lstlisting}
+\end{cpp}
 
 Without specifying that ConvertsWithoutNarrowing subsumes std::convertible\_to, the compiler would raise an ambiguity error here when calling foo() with two parameters that convert to each other without narrowing.
 
@@ -434,21 +434,21 @@ Yes, you can argue that these are different functions and that they should have 
 
 Having just introduced concepts, the “obvious” approach might be to introduce a concept to find out whether a certain function call is supported:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 concept SupportsPushBack = requires(Coll c, T v) {
 	c.push_back(v);
 };
-\end{lstlisting}
+\end{cpp}
 
 Note that we can also define a concept that needs only the collection as a template parameter:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll>
 concept SupportsPushBack = requires(Coll coll, Coll::value_type val) {
 	coll.push_back(val);
 };
-\end{lstlisting}
+\end{cpp}
 
 Note that we do not have to use typename here to use Coll::value\_type. Since C++20, typename is no longer required when it is clear by the context that a qualified member must be a type.
 
@@ -458,12 +458,12 @@ There are various other ways to declare this concept:
 \item
 You can use std::declval<>() to get a value of the element type:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll>
 concept SupportsPushBack = requires(Coll coll) {
 	coll.push_back(std::declval<typename Coll::value_type&>());
 };
-\end{lstlisting}
+\end{cpp}
 
 Here, you can see that the definition of concepts and requirements does not create code. It is an unevaluated context where we can use std::declval<>() for “assume we have an object of this type” and it does not matter whether we declare coll as a value or as a non-const reference.
 
@@ -474,12 +474,12 @@ You could use std::ranges::range\_value\_t instead of the value\_type member:
 
 You can use std::declval<>() to get a value of the element type:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll>
 concept SupportsPushBack = requires(Coll coll) {
 	coll.push_back(std::declval<std::ranges::range_value_t<Coll>>());
 };
-\end{lstlisting}
+\end{cpp}
 
 In general, using std::ranges::range\_value\_t<> makes code more generic when the element type of a collection is needed (e.g., it also works with raw array). However, because we require the member push\_back() here, also requiring the member value\_type does not hurt.
 
@@ -487,7 +487,7 @@ In general, using std::ranges::range\_value\_t<> makes code more generic when th
 
 With the concept SupportPushBack for one parameter, we can provide two implementations:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 requires SupportsPushBack<Coll>
 void add(Coll& coll, const T& val)
@@ -500,23 +500,23 @@ void add(Coll& coll, const T& val)
 {
 	coll.insert(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 In this case, we not need a named requirement SupportsInsert here because the add() with the additional requirement is more special, which means that overload resolution prefers it. However, there are only a few containers that support calling insert() with only one argument. To avoid problems with other overloads and calls of add(), we should probably better also have a constraint here.
 
 Because we define the requirement as a concept, we can even use it as a type constraint for the template parameter:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<SupportsPushBack Coll, typename T>
 void add(Coll& coll, const T& val)
 {
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 As a concept, we can also use it as a type constraint for auto as parameter types:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void add(SupportsPushBack auto& coll, const auto& val)
 {
 	coll.push_back(val);
@@ -527,7 +527,7 @@ void add(auto& coll, const auto& val)
 {
 	coll.insert(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -535,14 +535,14 @@ void add(auto& coll, const auto& val)
 
 We can also use the concept SupportsPushBack directly in an if constexpr condition:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if constexpr (SupportsPushBack<decltype(coll)>) {
 	coll.push_back(val);
 }
 else {
 	coll.insert(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -550,14 +550,14 @@ else {
 
 We can even skip introducing a concept and pass the requires expression directly as a condition to the compile-time if:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if constexpr (requires { coll.push_back(val); }) {
 	coll.push_back(val);
 }
 else {
 	coll.insert(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 This is a nice way to switch between two different function calls in generic code. It is especially recommended when introducing a concept is not worthwhile.
 
@@ -567,12 +567,12 @@ This is a nice way to switch between two different function calls in generic cod
 
 You might wonder why using concepts is better than using a variable template of type bool (like type traits do) such as the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 constexpr bool SupportsPushBack = requires(T coll) {
 	coll.push_back(std::declval<typename T::value_type>());
 };
-\end{lstlisting}
+\end{cpp}
 
 Concepts have the following benefits:
 
@@ -595,7 +595,7 @@ If you do not need any of these benefits, the question of whether to prefer the 
 
 To provide an overload that deals with multiple values passed as one collection, we can simply add constraints for them. The standard concept std::ranges::input\_range can be used for that:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
 void add(Coll& coll, const T& val)
 {
@@ -607,13 +607,13 @@ void add(Coll& coll, const T& val)
 {
 	coll.insert(val.begin(), val.end());
 }
-\end{lstlisting}
+\end{cpp}
 
 Again, as long as the overload has this as an additional constraint, these functions will be preferred.
 
 The concept std::ranges::input\_range is a concept introduced to deal with ranges, which are collections you can iterate over with begin() and end(). However, ranges are not required to have begin() and end() as member functions. Code that deals with ranges should therefore use the helpers std::ranges::begin() and std::ranges::end() that the ranges library provides:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
 void add(Coll& coll, const T& val)
 {
@@ -624,7 +624,7 @@ void add(Coll& coll, const T& val)
 {
 	coll.insert(std::ranges::begin(val), std::ranges::end(val));
 }
-\end{lstlisting}
+\end{cpp}
 
 These helpers are function objects so that using them avoids ADL problems.
 
@@ -634,7 +634,7 @@ These helpers are function objects so that using them avoids ADL problems.
 
 By bringing together all useful concepts and requirements, we could place them all in one function at different locations.
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
 requires ConvertsWithoutNarrowing<std::ranges::range_value_t<T>,
 typename Coll::value_type>
@@ -643,13 +643,13 @@ void add(Coll& coll, const T& val)
 	coll.insert(coll.end(),
 				std::ranges::begin(val), std::ranges::end(val));
 }
-\end{lstlisting}
+\end{cpp}
 
 To disable narrowing conversions, we use std::ranges::range\_value\_t to pass the element type of the ranges to ConvertsWithoutNarrowing. std::ranges::range\_value\_t is another ranges utility for getting the element type of ranges when iterating over them.
 
 We could also formulate them together in the requires clause:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 requires SupportsPushBack<Coll> &&
 			std::ranges::input_range<T> &&
@@ -660,7 +660,7 @@ void add(Coll& coll, const T& val)
 	coll.insert(coll.end(),
 				std::ranges::begin(val), std::ranges::end(val));
 }
-\end{lstlisting}
+\end{cpp}
 
 Both ways of declaring the function template are equivalent.
 
@@ -669,12 +669,9 @@ Both ways of declaring the function template are equivalent.
 
 The previous subsections provided a huge amount of flexibility. So, let us bring all options together to have at least one full example as a whole:
 
+\filename{lang/add.cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{lang/add.cpp}
-
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <set>
@@ -753,7 +750,7 @@ int main()
 	add(iVec, vals); // OK
 	// add(dVec, vals); // ERROR: narrowing
 }
-\end{lstlisting}
+\end{cpp}
 
 As you can see, I decided to use the concept SupportsPushBack for one template parameter inside the various function templates with if constexpr.
 
@@ -770,7 +767,7 @@ The major approach for disabling the availability of templates before C++20 was 
 
 For example, to switch between push\_back() and insert(), we could declare the function templates before C++20 as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 auto add(Coll& coll, const T& val) -> decltype(coll.push_back(val))
 {
@@ -782,7 +779,7 @@ auto add(Coll& coll, const T& val) -> decltype(coll.insert(val))
 {
 	return coll.insert(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 Because we make the call to push\_back() here part of the first template declaration, this template is ignored if push\_back() is not supported. The corresponding declaration is necessary in the second template for insert() (overload resolution does ignore return types and would complain if both function templates can be used).
 
@@ -798,7 +795,7 @@ This is a type trait that takes a Boolean condition that yields invalid code if 
 
 For example, you could use the std::enable\_if<> type trait to exclude types from calling the add() function template in the following way:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // disable the template for floating-point values:
 template<typename Coll, typename T,
 typename = std::enable_if_t<!std::is_floating_point_v<T>>>
@@ -806,7 +803,7 @@ void add(Coll& coll, const T& val)
 {
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 The trick is to insert an additional template parameter to be able to use the trait std::enable\_if<>. The trait yields void if it does not disable the template (you can specify that it yields another type as an optional second template parameter).
 

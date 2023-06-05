@@ -6,11 +6,9 @@ After introducing the new rules for comparisons, it turned out that C++20 introd
 
 The following example demonstrates the essence of the most typical problem:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{lang/spacecompat.cpp}
+\filename{lang/spacecompat.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 
 class MyType {
@@ -35,11 +33,11 @@ int main()
 		std::cout << "'0 == MyType{42}' works\n";
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 We have a trivial class that stores an integral value and has an implicit constructor to initialize the object (the implicit constructor is necessary to support initialization with =):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyType {
 	public:
 	MyType(int i); // implicit constructor from int
@@ -47,35 +45,35 @@ class MyType {
 };
 
 MyType x = 42; // OK
-\end{lstlisting}
+\end{cpp}
 
 The class also declares a member function to compare objects:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyType {
 	...
 	bool operator==(const MyType& rhs) const;
 	...
 };
-\end{lstlisting}
+\end{cpp}
 
 However, before C++20, this does only enable implicit type conversions for the second operand. Therefore, the class or some other code introduces a global operator that swaps the order of the arguments:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 bool operator==(int i, const MyType& t) {
 	return t == i; // OK until C++17
 }
-\end{lstlisting}
+\end{cpp}
 
 It would be better for the class to define the operator==() as a “hidden friend” (define it with friend inside the class structure so that both operators become parameters, you have direct access to members, and implicit type conversions are only performed if at least one parameter type fits). However, the code above had pretty much the same effect before C++20.
 
 Unfortunately, this code no longer works in C++20.[Thanks to Peter Dimov and Barry Revzin for pointing out the problem and discussing it in \url{http://stackoverflow.com/questions/65648897}.] It results in an endless recursion. This is because inside the global function, the expression t == i can also call the global operator==() itself, because the compiler also tries to rewrite the call as i == t:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 bool operator==(int i, const MyType& t) {
 	return t == i; // finds operator==(i,t) in addition to t.operator(MyType{i})
 }
-\end{lstlisting}
+\end{cpp}
 
 Unfortunately, the rewritten statement is a better match because it does not need the implicit type conversion. We have no solution yet to support backward compatibility here; however, compilers are already starting to warn about code like this.
 
@@ -85,11 +83,11 @@ If your code only has to work with C++20, you can simply remove the free-standin
 \item
 Use an explicit conversion:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 bool operator==(int i, const MyType& t) {
 	return t == MyType{i}; // OK until C++17 and with C++20
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Use a feature test macro to disable the code as soon as the new feature is available:
@@ -102,7 +100,7 @@ For derived classes with defaulted comparison operators, there might be problems
 
 Note that the defaulted comparison operators require the support of comparisons in the base class. Therefore, the following does not work:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct Base {
 };
 
@@ -114,11 +112,11 @@ struct Child : Base {
 Child c1, c2;
 ...
 c1 == c2; // ERROR
-\end{lstlisting}
+\end{cpp}
 
 As a consequence, you also have to provide a defaulted operator == in the base class. However, if you do not want the base class to provide operator == for the public, the obvious approach is to add a protected defaulted operator == in the base class:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct Base {
 	protected:
 	bool operator==(const Base& other) const = default;
@@ -128,7 +126,7 @@ Child : Base {
 	int i;
 	bool operator==(const Child& other) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 However, in this case, the defaulted comparisons for the derived class does not work. It is rejected by the current compilers implementing the specified behavior of defaulted operators that is too strict here. This hopefully will be fixed soon (see \url{http://wg21.link/cwg2568}).
 

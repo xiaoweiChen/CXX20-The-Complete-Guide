@@ -17,72 +17,72 @@ Let us look at some examples of using ad-hoc Boolean expressions to restrict the
 \item
 Available only if int and long have a different size:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires (sizeof(int) != sizeof(long))
 ...
-\end{lstlisting}
+\end{cpp}
 
 \item
 Available only if sizeof(T) is not too large:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires (sizeof(T) <= 64)
 ...
-\end{lstlisting}
+\end{cpp}
 
 \item
 Available only if the non-type template parameter Sz is greater than zero:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, std::size_t Sz>
 requires (Sz > 0)
 ...
-\end{lstlisting}
+\end{cpp}
 
 \item
 Available only for raw pointers and the nullptr:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires (std::is_pointer_v<T> || std::same_as<T, std::nullptr_t>)
 ...
-\end{lstlisting}
+\end{cpp}
 
 std::same\_as is a new standard concept. Instead, you could also use the standard type trait std::is\_same\_v<>:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires (std::is_pointer_v<T> || std::is_same_v<T, std::nullptr_t>)
 ...
-\end{lstlisting}
+\end{cpp}
 
 \item
 Available only if the argument cannot be used as a string:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires (!std::convertible_to<T, std::string>)
 ...
-\end{lstlisting}
+\end{cpp}
 
 std::convertible\_to is a new standard concept. You could also use the standard type trait std::is\_convertible\_v<>:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires (!std::is_convertible_v<T, std::string>)
 ...
-\end{lstlisting}
+\end{cpp}
 
 \item
 Available only if the argument is a pointer (or pointer-like object) to an integral value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires std::integral<std::remove_reference_t<decltype(*std::declval<T>())>>
 ...
-\end{lstlisting}
+\end{cpp}
 
 Note that operator* usually yields a reference that is not an integral type. Therefore, we do the following:
 
@@ -110,32 +110,32 @@ std::integral is a new standard concept. You could also use the standard type tr
 \item
 Available only if the non-type template parameters Min and Max have a greatest common divisor (GCD) that is greater than one:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 constexpr bool gcd(T a, T b); // greatest common divisor (forward declaration)
 
 template<typename T, int Min, int Max>
 requires (gcd(Min, Max) > 1) // available if there is a GCD greater than 1
 ...
-\end{lstlisting}
+\end{cpp}
 
 \item
 Disable a template (temporarily):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires false // disable the template
 ...
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 In non-trivial cases, you need parentheses around the whole requires expression or parts of it. You can only skip parentheses if you use only identifiers, ::, and <...> optionally combined with \&\& and ||. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 requires std::convertible_to<T, int> // no parentheses needed here
 		&&
 		(!std::convertible_to<int, T>) // ! forces the need for parentheses
-\end{lstlisting}
+\end{cpp}
 
 
 

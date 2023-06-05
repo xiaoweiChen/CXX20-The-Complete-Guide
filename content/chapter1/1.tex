@@ -7,7 +7,7 @@ Before C++20, you had to define six operators for a type to provide full support
 
 For example, if you wanted to compare objects of a type Value (having an integral ID), you had to implement the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Value {
 private:
 	long id;
@@ -35,31 +35,31 @@ public:
 		return !(*this < rhs); // derived check
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 This enables you to call any of the six comparison operators for a Value (the object the operator is defined for) with another Value (passed as parameter rhs). For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 Value v1, v2;
 ... ;
 if (v1 <= v2) { // calls v1.operator<=(v2)
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 The operators might also be called indirectly (e.g., by calling sort()):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<Value> coll;
 ... ;
 std::sort(coll.begin(), coll.end()); // uses operator < to sort
-\end{lstlisting}
+\end{cpp}
 
 Since C++20 , the call might alternatively use ranges:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::sort(coll); // uses operator < to sort
-\end{lstlisting}
+\end{cpp}
 
 The problem is that even though most of the operators are defined in terms of other operators (they are all based on either operator == or operator <), the definitions are tedious and they add a lot of visual clutter.
 
@@ -81,7 +81,7 @@ Declare the operators with [[nodiscard]] to force warnings if the return value i
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // lang/valueold.hpp
 
 class Value {
@@ -120,7 +120,7 @@ public:
 		return !(lhs < rhs); // derived check
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 1.1.2\hspace{0.2cm}Defining Comparison Operators Since C++20}
 \addcontentsline{toc}{subsubsection}{1.1.2\hspace{0.2cm}Defining Comparison Operators Since C++20}
@@ -135,15 +135,15 @@ To check for inequality, it is now enough to define operator ==.
 
 When the compiler finds no matching declaration for an expression a!=b, the compiler rewrites the expressions and looks for !(a==b) instead. If that does not work, the compiler also tries to change the order of the operands, so it also tries !(b==a):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 a != b // tries: a!=b, !(a==b), and !(b==a)
-\end{lstlisting}
+\end{cpp}
 
 Therefore, for a of TypeA and b of TypeB, the compiler will be able to compile
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 a != b
-\end{lstlisting}
+\end{cpp}
 
 It can do this if there is
 
@@ -171,23 +171,23 @@ Directly calling a defined operator != is preferred (but the order of the types 
 
 Thus, with
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 bool operator==(const TypeA&, const TypeB&);
-\end{lstlisting}
+\end{cpp}
 
 or
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class TypeA {
 public:
 	...
 	bool operator==(const TypeB&) const;
 };
-\end{lstlisting}
+\end{cpp}
 
 the compiler will be able to compile:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 MyType a;
 MyType b;
 ...
@@ -195,7 +195,7 @@ a == b; // OK: fits perfectly
 b == a; // OK, rewritten as: a == b
 a != b; // OK, rewritten as: !(a == b)
 b != a; // OK, rewritten as: !(a == b)
-\end{lstlisting}
+\end{cpp}
 
 Note that thanks to rewriting, implicit type conversions for the first operand are also possible when rewriting converts the operand so that it becomes the parameter of the defined member function.
 
@@ -209,7 +209,7 @@ There is no equivalent rule that for all relational operators it is enough to ha
 
 In fact, the following is enough to enable programmers to use all possible comparators:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // lang/value20.hpp
 
 #include <compare>
@@ -225,37 +225,37 @@ public:
 	// enable use of all equality and relational operators:
 	auto operator<=> (const Value& rhs) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 In general, operator == handles the equality of objects by defining == and !=, while operator <=> handles the order of objects by defining the relational operators. However, by declaring an operator<=> with =default, we use a special rule that a defaulted member operator<=>:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Value {
 	...
 	auto operator<=> (const Value& rhs) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 generates a corresponding member operator==, so that we effectively get:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Value {
 	...
 	auto operator<=> (const Value& rhs) const = default;
 	auto operator== (const Value& rhs) const = default; // implicitly generated
 };
-\end{lstlisting}
+\end{cpp}
 
 The effect is that both operators use their default implementation, which compares objects member by member. This means that the order of the members in the class matters.
 
 Thus, with
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Value {
 	...
 	auto operator<=> (const Value& rhs) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 we get all we need to be able to use all six comparison operators.
 
@@ -284,9 +284,9 @@ operator<=> defines the ordering and can be used by the relational operators <, 
 
 Note that you have to include header <compare> when defaulting or using operator <=>.
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <compare>
-\end{lstlisting}
+\end{cpp}
 
 However, most header files for standard types (strings, containers, <utility>) include this header anyway.
 
@@ -296,7 +296,7 @@ However, most header files for standard types (strings, containers, <utility>) i
 
 To have more control over the generated comparison operators, you can define operator== and operator<=> yourself. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // lang/value20def.hpp
 
 #include <compare>
@@ -318,7 +318,7 @@ public:
 		return id <=> rhs.id; // defines ordering (<, <=, >, and >=)
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 This means that you can specify which members in which order matter or implement special behavior.
 
@@ -326,21 +326,21 @@ The way these basic operators work is that if an expression uses one of the comp
 
 Corresponding to rewriting calls of equality operators, rewriting might also change the order of relational operands, which might enable implicit type conversion for the first operand. For example, if
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 x <= y
-\end{lstlisting}
+\end{cpp}
 
 does not find a matching definition of operator<=, it might be rewritten as
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 (x <=> y) <= 0
-\end{lstlisting}
+\end{cpp}
 
 or even
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 0 <= (y <=> x)
-\end{lstlisting}
+\end{cpp}
 
 As you can see by this rewriting, the new operator<=> performs a three-way comparison, which yields a value you can compare with 0:
 

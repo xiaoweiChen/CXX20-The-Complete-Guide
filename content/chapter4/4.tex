@@ -15,34 +15,34 @@ Requirements on the types that expressions yield
 
 A requires expression starts with requires followed by an optional parameter list and then a block of requirements (all ending with semicolons). For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll>
 ... requires {
 		typename Coll::value_type::first_type; // elements/values have first_type
 		typename Coll::value_type::second_type; // elements/values have second_type
 	}
-\end{lstlisting}
+\end{cpp}
 
 The optional parameter list allows you to introduce a set of “dummy variables” that can be used to express requirements in the body of the requires expression:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires(T x, T y) {
 		x + y; // supports +
 		x - y; // supports -
 	}
-\end{lstlisting}
+\end{cpp}
 
 These parameters are never replaced by arguments. Therefore, it usually does not matter whether you declare them by value or by reference.
 
 The parameters also allow us to introduce (parameters of) sub-types:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll>
 ... requires(Coll::value_type v) {
 		std::cout << v; // supports output operator
 	}
-\end{lstlisting}
+\end{cpp}
 
 This requirements checks whether Coll::value\_type is valid and whether objects of this type support the output operator.
 
@@ -50,12 +50,12 @@ Note that type members in this parameter list do not have to be qualified with t
 
 When using this to check only whether Coll::value\_type is valid, you do not need anything in the body of the block of the requirements. However, the block cannot be empty. Therefore, you could simply use true in that case:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll>
 ... requires(Coll::value_type v) {
 		true; // dummy requirement because the block cannot be empty
 	}
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 4.4.1\hspace{0.2cm}Simple Requirements}
 \addcontentsline{toc}{subsubsection}{4.4.1\hspace{0.2cm}Simple Requirements}
@@ -64,7 +64,7 @@ Simple requirements are just expressions that have to be well-formed. This means
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T1, typename T2>
 ... requires(T1 val, T2 p) {
 		*p; // operator* has to be supported for T2
@@ -73,21 +73,21 @@ template<typename T1, typename T2>
 		*p > val; // support the comparison of the result of operator* with T1
 		p == nullptr; // support the comparison of a T2 with a nullptr
 	}
-\end{lstlisting}
+\end{cpp}
 
 The last call does not require that p is the nullptr (to require that, you have to check whether T2 is type std::nullptr\_t). Instead, we require that we can compare an object of type T2 with nullptr.
 
 It usually does not make sense to use the operator ||. A simple requirement such as
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 *p > val || p == nullptr;
-\end{lstlisting}
+\end{cpp}
 
 does not require that either the left or the right sub-expression is possible. It formulates the requirement that we can combine the results of both sub-expressions with the operator ||.
 
 To require either one of the two sub-expressions, you have to use:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T1, typename T2>
 ... requires(T1 val, T2 p) {
 		*p > val; // support the comparison of the result of operator* with T1
@@ -95,37 +95,37 @@ template<typename T1, typename T2>
 	|| requires(T2 p) { // OR
 		p == nullptr; // support the comparison of a T2 with nullptr
 	}
-\end{lstlisting}
+\end{cpp}
 
 Note also that this concept does not require that T is an integral type:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 		std::integral<T>; // OOPS: does not require T to be integral
 		...
 	};
-\end{lstlisting}
+\end{cpp}
 
 The concept requires only that the expression std::integral<T> is valid, which is the case for all types. The requirements that T is integral you have to formulate as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... std::integral<T> && // OK, does require T to be integral
 	requires {
 		...
 	};
-\end{lstlisting}
+\end{cpp}
 
 Alternatively, as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 		requires std::integral<T>; // OK, does require T to be integral
 		...
 	};
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 4.4.2\hspace{0.2cm}Type Requirements}
 \addcontentsline{toc}{subsubsection}{4.4.2\hspace{0.2cm}Type Requirements}
@@ -134,39 +134,39 @@ Type requirements are expressions that have to be well-formed when using a name 
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T1, typename T2>
 ... requires {
 	typename T1::value_type; // type member value_type required for T1
 	typename std::ranges::iterator_t<T1>; // iterator type required for T1
 	typename std::common_type_t<T1, T2>; // T1 and T2 have to have a common type
 }
-\end{lstlisting}
+\end{cpp}
 
 For all type requirements, if the type exists but is void, then the requirement is met.
 
 Note that you can only check for names given to types (names of classes, enumeration types, from typedef or using). You cannot check for other type declarations using the type:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 	typename int; // ERROR: invalid type requirement
 	typename T&; // ERROR: invalid type requirement
 }
-\end{lstlisting}
+\end{cpp}
 
 The way to test the latter is to declare a corresponding parameter:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires(T&) {
 	true; // some dummy requirement
 };
-\end{lstlisting}
+\end{cpp}
 
 Again, the requirement checks whether using the passed type(s) to define another type is valid. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::integral T>
 class MyType1 {
 	...
@@ -182,25 +182,25 @@ void mytype1(T) {
 
 mytype1(42); // OK
 mytype1(7.7); // ERROR
-\end{lstlisting}
+\end{cpp}
 
 Therefore, the following requirement does not check whether there is a standard hash function for type T:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept StdHash = requires {
 	typename std::hash<T>; // does not check whether std::hash<> is defined for T
 };
-\end{lstlisting}
+\end{cpp}
 
 The way to require a standard hash function is to try to create or use it:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept StdHash = requires {
 	std::hash<T>{}; // OK, checks whether we can create a standard hash function for T
 };
-\end{lstlisting}
+\end{cpp}
 
 Note that simple requirements check only whether a requirement is valid, not whether it is fulfilled. For this reason:
 
@@ -208,53 +208,53 @@ Note that simple requirements check only whether a requirement is valid, not whe
 \item
 It does not make sense to use type functions that always yield a value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 	std::is_const_v<T>; // not useful: always valid (doesn’t matter what it yields)
 }
-\end{lstlisting}
+\end{cpp}
 
 To check for constness, use:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... std::is_const_v<T> // ensure that T is const
-\end{lstlisting}
+\end{cpp}
 
 Inside a requires expression, you can use a nested requirement (see below).
 
 \item
 It does not make sense to use type functions that always yield a type:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 	typename std::remove_const_t<T>; // not useful: always valid (yields a type)
 }
-\end{lstlisting}
+\end{cpp}
 
 The requirement checks only whether the type expression yields a type, which is always the case.
 \end{itemize}
 
 It also does not make sense to use type functions that may have undefined behavior. For example, the type trait std::make\_unsigned<> requires that the passed argument is an integral type other than bool. If the passed type is not an integral type, you get undefined behavior. Therefore, you should not use std::make\_unsigned<> as requirement without constraining the type you call it for:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 	std::make_unsigned<T>::type; // not useful as type requirement (valid or undefined behavior)
 }
-\end{lstlisting}
+\end{cpp}
 
 In this case, the requirement can only be fulfilled or results in undefined behavior (which might mean that the requirement is still fulfilled). Instead, you should also constrain the type T for which you can use a nested requirement:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 	requires (std::integral<T> && !std::same_as<T, bool>);
 	std::make_unsigned<T>::type; // OK
 }
-\end{lstlisting}
+\end{cpp}
 
 
 \subsubsection*{\zihao{3} 4.4.3\hspace{0.2cm}Compound Requirements}
@@ -272,7 +272,7 @@ noexcept to require that the expression guarantees not to throw
 
 Here are some examples:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires(T x) {
 	{ &x } -> std::input_or_output_iterator;
@@ -281,7 +281,7 @@ template<typename T>
 	{ x == x }noexcept;
 	{ x == x }noexcept -> std::convertible_to<bool>;
 }
-\end{lstlisting}
+\end{cpp}
 
 Note that the type constraint after the -> takes the resulting type as its first template argument. That means:
 
@@ -291,9 +291,9 @@ In the first requirement, we require that the concept std::input\_or\_output\_it
 
 You could also specify this as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 { &x } -> std::is_pointer_v<>;
-\end{lstlisting}
+\end{cpp}
 
 \item
 In the last requirement, we require that we can use the result of operator== for two objects of type T as bool (the concept std::convertible\_to is satisfied when passing the result of operator== for two objects of type T and bool as arguments).
@@ -301,32 +301,32 @@ In the last requirement, we require that we can use the result of operator== for
 
 Requires expressions can also express the need for associated types. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires(T coll) {
 	{ *coll.begin() } -> std::convertible_to<T::value_type>;
 }
-\end{lstlisting}
+\end{cpp}
 
 However, you cannot specify type requirements using nested types. For example, you cannot use them to require that the return value of calling the operator * yields an integral value. The problem is that the return value is a reference that you have to dereference first:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::integral<std::remove_reference_t<T>>
-\end{lstlisting}
+\end{cpp}
 
 and you cannot use such a nested expression with a type trait in a result of a requires expression:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept Check = requires(T p) {
 	{ *p } -> std::integral<std::remove_reference_t<>>; // ERROR
 	{ *p } -> std::integral<std::remove_reference_t>; // ERROR
 };
-\end{lstlisting}
+\end{cpp}
 
 You either have to define a corresponding concept first:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept UnrefIntegral = std::integral<std::remove_reference_t<T>>;
 
@@ -334,7 +334,7 @@ template<typename T>
 concept Check = requires(T p) {
 	{ *p } -> UnrefIntegral; // OK
 };
-\end{lstlisting}
+\end{cpp}
 
 Alternatively, you have to use a nested requirement.
 
@@ -345,40 +345,40 @@ Nested requirements can be used to specify additional constraints inside a requi
 
 For example, consider a concept that has to ensure that both the operator * and the operator [] yield the same type for a given type. By using nested requirements, we can specify this as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept DerefAndIndexMatch = requires (T p) {
 								requires std::same_as<decltype(*p),
 										decltype(p[0])>;
 							};
-\end{lstlisting}
+\end{cpp}
 
 The good thing is that we have an easy syntax here for “assume we have an object of type T.” We do not have to use a requires expression here; however, the code then has to use std::declval<>():
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept DerefAndIndexMatch = std::same_as<decltype(*std::declval<T>()),
 			 decltype(std::declval<T>()[0])>;
-\end{lstlisting}
+\end{cpp}
 
 As another example, we can use a nested requirement to solve the problem just introduced to specify a complex type requirement on an expression:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept Check = requires(T p) {
 	requires std::integral<std::remove_cvref_t<decltype(*p)>>;
 };
-\end{lstlisting}
+\end{cpp}
 
 Note the following difference inside a requires expression:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 ... requires {
 	!std::is_const_v<T>; // OOPS: checks whether we can call is_const_v<>
 	requires !std::is_const_v<T>; // OK: checks whether T is not const
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, we use the type trait is\_const\_v<> without and with requires. However, only the second requirement is useful:
 

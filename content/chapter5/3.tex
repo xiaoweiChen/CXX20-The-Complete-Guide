@@ -188,9 +188,7 @@ Calling std::ranges::data() yields a raw pointer to the first element
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::sized\_range<Rg>}
+\samllsection{std::ranges::sized\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -422,11 +420,11 @@ Guarantees that values of InP can be move assigned directly to values of OutP.
 \item
 With this concept, the following code is valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(InP inPos, OutP, outPos) {
 	*outPos = std::move(*inPos);
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Requires:
@@ -450,12 +448,12 @@ Guarantees that values of InP can be move assigned indirectly to values of OutP 
 \item
 With this concept, the following code is valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(InP inPos, OutP, outPos) {
 	OutP::value_type tmp = std::move(*inPos);
 	*outPos = std::move(tmp);
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Requires:
@@ -485,11 +483,11 @@ Guarantees that values of InP can be assigned directly to values of OutP.
 \item
 With this concept, the following code is valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(InP inPos, OutP outPos) {
 	*outPos = *inPos;
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Requires:
@@ -513,12 +511,12 @@ Guarantees that values of InP can be assigned indirectly to values of OutP even 
 \item
 With this concept, the following code is valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(InP inPos, OutP outPos) {
 	OutP::value_type tmp = *inPos;
 	*outPos = tmp;
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Requires:
@@ -614,9 +612,9 @@ Guarantees that Pos is an output iterator (an iterator where you can assign valu
 \item
 Iterators of type Pos can be used to assign a value val of type T with:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 *i++ = val;
-\end{lstlisting}
+\end{cpp}
 
 \item
 These iterators are only good for single-pass iterations.

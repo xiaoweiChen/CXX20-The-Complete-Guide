@@ -8,7 +8,7 @@ With auto parameters, it is significantly easier to implement code with circular
 
 Consider, for example, two classes that use objects of other classes. To use objects of another class, you need the definition of their type; a forward declaration is not enough (except when only declaring a reference or pointer):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class C2; // forward declaration
 
 class C1 {
@@ -27,13 +27,13 @@ class C2 {
 	}
 	void print() const;
 };
-\end{lstlisting}
+\end{cpp}
 
 While you can implement C2::foo() inside the class definition, you cannot implement C1::foo() because to check whether the call of c2.print() is valid, the compiler needs the definition of class C2.
 
 As a consequence, you have to implement C2::foo() after the structures of both classes are declared:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class C2;
 
 class C1 {
@@ -53,11 +53,11 @@ public:
 inline void C1::foo(const C2& c2) const { // implementation (inline if in header)
 	c2.print(); // OK
 }
-\end{lstlisting}
+\end{cpp}
 
 Because generic functions check members of generic parameters when the call happens, by using auto, you can just implement the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class C1 {
 	public:
 	void foo(const auto& c2) const {
@@ -74,13 +74,13 @@ class C2 {
 	}
 	void print() const;
 };
-\end{lstlisting}
+\end{cpp}
 
 This is nothing new. You would have the same effect when declaring C1::foo() as a member function template. However, using auto makes it easier to do so.
 
 Note that auto allows the caller to pass parameters of any type as long as the type provides a member function print(). If you do not want that, you can use the standard concept std::same\_as to constrain the use of this member function for parameters of type C2 only:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <concepts>
 
 class C2;
@@ -93,7 +93,7 @@ class C1 {
 	void print() const;
 };
 ...
-\end{lstlisting}
+\end{cpp}
 
 For the concept, an incomplete type works fine.
 
@@ -102,41 +102,41 @@ For the concept, an incomplete type works fine.
 
 A function with auto parameters is different from a lambda. For example, you still cannot pass a function with auto as a parameter without specifying the generic parameter:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 bool lessByNameFunc(const auto& c1, const auto& c2) { // sorting criterion
 	return c1.getName() < c2.getName(); // - compare by name
 }
 ...
 std::sort(persons.begin(), persons.end(),
 		  lessByNameFunc); // ERROR: can’t deduce type of parameters in sorting criterion
-\end{lstlisting}
+\end{cpp}
 
 Remember that the declaration of lessByName() is equivalent to:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T1, typename T2>
 bool lessByNameFunc(const T1& c1, const T2& c2) { // sorting criterion
 	return c1.getName() < c2.getName(); // - compare by name
 }
-\end{lstlisting}
+\end{cpp}
 
 Because the function template is not called directly, the compiler cannot deduce the template parameters to compile the call. Therefore, you have to specify the template parameters explicitly when passing a function template as a parameter:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::sort(persons.begin(), persons.end(),
 		  lessByName<Customer, Customer>); // OK
-\end{lstlisting}
+\end{cpp}
 
 By using a lambda, you can just pass the lambda as it is:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto lessByNameLambda = [] (const auto& c1, const auto& c2) { // sorting criterion
 							return c1.getName() < c2.getName(); // compare by name
 						};
 ...
 std::sort(persons.begin(), persons.end(),
 		  lessByNameLambda); // OK
-\end{lstlisting}
+\end{cpp}
 
 The reason is that the lambda is an object that does not have a generic type. Only the use of the object as a function is generic.
 
@@ -146,24 +146,24 @@ On the other hand, the explicit specification of an (abbreviated) function templ
 \item
 Just pass the specified type after the function name:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void printFunc(const auto& arg) {
 	...
 }
 
 printFunc<std::string>("hello"); // call function template compiled for std::string
-\end{lstlisting}
+\end{cpp}
 
 \item
 For a generic lambda, we have to do the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto printFunc = [] (const auto& arg) {
 	...
 };
 
 printFunc.operator()<std::string>("hello"); // call lambda compiled for std::string
-\end{lstlisting}
+\end{cpp}
 
 For a generic lambda, the function call operator operator() is generic. Therefore, you have to pass the requested type as an argument to operator() to specify the template parameter explicitly.
 \end{itemize}

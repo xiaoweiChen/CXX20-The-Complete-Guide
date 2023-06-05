@@ -19,7 +19,7 @@ All constraints can also be used wherever a Boolean expression can be used (espe
 
 To combine multiple constraints in requires clauses, we can use the operator \&\&. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires (sizeof(T) > 4) // ad-hoc Boolean expression
 			&& requires { typename T::value_type; } // requires expression
@@ -27,29 +27,29 @@ requires (sizeof(T) > 4) // ad-hoc Boolean expression
 void foo(T x) {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 The order of the constraints does not matter.
 
 We can also express “alternative” constraints using the operator ||. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires std::integral<T> || std::floating_point<T>
 T power(T b, T p);
-\end{lstlisting}
+\end{cpp}
 
 Specifying alternative constraints is rarely necessary and should not be done casually because excessive use of the operator || in requires clauses may potentially tax compilation resources (i.e., make compilation noticeably slower).
 
 A single constraint can also involve multiple template parameters. That way, constraints can impose a relationship between multiple types (or values). For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 requires std::convertible_to<T, U>
 auto f(T x, U y) {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 The operators \&\& and || are the only operators you can use to combine multiple constraints without having to use parentheses. For everything else, use parentheses (which formally pass an ad-hoc Boolean expression to the requires clause).
 

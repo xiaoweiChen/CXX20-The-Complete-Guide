@@ -41,7 +41,7 @@ To document that neither the operation nor the passed arguments are modified, yo
 \item
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct S {
 	int member;
 	int mfunc(int);
@@ -56,13 +56,13 @@ void testCallable()
 	std::invocable<decltype(&S::member), S>; // satisfied (member-pointer and object)
 	std::invocable<S, int>; // satisfied due to operator()
 }
-\end{lstlisting}
+\end{cpp}
 
 Note that as a type constraint, you only have to specify the parameter types:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void callWithIntAndString(std::invocable<int, std::string> auto op);
-\end{lstlisting}
+\end{cpp}
 
 For a complete example, see the use of a lambda as a non-type template parameter.
 

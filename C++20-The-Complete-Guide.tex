@@ -1,6 +1,7 @@
 
 \documentclass[11pt,a4paper,UTF8]{book}
 
+\usepackage{minted}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{authblk}
@@ -226,39 +227,6 @@
 	morestring=[d]',
 }
 
-\lstdefinestyle{styleCXX}{
-	language = C++,  
-	backgroundcolor=\color{blue!3!white}, 
-	%basicstyle = \footnotesize,  
-	basicstyle      =   \zihao{-5}\ttfamily,
-	numberstyle     =   \zihao{-5}\ttfamily,   
-	%breakatwhitespace = false,    
-	basewidth       =   0.5em,    
-	breaklines = true,                 
-	captionpos = b,                    
-	commentstyle = \color{mygray}\bfseries,
-	%extendedchars = false,             
-	frame =shadowbox, 
-	framerule=0.5pt,
-	%frameround = fttt,
-	keepspaces=true,
-	keywordstyle=\color{blue}\bfseries, % keyword style
-	otherkeywords={string}, 
-	numbers=left, 
-	numbersep=5pt,
-	numberstyle=\tiny\color{mygray},
-	rulecolor=\color{black},         
-	%showspaces=false,  
-	%showstringspaces=false, 
-	%showtabs=false,    
-	%stepnumber=1,         
-	stringstyle=\color{mymauve},        % string literal style
-	tabsize=2,          
-	columns         =   fixed,
-	flexiblecolumns,                   
-}
-
-
 \lstdefinestyle{styleCMake}{
 	language=CMake,
 	backgroundcolor=\color{blue!3!white}, 
@@ -366,6 +334,46 @@
 
 \newcommand{\subsubsubsectionmark}[1]{}
 \makeatother
+
+\ExplSyntaxOn
+
+% Setup enumerate, itemize and description
+\setenumerate  { nosep }
+\setitemize    { nosep }
+\setdescription{ nosep }
+
+% Setup minted
+\setminted { obeytabs, tabsize=2, breaklines=true, fontsize=\footnotesize, frame=single }
+
+% Def \filename
+\NewDocumentCommand { \filename } { m } 
+{ \noindent \textit { #1 } \vspace*{ -1ex } \nopagebreak[4] }
+
+% Def \samllsection
+\NewDocumentCommand { \samllsection } { m } 
+{ \noindent \textbf { #1 } \vspace*{ -1ex } \nopagebreak[4] }
+
+% Def \inlcpp
+\NewDocumentCommand { \inlcpp }   { m } 
+{ \mintinline { cpp } { #1 } }
+
+% Def cpp environment
+\NewDocumentEnvironment { cpp } { }
+{ \VerbatimEnvironment
+	\begin { minted } [ linenos=true ] { cpp } } 
+{ \end   { minted } }
+
+% Def shell environment
+\NewDocumentEnvironment { shell } { }
+{ \VerbatimEnvironment
+	\begin { minted } { text } } 
+{ \end   { minted } }
+
+\NewDocumentEnvironment { notice } { }
+{ \begin { tcolorbox } [ colback = green!5!white, colframe=green!75!black ] } 
+{ \end   { tcolorbox } }
+
+\ExplSyntaxOff
 
 \begin{document}
 	\begin{sloppypar} %latex中一行文字出现溢出问题的解决方法

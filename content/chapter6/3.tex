@@ -116,23 +116,23 @@ Usually, the latter option is and should be used. There are multiple ways of imp
 \item
 You can pass the range as a parameter to the constructor of the view:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::take_view first4{coll, 4};
-\end{lstlisting}
+\end{cpp}
 
 \item
 You can pass the range as a parameter to the corresponding adaptor:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto first4 = std::views::take(coll, 4);
-\end{lstlisting}
+\end{cpp}
 
 \item
 You can pipe the range into the corresponding adaptor:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto first4 = coll | std::views::take(4);
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 In any case, the view first4 iterates over only the first four elements of coll (or fewer if there are not enough elements). However, what happens exactly here depends on what coll is:
@@ -150,7 +150,7 @@ If an rvalue is passed (a temporary range such as a container returned by a func
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<std::string> coll{"just", "some", "strings", "to", "deal", "with"};
 
 auto v1 = std::views::take(coll, 4); // iterates over a ref_view to coll
@@ -159,7 +159,7 @@ auto v2 = std::views::take(std::move(coll), 4); // iterates over an owning_view
 // to a local vector<string>
 
 auto v3 = std::views::take(v1, 2); // iterates over v1
-\end{lstlisting}
+\end{cpp}
 
 In all cases, std::views::take() creates a new take view that finally iterates over the values initialized in coll. However, the resulting types and exact behavior differ as follows:
 
@@ -184,7 +184,7 @@ Internally, the initialization uses the deduction guides and the type utility st
 
 Note that this behavior allows a range-based for loop to iterate on temporary ranges:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (const auto& elem : getColl() | std::views::take(5)) {
 	std::cout << "- " << elem << '\n';
 }
@@ -192,7 +192,7 @@ for (const auto& elem : getColl() | std::views::take(5)) {
 for (const auto& elem : getColl() | std::views::take(5) | std::views::drop(2)) {
 	std::cout << "- " << elem << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 This is remarkable, because in general, it is a fatal runtime error to use a reference to a temporary as a collection a range-based for loop iterates over (a bug that the C++ standards committee has not been willing to fix for years now; see \url{http://wg21.link/p2012}). Because passing a temporary range object (rvalue) moves the range into an owning\_view, the view does not refer to an external container and therefore there is no runtime error.
 
@@ -215,7 +215,7 @@ Consider the following program:
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/filttrans.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <ranges>
@@ -242,7 +242,7 @@ int main()
 		std::cout << "val: " << val << "\n\n";
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 We define a view vColl that only filters and transforms the elements of the range coll:
 
@@ -257,7 +257,7 @@ By using std::views::transform(), we negate each value.
 The program has the following output:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 *** coll | filter | transform:
 filter 8
 filter 15
@@ -272,14 +272,14 @@ val: 0
 filter 9
 trans 9
 val: -9
-\end{tcblisting}
+\end{shell}
 }
 
 First, note that neither filter() nor transform() are called when or after we define the view vColl. The processing starts when we use the view (here: iterating over vColl). This means that views use lazy evaluation. A view is just the description of a processing. The processing is performed when we need the next element or value.
 
 Let us assume that we do the iteration over vColl more manually, calling begin() and ++ to get the next value and * to get its value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::cout << "pos = vColl.begin():\n";
 auto pos = vColl.begin();
 std::cout << "*pos:\n";
@@ -291,12 +291,12 @@ std::cout << "++pos:\n";
 std::cout << "*pos:\n";
 val = *pos;
 std::cout << "val: " << val << "\n\n";
-\end{lstlisting}
+\end{cpp}
 
 For this code, we get the following output:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 pos = vColl.begin():
 filter 8
 filter 15
@@ -310,7 +310,7 @@ filter 0
 *pos:
 trans 0
 val: 0
-\end{tcblisting}
+\end{shell}
 }
 
 Let us look at what happens step by step:
@@ -360,21 +360,21 @@ This iteration continues until the range or one of the views signals that we are
 
 This pull model has a big benefit: we do not process elements that we never need. For example, assume that we use the view to find the first resulting value that is 0:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::find(vColl, 0);
-\end{lstlisting}
+\end{cpp}
 
 The output would then be only:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 filter 8
 filter 15
 trans 15
 filter 7
 filter 0
 trans 0
-\end{tcblisting}
+\end{shell}
 }
 
 Another benefit of the pull model is that sequences or pipelines of views can even operate on infinite ranges. We do not compute an unlimited number of values not knowing how many are used; we compute as many values as requested by the user of the view.
@@ -390,7 +390,7 @@ Let us change the program above so that it iterates twice over the elements of t
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/filttrans2.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <ranges>
@@ -423,12 +423,12 @@ int main()
 		std::cout << "val: " << val << "\n\n";
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 *** coll | filter | transform:
 filter 8
 filter 15
@@ -451,27 +451,27 @@ val: 0
 filter 9
 trans 9
 val: -9
-\end{tcblisting}
+\end{shell}
 }
 
 As you can see, when used for the second time, calling vColl.begin() no longer tries to find the first element because it was cached with the first iteration over the elements of the filter.
 
 Note that this caching of begin() has good and bad and maybe unexpected consequences. First, it is better to initialize a caching view once and use it twice:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // better:
 auto v1 = coll | std::views::drop(5);
 check(v1);
 process(v1);
-\end{lstlisting}
+\end{cpp}
 
 than to initialize and use it twice:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // worse:
 check(coll | std::views::drop(5));
 process(coll | std::views::drop(5));
-\end{lstlisting}
+\end{cpp}
 
 In addition, modifying leading elements of ranges (changing their value or inserting/deleting elements) may invalidate views if and only if begin() has already been called before the modification.
 
@@ -481,29 +481,29 @@ That means:
 \item
 If we do not call begin() before a modification, the view is usually valid and works fine when we use it later:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list coll{1, 2, 3, 4, 5};
 auto v = coll | std::views::drop(2);
 coll.push_front(0); // coll is now: 0 1 2 3 4 5
 print(v); // initializes begin() with 2 and prints: 2 3 4 5
-\end{lstlisting}
+\end{cpp}
 
 \item
 However, if we do call begin() before the modification (e.g., by printing the elements), we can easily get wrong elements. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list coll{1, 2, 3, 4, 5};
 auto v = coll | std::views::drop(2);
 print(v); // init begin() with 3
 coll.push_front(0); // coll is now: 0 1 2 3 4 5
 print(v); // begin() is still 3, so prints: 3 4 5
-\end{lstlisting}
+\end{cpp}
 
 Here, begin() is cached as an iterator so that the view no longer operates on all elements of the underlying range if new elements are added to or removed from the range.
 
 However, we might also get invalid values. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector vec{1, 2, 3, 4};
 
 auto biggerThan2 = [](auto v){ return v > 2; };
@@ -515,7 +515,7 @@ print(vVec); // OK: 3 4
 vec[2] = 0; // vec becomes 1 3 0 4
 
 print(vVec); // OOPS: 0 4;
-\end{lstlisting}
+\end{cpp}
 
 \end{itemize}
 
@@ -560,7 +560,7 @@ The pull model also has its drawbacks. To demonstrate that, let us change the or
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/transfilt.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <ranges>
@@ -587,12 +587,12 @@ int main()
 	std::cout << "val: " << val << "\n\n";
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 Now, the output of the program is as follows:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 *** coll | transform | filter:
 trans: 8
 filt: -8
@@ -612,7 +612,7 @@ trans: 9
 filt: -9
 trans: 9
 val: -9
-\end{tcblisting}
+\end{shell}
 }
 
 We have additional calls of the transform view:
@@ -641,9 +641,9 @@ In fact, each filter adds one more call of all leading transformations on each e
 
 Given the following pipeline of transformations t1, t2, t3 and filters f1, f2:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 t1 | t2 | f1 | t3 | f2
-\end{lstlisting}
+\end{cpp}
 
 we have the following behavior:
 
@@ -651,37 +651,37 @@ we have the following behavior:
 \item
 For elements where f1 yields false, we call:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 t1 t2 f1
-\end{lstlisting}
+\end{cpp}
 
 \item
 For elements where f1 yields true but f2 yields false, we call:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 t1 t2 f1 t1 t2 t3 f2
-\end{lstlisting}
+\end{cpp}
 
 \item
 For elements where f1 and f2 yield true, we call:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 t1 t2 f1 t1 t2 t3 f2 t1 t2 t3
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 See ranges/viewscalls.cpp for a complete example.
 
 If this makes you worry about the performance of pipelines, take the following into account: yes, you should avoid expensive transformations before you use a filter. However, remember that all views provide functionality that is usually optimized in such a way that only the expressions inside the transformations and filters remain. In trivial cases such as the one here, where a filter checks for a multiple of 3 and the transformation negates, the resulting difference in behavior is effectively like calling
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if (-x % 3 == 0) return -x; // first transformation then filter
-\end{lstlisting}
+\end{cpp}
 
 instead of
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if (x % 3 == 0) return -x; // first filter then transformation
-\end{lstlisting}
+\end{cpp}
 
 For more details about filters, see the section about the filter view.

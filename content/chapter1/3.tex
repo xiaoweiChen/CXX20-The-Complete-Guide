@@ -62,7 +62,7 @@ For empty classes, the defaulted operators compare all objects as equal: operato
 
 If and only if an operator<=> member is defined as defaulted, then by definition a corresponding operator== member is also defined if no defaulted operator== is provided. All aspects (visibility, virtual, attributes, requirements, etc.) are adopted. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 class Type {
 	...
@@ -70,11 +70,11 @@ class Type {
 		[[nodiscard]] virtual std::strong_ordering
 			operator<=>(const Type&) const requires(!std::same_as<T,bool>) = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 is equivalent to the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 class Type {
 	...
@@ -85,7 +85,7 @@ class Type {
 	[[nodiscard]] virtual bool
 		operator== (const Type&) const requires(!std::same_as<T,bool>) = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 For example, the following is enough to support all six comparison operators for objects of the type Coord:
 
@@ -93,7 +93,7 @@ For example, the following is enough to support all six comparison operators for
 \hspace*{\fill} \\ %插入空行
 \textit{lang/coord.hpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <compare>
 struct Coord {
 	double x{};
@@ -101,17 +101,15 @@ struct Coord {
 	double z{};
 	auto operator<=>(const Coord&) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 Note again that the member function must be const and that the parameter must be declared to be a const lvalue reference (const \&).
 
 You can use this data structure as follows:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{lang/coord.cpp}
+\filename{lang/coord.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include "coord.hpp"
 #include <iostream>
 #include <algorithm>
@@ -125,17 +123,17 @@ int main()
 		std::cout << elem.x << '/' << elem.y << '/' << elem.z << '\n';
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 0/5/5
 3/0/0
 3/5/5
 3/5/7
 5/0/0
-\end{tcblisting}
+\end{shell}
 
 \subsubsection*{\zihao{3} 1.3.3\hspace{0.2cm}Implementation of the Defaulted operator<=>}
 \addcontentsline{toc}{subsubsection}{1.3.3\hspace{0.2cm}Implementation of the Defaulted operator<=>}
@@ -165,7 +163,7 @@ In that case, the return type of the defaulted operator<=> calling these operato
 
 For example, consider the following declarations:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct B {
 	bool operator==(const B&) const;
 	bool operator<(const B&) const;
@@ -174,30 +172,30 @@ struct B {
 struct D : public B {
 	std::strong_ordering operator<=> (const D&) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 Then:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 D d1, d2;
 d1 > d2; // calls B::operator== and possibly B::operator<
-\end{lstlisting}
+\end{cpp}
 
 If operator== yields true, we know that the result of > is false and that is it. Otherwise, operator< is called to find out whether the expression is true or false.
 
 With
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct D : public B {
 	std::partial_ordering operator<=> (const D&) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 the compiler might even call operator< twice to find out whether there is any order at all.
 
 With
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct B {
 	bool operator==(const B&) const;
 	bool operator<(const B&) const;
@@ -206,26 +204,26 @@ struct B {
 struct D : public B {
 	auto operator<=> (const D&) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 the compiler does not compile any call with relational operators because it cannot decide which ordering category the base class has. In that case, you need operator<=> in the base class too.
 
 However, checks for equality work, because in D, operator== is automatically declared equivalent to the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct D : public B {
 	auto operator<=> (const D&) const = default;
 	bool operator== (const D&) const = default;
 };
-\end{lstlisting}
+\end{cpp}
 
 This means that we have the following behavior:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 D d1, d2;
 d1 > d2; // ERROR: cannot deduce comparison category of operator<=>
 d1 != d2; // OK (note: only tries operator<=> and B::operator== of a base class)
-\end{lstlisting}
+\end{cpp}
 
 Equality checks always use only operator== of a base class (which might be generated according to a defaulted operator<=> though). Any operator< or operator!= in the base class is ignored.
 

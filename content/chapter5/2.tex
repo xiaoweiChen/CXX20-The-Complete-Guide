@@ -453,11 +453,11 @@ Guarantees that objects of type T are comparable with the operators ==, !=, <, <
 \item
 The concept does not claim that type T has a total order for all values. In fact, the expression std::totally\_ordered<double> yields true even though floating-point values do not have a total order:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::totally_ordered<double> // true
 std::totally_ordered<std::pair<double, double>> // true
 std::totally_ordered<std::complex<int>> // false
-\end{lstlisting}
+\end{cpp}
 
 This concept is therefore provided to check the formal requirements to be able to sort elements. It is used by std::ranges::less, which is the default sorting criterion for sorting algorithms. That way, sorting algorithms do not fail to compile if types do not have a total order for all values. Supporting all six basic comparison operators is enough. The values to be sorted should have a total or weak order. However, this a semantic constraint that cannot be checked at compile time.
 

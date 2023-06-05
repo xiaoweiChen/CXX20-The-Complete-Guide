@@ -13,7 +13,7 @@ As a requirement in a compound requirement
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::integral T> // type constraint for a template parameter
 class MyClass {
 	...
@@ -27,7 +27,7 @@ template<typename T>
 concept MyConcept = requires(T x) {
 		{ x + x } -> std::integral; // type constraint for return type
 	};
-\end{lstlisting}
+\end{cpp}
 
 Here, we use unary constraints that are called for a single parameter or type returned by an expression.
 
@@ -37,7 +37,7 @@ Here, we use unary constraints that are called for a single parameter or type re
 
 You can also use constraints with multiple parameters, for which the parameter type or return value is then used as the first argument:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::convertible_to<int> T> // conversion to int required
 class MyClass {
 	...
@@ -51,20 +51,20 @@ template<typename T>
 concept MyConcept = requires(T x) {
 		{ x + x } -> std::convertible_to<int>; // conversion to int required
 	};
-\end{lstlisting}
+\end{cpp}
 
 Another example often used is to constrain the type of a callable (function, function object, lambda) to require that you can pass a certain number of arguments of certain types using the concepts std::invocable or std::regular\_invocable: for example, to require the passing of an operation that takes an int and a std::string, you have to declare:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::invocable<int, std::string> Callable>
 void call(Callable op);
-\end{lstlisting}
+\end{cpp}
 
 or:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void call(std::invocable<int, std::string> auto op);
-\end{lstlisting}
+\end{cpp}
 
 The difference between std::invocable and std::regular\_invocable is that the latter guarantees not to modify the passed operation and arguments. That is a semantic difference that helps only to document the intention. Often, just std::invocable is used.
 
@@ -74,12 +74,12 @@ The difference between std::invocable and std::regular\_invocable is that the la
 
 Type constraints can be used in all places where auto can be used. The major application of this feature is to use the type constraints for the function parameters declared with auto. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(const std::integral auto& val)
 {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 However, you can also use type constraint for auto as follows:
 
@@ -87,42 +87,42 @@ However, you can also use type constraint for auto as follows:
 \item
 To constrain declarations:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::floating_point auto val1 = f(); // valid if f() yields floating-point value
 
 for (const std::integral auto& elem : coll) { // valid if elements are integral values
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 To constrain return types:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::copyable auto foo(auto) { // valid if foo() returns copyable value
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 To constrain non-type template parameters:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, std::integral auto Max>
 class SizedColl {
 	...
 };
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 This also works with concepts that take multiple parameters:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, std::convertible_to<T> auto DefaultValue>
 class MyType {
 	...
 };
-\end{lstlisting}
+\end{cpp}
 
 For another example, see the support for lambdas as non-type template parameters.
 

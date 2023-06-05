@@ -29,22 +29,22 @@ There are two ways to use such an iterator:
 \item
 Iterating while checking how many elements are left:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (std::counted_iterator pos{coll.begin(), 5}; pos.count() > 0; ++pos) {
 	std::cout << *pos << '\n';
 }
 std::cout << '\n';
-\end{lstlisting}
+\end{cpp}
 
 \item
 Iterating while comparing with a default sentinel:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (std::counted_iterator pos{coll.begin(), 5};
 pos != std::default_sentinel; ++pos) {
 	std::cout << *pos << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 This feature is used when the view adaptor std::ranges::counted() yields a subrange for iterators that are not random-access iterators.
 \end{itemize}
@@ -86,16 +86,16 @@ Type std::common\_iterator<> is used to harmonize the type of two iterators. It 
 
 For example, traditional algorithms that take a begin iterator and an end iterator require that these iterators have the same type. If you have iterators of different types, you can use this type function be able for calling these algorithm:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 algo(beg, end); // if this is an error due to different types
 
 algo(std::common_iterator<decltype(beg), decltype(end)>{beg}, // OK
 std::common_iterator<decltype(beg), decltype(end)>{end});
-\end{lstlisting}
+\end{cpp}
 
 Note that it is a compile-time error if the types passed to common\_iterator<> are the same. Thus, in generic code, you might have to call:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename BegT, typename EndT>
 void callAlgo(BegT beg, EndT end)
 {
@@ -107,18 +107,18 @@ void callAlgo(BegT beg, EndT end)
 		std::common_iterator<decltype(beg), decltype(end)>{end});
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 A more convenient way to have the same effect is to use the common() range adaptor:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename BegT, typename EndT>
 void callAlgo(BegT beg, EndT end)
 {
 	auto v = std::views::common(std::ranges::subrange(beg,end));
 	algo(v.begin(), v.end());
 }
-\end{lstlisting}
+\end{cpp}
 
 
 \subsubsection*{\zihao{3} 7.3.3\hspace{0.2cm}std::default\_sentinel}
@@ -126,19 +126,19 @@ void callAlgo(BegT beg, EndT end)
 
 A default sentinel is an iterator that provides no operations at all. C++20 provides a corresponding object std::default\_sentinel, which has type std::default\_sentinel\_t. It is provided in <iterator>. The type has no members:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 namespace std {
 	class default_sentinel_t {
 	};
 	inline constexpr default_sentinel_t default_sentinel{};
 }
-\end{lstlisting}
+\end{cpp}
 
 The type and the value are provided to serve as a dummy sentinel (end iterator), when an iterator knows its end without looking at the end iterator. For those iterators, a comparison with std::default\_sentinel is defined but the default sentinel is never used. Instead, the iterator checks internally whether it is at the end (or how far it is from the end).
 
 For example, counted iterators define an operator == for themselves with a default sentinel to perform checking whether they are at the end:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 namespace std {
 	template<std::input_or_output_iterator I>
 	class counted_iterator {
@@ -149,18 +149,18 @@ namespace std {
 		}
 	};
 }
-\end{lstlisting}
+\end{cpp}
 
 This allows code like this:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // iterate over the first five elements:
 for (std::counted_iterator pos{coll.begin(), 5};
 pos != std::default_sentinel;
 ++pos) {
 	std::cout << *pos << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 The standard defines the following operations with default sentinels:
 
@@ -242,10 +242,10 @@ When it is used, it can optimize generated code because a compiler can detect th
 
 For example, if we know that a value 42 exists in a collection, we can search for it as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto pos42 = std::ranges::find(coll.begin(), std::unreachable_sentinel,
 					42);
-\end{lstlisting}
+\end{cpp}
 
 Normally, the algorithm would compare against both, 42 and coll.end() (or whatever is passed as the end/sentinel). Because unreachable\_sentinel is used, for which any comparison with an iterator always yields false, compilers can optimize the code to compare only against 42. Of course, programmers have to ensure that a 42 exists.
 
@@ -262,7 +262,7 @@ If you have an iterator and a sentinel that form a valid range (concept std::sen
 
 You can use the move sentinel as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list<std::string> coll{"tic", "tac", "toe"};
 std::vector<std::string> v1;
 std::vector<std::string> v2;
@@ -277,16 +277,16 @@ for (std::move_iterator pos{coll.begin()};
 pos != std::move_sentinel(coll.end()); ++pos) {
 	v2.push_back(*pos);
 }
-\end{lstlisting}
+\end{cpp}
 
 Note that this has the effect that the iterator and the sentinel have different types. Therefore, you cannot initialize the vector directly because it requires the same type for begin and end. In that case, you also have to use a move iterator for the end:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<std::string> v3{std::move_iterator{coll.begin()},
 							std::move_sentinel{coll.end()}}; // ERROR
 std::vector<std::string> v4{std::move_iterator{coll.begin()},
 							std::move_iterator{coll.end()}}; // OK
-\end{lstlisting}
+\end{cpp}
 
 
 

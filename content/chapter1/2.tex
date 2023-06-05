@@ -7,23 +7,23 @@ Operator <=> is a new binary operator. It is defined for all fundamental data ty
 
 Operator <=> takes precedence over all other comparison operators, which means that you need parentheses to use it in an output statement but not to compare its result with another value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::cout << (0 < x <=> y) << '\n'; // calls 0 < (x <=> y)
-\end{lstlisting}
+\end{cpp}
 
 Please note that you have to include a specific header file to deal with the result of operator <=>:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <compare>
-\end{lstlisting}
+\end{cpp}
 
 This applies to declaring it (as defaulted), implementing it, or using it. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <compare> // for calling <=>
 
 auto x = 3 <=> 4; // does not compile without header <compare>
-\end{lstlisting}
+\end{cpp}
 
 Most header files for standard types (strings, containers, <utility>) include this header anyway. However, to call the operator on values or types that do not require this header, you have to include <compare>.
 
@@ -122,18 +122,18 @@ The new operator <=> should return a value of one of the comparison category typ
 
 For example, this is how a free-standing operator<=> might be defined for a type MyType:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::strong_ordering operator<=> (MyType x, MyOtherType y)
 {
 	if (xIsEqualToY) return std::strong_ordering::equal;
 	if (xIsLessThanY) return std::strong_ordering::less;
 	return std::strong_ordering::greater;
 }
-\end{lstlisting}
+\end{cpp}
 
 Or, as a more concrete example, defining operator<=> for a type MyType:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyType {
 	...
 	std::strong_ordering operator<=> (const MyType& rhs) const {
@@ -142,18 +142,18 @@ class MyType {
 							       std::strong_ordering::greater;
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 However, it is usually easier to define the operator by mapping it to results of underlying types. Therefore, it would be better for the member operator<=> above to just yield the value and category of its member value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyType {
 	...
 	auto operator<=> (const MyType& rhs) const {
 		return value <=> rhs.value;
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 This not only returns the right value; it also ensures that the return value has the right comparison category type depending on the type of the member value.
 
@@ -162,64 +162,64 @@ This not only returns the right value; it also ensures that the return value has
 
 You can call any defined operator <=> directly:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 MyType x, y;
 ...
 x <=> y // yields a value of the resulting comparison category type
-\end{lstlisting}
+\end{cpp}
 
 As written, you should only call operator <=> directly when implementing operator<=>. However, it can be very helpful to know the returned comparison category.
 
 As also written, operator<=> is predefined for all fundamental types for which the relational operators are defined. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 int x = 17, y = 42;
 x <=> y // yields std::strong_ordering::less
 x <=> 17.0 // yields std::partial_ordering::equivalent
 &x <=> &x // yields std::strong_ordering::equal
 &x <=> nullptr // ERROR: relational comparison with nullptr not supported
-\end{lstlisting}
+\end{cpp}
 
 In addition, all types of the C++ standard library that provide relational operators also provide operator<=> now. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::string{"hi"} <=> "hi" // yields std::strong_ordering::equal;
 std::pair{42, 0.0} <=> std::pair{42, 7.7} // yields std::partial_ordering::less
-\end{lstlisting}
+\end{cpp}
 
 For your own type(s), you only have to define operator<=> as a member or free-standing function.
 
 Because the return type depends on the comparison category, you can check against a specific return value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if (x <=> y == std::partial_ordering::equivalent) // always OK
-\end{lstlisting}
+\end{cpp}
 
 Due to the implicit type conversions to weaker ordering types, this will even compile if operator<=> yields a strong\_ordering or weak\_ordering value.
 
 The other way around does not work. If the comparison yields a weak\_ordering or partial\_ordering value, you cannot compare it with a strong\_ordering value.
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if (x <=> y == std::strong_ordering::equal) // might not compile
-\end{lstlisting}
+\end{cpp}
 
 However, a comparison with 0 is always possible and usually easier:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if (x <=> y == 0) // always OK
-\end{lstlisting}
+\end{cpp}
 
 In addition, operator<=> might be called indirectly due to the new rewriting of relational operator calls:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if (!(x < y || y < x)) // might call operator<=> to check for equality
-\end{lstlisting}
+\end{cpp}
 
 Or:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 if (x <= y && y <= x) // might call operator<=> to check for equality
-\end{lstlisting}
+\end{cpp}
 
 Note that operator!= is never rewritten to call operator<=>. However, it might call an operator== member that is implicitly generated due to a defaulted operator<=> member.
 
@@ -228,7 +228,7 @@ Note that operator!= is never rewritten to call operator<=>. However, it might c
 
 To compute the result of operator<=> based on multiple attributes, you can usually implement just a chain of sub-comparisons until the result is not equal/equivalent or you reach the final attribute to be compared:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Person {
 	...
 	auto operator<=> (const Person& rhs) const {
@@ -239,11 +239,11 @@ class Person {
 		return value <=> rhs.value; // final member for ordering
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 However, the return type does not compile if the attributes have different comparison categories. For example, if a member name is a string and a member value is a double, we have conflicting return types:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Person {
 	std::string name;
 	double value;
@@ -254,11 +254,11 @@ class Person {
 		return value <=> rhs.value; // return partial_ordering for double
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 In that case, you can use a conversion to the weakest comparison type. If you know the weakest comparison type, you can just declare it as the return type:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Person {
 	std::string name;
 	double value;
@@ -269,11 +269,11 @@ class Person {
 		return value <=> rhs.value; // partial_ordering used as the return type
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 If you do not know the comparison types (e.g., their type is a template parameter), you can use a new type trait std::common\_comparison\_category<> that computes the strongest comparison category:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Person {
 	std::string name;
 	double value;
@@ -286,13 +286,13 @@ class Person {
 		return value <=> rhs.value; // used as or converted to common comparison type
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 By using the trailing return type syntax (with auto in front and the return type after ->), we can use the parameters to compute the comparison types. Even though in this case, you could just use name instead of rhs.name, this approach works in general (e.g., also for free-standing functions).
 
 If you want to provide a stronger category than the one that is used internally, you have to map all possible values of the internal comparsions to values of the return type. This might include some error handling if you cannot map some values. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Person {
 	std::string name;
 	double value;
@@ -308,11 +308,11 @@ class Person {
 		                            : std::strong_ordering::less;
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 The C++ standard library provides some helper function objects for this. For example, to map floating-point values, you can call std::strong\_order() for the two values to be compared:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Person {
 	std::string name;
 	double value;
@@ -324,7 +324,7 @@ class Person {
 		return std::strong_order(value, rhs.value);
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 If possible, std::strong\_order() yields a std::strong\_ordering value according to the passed arguments as follows:
 
@@ -345,7 +345,7 @@ std::compare\_three\_way is a new function object type for calling operator <=>,
 
 For other types that have a weaker ordering and operators == and < defined, you can use the function object std::compare\_strong\_order\_fallback() accordingly:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Person {
 	std::string name;
 	SomeType value;
@@ -357,7 +357,7 @@ class Person {
 		return std::compare_strong_order_fallback(value, rhs.value);
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 Table Function objects for mapping comparison category types lists all available helper functions for mapping comparison category types.
 

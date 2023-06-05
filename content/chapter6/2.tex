@@ -9,13 +9,13 @@ Many algorithms return iterators to the ranges they operate on. However, when pa
 
 For example, consider passing a temporary range to a find() algorithm that searches for a value in a range:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> getData(); // forward declaration
 
 auto pos = find(getData(), 42); // returns iterator to temporary vector
 // temporary vector returned by getData() is destroyed here
 std::cout << *pos; // OOPS: using a dangling iterator
-\end{lstlisting}
+\end{cpp}
 
 The return value of getData() is destroyed with the end of the statement where it is used. Therefore, pos refers to an element of a collection that is no longer there. Using pos causes undefined behavior (at best, you get a core dump so that you can see that you have a problem).
 
@@ -25,38 +25,38 @@ By using type std::ranges::borrowed\_iterator\_t<>, algorithms can declare the r
 
 For example, std::ranges::find() for a single range is declared as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::input_range Rg,
 			typename T,
 			typename Proj = identity>
 ...
 constexpr std::ranges::borrowed_iterator_t<Rg>
 	find(Rg&& r, const T& value, Proj proj = {});
-\end{lstlisting}
+\end{cpp}
 
 By specifying the return type as std::ranges::borrowed\_iterator\_t<> of Rg, the standard enables a compile-time check: if the range R passed to the algorithm is a temporary object (a prvalue), the return type becomes a dangling iterator. In that case, the return value is an object of type std::ranges::dangling. Any use of such an object (except copying and assignment) results in a compile-time error.
 
 Therefore, the following code results in a compile-time error:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> getData(); // forward declaration
 
 auto pos = std::ranges::find(getData(), 42); // returns iterator to temporary vector
 // temporary vector returned by getData() was destroyed
 std::cout << *pos; // compile-time ERROR
-\end{lstlisting}
+\end{cpp}
 
 To be able to call find() for a temporary, you have to pass it as an lvalue. That is, it has to have a name. That way, the algorithm ensures that the collection still exists after calling it. It also means that you can also check whether a value was found (which is usually appropriate anyway).
 
 The best approach to give a returned collection a name is to bind it to a reference. That way, the collection is never copied. Note that by rule, references to temporary objects always extend their lifetime:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> getData(); // forward declaration
 
 reference data = getData(); // give return value a name to use it as an lvalue
 // lifetime of returned temporary vector ends now with destruction of data
 ...
-\end{lstlisting}
+\end{cpp}
 
 The are two kinds of references you can use here:
 
@@ -64,7 +64,7 @@ The are two kinds of references you can use here:
 \item
 You can declare a const lvalue reference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> getData(); // forward declaration
 
 const auto& data = getData(); // give return value a name to use it as an lvalue
@@ -72,14 +72,14 @@ auto pos = std::ranges::find(data, 42); // yields no dangling iterator
 if (pos != data.end()) {
 	std::cout << *pos; // OK
 }
-\end{lstlisting}
+\end{cpp}
 
 This reference makes the return value const, which might not be what you want (note that you cannot iterate over some views when they are const; although, due to the reference semantics of views, you have to be careful when returning them).
 
 \item
 In more generic code, you should use a universal reference (also called a forwarding reference) or decltype(auto) so that you keep the natural non-constness of the return value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 ... getData(); // forward declaration
 
 auto&& data = getData(); // give return value a name to use it as an lvalue
@@ -87,14 +87,14 @@ auto pos = std::ranges::find(data, 42); // yields no dangling iterator
 if (pos != data.end()) {
 	std::cout << *pos; // OK
 }
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 The consequence of this feature is that you cannot pass a temporary object to an algorithm even if the resulting code would be valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 process(std::ranges::find(getData(), 42)); // compile-time ERROR
-\end{lstlisting}
+\end{cpp}
 
 Although the iterator would be valid during the function call (the temporary vector would be destroyed after the call), find() returns a std::ranges::dangling object.
 
@@ -104,29 +104,29 @@ Again, the best way to deal with this issue is to declare a reference for the re
 \item
 Using a const lvalue reference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 const auto& data = getData(); // give return value a name to use it as an lvalue
 process(std::ranges::find(data, 42)); // passes a valid iterator to process()
-\end{lstlisting}
+\end{cpp}
 
 \item
 Using a universal/forwarding reference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto&& data = getData(); // give return value a name to use it as an lvalue
 process(std::ranges::find(data, 42)); // passes a valid iterator to process()
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 Remember that often, you need a name for the return value anyway to check whether the return value refers to an element and is not the end() of a range:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto&& data = getData(); // give return value a name to use it as an lvalue
 auto pos = std::ranges::find(data, 42); // yields a valid iterator
 if (pos != data.end()) { // OK
 	std::cout << *pos; // OK
 }
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 6.2.2\hspace{0.2cm}Borrowed Ranges}
 \addcontentsline{toc}{subsubsection}{6.2.2\hspace{0.2cm}Borrowed Ranges}
@@ -175,7 +175,7 @@ As a result, we can catch some but not all possible runtime errors at compile ti
 \item
 All lvalues (objects with names) are borrowed ranges, which means that the returned iterator cannot be dangling as long as the iterator exists in the same scope or a sub-scope of the range.
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector coll{0, 8, 15};
 
 auto pos0 = std::ranges::find(coll, 8); // borrowed range
@@ -183,12 +183,12 @@ std::cout << *pos0; // OK (undefined behavior if no 8)
 
 auto pos1 = std::ranges::find(std::vector{8}, 8); // yields dangling
 std::cout << *pos1; // compile-time ERROR
-\end{lstlisting}
+\end{cpp}
 
 \item
 For temporary views the situation depends. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto pos2 = std::ranges::find(std::views::single(8), 8); // yields dangling
 std::cout << *pos2; // compile-time ERROR
 
@@ -197,7 +197,7 @@ std::cout << *pos3; // OK (undefined behavior if no 8 found)
 
 auto pos4 = std::ranges::find(std::views::empty<int>, 8); // borrowed range
 std::cout << *pos4; // undefined behavior as no 8 found
-\end{lstlisting}
+\end{cpp}
 
 For example, single view iterators refer to the value of their element in the view; therefore, single views are not borrowed ranges.
 
@@ -206,20 +206,20 @@ On the other hand, iota view iterators hold copies of the element they refer to,
 \item
 For views that refer to another range (as a whole or to a sub-sequence of it), the situation is more complicated. If they can, they try to detect similar problems. For example, the adaptor std::views::take() also checks for prvalues:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto pos5 = std::ranges::find(std::views::take(std::vector{0, 8, 15}, 2), 8);
 // compile-time ERROR
-\end{lstlisting}
+\end{cpp}
 
 Here, calling take() is already a compile-time error.
 
 However, if you use counted(), which only takes an iterator, it is the responsibility of the programmer to ensure that the iterator is valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto pos6 = std::ranges::find(std::views::counted(std::vector{0, 8, 15}.begin(),
 							2), 8);
 std::cout << *pos6; // runtime ERROR even if 8 found
-\end{lstlisting}
+\end{cpp}
 
 The views, which are created with counted() here, are by definition borrowed ranges, because they pass their internal references to their iterators. In other words: an iterator of a counted view does not need the view it belongs to. However, the iterator can still refer to a range that no longer exists (because its view referred to an object that no longer exists). The last line of the example with pos6 demonstrates this situation. We still get undefined behavior even if the value that find() is looking for could be found in the temporary range.
 

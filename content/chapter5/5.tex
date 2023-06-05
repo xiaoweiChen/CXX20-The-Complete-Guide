@@ -42,9 +42,9 @@ Guarantees that objects of type T can be initialized with rvalues of their type.
 \item
 That means the following operation is valid (although it might copy instead of move):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 T t2{std::move(t1)} // for any t1 of type T
-\end{lstlisting}
+\end{cpp}
 
 Afterwards, t2 shall have the former value of t1, which is a semantic constraint that cannot be checked at compile time.
 
@@ -74,9 +74,9 @@ Guarantees that objects of type T can be initialized with lvalues of their type.
 \item
 That means the following operation is valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 T t2{t1} // for any t1 of type T
-\end{lstlisting}
+\end{cpp}
 
 Afterwards, t2 shall be equal to t1, which is a semantic constraint that cannot be checked at compile time.
 

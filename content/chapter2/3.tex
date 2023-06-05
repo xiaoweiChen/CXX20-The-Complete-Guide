@@ -12,15 +12,15 @@ For each parameter declared with auto, the function has an implicit template par
 
 \item
 The parameters can be a parameter pack:
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(auto... args);
-\end{lstlisting}
+\end{cpp}
 
 This is equivalent to the following (without introducing Types):
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename... Types>
 void foo(Types... args);
-\end{lstlisting}
+\end{cpp}
 
 \item
 Using decltype(auto) is not allowed.
@@ -30,7 +30,7 @@ Abbreviated function templates can still be called with (partially) explicitly s
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(auto x, auto y)
 {
 	...
@@ -39,14 +39,14 @@ void foo(auto x, auto y)
 foo("hello", 42); // x has type const char*, y has type int
 foo<std::string>("hello", 42); // x has type std::string, y has type int
 foo<std::string, long>("hello", 42); // x has type std::string, y has type long
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 2.3.2\hspace{0.2cm}Combining Template and auto Parameters}
 \addcontentsline{toc}{subsubsection}{2.3.2\hspace{0.2cm}Combining Template and auto Parameters}
 
 Abbreviated function templates can still have explicitly specified template parameters. The generated template parameters for the placeholder types are added after the specified parameters:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 void foo(auto x, T y, auto z)
 {
@@ -55,23 +55,23 @@ void foo(auto x, T y, auto z)
 
 foo("hello", 42, '?'); // x has type const char*, T and y are int, z is char
 foo<long>("hello", 42, '?'); // x has type const char*, T and y are long, z is char
-\end{lstlisting}
+\end{cpp}
 
 Therefore, the following declarations are equivalent (except that you have no name for the types where auto is used):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 void foo(auto x, T y, auto z);
 
 template<typename T, typename T2, typename T3>
 void foo(T2 x, T y, T3 z);
-\end{lstlisting}
+\end{cpp}
 
 As we introduce later, by using concepts as type constraints, you can constrain placeholder parameters as well as template parameters. Template parameters may then be used for such a qualification.
 
 For example, the following declaration ensures that the second parameter y has an integral type and that the third parameter z has a type that can be converted to the type of y:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::integral T>
 void foo(auto x, T y, std::convertible_to<T> auto z)
 {
@@ -81,17 +81,15 @@ void foo(auto x, T y, std::convertible_to<T> auto z)
 foo(64, 65, 'c'); // OK, x is int, T and y are int, z is char
 foo(64, 65, "c"); // ERROR: "c" cannot be converted to type int (type of 65)
 foo<long,char>(64, 65, 'c'); // NOTE: x is char, T and y are long, z is char
-\end{lstlisting}
+\end{cpp}
 
 Note that the last statement specifies the type of the parameters in the wrong order.
 
 The fact that the order of template parameters is not as expected might lead to subtle bugs. Consider the following example:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{lang/tmplauto.cpp}
+\filename{lang/tmplauto.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <vector>
 #include <ranges>
 
@@ -112,7 +110,7 @@ int main()
 	std::vector<int> coll;
 	addValInto(42, coll); // ERROR: ambiguous
 }
-\end{lstlisting}
+\end{cpp}
 
 Due to using auto only for the first parameter in the second declaration of addValInto(), the order of the template parameters differs. Due to \url{http://wg21.link/p2113r0}, which was accepted for C++20, this means that overload resolution does not prefer the second declaration over the first one and we get an ambiguity error.[Not all compilers handle this correctly, yet.]
 

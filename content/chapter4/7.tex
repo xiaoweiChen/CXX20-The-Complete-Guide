@@ -3,7 +3,7 @@ Two concepts can have a subsuming relationship. That is, one concept can be spec
 
 For example, assume that we introduce the following two concepts:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept GeoObject = requires(T obj) {
 	{ obj.width() } -> std::integral;
@@ -18,13 +18,13 @@ concept ColoredGeoObject =
 		obj.setColor(Color{});
 		{ obj.getColor() } -> std::convertible_to<Color>;
 	};
-\end{lstlisting}
+\end{cpp}
 
 The concept ColoredGeoObject explicitly subsumes the concept GeoObject because it explicitly formulates the constraint that type T also has to satisfy the concept GeoObject.
 
 As a consequence, we do not get an ambiguity error, when we overload templates for both concepts and both concepts are satisfied, Overload resolution prefers the concept that subsumes the other(s):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<GeoObject T>
 void process(T) // called for objects that do not provide setColor() and getColor()
 {
@@ -36,13 +36,13 @@ void process(T) // called for objects that provide setColor() and getColor()
 {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 Constraint subsumption works only when concepts are used. There is no automatic subsumption when one concept/constraint is more special than another.
 
 Constraints and concepts do not subsume based only on requirements. Consider the following example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // declared in a header file:
 template<typename T>
 concept GeoObject = requires(T obj) {
@@ -55,11 +55,11 @@ concept Cowboy = requires(T obj) {
 					obj.draw();
 					obj = obj;
 				};
-\end{lstlisting}
+\end{cpp}
 
 Assume that we overload a function template for both GeoObject and Cowboy:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<GeoObject T>
 void print(T) {
 	...
@@ -69,13 +69,13 @@ template<Cowboy T>
 void print(T) {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 We do not want that for a Circle or Rectangle, which both have a draw() member function, the call to print() prefers the print() for cowboys just because the Cowboy concept is more special. We want to see that there are two possible print() functions that in this case collide.
 
 The effort to check for subsumptions is evaluated only for concepts. Overloading with different constraints is ambiguous if no concepts are used:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires std::is_convertible_v<T, int>
 void print(T) {
@@ -89,11 +89,11 @@ void print(T) {
 }
 
 print(42); // ERROR: ambiguous (if both constraints are true)
-\end{lstlisting}
+\end{cpp}
 
 When using concepts instead, this code works:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires std::convertible_to<T, int>
 void print(T) {
@@ -107,7 +107,7 @@ void print(T) {
 }
 
 print(42); // OK
-\end{lstlisting}
+\end{cpp}
 
 One reason for this behavior is that it takes compile time to process dependencies between concepts in detail.
 
@@ -135,17 +135,17 @@ or specialization over the other, even though their constraints are not defined 
 
 For example, assume that you have defined the following two concepts:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept RgSwap = std::ranges::input_range<T> && std::swappable<T>;
 
 template<typename T>
 concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
-\end{lstlisting}
+\end{cpp}
 
 When we now overload two functions for these two concepts and pass an object that fits both concepts, this is not ambiguous:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<RgSwap T>
 void foo1(T) {
 	std::cout << "foo1(RgSwap)\n";
@@ -157,7 +157,7 @@ void foo1(T) {
 }
 
 foo1(std::vector<int>{}); // OK: both fit, ContCopy is more constrained
-\end{lstlisting}
+\end{cpp}
 
 The reason is that ContCopy subsumes RgSwap because:
 
@@ -175,25 +175,25 @@ The concept copyable is defined in terms of the concept swappable.
 
 However, with the following declarations, we get an ambiguity when both concepts fit:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept RgSwap = std::ranges::sized_range<T> && std::swappable<T>;
 
 template<typename T>
 concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
-\end{lstlisting}
+\end{cpp}
 
 The reason for is that neither of the concepts contiguous\_range or sized\_range imply the other.
 
 Also, for the following declarations, no concept subsumes the other:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept RgCopy = std::ranges::input_range<T> && std::copyable<T>;
 
 template<typename T>
 concept ContMove = std::ranges::contiguous_range<T> && std::movable<T>;
-\end{lstlisting}
+\end{cpp}
 
 On the one hand, ContMove is more constrained because contiguous\_range implies input\_range; however, on the other hand, RgCopy is more constrained because copyable implies movable.
 
@@ -206,14 +206,14 @@ To implement subsumptions correctly, you have to be careful. A good example is t
 
 To understand why defining the concept is not trivial, let us assume that we define our own concept SameAs just as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 concept SameAs = std::is_same_v<T, U>; // define concept SameAs
-\end{lstlisting}
+\end{cpp}
 
 This definition is good enough for cases like this:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 concept SameAs = std::is_same_v<T, U>; // define concept SameAs
 
@@ -232,13 +232,13 @@ void foo(T, U)
 }
 
 foo(1, 2); // OK: second foo() preferred
-\end{lstlisting}
+\end{cpp}
 
 Here, the second definition of foo() subsumes the first one, which means that the second foo() is called when two arguments of the same integral type are passed and for both foo() the constraints are satisfied.
 
 However, note what happens if we slightly modify the parameters when we call SameAs<> in the constraints of the second foo():
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 requires SameAs<T, U> // use concept SameAs
 void foo(T, U)
@@ -254,24 +254,24 @@ void foo(T, U)
 }
 
 foo(1, 2); // ERROR: ambiguity: both constraints are satisfied without one subsuming the other
-\end{lstlisting}
+\end{cpp}
 
 The problem is that the compiler cannot detect that SameAs<> is commutative. For the compiler, the order of the template parameters matters, and therefore, the first requirement is not necessarily a subset of the second requirement.
 
 To solve this problem, we have to design the concept SameAs in a way that the order of the arguments does not matter. This requires a helper concept:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 concept SameAsHelper = std::is_same_v<T, U>;
 
 template<typename T, typename U>
 concept SameAs = SameAsHelper<T, U> && SameAsHelper<U, T>; // make commutative
-\end{lstlisting}
+\end{cpp}
 
 Now, the order of the parameters no longer matters for IsSame<>:
 
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 requires SameAs<T, U> // use SameAs
 void foo(T, U)
@@ -287,13 +287,13 @@ void foo(T, U)
 }
 
 foo(1, 2); // OK: second foo() preferred
-\end{lstlisting}
+\end{cpp}
 
 The compiler can find out that the first building block SameAs<U,T> is part of a sub-concept of the definition of SameAs so that the other building blocks SameAs<T,U> and std::integral<T> are an extension. Therefore, the second foo() now has preference.
 
 Tricky details like this are designed into the concepts that the C++20 standard library provides (see std::same\_as). Therefore, you should use them when they fit your needs instead of providing your own concepts.
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 requires std::same_as<T, U> // standard same_as<> is commutative
 void foo(T, U)
@@ -309,7 +309,7 @@ void foo(T, U)
 }
 
 foo(1, 2); // OK: second foo() preferred
-\end{lstlisting}
+\end{cpp}
 
 For your own concepts, take as many uses (and abuses) as possible into account. The more the better. Just like any good piece of software, concepts also require good design and test cases.
 

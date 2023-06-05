@@ -9,22 +9,22 @@ Templates (function, class, variable, and alias templates) can use concepts to c
 
 Concepts are defined as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template< ... >
 concept name = ... ;
-\end{lstlisting}
+\end{cpp}
 
 The equal sign is required (you cannot declare a concept without defining it and you cannot use braces here).
 After the equal sign, you can specify any compile-time expression that converts to true or false.
 
 Concepts are much like constexpr variable templates of type bool, but the type is not explicitly specified:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept MyConcept = ... ;
 
 std::is_same<MyConcept< ... >, bool> // yields true
-\end{lstlisting}
+\end{cpp}
 
 This means that both at compile time and at runtime you can always use a concept where the value of a Boolean expression is needed. However, you cannot take the address because there is no object behind it (it is a prvalue).
 
@@ -39,17 +39,17 @@ Concepts have special abilities.
 
 Consider, for example, the following concept:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept IsOrHasThisOrThat = ... ;
-\end{lstlisting}
+\end{cpp}
 
 Compared to a definition of a Boolean variable template (which is the usual way type traits are defined):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 inline constexpr bool IsOrHasThisOrThat = ... ;
-\end{lstlisting}
+\end{cpp}
 
 we have the following differences:
 
@@ -65,10 +65,10 @@ Concepts do not have to be declared as inline. They implicitly are inline.
 \item
 Concepts can be used as type constraints:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<IsOrHasThisOrThat T>
 ...
-\end{lstlisting}
+\end{cpp}
 
 Variable templates cannot be used that way.
 
@@ -84,7 +84,7 @@ Concepts subsume. To let the compiler decide whether a constraint implies anothe
 
 Concepts can also be applied to non-type template parameters (NTTP). For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<auto Val>
 concept LessThan10 = Val < 10;
 
@@ -93,7 +93,7 @@ requires LessThan10<Val>
 class MyType {
 	...
 };
-\end{lstlisting}
+\end{cpp}
 
 As a more useful example, we can use a concept to constrain the value of a non-type template parameter to be a power of two:
 
@@ -101,7 +101,7 @@ As a more useful example, we can use a concept to constrain the value of a non-t
 \hspace*{\fill} \\ %插入空行
 \textit{lang/conceptnttp.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <bit>
 
 template<auto Val>
@@ -121,36 +121,36 @@ int main()
 	Memory<int, true> m4; // OK
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 The concept PowerOf2 takes a value instead of a type as a template parameter (here, using auto to not require a specific type):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<auto Val>
 concept PowerOf2 = std::has_single_bit(static_cast<unsigned>(Val));
-\end{lstlisting}
+\end{cpp}
 
 The concept is satisfied when the new standard function std::has\_single\_bit() yields true for the passed value (having only one bit set means that a value is a power of two). Note that std::has\_single\_bit() requires that we have an unsigned integral value. By casting to unsigned, programmers can pass signed integral values and reject types that cannot be converted to an unsigned integral value.
 
 The concept is then used to require that a class Memory, taking a type and a size, accepts only sizes that are a power of two:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, auto Val>
 requires PowerOf2<Val>
 class Memory {
 	...
 };
-\end{lstlisting}
+\end{cpp}
 
 Note that you cannot write the following:
 
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, PowerOf2 auto Val>
 class Memory {
 	...
 };
-\end{lstlisting}
+\end{cpp}
 
 This puts the requirement on the type of Val; however, the concept PowerOf2 does not constrain a type; it constrains the value.
 

@@ -7,27 +7,27 @@ Let us look at the role of ranges and views by looking at a few examples that us
 
 Since the first C++ standard published in C++98, we iterate over half-open ranges when dealing with collections of elements. By passing the begin and the end of a range (often coming from the begin() and end() member functions of a container), you can specify which elements have to be processed:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <vector>
 #include <algorithm>
 
 std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
 
 std::sort(coll.begin(), coll.end()); // sort all elements of the collection
-\end{lstlisting}
+\end{cpp}
 
 C++20 introduces the concept of a range, which is a single object that represents a sequence of values. Any container can be used as such a range.
 
 As a consequence, you can now pass containers as a whole to algorithms:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <vector>
 #include <algorithm>
 
 std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
 
 std::ranges::sort(coll); // sort all elements of the collection
-\end{lstlisting}
+\end{cpp}
 
 Here, we pass the vector coll to the range algorithm sort() to sort all elements in the vector.
 
@@ -87,7 +87,7 @@ If both can be used, it is better to use symbols and utilities of the namespace 
 
 It is pretty common to introduce a shortcut for the namespace std::ranges, such as rg or rng. Therefore, code above can also look as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <vector>
 #include <algorithm>
 namespace rg = std::ranges; // define shortcut for std::ranges
@@ -95,7 +95,7 @@ namespace rg = std::ranges; // define shortcut for std::ranges
 std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
 
 rg::sort(coll); // sort all elements of the collection
-\end{lstlisting}
+\end{cpp}
 
 Do not use a using namespace directive to avoid having to qualify range symbols at all. Otherwise, you can easily end up with code that has compile-time conflicts or uses wrong lookups meaning that nasty bugs can occur.
 
@@ -109,7 +109,7 @@ Therefore, to use the algorithms provided for ranges as single arguments, you st
 
 However, for a couple of additional features provided by the ranges library, you need the header file <ranges>. For this reason, you should always include <ranges> when using something from the namespaces std::ranges or std::views:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <vector>
 #include <algorithm>
 #include <ranges> // for ranges utilities (so far not necessary yet)
@@ -117,7 +117,7 @@ However, for a couple of additional features provided by the ranges library, you
 std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
 
 std::ranges::sort(coll); // sort all elements of the collection
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 6.1.2\hspace{0.2cm}Constraints and Utilities for Ranges}
 \addcontentsline{toc}{subsubsection}{6.1.2\hspace{0.2cm}Constraints and Utilities for Ranges}
@@ -126,12 +126,12 @@ The new standard algorithms for ranges declare range parameters as template para
 
 Consider, for example, the sort() algorithm for ranges. In principle, it is defined as follows (a few details are missing and will be introduced later):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::random_access_range R,
 		typename Comp = std::ranges::less>
 requires std::sortable<std::ranges::iterator_t<R>, Comp>
 ... sort(R&& r, Comp comp = {});
-\end{lstlisting}
+\end{cpp}
 
 This declaration already has multiple new features of ranges:
 
@@ -160,7 +160,7 @@ This means that you can pass any range with random-access iterators and sortable
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/rangessort.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <string>
 #include <vector>
@@ -185,28 +185,28 @@ int main()
 	std::ranges::sort(arr); // sort values in array
 	print(arr);
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 Beilnr New York Rio Tokyo
 0 7 8 15 42
-\end{tcblisting}
+\end{shell}
 
 If you pass a container/range that has no random-access iterators, you get an error message stating that the concept std::ranges::random\_access\_range is not satisfied:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list<std::string> coll2{"New York", "Rio", "Tokyo"};
 std::ranges::sort(coll2); // ERROR: concept random_access_range not satisfied
-\end{lstlisting}
+\end{cpp}
 
 If you pass a container/range where you cannot compare the elements with the operator <, std::sortable is not satisfied:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<std::complex<double>> coll3;
 std::ranges::sort(coll3); // ERROR: concept sortable not satisfied
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -290,17 +290,17 @@ Generate a sequence of values themselves
 
 Views are usually used to process, on an ad-hoc basis, a subset of the elements of an underlying range and/or their values after some optional transformation. For example, you can use a view to iterate over only the first five elements of a range as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (const auto& elem : std::views::take(coll, 5)) {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 std::views::take() is a range adaptor for creating a view that operates on the passed range coll. In this case, take() creates a view to the first n elements of a passed range (if there are any). So with
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::views::take(coll, 5)
-\end{lstlisting}
+\end{cpp}
 
 we pass a view to coll that ends with its sixth element (or the last element if there are fewer elements).
 
@@ -312,17 +312,17 @@ The C++ standard library provides several range adaptors and factories for creat
 
 There is an alternative syntax for calling range adaptors that operate on a range passed as a single argument:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (const auto& elem : coll | std::views::take(5)) {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 Both forms are equivalent. However, the pipeline syntax makes it more convenient to create a sequence of views on a range, which we will discuss in detail in a moment. That way, simple views can be used as building blocks for more complex processing of collections of elements.
 
 Assume you want to use the following three views:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // view with elements of coll that are multiples of 3:
 std::views::filter(coll, [] (auto elem) {
 	return elem % 3 == 0;
@@ -335,11 +335,11 @@ std::views::transform(coll, [] (auto elem) {
 
 // view with first three elements of coll:
 std::views::take(coll, 3)
-\end{lstlisting}
+\end{cpp}
 
 Because a view is a range, you can use a view as an argument of another view:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // view with first three squared values of the elements in coll that are multiples of 3:
 auto v = std::views::take(
 	std::views::transform(
@@ -347,31 +347,31 @@ auto v = std::views::take(
 			[] (auto elem) { return elem % 3 == 0; }),
 		[] (auto elem) { return elem * elem; }),
 	3);
-\end{lstlisting}
+\end{cpp}
 
 This nesting is hard to read and maintain. Here, however, we can benefit from the alternative pipe syntax to let a view operate on a range. By using the operator |, we can create pipelines of views:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // view with first three squared values of the elements in coll that are multiples of 3:
 auto v = coll
 	| std::views::filter([] (auto elem) { return elem % 3 == 0; })
 	| std::views::transform([] (auto elem) { return elem * elem; })
 	| std::views::take(3);
-\end{lstlisting}
+\end{cpp}
 
 This pipeline of ranges and views is easy to define and to understand.
 
 For a collection such as
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector coll{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
-\end{lstlisting}
+\end{cpp}
 
 the output would be:
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 9 36 81
-\end{tcblisting}
+\end{shell}
 
 Here is another full program that demonstrates the composability of views with the pipeline syntax:
 
@@ -379,7 +379,7 @@ Here is another full program that demonstrates the composability of views with t
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/viewspipe.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <map>
@@ -407,26 +407,26 @@ int main()
 		std::cout << "- " << elem << '\n';
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 In this example, we apply a couple of views to a map of composers, where the elements have their name and their year of birth (note that we introduce vws as a shortcut for std::views):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::map<std::string, int> composers{ ... };
 ...
 composers
 	| vws::filter( ... )
 	| vws::take(3)
 	| vws::keys
-\end{lstlisting}
+\end{cpp}
 
 The composing pipeline is passed directly to the range-based for loop and produces the following output (remember that the elements in the map are sorted according to their keys/names):
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 - Beethoven
 - Chopin
 - Mozart
-\end{tcblisting}
+\end{shell}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -434,11 +434,11 @@ The composing pipeline is passed directly to the range-based for loop and produc
 
 Views can also generate a sequence of values themselves. For example, by using the iota view, we can iterate over all values from 1 to 10 as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (int val : std::views::iota(1, 11)) { // iterate from 1 to 10
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -446,7 +446,7 @@ for (int val : std::views::iota(1, 11)) { // iterate from 1 to 10
 
 You can create the views and give them a name before you use them:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto v1 = std::views::take(coll, 5);
 auto v2 = coll | std::views::take(5);
 ...
@@ -454,15 +454,15 @@ for (int val : v1) {
 	...
 }
 std::ranges::sort(v2);
-\end{lstlisting}
+\end{cpp}
 
 However, most views on lvalues (ranges that have a name) have reference semantics. Therefore, you have to ensure that the referred ranges and iterators of views still exist and are valid.
 
 You should use auto to declare the views because the exact type can be tricky to specify. In this case, for example, for coll having type std::vector<int>, both v1 and v2 have the following type:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::take_view<std::ranges::ref_view<std::vector<int>>>
-\end{lstlisting}
+\end{cpp}
 
 Internally, adaptors and constructors may create nested view types such as a std::ranges::take\_view or std::ranges::iota\_view referring to a std::ranges::ref\_view that is used to refer to the elements of the passed external container.
 
@@ -478,15 +478,15 @@ Views on lvalues usually have reference semantics. This means that, in principle
 
 For example, we can sort only the first five elements of coll as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::sort(std::views::take(coll, 5)); // sort the first five elements of coll
-\end{lstlisting}
+\end{cpp}
 
 or as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::sort(coll | std::views::take(5)); // sort the first five elements of coll
-\end{lstlisting}
+\end{cpp}
 
 This means that usually:
 
@@ -504,7 +504,7 @@ If elements of the view are modified, the elements of the referred range were mo
 
 Besides having reference semantics, views use lazy evaluation. This means that views do their processing for the next element when an iterator to the view calls begin() or ++ or the value of the element is requested:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto v = coll | std::views::take(5); // neither goes to the first element nor to its value
 ...
 auto pos = v.begin(); // goes to the first element
@@ -514,7 +514,7 @@ std::cout << *pos; // goes to its value
 ++pos; // goes to the next element
 ...
 std::cout << *pos; // goes to its value
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -581,14 +581,14 @@ The generalization of end iterators as sentinels solves this dilemma. C++20 rang
 
 Note that before C++20, we could also have these kinds of sentinels but they were required to have the same type as the iterators. One example was input stream iterators: a default constructed iterator of type std::istream\_iterator<> was used to create an end-of-stream iterator so that you could process input from a stream with an algorithm until end-of-file or an error occurs:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // print all int values read from standard input:
 std::for_each(std::istream_iterator<int>{std::cin}, // read ints from cin
 		std::istream_iterator<int>{}, // end is an end-of-file iterator
 		[] (int val) {
 			std::cout << val << '\n';
 		});
-\end{lstlisting}
+\end{cpp}
 
 By relaxing the requirement that sentinels (end iterators) now have to have the same type as iterating iterators, we gain a couple of benefits:
 
@@ -609,7 +609,7 @@ Let us look at a simple example using a sentinel of a different type to iterate 
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/sentinel1.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <compare>
 #include <algorithm> // for for_each()
@@ -638,24 +638,24 @@ int main()
 				});
 	std::cout << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 h e l l o   w o r l d
 h e l l o   w o r l d
-\end{tcblisting}
+\end{shell}
 
 In the program, we first define an end iterator that defines the end as having a value equal to ’\verb|\|0’:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 struct NullTerm {
 	bool operator== (auto pos) const {
 		return *pos == '\0'; // end is where iterator points to ’\0’
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 Note that we combine a few other new features of C++20 here:
 
@@ -673,11 +673,11 @@ We define only the operator == as a generic member function even though algorith
 
 We then use a basic loop to iterate over the “range” of characters of the string rawString:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (auto pos = rawString; pos != NullTerm{}; ++pos) {
 	std::cout << ' ' << *pos;
 }
-\end{lstlisting}
+\end{cpp}
 
 We initialize pos as an iterator that iterates over the characters and prints out their values with *pos. The loop runs while its comparison with NullTerm\{\} yields that the value of pos does not equal ’\verb|\|0’. That way, NullTerm\{\} serves as a sentinel. It does not have the same type as pos but it supports a comparison with pos in such a way that it checks the current value that pos refers to.
 
@@ -689,18 +689,18 @@ Here you can see how sentinels are the generalization of end iterators. They may
 
 C++20 provides overloads for algorithms that no longer require that the begin iterator and the sentinel (end iterator) have the same type. However, these overloads are provided in the namespace std::ranges:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::for_each(rawString, // begin of range
 						NullTerm{}, // end is null terminator
 						... );
-\end{lstlisting}
+\end{cpp}
 
 The algorithms in the namespace std still require that the begin iterator and the end iterator have the same type and cannot be used in that way:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::for_each(rawString, NullTerm{}, // ERROR: begin and end have different types
 			... );
-\end{lstlisting}
+\end{cpp}
 
 If you have two iterators of different types, type std::common\_iterator provides a way to harmonize them for traditional algorithms. This can be useful because numeric algorithms, parallel algorithms, and containers still require that the begin and the end iterator have the same type.
 
@@ -727,11 +727,11 @@ The ranges library supports the definition and use of all of these ranges.
 
 First, the algorithms are implemented in such a way that the ranges can be arrays. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 int rawArray[] = {8, 6, 42, 1, 77};
 ...
 std::ranges::sort(rawArray); // sort elements in the raw array
-\end{lstlisting}
+\end{cpp}
 
 In addition, there are several utilities for defining ranges defined by iterators and sentinels or counts, and these are introduced in the following subsections.
 
@@ -747,7 +747,7 @@ Let us look at a simple example using subranges:
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/sentinel2.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <compare>
 #include <algorithm> // for for_each()
@@ -779,33 +779,33 @@ int main()
 	
 	std::cout << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 As introduced as an example of a sentinel we define type NullTerm as a type for sentinels that check for the null terminator of a string as the end of a range.
 
 By using a std::ranges::subrange, the program defines a range object that represents the beginning of the string and the sentinel as its end:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::subrange rawStringRange{rawString, NullTerm{}};
-\end{lstlisting}
+\end{cpp}
 
 A subrange is the generic type that can be used to convert a range defined by an iterator and a sentinel into a single object that represents this range. In fact, the range is even a view, which internally, just stores the iterator and the sentinel. This means that subranges have reference semantics and are cheap to copy.
 
 As a subrange, we can pass the range to the new algorithms that take ranges as single arguments:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::for_each(rawStringRange, ... ); // OK
-\end{lstlisting}
+\end{cpp}
 
 Note that subranges are not always common ranges, meaning that calling begin() and end() for them may yield different types. Subranges just yield what was was passed to define the range.
 
 Even when a subrange is not a common range, you can pass it to a range-based for loop. The rangebased for loop accepts ranges where the types of the begin iterator and the sentinel (end iterators) differ (this feature was already introduced with C++17, but with ranges and views, you can really benefit from it):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (char c : std::ranges::subrange{rawString, NullTerm{}}) {
 	std::cout << ' ' << c;
 }
-\end{lstlisting}
+\end{cpp}
 
 We can make this approach even more generic by defining a class template where you can specify the value that ends a range. Consider the following example:
 
@@ -813,7 +813,7 @@ We can make this approach even more generic by defining a class template where y
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/sentinel3.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <algorithm>
 
@@ -848,16 +848,16 @@ int main()
 							});
 	std::cout << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, we define EndValue<> as the end iterator, checking for the end passed as a template parameter. EndValue<7>{} creates an end iterator where 7 ends the range and EndValue<-1>{} creates an end iterator where -1 ends the range.
 
 The output of the program is as follows:
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 0 8 15 42
 0 8 15 42 7
-\end{tcblisting}
+\end{shell}
 
 You could define a value of any supported non-type template parameter type.
 
@@ -875,7 +875,7 @@ The most convenient way to create a range with a begin iterator and a count is t
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> coll{1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 auto pos5 = std::ranges::find(coll, 5);
@@ -884,18 +884,18 @@ if (std::ranges::distance(pos5, coll.end()) >= 3) {
 		std::cout << val << ' ';
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, std::views::counted(pos5, 3) creates a view that represents the three elements starting with the element to which pos5 refers. Note that counted() does not check whether there are elements (passing a count that is too high results in undefined behavior). It is up to the programmer to ensure that the code is valid. Therefore, with std::ranges::distance(), we check whether there are enough elements (note that this check can be expensive if your collection does not have random-access iterators).
 
 If you know that there is an element with the value 5 that has at least two elements behind it, you can also write:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 // if we know there is a 5 and at least two elements behind:
 for (int val : std::views::counted(std::ranges::find(coll, 5), 3)) {
 	std::cout << val << ' ';
 }
-\end{lstlisting}
+\end{cpp}
 
 The count may be 0, which means that the range is empty.
 
@@ -908,34 +908,34 @@ For more details, see the description of std::views::counted().
 
 sort() and many other algorithms for ranges usually have an additional optional template parameter, a projection:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::random_access_range R,
 			typename Comp = std::ranges::less,
 			typename Proj = std::identity>
 requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
 ... sort(R&& r, Comp comp = {}, Proj proj = {});
-\end{lstlisting}
+\end{cpp}
 
 The optional additional parameter allows you to specify a transformation (projection) for each element before the algorithm processes it further.
 
 For example, sort() allows you to specify a projection for the elements to be sorted separately from the way the resulting values are compared:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::sort(coll,
 				std::ranges::less{}, // still compare with <
 				[] (auto val) { // but use the absolute value
 					return std::abs(val);
 				});
-\end{lstlisting}
+\end{cpp}
 
 This might be more readable or easier to program than:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::sort(coll,
 				[] (auto val1, auto val2) {
 					return std::abs(val1) < std::abs(val2);
 				});
-\end{lstlisting}
+\end{cpp}
 
 See ranges/rangesproj.cpp for a complete example.
 
@@ -945,9 +945,9 @@ User-defined projections simply have to take one parameter and return a value fo
 
 As you can see, the requirement that the elements have to be sortable takes the projection into account:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
-\end{lstlisting}
+\end{cpp}
 
 
 \subsubsection*{\zihao{3} 6.1.7\hspace{0.2cm}Utilities for Implementing Code for Ranges}
@@ -969,7 +969,7 @@ Assume that we want to implement an algorithm that yields the maximum value in a
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/maxvalue1.hpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <ranges>
 
 template<std::ranges::input_range Range>
@@ -987,7 +987,7 @@ std::ranges::range_value_t<Range> maxValue(const Range& rg)
 	}
 	return max;
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, we use a couple of standard utilities to deal with the range rg:
 
@@ -1014,10 +1014,10 @@ For example, std::ranges::empty() tries to call a member function empty(), a mem
 
 Note that the generic maxValue() function should declare the passed range rg as a universal reference (also called a forwarding reference) because you cannot iterate over some lightweight ranges (views) when they are const:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::input_range Range>
 std::ranges::range_value_t<Range> maxValue(Range&& rg)
-\end{lstlisting}
+\end{cpp}
 
 This is discussed later in detail.
 
@@ -1030,18 +1030,18 @@ In C++20, ranges also have some major limitations and drawbacks that should be m
 \item
 There is no ranges support for numeric algorithms yet. To pass a range to a numeric algorithm, you have to pass begin() and end() explicitly:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::accumulate(cont, 0L); // ERROR: not provided
 std::accumulate(cont.begin(), cont.end(), 0L); // OK
-\end{lstlisting}
+\end{cpp}
 
 \item
 There is no support for ranges for parallel algorithms yet.
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::sort(std::execution::par, cont); // ERROR: not provided
 std::sort(std::execution::par, cont.begin(), cont.end()); // OK
-\end{lstlisting}
+\end{cpp}
 
 However, note that you should be careful when using the existing parallel algorithms for views by passing begin() and end() to them. For some views, concurrent iterations cause undefined behavior. Only do this after declaring the view to be const.
 
@@ -1060,7 +1060,7 @@ When views refer to containers, their propagation of constness may be broken.
 \item
 Ranges lead to a significant namespace mess. For example, look at the following declaration of std::find() but with all standard names fully qualified:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::input_range Rg,
 				typename T,
 				typename Proj = std::identity>
@@ -1069,7 +1069,7 @@ requires std::indirect_binary_predicate<std::ranges::equal_to,
 									const T*>
 constexpr std::ranges::borrowed_iterator_t<Rg>
 	find(Rg&& rg, const T& value, Proj proj = {});
-\end{lstlisting}
+\end{cpp}
 
 It is really not easy to know which namespace has to be used where.
 

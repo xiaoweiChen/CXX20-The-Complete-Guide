@@ -8,3 +8,5 @@
 *.synctex(busy)
 *.zip
 *.epub
+*.pygtex
+*.pygstyle

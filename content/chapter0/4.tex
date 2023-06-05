@@ -6,10 +6,10 @@ Note the following hints about the way I write code and comments in this book
 
 I usually use the modern form of initialization (introduced in C++11 as uniform initialization) with curly braces or with = in trivial cases:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 int i = 42;
 std::string s{"hello"};
-\end{lstlisting}
+\end{cpp}
 
 The brace initialization has the following advantages:
 
@@ -35,9 +35,9 @@ If the braces are empty, the default constructors of (sub)objects are called and
 
 I often talk about programming errors. If there is no special hint, the term error or a comment such as
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 ... // ERROR
-\end{lstlisting}
+\end{cpp}
 
 means a compile-time error. The corresponding code should not compile (with a conforming compiler).
 
@@ -55,12 +55,12 @@ Most of the time I use an ellipsis (“...”) to signal additional code that is
 \item
 In header files, I usually skip the preprocessor guards. All header files should have something like the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #ifndef MYFILE_HPP
 #define MYFILE_HPP
 ...
 #endif // MYFILE_HPP
-\end{lstlisting}
+\end{cpp}
 
 Therefore, please beware and fix the code when using these header files in your projects.
 \end{itemize}

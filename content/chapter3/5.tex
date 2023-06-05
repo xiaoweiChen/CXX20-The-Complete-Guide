@@ -55,7 +55,7 @@ Consider the following example, where we overload a function foo() with two requ
 \hspace*{\fill} \\ %插入空行
 \textbf{type traits:}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 requires std::is_same_v<T, U> // using traits
 void foo(T, U)
@@ -71,13 +71,13 @@ void foo(T, U)
 }
 
 foo(1, 2); // ERROR: ambiguity: both requirements are true
-\end{lstlisting}
+\end{cpp}
 
 The problem is that if both requirements evaluate to true, both overloads fit and there is no rule that one of them has priority over the other. Therefore, the compiler stops compiling with an ambiguity error.
 
 If we use the corresponding concepts instead, the compiler finds out that the second requirement is a specialization and prefers it if both requirements are met:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, typename U>
 requires std::same_as<T, U> // using concepts
 void foo(T, U)
@@ -93,7 +93,7 @@ void foo(T, U)
 }
 
 foo(1, 2); // OK: second foo() preferred
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -103,7 +103,7 @@ C++17 introduced a compile-time if that allows us to switch between code dependi
 
 For example (as introduced before):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename Coll, typename T>
 void add(Coll& coll, const T& val) // for floating-point value types
 {
@@ -112,7 +112,7 @@ void add(Coll& coll, const T& val) // for floating-point value types
 	}
 	coll.push_back(val);
 }
-\end{lstlisting}
+\end{cpp}
 
 When generic code must provide different implementations for different kinds of arguments, but the signature is the same, using this approach can be way more readable than providing overloaded or specialized templates.
 

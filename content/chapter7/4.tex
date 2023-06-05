@@ -65,9 +65,9 @@ Assume you want to write generic code that calls the begin() function defined fo
 \item
 To support range types like containers that have a begin() member function, we can always call the member function begin():
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 obj.begin(); // only works if a member function begin() is provided
-\end{lstlisting}
+\end{cpp}
 
 However, that does not work for types that have only a free-standing begin() (such as raw arrays).
 
@@ -81,7 +81,7 @@ The standard free-standing std::begin() for raw arrays needs the full qualificat
 \item
 Other non-standard ranges cannot deal with the full qualification std::. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyColl {
 	...
 };
@@ -89,23 +89,23 @@ class MyColl {
 
 MyColl obj;
 std::begin(obj); // std::begin() does not find ::begin(MyType)
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 \item
 The necessary workaround is to put an additional using declaration in front of the begin() call and not qualify the call itself:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 using std::begin;
 begin(obj); // OK, works in all these cases
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 The new std::ranges::begin() does not have this problem:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::begin(obj); // OK, works in all these cases
-\end{lstlisting}
+\end{cpp}
 
 The trick is that begin is not a function that uses argument-dependent lookup, but rather a function object that implements all possible lookups. See lib/begin.cpp for a complete example.
 
@@ -166,7 +166,7 @@ Consider the following example:
 \hspace*{\fill} \\ %插入空行
 \textit{lib/swap.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <utility> // for std::swap()
 #include <concepts> // for std::ranges::swap()
@@ -202,12 +202,12 @@ int main()
 	std::cout << "--- std::ranges::swap()\n";
 	std::ranges::swap(a, b); // efficient swap called
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 --- std::swap()
 COPY constructor
 COPY assignment
@@ -216,12 +216,12 @@ COPY assignment
 efficient swap()
 --- std::ranges::swap()
 efficient swap()
-\end{tcblisting}
+\end{shell}
 }
 
 Note that using std::ranges::swap() is counter-productive when swap functions are defined in the namespace std for types not defined in std (which is formally not allowed):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Foo {
 	...
 };
@@ -231,33 +231,33 @@ namespace std {
 		...
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 You should change this code. The best option is to use a “hidden friend:”
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class Foo {
 	...
 	friend void swap(Foo& a, Foo& b) { // found by std::ranges::swap()
 		...
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 The functions std::ranges::iter\_move() and std::ranges::iter\_swap() have one benefit over dereferencing the iterators and calling std::move() or swap(): they work fine with proxy iterators. Therefore, to support proxy iterators in generic code, use:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto val = std::ranges::iter_move(it);
 std::ranges::iter_swap(it1, it2);
-\end{lstlisting}
+\end{cpp}
 
 rather than:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto val = std::move(*it);
 using std::swap;
 swap(*it1, *it2);
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 7.4.4\hspace{0.2cm}Functions for Comparisons of Values}
 \addcontentsline{toc}{subsubsection}{7.4.4\hspace{0.2cm}Functions for Comparisons of Values}

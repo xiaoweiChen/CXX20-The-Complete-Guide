@@ -34,7 +34,7 @@ The class view\_interface<> also initializes std::ranges::enable\_view<> for eac
 
 Whenever you define your own view type, you should derive it from view\_interface<> with your own type passed as an argument. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 class MyView : public std::ranges::view_interface<MyView<T>> {
 	public:
@@ -42,7 +42,7 @@ class MyView : public std::ranges::view_interface<MyView<T>> {
 	... end() ... ;
 	...
 };
-\end{lstlisting}
+\end{cpp}
 
 Based on the return types of begin() and end(), your type then automatically provides the member functions listed in table Operations of std::ranges::view\_interface<> if the preconditions for their availability fit. The const versions of these member functions require that the const version of the view type is a valid range.
 
@@ -53,47 +53,47 @@ C++23 will add the members cbegin() and cend(), which map to std::ranges::cbegin
 
 Range adaptors and factories have their own namespace, std::ranges::views, for which the namespace alias std::views is defined:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 namespace std {
 	namespace views = ranges::views;
 }
-\end{lstlisting}
+\end{cpp}
 
 That way, we can use names for views that may be used in other namespaces (even in another standard namespace).
 
 As a consequence, you can (and have to) qualify views when using them:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::views::reverse // full qualification
 std::views::reverse // shortcut
-\end{lstlisting}
+\end{cpp}
 
 Usually, it is not possible to use a view without qualification. ADL does not kick in because there is no range (container or view) defined in the namespace std::views:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> v;
 ...
 take(v, 3) | drop(2); // ERROR: can’t find views (may find different symbol)
-\end{lstlisting}
+\end{cpp}
 
 Even views yield an object that is not part of the namespace for views (they are in std::ranges), which means that you still have to qualify views when using them:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> values{ 0, 1, 2, 3, 4 };
 auto v1 = std::views::all(values);
 auto v2 = take(v1, 3); // ERROR
 auto v3 = std::views::take(v1, 3); // OK
-\end{lstlisting}
+\end{cpp}
 
 There is one important thing to note: never use a using declaration to skip the qualification of range adaptors:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 using namespace std::views; // do not do this
-\end{lstlisting}
+\end{cpp}
 
 Taking the composers example, we would be in trouble if we just filtered out values with a local values object defined:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> values;
 ...
 std::map<std::string, int> composers{ ... };
@@ -103,6 +103,6 @@ using namespace std::views; // do not do this
 for (const auto& elem : composers | values) { // OOPS: finds wrong values
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 In this example, we would use the local vector values instead of the view. You are lucky here, because you get a compile-time error. If you are not lucky, unqualified views find different symbols, which might have the effect that you run into undefined behavior that uses or even overwrites memory of other objects.

@@ -24,14 +24,14 @@ An example of a semantic constraint is the concept std::ranges::sized\_range. It
 
 If a range type provides size() (as a member function or as a free-standing function), this concept is fulfilled by default. To opt out from this concept (e.g., because it iterates over all elements to yield its result), you can and should set std::disable\_sized\_range<Rg> to true:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyCont {
 	...
 	std::size_t size() const; // assume this is expensive, so that this is not a sized range
 };
 // opt out from concept std::ranges::sized_range:
 constexpr bool std::ranges::disable_sized_range<MyCont> = true;
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -75,51 +75,51 @@ When only weakly\_incrementable is satisfied, you can iterate over a range only 
 
 This difference matters for iterators: input stream iterators (iterators that read values from a stream) can iterate only once because the next iteration yields different values. Consequently, input stream iterators satisfy the weakly\_incrementable concept but not the incrementable concept. However, the concepts cannot be used to check for this difference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::weakly_incrementable<std::istream_iterator<int>> // yields true
 std::incrementable<std::istream_iterator<int>> // OOPS: also yields true
-\end{lstlisting}
+\end{cpp}
 
 The reason is that the difference is a semantic constraint that cannot be checked at compile time. Therefore, the concepts can be used to document the constraints:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::weakly_incrementable T>
 void algo1(T beg, T end); // single-pass algorithm
 
 template<std::incrementable T>
 void algo2(T beg, T end); // multi-pass algorithm
-\end{lstlisting}
+\end{cpp}
 
 Note that we use different names for the algorithms here. Due to the fact that we cannot check the semantic difference of the constraints, it is up to the programmer to not pass an input stream iterator:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 algo1(std::istream_iterator<int>{std::cin}, // OK
 	  std::istream_iterator<int>{});
 
 algo2(std::istream_iterator<int>{std::cin}, // OOPS: violates constraint
 	  std::istream_iterator<int>{});
-\end{lstlisting}
+\end{cpp}
 
 However, you cannot distinguish between two implementations based on this difference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::weakly_incrementable T>
 void algo(T beg, T end); // single-pass implementation
 
 template<std::incrementable T>
 void algo(T beg, T end); // multi-pass implementation
-\end{lstlisting}
+\end{cpp}
 
 If you pass an input stream iterator here, the compiler will incorrectly use the multi-pass implementation:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 algo(std::istream_iterator<int>{std::cin}, // OOPS: calls the wrong overload
 	 std::istream_iterator<int>{});
-\end{lstlisting}
+\end{cpp}
 
 Fortunately, there is a solution here, because for this semantic difference, C++98 had already introduced iterator traits, which are used by the iterator concepts. If you use these concepts (or the corresponding range concepts), everything works fine:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::input_iterator T>
 void algo(T beg, T end); // single-pass implementation
 	
@@ -128,7 +128,7 @@ void algo(T beg, T end); // multi-pass implementation
 
 algo(std::istream_iterator<int>{std::cin}, // OK: calls the right overload
 	std::istream_iterator<int>{});
-\end{lstlisting}
+\end{cpp}
 
 You should prefer the more specific concepts for iterators and ranges, which also honor the new and slightly modified iterator categories.
 

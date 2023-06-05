@@ -45,7 +45,7 @@ The assumption that the values of forward, bidirectional, or random-access itera
 
 For that reason, C++20 introduces a new optional iterator attribute, iterator\_concept, and defines that this attribute may be set to signal a C++20 category that differs from the traditional category. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector vec{1, 2, 3, 4};
 auto pos1 = vec.begin();
 decltype(pos1)::iterator_category // type std::random_access_iterator_tag
@@ -55,7 +55,7 @@ auto v = std::views::iota(1);
 auto pos2 = v.begin();
 decltype(pos2)::iterator_category // type std::input_iterator_tag
 decltype(pos2)::iterator_concept // type std::random_access_iterator_tag
-\end{lstlisting}
+\end{cpp}
 
 Note that std::iterator\_traits do not provide a member iterator\_concept and that for iterators, a member iterator\_category may not always be defined.
 

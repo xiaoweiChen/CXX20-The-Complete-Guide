@@ -56,11 +56,9 @@ Table 7.11. New return types for range algorithms
 
 The following program demonstrates how to use these return types:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/results.cpp}
+\filename{ranges/results.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <string_view>
 #include <vector>
@@ -90,17 +88,17 @@ int main()
 	print("written out: ", outColl.begin(), result.out);
 	print("rest of out: ", result.out, outColl.end());
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 processed in: 1 2 3 4 5 6 7
 rest of in:
 written out: 1 4 9 16 25 36 49
 rest of out: 8 9 10
-\end{tcblisting}
+\end{shell}
 }
 
 \subsubsection*{\zihao{3} 7.6.2\hspace{0.2cm}Algorithm Overview}

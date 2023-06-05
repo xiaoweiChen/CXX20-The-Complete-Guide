@@ -27,31 +27,31 @@ The class template std::ranges::subrange<> defines a view to the elements of a r
 
 The major use case of the subrange view is to convert a pair of begin iterator and sentinel (end iterator) into one object. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<int> coll{0, 8, 15, 47, 11, -1, 13};
 
 std::ranges::subrange s1{std::ranges::find(coll, 15),
 						std::ranges::find(coll, -1)};
 print(coll); // 15 47 11
-\end{lstlisting}
+\end{cpp}
 
 You can initialize the subrange with a special sentinel for the end value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::subrange s2{coll.begin() + 1, EndValue<-1>{}};
 print(s2); // 8 15 47 11
-\end{lstlisting}
+\end{cpp}
 
 Both are especially helpful for converting a pair of iterators into a range/view so that, for example, range adaptors can process the elements:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(auto beg, auto end)
 {
 	// init view for all but the first five elements (if there are any):
 	auto v = std::ranges::subrange{beg, end} | std::views::drop(5);
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 Here is a complete example that demonstrates the use of a subrange:
 
@@ -59,7 +59,7 @@ Here is a complete example that demonstrates the use of a subrange:
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/subrange.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -91,27 +91,27 @@ int main()
 	// create subrange view to print all translations:
 	printPairs(std::ranges::subrange(beg, end));
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 smart:klug smart:elegant smart:raffiniert
-\end{tcblisting}
+\end{shell}
 }
 
 After equal\_range() gives us a pair of the beginning and the end of all elements in dict that have the key "smart", we use a subrange to convert these two iterators into a view (here, a view of elements that are pairs of strings):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::subrange(beg, end)
-\end{lstlisting}
+\end{cpp}
 
 We then can pass the view to printPairs() to iterate over the elements and print them out.
 
 Note that a subrange might change its size so that elements are inserted or deleted between begin and end as long as both begin and end remain valid:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list coll{1, 2, 3, 4, 5, 6, 7, 8};
 
 auto v1 = std::ranges::subrange(coll.begin(), coll.end());
@@ -120,7 +120,7 @@ print(v1); // 1 2 3 4 5 6 7 8
 coll.insert(++coll.begin(), 0);
 coll.push_back(9);
 print(v2); // 1 0 2 3 4 5 6 7 8 9
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -128,29 +128,29 @@ print(v2); // 1 0 2 3 4 5 6 7 8 9
 
 There is no range factory for initializing a subrange from a begin (iterator) and an end (sentinel). However, there is a range factory that might create a subrange from begin and a count:[C++20 originally stated that all() might also yield a subrange. However, that option was removed later when owning views were introduced (see \url{http://wg21.link/p2415})]
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::views::counted(beg, sz)
-\end{lstlisting}
+\end{cpp}
 
 std::views::counted() creates a subrange with the first sz elements of the non-contiguous range, starting with the element that the iterator beg refers to (for a contiguous range, counted() creates a span view).
 
 When std::views::counted() creates a subrange, the subrange gets a std::counted\_iterator as the begin and a dummy sentinel of type std::default\_sentinel\_t as the end. This means that:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::views::counted(rg.begin(), 5);
-\end{lstlisting}
+\end{cpp}
 
 is equivalent to:
 
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::subrange{std::counted_iterator{rg.begin(), 5},
 	std::default_sentinel};
-\end{lstlisting}
+\end{cpp}
 
 This has the effect that the count in this subrange remains stable even if elements are inserted or removed:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list coll{1, 2, 3, 4, 5, 6, 7, 8};
 
 auto v2 = std::views::counted(coll.begin(), coll.size());
@@ -159,7 +159,7 @@ print(v2); // 1 2 3 4 5 6 7 8
 coll.insert(++coll.begin(), 0);
 coll.push_back(9);
 print(v2); // 1 0 2 3 4 5 6 7
-\end{lstlisting}
+\end{cpp}
 
 For more details, see the description of std::views::counted() and type std::counted\_iterator.
 
@@ -169,7 +169,7 @@ Here is a complete example that demonstrates the use of a subrange via counted()
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/subrangecounted.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -198,15 +198,15 @@ int main()
 	printPairs(dict);
 	printPairs(std::views::counted(dict.begin(), 3));
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 trait:Merkmal car:Auto smart:klug smart:elegant smart:raffiniert strange:fremd
 trait:Merkmal car:Auto smart:klug
-\end{tcblisting}
+\end{shell}
 }
 
 Note that in rare cases, std::views::reverse() might also yield a subrange. This happens when you reverse a reversed subrange. In that case, you get back the original subrange.
@@ -224,32 +224,32 @@ This has the following consequences:
 \item
 If you pass contiguous or random-access iterators of the same type, the subrange is sized:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector vec{1, 2, 3, 4, 5}; // has random access
 ...
 std::ranges::subrange sv{vec.begin()+1, vec.end()-1}; // sized
 std::cout << std::ranges::sized_range<decltype(sv)>; // true
-\end{lstlisting}
+\end{cpp}
 
 \item
 If you pass iterators that do not support random access or that are not common, the subrange is not sized:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list lst{1, 2, 3, 4, 5}; // no random access
 ...
 std::ranges::subrange sl{++lst.begin(), --lst.end()}; // unsized
 std::cout << std::ranges::sized_range<decltype(sl)>; // false
-\end{lstlisting}
+\end{cpp}
 
 \item
 In the latter case, you can pass a size to make a subrange a sized range:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list lst{1, 2, 3, 4, 5}; // no random access
 ...
 std::ranges::subrange sl2{++lst.begin(), --lst.end(), lst.size()-2}; // sized
 std::cout << std::ranges::sized_range<decltype(sl2)>; // true
-\end{lstlisting}
+\end{cpp}
 
 It is undefined behavior if you initialize the view with the wrong size or use the view after elements have been inserted or deleted between the begin and end.
 \end{itemize}
@@ -272,9 +272,9 @@ Iterators of a subrange refer to the underlying (or temporarily created) range. 
 
 std::ranges::subrange also has a tuple-like interface to support structured bindings (introduced to C++ with C++17). Thus, you can easily initialize a begin iterator and a sentinel (end iterator) doing something like the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto [beg, end] = std::ranges::subrange{coll};
-\end{lstlisting}
+\end{cpp}
 
 For this, the class std::ranges::subrange provides;
 
@@ -330,7 +330,7 @@ This can be used to harmonize the type of raw arrays.
 
 Consider the following example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 int a1[5] = { ... };
 int a2[10] = { ... };
 
@@ -338,7 +338,7 @@ std::same_as<decltype(a1), decltype(a2)> // false
 
 std::same_as<decltype(std::ranges::subrange{a1}),
 			 decltype(std::ranges::subrange{a2})> // true
-\end{lstlisting}
+\end{cpp}
 
 Note that this works only for raw arrays. For std::array<> and other containers, iterators (may) have different types, meaning that a harmonization of the types with a subrange is at least not portable.
 
@@ -370,7 +370,7 @@ The effect is similar to type std::reference\_wrapper<> (introduced with C++11),
 
 The major use case of the ref\_view is to convert a container into a lightweight object that is cheap to copy. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(std::ranges::input_range auto coll) // NOTE: takes range by value
 {
 	for (const auto& elem : coll) {
@@ -382,19 +382,19 @@ std::vector<std::string> coll{ ... };
 
 foo(coll); // copies coll
 foo(std::ranges::ref_view{coll}); // pass coll by reference
-\end{lstlisting}
+\end{cpp}
 
 Passing a container to a coroutine, which usually has to take parameters by value, may be one application of this technique.
 
 Note that you can only create a ref view to an lvalue (a range that has a name):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector coll{0, 8, 15};
 ...
 std::ranges::ref_view v1{coll}; // OK, refers to coll
 std::ranges::ref_view v2{std::move(coll)}; // ERROR
 std::ranges::ref_view v3{std::vector{0, 8, 15}}; // ERROR
-\end{lstlisting}
+\end{cpp}
 
 For an rvalue, you have to use an owning view.
 
@@ -404,7 +404,7 @@ Here is a complete example using a ref view:
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/refview.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <string>
 #include <vector>
@@ -426,7 +426,7 @@ int main()
 	printByVal(std::ranges::ref_view{coll}); // pass coll by reference
 	printByVal(std::views::all(coll)); // ditto (using a range adaptor)
 }
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -434,9 +434,9 @@ int main()
 
 Ref views can also (and usually should) be created with a range factory:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::views::all(rg)
-\end{lstlisting}
+\end{cpp}
 
 std::views::all() creates a ref\_view to the passed range rg provided rg is an lvalue and not a view yet (all() yields rg if it is already a view and an owning view if otherwise an rvalue is passed).
 
@@ -444,23 +444,23 @@ In addition, almost all other range adaptors also create a ref view if an lvalue
 
 The example program above uses this indirect way for creating a ref view with the last call of printByVal(). It passes a std::ranges::ref\_view<std::vector<std::string>{}>{}>:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector<std::string> coll{"love", "of", "my", "life"};
 ...
 printByVal(std::views::all(coll));
-\end{lstlisting}
+\end{cpp}
 
 Note that all other views that take a range indirectly call all() for that passed range (by using std::views::all\_t<>). For that reason, a ref view is almost always created automatically if you pass an lvalue that is not a view to one of the views. For example, calling:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::views::take(coll, 3)
-\end{lstlisting}
+\end{cpp}
 
 basically has the same effect as calling the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::take_view{std::ranges::ref_view{coll}, 3};
-\end{lstlisting}
+\end{cpp}
 
 However, using the adaptor, some optimizations might apply.
 
@@ -540,7 +540,7 @@ This is the only view (so far) that might own multiple elements. However, constr
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector vec{0, 8, 15};
 std::ranges::owning_view v0{vec}; // ERROR
 std::ranges::owning_view v1{std::move(vec)}; // OK
@@ -552,21 +552,21 @@ std::ranges::owning_view v2{arr}; // ERROR
 std::ranges::owning_view v2{std::move(arr)}; // OK
 print(v2); // "tic" "tac" "toe"
 print(arr); // "" "" ""
-\end{lstlisting}
+\end{cpp}
 
 This is the only standard view of C++20 that does not support copying at all. You can only move it. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector coll{0, 8, 15};
 std::ranges::owning_view v0{std::move(coll)};
 
 auto v3 = v0; // ERROR
 auto v4 = std::move(v0); // OK (range in v0 moved to v4)
-\end{lstlisting}
+\end{cpp}
 
 The major use case of the owning\_view is to create a view from a range without depending on the lifetime of the range anymore. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(std::ranges::view auto coll) // NOTE: takes range by value
 {
 	for (const auto& elem : coll) {
@@ -580,7 +580,7 @@ foo(coll); // ERROR: no view
 foo(std::move(coll)); // ERROR: no view
 foo(std::ranges::owning_view{coll}); // ERROR: must pass rvalue
 foo(std::ranges::owning_view{std::move(coll)}); // OK: move coll as view
-\end{lstlisting}
+\end{cpp}
 
 Converting a range to an owning view is usually done implicitly by passing a temporary container to a range adaptor (see below).
 
@@ -590,9 +590,9 @@ Converting a range to an owning view is usually done implicitly by passing a tem
 
 Owning views can also (and usually should) be created with a range factory:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::views::all(rg)
-\end{lstlisting}
+\end{cpp}
 
 std::views::all() creates an owning\_view to the passed range rg provided rg is an rvalue and not a view yet (all() yields rg if it is already a view and a ref view if otherwise an lvalue is passed).
 
@@ -600,9 +600,9 @@ In addition, almost all other range adaptors also create an owning view if an rv
 
 The example above can therefore implement the call of foo() as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 foo(std::views::all(std::move(coll))); // move coll as view
-\end{lstlisting}
+\end{cpp}
 
 To create an owning view, the adaptor all() requires an rvalue (for an lvalue, all() creates a ref view). This means that you have to pass a temporary range or a named range marked with std::move() (all() yields a ref view if an lvalue is passed).
 
@@ -612,7 +612,7 @@ Here is a complete example:
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/owningview.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <string>
 #include <vector>
@@ -635,21 +635,21 @@ int main()
 	}
 	std::cout << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, v1 and v2 both have type std::ranges::owning\_view<std::vector<std::string>>>. However, the usual way to create an owning view is demonstrated the range-based for loop at the end of the program: it creates an owning view indirectly when we pass the a temporary container to a range adaptor.
 
 The expression
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 getColl() | std::views::drop(1)
-\end{lstlisting}
+\end{cpp}
 
 creates a
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::drop_view<std::ranges::owning_view<std::vector<std::string>>>
-\end{lstlisting}
+\end{cpp}
 
 The way this happens is that the drop view indirectly calls all() for the passed temporary range (by using std::views::all\_t<>).
 
@@ -702,19 +702,159 @@ Table 8.6. Operations of the class std::ranges::owning\_view<>
 \subsubsection*{\zihao{3} 8.3.4\hspace{0.2cm}Common View}
 \addcontentsline{toc}{subsubsection}{8.3.4\hspace{0.2cm}Common View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}     & std::ranges::common\_view\textless{}\textgreater{}                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}  & All elements of a range with harmonized iterator types            \\ \hline
+\textbf{Adaptor:}              & std::views::common()        \\ \hline
+\textbf{Element type:}         & Same type a as passed range \\ \hline
+\textbf{Requires:} & Non-common at least forward range (adaptor accepts common ranges) \\ \hline
+\textbf{Category:} & Usually forward(contiguous if on a sized contiguous range)        \\ \hline
+\textbf{Is sized range:}       & If on sized range           \\ \hline
+\textbf{Is common range:}      & Always                      \\ \hline
+\textbf{Is borrowed ranges:}   & If on borrowed range        \\ \hline
+\textbf{Caches:}               & Nothing                     \\ \hline
+\textbf{Const iterable:}       & If on const-iterable range  \\ \hline
+\textbf{Progagates constness:} & Only if on rvalue range     \\ \hline
+\end{longtable}
+
+The class template std::ranges::common\_view<> is a view that harmonizes the begin and end iterator types of a range to be able to pass them to code where the same iterator type is required (such as to constructors of containers or traditional algorithms).
+
+Note that the constructor of the view requires that the passed range is not a common range (iterators have different types). For example:
+
+\begin{cpp}
+std::list<int> lst{1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+auto v1 = std::ranges::common_view{lst}; // ERROR: is already common
+
+auto take5 = std::ranges::take_view{lst, 5}; // yields no common view
+auto v2 = std::ranges::common_view{take5}; // OK
+\end{cpp}
+
+The corresponding range adaptor can also deal with ranges that already are common. Therefore, it is better to use the range adaptor std::views::common() to create a common view.
+
+\samllsection{Range Adaptors for Common Views}
+
+Common views can also (and usually should) be created with a range adaptor:
+
+\begin{cpp}
+std::views::common(rg)
+\end{cpp}
+
+std::views::common() creates a view that refers to rg as a common range. If rg is already common, it returns std::views::all(rg).
+
+The examples above can therefore be made to always compile as follows:
+
+\begin{cpp}
+std::list<int> lst{1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+auto v1 = std::views::common(lst); // OK
+
+auto take5 = std::ranges::take_view{lst, 5}; // yields no common view
+auto v2 = std::views::common(take5); // v2 is common view
+std::vector<int> coll{v2.begin(), v2.end()}; // OK
+\end{cpp}
+
+Note that by using the adaptor, it is not a compile-time error to create a common view from a range that is already common. This is the key reason to prefer the adaptor over directly initializing the view.
+
+Here is a full example program for using common views:
+
+\filename{ranges/commonview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <list>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::list<std::string> coll{"You're", "my", "best", "friend"};
+	
+	auto tv = coll | std::views::take(3);
+	static_assert(!std::ranges::common_range<decltype(tv)>);
+	// could not initialize a container by passing begin and end of the view
+	
+	std::ranges::common_view vCommon1{tv};
+	static_assert(std::ranges::common_range<decltype(vCommon1)>);
+	
+	auto tvCommon = coll | std::views::take(3) | std::views::common;
+	static_assert(std::ranges::common_range<decltype(tvCommon)>);
+	
+	std::vector<std::string> coll2{tvCommon.begin(), tvCommon.end()}; // OK
+	print(coll);
+	print(coll2);
+}
+\end{cpp}
+
+Here, we first create a take view, which is not common if it is not a random-access range. Because it is not common, we cannot use it to initialize a container with its elements:
+
+\begin{cpp}
+std::vector<std::string> coll2{tv.begin(), tv.end()}; // ERROR: begin/end types differ
+\end{cpp}
+
+Using the common view, the initialization works fine. Use std::views::common() if you do not know whether the range you want to harmonize is already common.
+
+The major use case of the common view is to pass ranges or views that have different types for the begin and end iterators to generic code that requires begin and end to have the same type. A typical example is to pass the begin and end of a range to a constructor of a container or to a traditional algorithm. For example:
+
+\begin{cpp}
+std::list<int> lst {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+auto v1 = std::views::take(lst, 5); // Note: types of begin() and end() differ
+std::vector<int> coll{v1.begin(), v1.end()}; // ERROR: containers require the same type
+
+auto v2 = std::views::common(std::views::take(lst, 5)); // same type now
+std::vector<int> coll{v2.begin(), v2.end()}; // OK
+\end{cpp}
+
+\samllsection{Interface of Common Views}
+
+Table Operations of the class std::ranges::common\_view<> lists the API of a common view.
 
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}   & \textbf{Effect}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+common\_view r\{\} & Creates a common\_view that refers to a default constrcted range                                   \\ \hline
+common\_view r\{rg\} & Creates a common\_view that refers to range rg                 \\ \hline
+r.begin()            & Yields the begin iterator                                      \\ \hline
+r.end()              & Yields the sentinel(end iterator)                              \\ \hline
+r.empty()            & Yields whether r is empty(available if the range supportes it) \\ \hline
+if (r)               & true if r is not empty(available if empty() is defined)        \\ \hline
+r.size()           & Yields the number of elements (available if it refers to a sized range)                            \\ \hline
+r.front()            & Yields the first element(available if forwarding)              \\ \hline
+r.back()             & Yields the last element(available if bidrectional and common)  \\ \hline
+r{[}idx{]}           & Yields the n-th element(available if random access)            \\ \hline
+r.data()           & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()             & Yields a reference to the range that r refers to               \\ \hline
+\end{longtable}
 
+\begin{center}
+Table 8.7. Operations of the class std::ranges::common\_view<>
+\end{center}
 
-
-
-
-
-
-
-
-
-
-
-
+The default constructor is provided only if the iterator is default initializable. Internally, common\_view uses iterators of type std::common\_iterator.
 

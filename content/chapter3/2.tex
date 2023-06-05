@@ -5,23 +5,23 @@ You can use requires clauses or concepts to constrain almost all forms of generi
 \begin{itemize}
 \item
 Function templates:
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires ...
 void print(const T&) {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Class templates
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires ...
 class MyType {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Alias templates
@@ -37,18 +37,18 @@ For these templates, you can constrain both type and value parameters.
 
 However, note that you cannot constrain concepts:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::sized_range T> // ERROR
 concept IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
-\end{lstlisting}
+\end{cpp}
 
 Instead, you have to specify this as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 concept IsIntegralValType = std::ranges::sized_range<T> &&
 							std::integral<std::ranges::range_value_t<T>>;
-\end{lstlisting}
+\end{cpp}
 
 
 \subsubsection*{\zihao{3} 3.2.1\hspace{0.2cm}Constraining Alias Templates}
@@ -56,52 +56,52 @@ concept IsIntegralValType = std::ranges::sized_range<T> &&
 
 Here is an example of constraining alias templates (generic using declarations):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::range T>
 using ValueType = std::ranges::range_value_t<T>;
-\end{lstlisting}
+\end{cpp}
 
 The declaration is equivalent to the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires std::ranges::range<T>
 using ValueType = std::ranges::range_value_t<T>;
-\end{lstlisting}
+\end{cpp}
 
 Type ValueType<> is now defined only for types that are ranges:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 ValueType<int> vt1; // ERROR
 ValueType<std::vector<int>> vt2; // int
 ValueType<std::list<double>> vt3; // double
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 3.2.2\hspace{0.2cm}Constraining Variable Templates}
 \addcontentsline{toc}{subsubsection}{3.2.2\hspace{0.2cm}Constraining Variable Templates}
 
 Here is an example of constraining variable templates:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::range T>
 constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
-\end{lstlisting}
+\end{cpp}
 
 Again, this is equivalent to the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 requires std::ranges::range<T>
 constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
-\end{lstlisting}
+\end{cpp}
 
 The Boolean variable template is now defined only for ranges:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 bool b1 = IsIntegralValType<int>; // ERROR
 bool b2 = IsIntegralValType<std::vector<int>>; // true
 bool b3 = IsIntegralValType<std::list<double>>; // false
-\end{lstlisting}
+\end{cpp}
 
 
 \subsubsection*{\zihao{3} 3.2.3\hspace{0.2cm}Constraining Member Functions}
@@ -111,11 +111,9 @@ Requires clauses can also be part of the declaration of member functions. That w
 
 Consider the following example:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{lang/valorcoll.hpp}
+\filename{lang/valorcoll.hpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <ranges>
 
@@ -141,7 +139,7 @@ class ValOrColl {
 		std::cout << '\n';
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 Here, we define a class ValOrColl that can hold a single value or a collection of values as value of type T. Two print() member functions are provided and the class uses the standard concept std::ranges::range to decided which one to call:
 
@@ -155,11 +153,9 @@ If type T is not a collection, only the first print() is available and therefore
 
 For example, you can use the class as follows:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{lang/valorcoll.cpp}
+\filename{lang/valorcoll.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include "valorcoll.hpp"
 #include <vector>
 
@@ -170,23 +166,23 @@ int main()
 	ValOrColl o2 = std::vector{1, 2, 3, 4};
 	o2.print();
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 42
 1 2 3 4
-\end{tcblisting}
+\end{shell}
 
 Note that you can constrain only templates this way. You cannot use requires to constrain ordinary functions:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo() requires std::numeric_limits<char>::is_signed // ERROR
 {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 One example of a constraining member function inside the C++standard library is the conditional availability of begin() for const views.
 
@@ -196,27 +192,27 @@ One example of a constraining member function inside the C++standard library is 
 
 It is not only types that you can constrain. You can also constrain values that are template parameters (non-type template parameters (NTTP)). For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<int Val>
 concept LessThan10 = Val < 10;
-\end{lstlisting}
+\end{cpp}
 
 Or more generic:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<auto Val>
 concept LessThan10 = Val < 10;
-\end{lstlisting}
+\end{cpp}
 
 This concept can be used as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T, int Size>
 requires LessThan10<Size>
 class MyType {
 	...
 };
-\end{lstlisting}
+\end{cpp}
 
 We will discuss more examples later.
 

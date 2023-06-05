@@ -21,10 +21,10 @@ There are fixes under way that at least fix the broken constness of cbegin() and
 
 It is surprisingly complicated to implement a generic function that can iterate over the elements of every type of containers and views with good performance. For example, declaring a function that shall print all elements as follows does not always work:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 void print(const T& coll); // OOPS: might not work for some views
-\end{lstlisting}
+\end{cpp}
 
 Consider the following concrete example:
 
@@ -32,7 +32,7 @@ Consider the following concrete example:
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/printconst.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <list>
@@ -66,16 +66,16 @@ int main()
 	};
 	print(vec | std::views::filter(isEven)); // ERROR
 }
-\end{lstlisting}
+\end{cpp}
 
 First, we declare a very trivial generic function print(), which prints all elements of a range passed as a const reference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(const auto& rg)
 {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 Then, we call print() for a couple of views and run into surprising behavior:
 
@@ -84,39 +84,39 @@ Then, we call print() for a couple of views and run into surprising behavior:
 \item
 Passing take views and a drop view to a vector works fine:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 print(vec | std::views::take(3)); // OK
 print(vec | std::views::drop(3)); // OK
 
 print(lst | std::views::take(3)); // OK
-\end{lstlisting}
+\end{cpp}
 
 \item
 Passing a drop view to a list does not compile:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 print(vec | std::views::take(3)); // OK
 print(vec | std::views::drop(3)); // OK
 
 print(lst | std::views::take(3)); // OK
 print(lst | std::views::drop(3)); // ERROR
-\end{lstlisting}
+\end{cpp}
 
 \item
 However, iterating over the drop view directly works fine:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (const auto& elem : lst | std::views::drop(3)) { // OK
 	std::cout << elem << ' ';
 }
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 This does not mean that vectors always work fine. If, for example, we pass a filter view, we get an error for all ranges:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 print(vec | std::views::filter(isEven)); // ERROR
-\end{lstlisting}
+\end{cpp}
 
 
 \noindent
@@ -166,7 +166,7 @@ All views that refer to other ranges if the referred ranges themselves are not c
 For these views, begin() and end() as const member functions are provided only conditionally or are not provided at all. For example, for drop views, begin() for const objects is provided only if the passed ranges fulfill the requirement of a random-access range and sized range:[You might be surprised by the fact that the template parameter V is constrained to be a view. However, it may be a ref view implicitly created from a passed container that is not a view]
 
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 namespace std::ranges {
 	template<view V>
 	class drop_view : public view_interface<drop_view<V>> {
@@ -177,27 +177,27 @@ namespace std::ranges {
 		...
 	};
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, we use the new feature to constrain member functions.
 
 This means that you cannot provide a generic function that can deal with the elements of all ranges and views if you declare the parameter to be a const reference.
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(const auto& coll); // not callable for all views
 
 template<typename T>
 void foo(const T& coll); // not callable for all views
-\end{lstlisting}
+\end{cpp}
 
 It does not matter whether you have constraints for the type of the range parameter:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(const std::ranges::input_range auto& coll); // not callable for all views
 
 template<std::ranges::random_access_range T>
 void foo(const T& coll); // not callable for all views
-\end{lstlisting}
+\end{cpp}
 
 
 \noindent
@@ -206,12 +206,12 @@ void foo(const T& coll); // not callable for all views
 
 To also support these views in generic code, you should declare the range parameters as universal references (also called forwarding references). These are references that can refer to all expressions while retaining the fact that the referred object is not const[ In the C++ standard, universal references are called forwarding references, which is unfortunate because they do not really forward until std::forward<>() is called for them, and perfect forwarding is not always the reason to use these references (as this example demonstrates).]. For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(std::ranges::input_range auto&& coll); // can in principle pass all views
 
 template<std::ranges::random_access_range T>
 void foo(T&& coll);
-\end{lstlisting}
+\end{cpp}
 
 Thus, the following program works fine:
 
@@ -219,7 +219,7 @@ Thus, the following program works fine:
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/printranges.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <list>
@@ -253,11 +253,11 @@ int main()
 	};
 	print(vec | std::views::filter(isEven)); // OK
 }
-\end{lstlisting}
+\end{cpp}
 
 For the same reason, the generic maxValue() function introduced before does not always work:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::input_range Range>
 std::ranges::range_value_t<Range> maxValue(const Range& rg)
 {
@@ -269,7 +269,7 @@ auto odd = [] (auto val) {
 					return val % 2 != 0;
 				};
 std::cout << maxValue(arr | std::views::filter(odd)) << '\n'; // ERROR
-\end{lstlisting}
+\end{cpp}
 
 As written, it is better to implement the generic maxValue() function as follows:
 
@@ -277,7 +277,7 @@ As written, it is better to implement the generic maxValue() function as follows
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/maxvalue2.hpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <ranges>
 
 template<std::ranges::input_range Range>
@@ -295,14 +295,14 @@ std::ranges::range_value_t<Range> maxValue(Range&& rg)
 	}
 	return max;
 }
-\end{lstlisting}
+\end{cpp}
 
 Here, we declare parameter rg as a universal/forwarding reference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::input_range Range>
 std::ranges::range_value_t<Range> maxValue(Range&& rg)
-\end{lstlisting}
+\end{cpp}
 
 That way, we ensure that the passed views are not becoming const, which means that we can also pass a filter view now:
 
@@ -310,7 +310,7 @@ That way, we ensure that the passed views are not becoming const, which means th
 \hspace*{\fill} \\ %插入空行
 \textit{ranges/maxvalue2.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include "maxvalue2.hpp"
 #include <iostream>
 #include <algorithm>
@@ -324,14 +324,14 @@ int main()
 			};
 	std::cout << maxValue(arr | std::views::filter(odd)) << '\n'; // OK
 }
-\end{lstlisting}
+\end{cpp}
 
 The output of the program is:
 
 {\footnotesize
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 15
-\end{tcblisting}
+\end{shell}
 }
 
 Are you wondering now how to declare a generic function that can be called for all const and non-const ranges and views and guarantees that the elements are not modified? Well, again, there is an important lesson to learn here:
@@ -365,7 +365,7 @@ Regarding the advice to use universal/forwarding references, there is an importa
 
 Consider the following example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::list<int> lst{1, 2, 3, 4, 5, 6, 7, 8};
 
 auto v = lst | std::views::drop(2);
@@ -380,13 +380,13 @@ std::jthread printThread{[&] {
 // this thread computes the sum of the element values:
 auto sum = std::accumulate(v.begin(), v.end(), // fatal runtime ERROR
 0L);
-\end{lstlisting}
+\end{cpp}
 
 By using a std::jthread, we start a thread that iterates over the elements of the view v to print them. At the same time, we iterate over v to compute the sum of the element values. For standard containers, parallel iterations that only read are safe (there is a guarantee for containers, that calling begin() counts as read access). However, this guarantee does not apply to standard views. Because we might call begin() for view v concurrently, this code causes undefined behavior (a possible data race).
 
 Functions that perform concurrent iterations that only read should use const view to convert possible runtime errors into compile-time errors:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 const auto v = lst | std::views::drop(2);
 
 std::jthread printThread{[&] {
@@ -397,7 +397,7 @@ std::jthread printThread{[&] {
 
 auto sum = std::accumulate(v.begin(), v.end(), // compile-time ERROR
 0L);
-\end{lstlisting}
+\end{cpp}
 
 \noindent
 \hspace*{\fill} \\ %插入空行
@@ -405,41 +405,41 @@ auto sum = std::accumulate(v.begin(), v.end(), // compile-time ERROR
 
 You might claim that you can simply overload a generic function for containers and views. For views, it might be enough to just add an overload that constrains the function for views and takes the parameter by value:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(const auto& rg); // for containers
 void print(std::ranges::view auto rg) // for views
-\end{lstlisting}
+\end{cpp}
 
 However, the rules of overload resolution can become tricky when you once pass by value and once by reference. In this case, it causes ambiguities:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // ERROR: ambiguous
-\end{lstlisting}
+\end{cpp}
 
 It also does not help to use a concept for the views that subsumes a concept used for the general case:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(const std::ranges::range auto& rg); // for containers
 void print(std::ranges::view auto rg) // for views
 
 std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // ERROR: ambiguous
-\end{lstlisting}
+\end{cpp}
 
 It also does not help to use a concept for the views that subsumes a concept used for the general case:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(const std::ranges::range auto& rg); // for containers
 void print(std::ranges::view auto rg) // for views
 
 std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // ERROR: ambiguous
-\end{lstlisting}
+\end{cpp}
 
 Instead, you have to state that the const\& overload is not for views:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<std::ranges::input_range T> // for containers
 requires (!std::ranges::view<T>) // and not for views
 void print(const T& rg);
@@ -448,7 +448,7 @@ void print(std::ranges::view auto rg) // for views
 
 std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // OK
-\end{lstlisting}
+\end{cpp}
 
 However, remember that copying a view might create a view with different state and behavior than the source view. For this reason, it is anyway questionable whether it is good to pass all views by value.
 
@@ -457,7 +457,7 @@ However, remember that copying a view might create a view with different state a
 
 Containers have deep constness. Because they have value semantics and own their elements, they propagate any constness to their elements. When a containers is const, its elements are const. As a consequence, the following code fails to compile:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 void modifyConstRange(const T& range)
 {
@@ -467,11 +467,11 @@ void modifyConstRange(const T& range)
 std::array<int, 10> coll{}; // array of 10 ints with value 0
 ...
 modifyConstRange(coll); // compile-time ERROR
-\end{lstlisting}
+\end{cpp}
 
 This compile-time error is helpful because it helps to detect code that would otherwise be broken at runtime. For example, if you accidentally use the assignment operator instead of a comparison, the code does not compile:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 void modifyConstRange(const T& range)
 {
@@ -483,84 +483,84 @@ void modifyConstRange(const T& range)
 std::array<int, 10> coll{}; // array of 10 ints with value 0
 ...
 modifyConstRange(coll); // compile-time ERROR (thank goodness)
-\end{lstlisting}
+\end{cpp}
 
 Knowing that elements cannot be modified also helps for optimizations (such as avoiding the need to make backups and check for changes) or to be sure that element access cannot cause undefined behavior due to data races when multiple threads are used.
 
 With views the situation is more complicated. Views on ranges passed as lvalues have reference semantics. They refer to elements stored somewhere else. By design, these views do not propagate constness to their elements. They have shallow constness:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::array<int, 10> coll{}; // array of 10 ints with value 0
 ...
 std::ranges::take_view v{coll, 5}; // view to first five elements of coll
 modifyConstRange(v); // OK, modifies the first element of coll
-\end{lstlisting}
+\end{cpp}
 
 That applies to almost all views on lvalues regardless of how they are created:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 modifyConstRange(coll | std::views::drop(5)); // OK, elements of coll are not const
 modifyConstRange(coll | std::views::take(5)); // OK, elements of coll are not const
-\end{lstlisting}
+\end{cpp}
 
 As a consequence, you can use the range adaptor std::views::all() to pass a container to a generic function that takes a range as a const reference:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 modifyConstRange(coll); // compile-time ERROR: elements are const
 modifyConstRange(std::views::all(coll)); // OK, elements of coll are not const
-\end{lstlisting}
+\end{cpp}
 
 Note that views on rvalues (if they are valid) usually still propagate constness:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 readConstRange(getColl() | std::views::drop(5)); // compile-time ERROR (good)
 readConstRange(getColl() | std::views::take(5)); // compile-time ERROR (good)
-\end{lstlisting}
+\end{cpp}
 
 Also, note that it is not possible to modify the elements of a const container using a view:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 const std::array<int, 10> coll{}; // array of 10 ints with value 0
 ...
 auto v = std::views::take(coll, 5); // view to first five elements of coll
 modifyConstRange(v); // compile-time ERROR (good)
-\end{lstlisting}
+\end{cpp}
 
 Therefore, you can ensure that elements of a container cannot be modified by a function that takes a view by making the container const before the view refers to it:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::array<int, 10> coll{}; // array of 10 ints with value 0
 ...
 std::ranges::take_view v{std::as_const(coll), 5}; // view to five elems of const coll
 modifyConstRange(v); // compile-time ERROR
 modifyConstRange(std::as_const(coll) | std::views::take(5)); // compile-time ERROR
-\end{lstlisting}
+\end{cpp}
 
 The function std::as\_const() has been provided since C++17 in the header file <utility>. However, calling std::as\_const() after the view was created has no effect (except that for a few views, you are no longer able to iterate over the elements).
 
 C++23 will introduce a helper view std::ranges::as\_const\_view with the range adaptor std::views::as\_const() so that you can simply make the elements of a view const as follows (see \url{http://wg21.link/p2278r4}):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::views::as_const(v); // make elements of view v const
-\end{lstlisting}
+\end{cpp}
 
 However, note again that you must not forget the namespace views here:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::as_const(v); // OOPS: no effect on views
-\end{lstlisting}
+\end{cpp}
 
 The functions as\_const() in the namespace std and in the namespace std::ranges both make something const but the former makes the object const while the latter makes the elements const[The members of the C++ standards committee sometimes decide in favor of features that look the same even though details differ and may become a source of trouble.]. You might wonder why views with reference semantics were not designed in a way that they propagate constness. One argument was that they internally use pointers and therefore should behave like pointers.
 
 However, then it is strange that views on rvalues do not work that way. Another argument was that the constness is worth almost nothing because it can easily be removed by copying the view to a non-const view:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo(const auto& rg) // if rg would propagate constness for views on lvalues
 {
 	auto rg2 = rg; // rg2 would no longer propagate constness
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 The initialization would act kind of a const\_cast<>. However, if this is generic code for containers programmers are already used not to copy a passed collection, because it is expensive to do so. Therefore, we now have another good reason not to copy a passed range. And the effect of declaring ranges (containers and views) as const would be way more consistent. However, the design decision is done now and as a programmer you have to deal with it.
 
@@ -589,29 +589,29 @@ The only easy way to ensure that elements of a view cannot be modified is to for
 \item
 Either by using const in the range-based for loop:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (const auto& elem : rg) {
 	...
 }
-\end{lstlisting}
+\end{cpp}
 
 \item
 Or by passing elements converted to const:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (auto pos = rg.begin(); pos != rg.end(); ++pos) {
 	elemfunc(std::as_const(*pos));
 }
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 However, here is the bad news: the designers of the views library plan to disable the effect of declaring elements const for some views such as the upcoming zip view:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (const auto& elem : myZipView) {
 	elem.member = value; // WTF: C++23 plans to let this compile
 }
-\end{lstlisting}
+\end{cpp}
 
 Maybe we can still stop this. However, beware that making collections or their elements const may not work when using C++ standard views.
 
@@ -625,43 +625,43 @@ Unfortunately, the usual approach of making all elements of a container const do
 \item
 In general, views do not provide a const\_iterator to do the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (decltype(rg)::const_iterator pos = rg.begin(); // not for views
 pos != range.end();
 ++pos) {
 	elemfunc(*pos);
 }
-\end{lstlisting}
+\end{cpp}
 
 Therefore, we also cannot simply convert the range as a whole:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::ranges::subrange<decltype(rg)::const_iterator> crg{rg}; // not for views
-\end{lstlisting}
+\end{cpp}
 
 \item
 In general, views do not have the member functions cbegin() and cend() to do the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 callTraditionalAlgo(rg.cbegin(), rg.cend()); // not for views
-\end{lstlisting}
+\end{cpp}
 \end{itemize}
 
 You might propose that we use the free-standing helper functions std::cbegin() and std::cend(), which have been provided since C++11 instead. They were introduced to ensure that elements are const when you iterate over them. Here, however, the situation is even worse, because std::cbegin() and std::cend() are broken for views. Their specification did not take into account types that have shallow constness (internally, they call the const member function begin() and do not add constness to the value type). Therefore, for views that do not propagate constness, these functions are simply broken[std::cbegin() and std::cend() should simply be fixed. However, so far, the C++ standards committee has rejected each proposal to fix them.]:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (auto pos = std::cbegin(range); pos != std::cend(range); ++pos) {
 	elemfunc(*pos); // does not provide constness for values of views
 }
-\end{lstlisting}
+\end{cpp}
 
 Note also that when using these helper functions, there are some issues with ADL. For that reason, C++20 introduces corresponding helper functions of the ranges library in the namespace std::ranges. Unfortunately, std::ranges::cbegin() and std::ranges::cend() are also broken for views in C++20 (this will be fixed in C++23, though):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 for (auto pos = std::ranges::cbegin(rg); pos != std::ranges::cend(rg); ++pos) {
 	elemfunc(*pos); // OOPS: Does not provide constness for the values in C++20
 }
-\end{lstlisting}
+\end{cpp}
 
 Thus, in C++20, we have yet another severe problem when typing to make all elements of a view const:
 
@@ -671,17 +671,17 @@ I do not know what is worse: that we have this problem or that the C++ standards
 
 However, there is some hope: \url{http://wg21.link/p2278} provides an approach to fix this broken constness for C++23 (unfortunately, not for std::cbegin() and std::cend(), sigh).9 With that approach, inside a generic function, you can make the elements const as follows:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(auto&& rgPassed)
 {
 	auto rg = std::views::as_const(rgPassed); // ensure all elements are const
 	... // use rg instead of rgPassed now
 }
-\end{lstlisting}
+\end{cpp}
 
 As another approach, you can do the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(R&& rg)
 {
 	if constexpr (std::ranges::const_range<R>) {
@@ -693,7 +693,7 @@ void print(R&& rg)
 		print(std::views::as_const(std::forward<R>(rg)));
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 Unfortunately, C++23 will still not provide a generic way to declare a reference parameter for both containers and views that guarantees that the elements are const inside. You cannot declare a function print() that guarantees in its signature not to modify the elements.
 

@@ -18,7 +18,7 @@ As a default type when you have to specify the type of a function object
 
 For example:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 struct Value {
 	T val{};
@@ -27,13 +27,13 @@ struct Value {
 		return std::compare_three_way{}(val<=>v.val);
 	}
 };
-\end{lstlisting}
+\end{cpp}
 
 Using std::compare\_three\_way has (like std::less) the benefit that it even defines a total order for raw pointers (which is not the case for operators <=> or <). Therefore, you should use it when generic types are used that can be raw pointer types.
 
 To allow programmers to forward declare operator<=>(), C++20 also introduces the type trait std::compare\_three\_way\_result with the alias template std::compare\_three\_way\_result\_t:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 struct Value {
 	T val{};
@@ -41,7 +41,7 @@ struct Value {
 	std::compare_three_way_result_t<T,T>
 		operator<=> (const Value& v) const noexcept(noexcept(val<=>val));
 };
-\end{lstlisting}
+\end{cpp}
 
 \subsubsection*{\zihao{3} 1.5.2\hspace{0.2cm}Algorithm lexicographical\_compare\_three\_way()}
 \addcontentsline{toc}{subsubsection}{1.5.2\hspace{0.2cm}Algorithm lexicographical\_compare\_three\_way()}
@@ -50,11 +50,9 @@ To be able to compare two ranges and yield a value of the matching comparison ca
 
 For example:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{lib/lexicothreeway.cpp}
+\filename{lib/lexicothreeway.cpp}
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -80,21 +78,21 @@ int main()
 	std::cout << "r1: " << r1 << '\n';
 	std::cout << "r2: " << r2 << '\n';
 }
-\end{lstlisting}
+\end{cpp}
 
 The program has the following output:
 
-\begin{tcblisting}{commandshell={}}
+\begin{shell}
 r1: 1
 r2: less
-\end{tcblisting}
+\end{shell}
 
 Note that there is no ranges support (yet) for lexicographical\_compare\_three\_way(). You can neither pass a range as a single argument nor pass projection parameters:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto r3 = std::ranges::lexicographical_compare(v1, v2); // OK
 auto r4 = std::ranges::lexicographical_compare_three_way(v1, v2); // ERROR
-\end{lstlisting}
+\end{cpp}
 
 
 

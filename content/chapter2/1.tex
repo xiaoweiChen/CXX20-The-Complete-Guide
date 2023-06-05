@@ -1,37 +1,37 @@
 Since C++14, lambdas can use placeholders such as auto to declare/define their parameters:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 auto printColl = [] (const auto& coll) { // generic lambda
 	for (const auto& elem : coll) {
 		std::cout << elem << '\n';
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 These placeholders allow us to pass arguments of any type, provided the operations inside the lambda are supported:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 std::vector coll{1, 2, 4, 5};
 ...
 printColl(coll); // compiles the lambda for vector<int>
 
 printColl(std::string{"hello"}); // compiles the lambda for std::string
-\end{lstlisting}
+\end{cpp}
 
 Since C++20, you can use placeholders such as auto for all functions (including member functions and operators):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void printColl(const auto& coll) // generic function
 {
 	for (const auto& elem : coll) {
 		std::cout << elem << '\n';
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 Such a declaration is just a shortcut for declaring a template such as the following:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 template<typename T>
 void printColl(const T& coll) // equivalent generic function
 {
@@ -39,7 +39,7 @@ void printColl(const T& coll) // equivalent generic function
 		std::cout << elem << '\n';
 	}
 }
-\end{lstlisting}
+\end{cpp}
 
 The only difference is that by using auto, you no longer have a name for the template parameter T. For this reason, this feature is also called the abbreviated function template syntax.
 
@@ -47,7 +47,7 @@ Because functions with auto are function templates, all rules of using function 
 
 In addition, you can specify the template parameters explicitly:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void print(auto val)
 {
 	std::cout << val << '\n';
@@ -55,7 +55,7 @@ void print(auto val)
 
 print(64); // val has type int
 print<char>(64); // val has type char
-\end{lstlisting}
+\end{cpp}
 
 
 \subsubsection*{\zihao{3} 2.1.1\hspace{0.2cm}auto for Parameters of Member Functions}
@@ -63,32 +63,32 @@ print<char>(64); // val has type char
 
 You can also use this feature to define member functions:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyType {
 	...
 	void assign(const auto& newVal);
 };
-\end{lstlisting}
+\end{cpp}
 
 That declaration is equivalent to (with the difference that there is no type T defined):
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 class MyType {
 	...
 	template<typename T>
 	void assign(const T& newVal);
 };
-\end{lstlisting}
+\end{cpp}
 
 Note that templates may not be declared inside functions. With member functions using auto parameters, you can no longer define the class or data structure locally inside a function:
 
-\begin{lstlisting}[style=styleCXX]
+\begin{cpp}
 void foo()
 {
 	struct Data {
 		void mem(auto); // ERROR can’t declare templates inside functions
 	};
 }
-\end{lstlisting}
+\end{cpp}
 
 See sentinel1.cpp for an example of a member operator == with auto.
