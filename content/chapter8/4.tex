@@ -4,14 +4,604 @@ This section discusses all features of C++20 for creating views that generate va
 \subsubsection*{\zihao{3} 8.4.1\hspace{0.2cm}Iota View}
 \addcontentsline{toc}{subsubsection}{8.4.1\hspace{0.2cm}Iota View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::iota\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & Generator of an incrementing sequence of values  \\ \hline
+\textbf{Factory:}              & std::views::iota()                               \\ \hline
+\textbf{Element type:}         & Values                                           \\ \hline
+\textbf{Category:}        & Input to random access(depends on the type of the start value) \\ \hline
+\textbf{Is sized range:}       & If initialized with an end value                 \\ \hline
+\textbf{Is common range:} & If limited and the end has the same type as the values         \\ \hline
+\textbf{Is borrowed range:}    & Always                                           \\ \hline
+\textbf{Caches:}               & Nothing                                          \\ \hline
+\textbf{Const iterable:}       & Always                                           \\ \hline
+\textbf{Propagates constness:} & Never(but elements are not lvalues)              \\ \hline
+\end{longtable}
+
+The class template std::ranges::iota\_view<> is a view that generates a sequence of values. These values may be integral, such as
+
+\begin{itemize}
+\item
+1, 2, 3 ...
+
+\item
+’a’, ’b’, ’c’ ...
+\end{itemize}
+
+or they might use the operator ++ to generate a sequence of pointers or iterators.
+
+The sequence might be limited or unlimited (endless).
+
+The major use case of the iota view is to provide a view that iterates over a sequence of values. For example:
+
+\begin{cpp}
+std::ranges::iota_view v1{1, 100}; // view with values: 1, 2, ... 99
+for (auto val : v1) {
+	std::cout << val << '\n'; // print these values
+}
+\end{cpp}
+
+\samllsection{Range Factories for Iota Views}
+
+Iota views can also (and usually should) be created with a range factory:
+
+\begin{cpp}
+std::views::iota(val)
+std::views::iota(val, endVal)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (auto val : std::views::iota(1, 100)) { // iterate over values 1, 2, ... 99
+	std::cout << val << '\n'; // print these values
+}
+\end{cpp}
+
+Here is a full example program using iota views:
+
+\filename{ranges/iotaview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	int num = 0;
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+		if (++num > 30) { // print only up to 30 values:
+			std::cout << "...";
+			break;
+		}
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::ranges::iota_view<int> iv0; // 0 1 2 3 ...
+	print(iv0);
+	
+	std::ranges::iota_view iv1{-2}; // -2 -1 0 1 ...
+	print(iv1);
+	
+	std::ranges::iota_view iv2{10, 20}; // 10 11 12 ... 19
+	print(iv2);
+	
+	auto iv3 = std::views::iota(1); // -2 -1 0 1 ...
+	print(iv3);
+	
+	auto iv4 = std::views::iota('a', 'z'+1); // a b c ... z
+	print(iv4);
+	
+	std::vector coll{0, 8, 15, 47, 11};
+	for (auto p : std::views::iota(coll.begin(), coll.end())) { // sequence of iterators
+		std::cout << *p << ' '; // 0 8 15 47 11
+	}
+	std::cout << '\n';
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 ...
+-2 -1 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 ...
+10 11 12 13 14 15 16 17 18 19
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ...
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+0 8 15 47 11	
+\end{shell}
+
+Note that the output from ’a’ to ’z’ depends on the character set of the platform.
+
+\samllsection{Special Characteristics of Iota Views}
+
+Because the iterators hold the current value, the iota view is a borrowed range (the lifetime of its iterators does not depend on the view). If the iota view is limited and the end value has the same type as the begin value, the view is a common range.
+
+If the iota view is endless or the type of the end differs from the type of the begin, it is not a common range. You might have to use a common view to harmonize the types of the begin iterator and the sentinel (end iterator).
+
+\samllsection{Interface of Iota Views}
+
+Table Operations of the class std::ranges::iota\_view<> lists the API of an iota view.
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}       & \textbf{Effect}                                                    \\ \hline
+\endfirsthead
+%
+\endhead
+%
+ioat\_view\textless{}Type\textgreater v & Creates an unlimited sequence starting with the default value of Type               \\ \hline
+iota\_view v\{begVal\}   & Creates an unlimited sequence starting with begVal                 \\ \hline
+iota\_view v\{begVal, endVal\}          & Creates a sequence starting with begVal up to the value before endVal               \\ \hline
+iota\_view v\{beg, end\} & Helper constructor to enable sub-views                             \\ \hline
+v.begin()                & Yields the begin iterator(referring to the starting value)         \\ \hline
+v.end()                                 & Yields the sentinel(end iterator), which is std::unreachable\_sentinel if unlimited \\ \hline
+v.empty()                & Yields whether v is empty                                          \\ \hline
+if (v)                   & true if v is not empty                                             \\ \hline
+v.size()                 & Yields the number of elements(available if limited and computable) \\ \hline
+v.front()                & Yields the first element                                           \\ \hline
+v.back()                 & Yields the last element(available if limited and common)           \\ \hline
+v{[}idx{]}               & Yields the n-th element                                            \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.8. Operations of the class std::ranges::iota\_view<>
+\end{center}
+
+When declaring an iota view as follows:
+
+\begin{cpp}
+std::ranges::iota_view v1{1, 100}; // range with values: 1, 2, ... 99
+\end{cpp}
+
+the type of v1 is deduced as std::ranges::iota\_view<int, int>, which creates an object that provides the basic API, with begin() and end() yielding an iterator to these values. The iterators store the current value internally and increment it when the iterator is incremented:
+
+\begin{cpp}
+std::ranges::iota_view v1{1, 100}; // range with values: 1, 2, ... 99
+auto pos = v1.begin(); // initialize iterator with value 1
+std::cout << *pos; // print current value (here, value 1)
+++pos; // increment to next value (i.e., increment value to 2)
+std::cout << *pos; // print current value (here, value 2)
+\end{cpp}
+
+Thus, the type of the values has to support the operator ++. For this reason, a value type such as bool or std::string is not possible.
+
+Note that the type of this iterator is up to the implementation of iota\_view, which means that you have to use auto when using it. Alternatively, you could declare pos with std::ranges::iterator\_t<>:
+
+\begin{cpp}
+std::ranges::iterator_t<decltype(v1)> pos = v1.begin();
+\end{cpp}
+
+As for ranges of iterators, the range of values is a half-open range and the end value is not included. To include the end value, you might have to increment the end :
+
+\begin{cpp}
+std::ranges::iota_view letters{'a', 'z'+1}; // values: ’a’, ’b’, ... ’z’
+for (auto c : letters) {
+	std::cout << c << ' '; // print these values/letters
+}
+\end{cpp}
+
+Note that the output of this loop depends on the character set. Only if the lower-case letters have consecutive values (as is the case with ASCII or ISO-Latin-1 or UTF-8) the view iterates over nothing else but lower-case characters. By using char8\_t, you can ensure portably that this is the case for UTF-8 characters:
+
+\begin{cpp}
+std::ranges::iota_view letters{u8'a', u8'z'+1}; // UTF-8 values from a to z
+\end{cpp}
+
+If no end value is passed, the view is unlimited and generates an endless sequence of values:
+
+\begin{cpp}
+std::ranges::iota_view v2{10L}; // unlimited range with values: 10L, 11L, 12L, ...
+std::ranges::iota_view<int> v3; // unlimited range with values: 0, 1, 2, ...
+\end{cpp}
+
+The type of v3 is std::ranges::iota\_view<int, std::unreachable\_sentinel\_t>, meaning that end() yields std::unreachable\_sentinel.
+
+An unlimited iota view is endless. When the iterator represents the highest value and iterates to the next value, it calls the operator ++, which formally, is undefined behavior (in practice, it usually performs an overflow, so that the next value is the lowest value of the value type). If the view has an end value that never matches, it behaves the same.
+
+\samllsection{Using Iota Views to Iterate over Pointers and Iterators}
+
+You can initialize an iota view with iterators or pointers. In that case, the iota view uses the first value as begin and the last value as end, but the elements are iterators/pointers instead of the values.
+
+You can use this to deal with iterators to all elements of a range.
+
+\begin{cpp}
+std::list<int> coll{2, 4, 6, 8, 10, 12, 14};
+...
+// pass iterator to each element to foo():
+for (const auto& itorElem : std::views::iota(coll.begin(), coll.end())) {
+	std::cout << *itorElem << '\n';
+}
+\end{cpp}
+
+You can also use this feature to initialize a container with iterators to all elements of a collection coll:
+
+\begin{cpp}
+std::ranges::iota_view itors{coll.begin(), coll.end()};
+std::vector<std::ranges::iterator_t<decltype(coll)>> refColl{itors.begin(),
+	itors.end()};
+\end{cpp}
+
+Note that if you skip the specification of the element type of refColl, you have to use parentheses. Otherwise, you would initialize the vector with two iterator elements:
+
+\begin{cpp}
+std::vector refColl(itors.begin(), itors.end());
+\end{cpp}
+
+The main reason that this constructor is provided is to support generic code that can create a sub-view of an iota view, like, for example, the drop view does:
+
+\begin{cpp}
+// generic function to drop the first element from a view:
+auto dropFirst = [] (auto v) {
+						return decltype(v){++v.begin(), v.end()};
+					};
+std::ranges::iota_view v1{1, 9}; // iota view with elems from 1 to 8
+auto v2 = dropFirst(v1); // iota view with elems from 2 to 8
+\end{cpp}
+
+In this case, the availability of the member functions size() and operator[] depends on the support for these operators in the passed range.
 
 \subsubsection*{\zihao{3} 8.4.2\hspace{0.2cm}Single View}
 \addcontentsline{toc}{subsubsection}{8.4.2\hspace{0.2cm}Single View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::single\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & Generator of a range with a single element         \\ \hline
+\textbf{Factory:}              & std::views::single()                               \\ \hline
+\textbf{Element type:}         & Reference                                          \\ \hline
+\textbf{Category:}             & Contiguous                                         \\ \hline
+\textbf{Is sized range:}       & Always with size 1                                 \\ \hline
+\textbf{Is common range:}      & Always                                             \\ \hline
+\textbf{Is borrowed range:}    & Never                                              \\ \hline
+\textbf{Caches:}               & Nothing                                            \\ \hline
+\textbf{Const iterable:}       & Always                                             \\ \hline
+\textbf{Propagates constness:} & Always                                             \\ \hline
+\end{longtable}
+
+The class template std::ranges::single\_view<> is a view that owns one element. Unless the value type is const, you can even modify the value.
+
+The overall effect is that a single view behaves roughly like a cheap collection of one element that does not allocate any heap memory.
+
+The major use case of the single view is to call generic code to operate on a cheap view with exactly one element/value:
+
+\begin{cpp}
+std::ranges::single_view<int> v1{42}; // single view
+for (auto val : v1) {
+	... // called once
+}
+\end{cpp}
+
+This can be used for test cases or for cases where code has to provide a view that in a specific context, has to contain exactly one element.
+
+\samllsection{Range Factories for Single Views}
+
+Single views can also (and usually should) be created with a range factory:
+
+\begin{cpp}
+std::views::single(val)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (auto val : std::views::single(42)) { // iterate over the single int value 42
+	... // called once
+}
+\end{cpp}
+
+Here is a full example program using single views:
+
+\filename{ranges/singleview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::ranges::single_view<double> sv0; // single view double 0.0
+	std::ranges::single_view sv1{42}; // single_view<int> with int 42
+	
+	auto sv2 = std::views::single('x'); // single_view<char>
+	auto sv3 = std::views::single("ok"); // single_view<const char*>
+	std::ranges::single_view<std::string> sv4{"ok"}; // single view with string "ok"
+	
+	print(sv0);
+	print(sv1);
+	print(sv2);
+	print(sv3);
+	print(sv4);
+	print(std::ranges::single_view{42});
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+0
+42
+x
+ok
+ok
+42
+\end{shell}
+
+\samllsection{Special Characteristics of Single Views}
+
+The single view models the following concepts:
+
+\begin{itemize}
+\item
+std::ranges::contiguous\_range
+
+\item
+std::ranges::sized\_range
+\end{itemize}
+
+The view is always a common range and never a borrowed range (the lifetime of its iterators does not depend on the view).
+
+\samllsection{Interface of Single Views}
+
+Table Operations of the class std::ranges::single\_view<> lists the API of a single view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                         \\ \hline
+\endfirsthead
+%
+\endhead
+%
+single\_view\textless{}Type\textgreater v                                    & Creates a view with one value-initialized element of type Type   \\ \hline
+single\_view v\{val\}                                                        & Creates a view with one element of value val of its type         \\ \hline
+single\_view\textless{}Type\textgreater v\{std::in\_place, arg1, arg2, ...\} & Creates a view with one element initialized with arg1, arg2, ... \\ \hline
+v.begin()          & Yields a raw pointer to the element                     \\ \hline
+v.end()            & Yields a raw pointer to the position behind the element \\ \hline
+v.empty()          & Always false                                            \\ \hline
+if(v)              & Always true                                             \\ \hline
+v.size()           & Yields 1                                                \\ \hline
+v.front()          & Yields a reference to the current value                 \\ \hline
+v.back()           & Yields a reference to the current value                 \\ \hline
+v{[}idx{]}         & Yields the current value for idx 0                      \\ \hline
+r.data()           & Yields a raw pointer to the element                     \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.9. Operations of the class std::ranges::single\_view<>
+\end{center}
+
+If you call the constructor without passing an initial value, the element in the single view is valueinitialized. That means it either uses the default constructor of its Type or initializes the value with 0, false, or nullptr.
+
+To initialize a single view with objects that need multiple initializers, you have two options:
+
+\begin{itemize}
+\item
+Passing the initialized object:
+
+\begin{cpp}
+std::ranges::single_view sv1{std::complex{1,1}};
+auto sv2 = std::views::single(std::complex{1,1});
+\end{cpp}
+
+\item
+Passing the initial values as arguments after an argument std::in\_place:
+
+\begin{cpp}
+std::ranges::single_view<std::complex<int>> sv4{std::in_place, 1, 1};
+\end{cpp}
+\end{itemize}
+
+Note that for a non-const single view, you can modify the value of the “element:”
+
+\begin{cpp}
+std::ranges::single_view v2{42};
+std::cout << v2.front() << '\n'; // prints 42
+++v2.front(); // OK, modifies value of the view
+std::cout << v2.front() << '\n'; // prints 43
+\end{cpp}
+
+You can prevent this by declaring the element type as const:
+
+\begin{cpp}
+std::ranges::single_view<const int> v3{42};
+++v3.front(); // ERROR
+\end{cpp}
+
+The constructor taking a value either copies or moves this values into the view. This means that the view cannot refer to the initial value (declaring the element type to be a reference does not compile).
+
+Because begin() and end() yield the same value, the view is always a common range. Because iterators refer to the value stored in the view to be able to modify it, the single view is not a borrowed range (the lifetime of its iterators does depend on the view)
 
 \subsubsection*{\zihao{3} 8.4.3\hspace{0.2cm}Empty View}
 \addcontentsline{toc}{subsubsection}{8.4.3\hspace{0.2cm}Empty View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::empty\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & Generator of a range wit no element               \\ \hline
+\textbf{Factory:}              & std::views::empty\textless{}\textgreater{}        \\ \hline
+\textbf{Element type:}         & Reference                                         \\ \hline
+\textbf{Category:}             & Contiguous                                        \\ \hline
+\textbf{Is sized range:}       & Always with size 0                                \\ \hline
+\textbf{Is common range:}      & Always                                            \\ \hline
+\textbf{Is borrowed range:}    & Always                                            \\ \hline
+\textbf{Caches:}               & Nothing                                           \\ \hline
+\textbf{Const iterable:}       & Always                                            \\ \hline
+\textbf{Propagates constness:} & Never                                             \\ \hline
+\end{longtable}
+
+The class template std::ranges::empty\_view<> is a view with no elements. However, you have to specify the element type.
+
+The major use case of the empty view is to call generic code with a cheap view that has no elements and for which the type system knows that it never has any elements:
+
+
+\begin{cpp}
+std::ranges::empty_view<int> v1; // empty view
+for (auto val : v1) {
+	... // never called
+}
+\end{cpp}
+
+This can be used for test cases or for cases where code has to provide a view that in a specific context, can never have any elements.
+
+\samllsection{Range Factories for Empty Views}
+
+Empty views can also (and usually should) be created with a range factory, which which is a variable template, meaning that you declare it with a template parameter for the type but no call parameters:
+
+\begin{cpp}
+std::views::empty<type>
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (auto val : std::views::empty<int>) { // iterate over no int values
+	... // never called
+}
+\end{cpp}
+
+Here is a full example program using empty views:
+
+\filename{ranges/emptyview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	if (coll.empty()) {
+		std::cout << "<empty>\n";
+	}
+	else {
+		for (const auto& elem : coll) {
+			std::cout << elem << ' ';
+		}
+		std::cout << '\n';
+	}
+}
+
+int main()
+{
+	std::ranges::empty_view<double> ev0; // empty view of double
+	auto ev1 = std::views::empty<int>; // empty view of int
+	
+	print(ev0);
+	print(ev1);
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+<empty>
+<empty>
+\end{shell}
+
+\samllsection{Special Characteristics of Empty Views}
+
+An empty view behaves roughly like an empty vector. In fact, it models the following concepts:
+
+\begin{itemize}
+\item
+std::ranges::contiguous\_range (which implies std::ranges::random\_access\_range)
+
+\item
+std::ranges::sized\_range
+\end{itemize}
+
+Both begin() and end() simply always yield the nullptr, meaning that the range is also a common range and a borrowed range (the lifetime of its iterators does not depend on the view).
+
+\samllsection{Interface of Empty Views}
+
+Table Operations of the class std::ranges::empty\_view<> lists the API of an empty view.
+
+You might wonder why an empty view provides front(), back(), and operator[] that always have undefined behavior. Calling them is always a fatal runtime error. However, remember that generic code always has to check (or know) that there are elements before calling front(), back(), or the operator [], meaning that this generic code would never call these member functions. Such code will compile even for empty views.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                       \\ \hline
+\endfirsthead
+%
+\endhead
+%
+empty\_view\textless{}Type\textgreater v & Creates a view with no elements of type Type                          \\ \hline
+v.begin()                                & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
+v.end()            & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
+v.empty()          & Yields true                                                           \\ \hline
+if (v)             & Always false                                                          \\ \hline
+v.size()           & Yields 0                                                              \\ \hline
+v.front()          & Always undefined behavior(fatal runtime error)                        \\ \hline
+v.back()           & Always undefined behavior(fatal runtime error)                        \\ \hline
+v{[}idx{]}         & Always undefined behavior(fatal runtime error)                        \\ \hline
+r.data             & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.10. Operations of the class std::ranges::empty\_view<>
+\end{center}
+
+For example, you can pass an empty view to code like this and it will compile:
+
+\begin{cpp}
+void foo(std::ranges::random_access_range auto&& rg)
+{
+	std::cout << "sortFirstLast(): \n";
+	std::ranges::sort(rg);
+	if (!std::ranges::empty(rg)) {
+		std::cout << " first: " << rg.front() << '\n';
+		std::cout << " last: " << rg.back() << '\n';
+	}
+}
+
+foo(std::ranges::empty_view<int>{}); // OK
+\end{cpp}
 
 \subsubsection*{\zihao{3} 8.4.4\hspace{0.2cm}IStream View}
 \addcontentsline{toc}{subsubsection}{8.4.4\hspace{0.2cm}IStream View}
