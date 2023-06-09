@@ -606,13 +606,465 @@ foo(std::ranges::empty_view<int>{}); // OK
 \subsubsection*{\zihao{3} 8.4.4\hspace{0.2cm}IStream View}
 \addcontentsline{toc}{subsubsection}{8.4.4\hspace{0.2cm}IStream View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:} &
+\begin{tabular}[c]{@{}l@{}}std::ranges::basic\_istream\_view\textless{}\textgreater\\ std::ranges::istream\_view\textless{}\textgreater\\ std::ranges::wistream\_view\textless{}\textgreater{}\end{tabular} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & Generator of a range with elements read from a stream \\ \hline
+\textbf{Factory:}              & std::views::istream\textless{}\textgreater{}()        \\ \hline
+\textbf{Element type:}         & Reference                                             \\ \hline
+\textbf{Category:}             & Input                                                 \\ \hline
+\textbf{Is sized range:}       & Never                                                 \\ \hline
+\textbf{Is common range:}      & Never                                                 \\ \hline
+\textbf{Is borrowed range:}    & Never                                                 \\ \hline
+\textbf{Caches:}               & Nothing                                               \\ \hline
+\textbf{Const iterable:}       & Never                                                 \\ \hline
+\textbf{Propagates constness:} & --                                                    \\ \hline
+\end{longtable}
+
+The class template std::ranges::basic\_istream\_view<> is a view that reads elements from an input stream (such as the standard input, from a file, or from a string stream).
+
+As usual for stream types, the type is generic for the type of the characters and provides specializations for char and wchar\_t:
+
+\begin{itemize}
+\item
+The class template std::ranges::istream\_view<> is a view that reads elements from an input stream using characters of type char.
+
+\item
+The class template std::ranges::wistream\_view<> is a view that reads elements from an input stream using characters of type wchar\_t.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+std::istringstream myStrm{"0 1 2 3 4"};
+
+for (const auto& elem : std::ranges::istream_view<int>{myStrm}) {
+	std::cout << elem << '\n';
+}
+\end{cpp}
+
+\samllsection{Range Factories for IStream Views}
+
+Istream views can also (and usually should) be created with a range factory. The factory passes its parameters to the std::ranges::basic\_istream\_view constructor using the character type of the passed range:
+
+\begin{cpp}
+std::views::istream<Type>(rg)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+std::istringstream myStrm{"0 1 2 3 4"};
+
+for (const auto& elem : std::views::istream<int>(myStrm)) {
+	std::cout << elem << '\n';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+std::wistringstream mywstream{L"1.1 2.2 3.3 4.4"};
+auto vw = std::views::istream<double>(mywstream);
+\end{cpp}
+
+The initialization of vw is equivalent to both of the following initializations:
+
+\begin{cpp}
+auto vw2 = std::ranges::basic_istream_view<double, wchar_t>{myStrm};
+auto vw3 = std::ranges::wistream_view<double>{myStrm};
+\end{cpp}
+
+Here is a full example program using istream views:
+
+\filename{ranges/istreamview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << " ";
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::string s{"2 4 6 8 Motorway 1977 by Tom Robinson"};
+	
+	std::istringstream mystream1{s};
+	std::ranges::istream_view<std::string> vs{mystream1};
+	print(vs);
+	
+	std::istringstream mystream2{s};
+	auto vi = std::views::istream<int>(mystream2);
+	print(vi);
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+2 4 6 8 Motorway 1977 by Tom Robinson
+2 4 6 8
+\end{shell}
+
+The program iterates twice over an string stream initialized with the string s:
+
+\begin{itemize}
+\item
+The istream view vs iterates over all strings read from the input string stream mystream1. It prints all sub-strings of s.
+
+\item
+The istream view vi iterates over all ints read from the input string stream mystream2. Its reading ends when it reaches Motorway.
+\end{itemize}
+
+\samllsection{IStream Views and const}
+
+Note that you cannot iterate over a const istream view. For example:
+
+\begin{cpp}
+void printElems(const auto& coll) {
+	for (const auto elem& e : coll) {
+		std::cout << elem << '\n';
+	}
+}
+
+std::istringstream myStrm{"0 1 2 3 4"};
+
+printElems(std::views::istream<int>(myStrm)); // ERROR
+\end{cpp}
+
+The problem is that begin() is provided only for a non-const istream view because a value is processed in two steps (begin()/++ and then operator*) and the value is stored in the view in the meantime.
+
+The reason for modifying the view is demonstrated by the following example of reading strings from an istream view by using a low-level way to iterate over the “elements” of the view:
+
+\begin{cpp}
+std::istringstream myStrm{"stream with very-very-very-long words"};
+
+auto v = std::views::istream<std::string>(myStrm);
+
+for (auto pos = v.begin(); pos != v.end(); ++pos) {
+	std::cout << *pos << '\n';
+}
+\end{cpp}
+
+This code has the following output:
+
+\begin{shell}
+stream
+with
+very-very-very-long
+words
+\end{shell}
+
+When the iterator pos iterates over the view va, it reads strings from the input stream myStrm with begin() and ++. These strings have to be stored internally so that they can be used via the operator *. If we store the string in the iterator, the iterator might have to hold memory for the string and copying the iterator would have to copy this memory. However, copying an iterator should not be expensive. Therefore, the view stores the string in the view, which has the effect that the view is modified while we are iterating.
+
+As a consequence, you have to use universal/forwarding references to support this view in generic code:
+
+\begin{cpp}
+void printElems(auto&& coll) {
+	...
+}
+\end{cpp}
+
+\samllsection{Interface of IStream Views}
+
+Table Operations of the class std::ranges::basic\_istream\_view<> lists the API of an istream view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                     \\ \hline
+\endfirsthead
+%
+\endhead
+%
+istream\_view\textless{}Type\textgreater v\{strm\} & Creates an istream view of type Type reading from strm \\ \hline
+v.begin()          & Reads the first value and yields tha begin iterator \\ \hline
+v.end()            & Yields std::default\_sentinel as end iterator       \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.11. Operations of the class std::ranges::basic\_istream\_view<>
+\end{center}
+
+All you can do is to use iterators to read value by value until the end of the stream is reached. No other member function (like empty() or front()) is provided.
+
+Note that the original specification of istream views in the C++20 standard had some inconsistencies with other views, which were fixed afterwards (see \url{http://wg21.link/p2432}). With this fix, we have the current behavior:
+
+\begin{itemize}
+\item
+You can fully specify all template parameters:
+
+\begin{cpp}
+std::ranges::basic_istream_view<int, char, std::char_traits<char>> v1{myStrm};
+\end{cpp}
+
+\item
+The last template parameter has a working default value, meaning that you can use:
+
+\begin{cpp}
+std::ranges::basic_istream_view<int, char> v2{myStrm}; // OK
+\end{cpp}
+
+\item
+However, you cannot skip more parameters:
+
+\begin{cpp}
+std::ranges::basic_istream_view<int> v3{myStrm}; // ERROR
+\end{cpp}
+
+\item
+However, the istream views follow the usual convention that there are special types for char and wchar\_t streams without the basic\_ prefix:
+
+\begin{cpp}
+std::ranges::istream_view<int> v4{myStrm}; // OK for char streams
+
+std::wistringstream mywstream{L"0 1 2 3 4"};
+std::ranges::wistream_view<int> v5{mywstream}; // OK for wchar_t streams
+\end{cpp}
+
+\item
+And a corresponding range factory is provided:
+
+\begin{cpp}
+auto v6 = std::views::istream<int>(myStrm); // OK
+\end{cpp}
+\end{itemize}
 
 \subsubsection*{\zihao{3} 8.4.5\hspace{0.2cm}String View}
 \addcontentsline{toc}{subsubsection}{8.4.5\hspace{0.2cm}String View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:} &
+\begin{tabular}[c]{@{}l@{}}std::basic\_string\_view\textless{}\textgreater\\ std::string\_view\\ std::u8string\_view\\ std::u16string\_view\\ std::u32string\_view\\ std::wstring\_view\end{tabular} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All characters of a character sequence \\ \hline
+\textbf{Factory:}              & --                                     \\ \hline
+\textbf{Element type:}         & const reference                        \\ \hline
+\textbf{Category:}             & Contiguous                             \\ \hline
+\textbf{Is sized range:}       & Always                                 \\ \hline
+\textbf{Is common range:}      & Always                                 \\ \hline
+\textbf{Is borrowed range:}    & Always                                 \\ \hline
+\textbf{Caches:}               & Nothing                                \\ \hline
+\textbf{Const iterable:}       & Always                                 \\ \hline
+\textbf{Propagates constness:} & Elements are always const              \\ \hline
+\end{longtable}
+
+The class template std::basic\_string\_view<> and its specializations std::string\_view, std::u16string\_view, std::u32string\_view, and std::wstring\_view are the only view types that were already available in the C++17 standard library. However, C++20 adds the specialization for UTF-8 characters: std::u8string\_view.
+
+String views do not follow a couple of conventions that views usually have:
+
+\begin{itemize}
+\item
+The view is defined in the namespace std (instead of std::ranges).
+
+\item
+The view has its own header file <string\_view>.
+
+\item
+The view has no range adaptor/factory to create view objects.
+
+\item
+The view provides only read access to the elements/characters.
+
+\item
+The view provides cbegin() and cend() member functions.
+
+\item
+The view supports no conversion to bool.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+for (char c : std::string_view{"hello"}) {
+	std::cout << c << ' ';
+}
+std::cout << '\n';
+\end{cpp}
+
+This loop has the following output:
+
+\begin{shell}
+h e l l o
+\end{shell}
+
+\samllsection{Special Characteristics of String Views}
+
+Iterators do not refer to this view. Instead, they refer to the underlying character sequence. Therefore, a string view is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
+
+\samllsection{View-Specific Interface of String Views}
+
+Table View operations of the class std::basic\_string\_view<> lists the view-relevant parts of the API of a string view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}   & \textbf{Effect}                                                       \\ \hline
+\endfirsthead
+%
+\endhead
+%
+string\_view sv      & Creates a string view with no elements                                \\ \hline
+string\_view sv\{s\} & Creates a string view to s                                            \\ \hline
+v.begin()            & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
+v.end()              & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
+sv.empty()           & Yields whether sv is empty                                            \\ \hline
+sv.size()            & Yields the number of characters                                       \\ \hline
+sv.front()           & Yields the first character                                            \\ \hline
+sv.back()            & Yields the last character                                             \\ \hline
+sv{[}idx{]}          & Yields th n-th character                                              \\ \hline
+sv.data()            & Yields a raw pointer to the characters or nullptr                     \\ \hline
+...                  & Several other operations provided for read-only strings               \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.12. View operations of the class std::ranges::basic\_string\_view<>
+\end{center}
+
+In addition to the usual interface of views, the type also provides the full API of all read-only operations of strings.
+
+For more details, take a look at my book C++17 - The Complete Guide (see \url{http://www.cppstd17.com}).
 
 \subsubsection*{\zihao{3} 8.4.6\hspace{0.2cm}Span}
 \addcontentsline{toc}{subsubsection}{8.4.6\hspace{0.2cm}Span}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::span\textless{}\textgreater{}           \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All elements of a range in contiguous memory \\ \hline
+\textbf{Factory:}              & std::views::counted()                        \\ \hline
+\textbf{Element type:}         & Reference                                    \\ \hline
+\textbf{Requires:}             & Contiguous range                             \\ \hline
+\textbf{Category:}             & Contiguous                                   \\ \hline
+\textbf{Is sized range:}       & Always                                       \\ \hline
+\textbf{Is common range:}      & Always                                       \\ \hline
+\textbf{Is borrowed range:}    & Always                                       \\ \hline
+\textbf{Caches:}               & Nothing                                      \\ \hline
+\textbf{Const iterable:}       & Always                                       \\ \hline
+\textbf{Propagates constness:} & Never                                        \\ \hline
+\end{longtable}
+
+The class template std::span<> is a view to a sequence of elements that are stored in contiguous memory. It is described in its own chapter in detail. Here, we present only the properties of spans as a view.
+
+The major benefit of spans is that they support referring to a subrange of n elements in the middle or at the end of the referred range. For example:
+
+\begin{cpp}
+std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
+
+// sort the three elements in the middle:
+std::ranges::sort(std::span{vec}.subspan(1, 3));
+
+// print last three elements:
+print(std::span{vec}.last(3));
+\end{cpp}
+
+This example is discussed later in a section of the chapter about spans.
+
+Note that spans do not follow a couple of conventions that views usually have:
+
+\begin{itemize}
+\item
+The view is defined in the namespace std instead of std::ranges.
+
+\item
+The view has its own header file <span>.
+
+\item
+The view supports no conversion to bool.
+\end{itemize}
+
+\samllsection{Range Factories for Spans}
+
+There is no range factory for initializing a span from a begin (iterator) and an end (sentinel). However, there is a range factory that might create a span from begin and a count:
+
+\begin{cpp}
+std::views::counted(beg, sz)
+\end{cpp}
+
+std::views::counted() creates a span of dynamic size initialized with the first sz elements of the contiguous range, starting with the iterator beg (for a non-contiguous range, counted() creates a subrange).
+
+For example:
+
+\begin{cpp}
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of vec
+\end{cpp}
+
+When std::views::counted() creates a span, the span has dynamic extent (its size can vary).
+
+\samllsection{Special Characteristics of Spans}
+
+Iterators do not refer to a span. Instead, they refer to the underlying elements. Therefore, a span is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
+
+\samllsection{View-Specific Interface of Spans}
+
+Table View operations of the class std::span<> lists the view-relevant parts of the API of a span.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                   \\ \hline
+\endfirsthead
+%
+\endhead
+%
+span sp            & Creates a span with no elements                   \\ \hline
+span sp\{s\}       & Creates a span to s                               \\ \hline
+sp.begin()         & Yields the begin iterator                         \\ \hline
+sp.end()           & Yields the sentinel (end iterator)                \\ \hline
+sp.empty()         & Yields whether sv is empty                        \\ \hline
+sp.size()          & Yields the number of characters                   \\ \hline
+sp.front()         & Yields the first character                        \\ \hline
+sp.back()          & Yields the last character                         \\ \hline
+sp{[}idx{]}        & Yields the n-th character                         \\ \hline
+sp.data()          & Yields a raw pointer to the characters or nullptr \\ \hline
+...                & See the section about spans operations            \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.13. View operations of the class std::span<>
+\end{center}
+
+For more details, see the section about span operations.
+
+
 
 
 
