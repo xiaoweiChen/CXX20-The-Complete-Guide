@@ -59,5 +59,6 @@ C++20是现代C++编程的下一代发展，现在主要的C++编译器g++、Cla
 * Github地址：https://github.com/xiaoweiChen/CXX20-The-Complete-Guide
 * 译文的LaTeX 环境配置：https://www.cnblogs.com/1625--H/p/11524968.html 
   * 禁用拼写检查：https://blog.csdn.net/weixin_39278265/article/details/87931348
+  * 使用xelatex编译时需要添加`-shell-escape`和`-8bit`选项
 * vscode中配置LaTeX：https://blog.csdn.net/Ruins_LEE/article/details/123555016
 

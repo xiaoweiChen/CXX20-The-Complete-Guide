@@ -49,7 +49,7 @@ for (auto val : v1) {
 }
 \end{cpp}
 
-\samllsection{Range Factories for Iota Views}
+\mySamllsection{Range Factories for Iota Views}
 
 Iota views can also (and usually should) be created with a range factory:
 
@@ -127,13 +127,13 @@ a b c d e f g h i j k l m n o p q r s t u v w x y z
 
 Note that the output from ’a’ to ’z’ depends on the character set of the platform.
 
-\samllsection{Special Characteristics of Iota Views}
+\mySamllsection{Special Characteristics of Iota Views}
 
 Because the iterators hold the current value, the iota view is a borrowed range (the lifetime of its iterators does not depend on the view). If the iota view is limited and the end value has the same type as the begin value, the view is a common range.
 
 If the iota view is endless or the type of the end differs from the type of the begin, it is not a common range. You might have to use a common view to harmonize the types of the begin iterator and the sentinel (end iterator).
 
-\samllsection{Interface of Iota Views}
+\mySamllsection{Interface of Iota Views}
 
 Table Operations of the class std::ranges::iota\_view<> lists the API of an iota view.
 
@@ -216,7 +216,7 @@ The type of v3 is std::ranges::iota\_view<int, std::unreachable\_sentinel\_t>, m
 
 An unlimited iota view is endless. When the iterator represents the highest value and iterates to the next value, it calls the operator ++, which formally, is undefined behavior (in practice, it usually performs an overflow, so that the next value is the lowest value of the value type). If the view has an end value that never matches, it behaves the same.
 
-\samllsection{Using Iota Views to Iterate over Pointers and Iterators}
+\mySamllsection{Using Iota Views to Iterate over Pointers and Iterators}
 
 You can initialize an iota view with iterators or pointers. In that case, the iota view uses the first value as begin and the last value as end, but the elements are iterators/pointers instead of the values.
 
@@ -298,7 +298,7 @@ for (auto val : v1) {
 
 This can be used for test cases or for cases where code has to provide a view that in a specific context, has to contain exactly one element.
 
-\samllsection{Range Factories for Single Views}
+\mySamllsection{Range Factories for Single Views}
 
 Single views can also (and usually should) be created with a range factory:
 
@@ -360,7 +360,7 @@ ok
 42
 \end{shell}
 
-\samllsection{Special Characteristics of Single Views}
+\mySamllsection{Special Characteristics of Single Views}
 
 The single view models the following concepts:
 
@@ -374,7 +374,7 @@ std::ranges::sized\_range
 
 The view is always a common range and never a borrowed range (the lifetime of its iterators does not depend on the view).
 
-\samllsection{Interface of Single Views}
+\mySamllsection{Interface of Single Views}
 
 Table Operations of the class std::ranges::single\_view<> lists the API of a single view.
 
@@ -486,7 +486,7 @@ for (auto val : v1) {
 
 This can be used for test cases or for cases where code has to provide a view that in a specific context, can never have any elements.
 
-\samllsection{Range Factories for Empty Views}
+\mySamllsection{Range Factories for Empty Views}
 
 Empty views can also (and usually should) be created with a range factory, which which is a variable template, meaning that you declare it with a template parameter for the type but no call parameters:
 
@@ -541,7 +541,7 @@ The program has the following output:
 <empty>
 \end{shell}
 
-\samllsection{Special Characteristics of Empty Views}
+\mySamllsection{Special Characteristics of Empty Views}
 
 An empty view behaves roughly like an empty vector. In fact, it models the following concepts:
 
@@ -555,7 +555,7 @@ std::ranges::sized\_range
 
 Both begin() and end() simply always yield the nullptr, meaning that the range is also a common range and a borrowed range (the lifetime of its iterators does not depend on the view).
 
-\samllsection{Interface of Empty Views}
+\mySamllsection{Interface of Empty Views}
 
 Table Operations of the class std::ranges::empty\_view<> lists the API of an empty view.
 
@@ -651,7 +651,7 @@ for (const auto& elem : std::ranges::istream_view<int>{myStrm}) {
 }
 \end{cpp}
 
-\samllsection{Range Factories for IStream Views}
+\mySamllsection{Range Factories for IStream Views}
 
 Istream views can also (and usually should) be created with a range factory. The factory passes its parameters to the std::ranges::basic\_istream\_view constructor using the character type of the passed range:
 
@@ -732,7 +732,7 @@ The istream view vs iterates over all strings read from the input string stream 
 The istream view vi iterates over all ints read from the input string stream mystream2. Its reading ends when it reaches Motorway.
 \end{itemize}
 
-\samllsection{IStream Views and const}
+\mySamllsection{IStream Views and const}
 
 Note that you cannot iterate over a const istream view. For example:
 
@@ -781,7 +781,7 @@ void printElems(auto&& coll) {
 }
 \end{cpp}
 
-\samllsection{Interface of IStream Views}
+\mySamllsection{Interface of IStream Views}
 
 Table Operations of the class std::ranges::basic\_istream\_view<> lists the API of an istream view.
 
@@ -913,11 +913,11 @@ This loop has the following output:
 h e l l o
 \end{shell}
 
-\samllsection{Special Characteristics of String Views}
+\mySamllsection{Special Characteristics of String Views}
 
 Iterators do not refer to this view. Instead, they refer to the underlying character sequence. Therefore, a string view is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
 
-\samllsection{View-Specific Interface of String Views}
+\mySamllsection{View-Specific Interface of String Views}
 
 Table View operations of the class std::basic\_string\_view<> lists the view-relevant parts of the API of a string view.
 
@@ -1007,7 +1007,7 @@ The view has its own header file <span>.
 The view supports no conversion to bool.
 \end{itemize}
 
-\samllsection{Range Factories for Spans}
+\mySamllsection{Range Factories for Spans}
 
 There is no range factory for initializing a span from a begin (iterator) and an end (sentinel). However, there is a range factory that might create a span from begin and a count:
 
@@ -1027,11 +1027,11 @@ auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of 
 
 When std::views::counted() creates a span, the span has dynamic extent (its size can vary).
 
-\samllsection{Special Characteristics of Spans}
+\mySamllsection{Special Characteristics of Spans}
 
 Iterators do not refer to a span. Instead, they refer to the underlying elements. Therefore, a span is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
 
-\samllsection{View-Specific Interface of Spans}
+\mySamllsection{View-Specific Interface of Spans}
 
 Table View operations of the class std::span<> lists the view-relevant parts of the API of a span.
 

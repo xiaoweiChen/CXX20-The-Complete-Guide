@@ -740,7 +740,7 @@ auto v2 = std::ranges::common_view{take5}; // OK
 
 The corresponding range adaptor can also deal with ranges that already are common. Therefore, it is better to use the range adaptor std::views::common() to create a common view.
 
-\samllsection{Range Adaptors for Common Views}
+\mySamllsection{Range Adaptors for Common Views}
 
 Common views can also (and usually should) be created with a range adaptor:
 
@@ -823,7 +823,7 @@ auto v2 = std::views::common(std::views::take(lst, 5)); // same type now
 std::vector<int> coll{v2.begin(), v2.end()}; // OK
 \end{cpp}
 
-\samllsection{Interface of Common Views}
+\mySamllsection{Interface of Common Views}
 
 Table Operations of the class std::ranges::common\_view<> lists the API of a common view.
 

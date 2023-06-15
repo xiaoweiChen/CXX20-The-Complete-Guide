@@ -231,9 +231,7 @@ requires IsComparableWith<decltype(*a), decltype(*b)>
 
 Here, we use a trailing requires clause, which can be specified after the parameter list. It has the benefit that it can use the name of a parameter or combine even multiple parameter names to formulate constraints.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Standard Concepts}
+\mySamllsection{Standard Concepts}
 
 In the previous example, we did not define the concept IsComparableWith. We could do that using a requires expression (which we introduce in a moment); however, we could also use a concept of the C++ standard library, For example, we could declare the following:
 
@@ -251,9 +249,7 @@ The standard library has many standard concepts for common constraints. They are
 
 For example, we could also use the concept std::three\_way\_comparable\_with, which in addition requires that the new operator <=> (which gives the concept the name) is supported. To check support for comparisons of two objects of the same type, we can use the concept std::totally\_ordered.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{requires Expressions}
+\mySamllsection{requires Expressions}
 
 So far, the maxValue() templates do not work for pointer-like types that are not raw pointers, such as smart pointers. If the code should also compile for those types, we should better define that pointers are objects for which we can call operator*.
 
@@ -309,8 +305,7 @@ auto maxValue(T a, T b)
 }
 \end{cpp}
 
-\subsubsection*{\zihao{3} 3.1.2\hspace{0.2cm}A Complete Example with Concepts}
-\addcontentsline{toc}{subsubsection}{3.1.2\hspace{0.2cm}A Complete Example with Concepts}
+\mySamllsection{A Complete Example with Concepts}
 
 We have now introduced everything necessary to look at a complete example program for concepts that computes the maximum value for plain values and pointer-like objects:
 

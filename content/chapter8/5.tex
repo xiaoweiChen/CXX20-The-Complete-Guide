@@ -1,24 +1,603 @@
 
 
+This section discusses all views that filter out elements of a given range or view.
 
 
-\subsubsection*{\zihao{3} 8.5.1\hspace{0.2cm}Take View}
-\addcontentsline{toc}{subsubsection}{8.5.1\hspace{0.2cm}Iota View}
+\mySubsubsection{8.5.1}{Take View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::take\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & The first (up to) num elements of a range        \\ \hline
+\textbf{Adaptor:}              & std::views::take()                               \\ \hline
+\textbf{Element type:}         & Same type as passed range                        \\ \hline
+\textbf{Requires:}             & At least input range                             \\ \hline
+\textbf{Category:}             & Same as passed                                   \\ \hline
+\textbf{Is sized range:}       & If on a sized range                              \\ \hline
+\textbf{Is common range:}      & If on sized random-access range                  \\ \hline
+\textbf{Is borrowed range:}    & If on borrowed view or on lvalue non-view        \\ \hline
+\textbf{Caches:}               & Nothing                                          \\ \hline
+\textbf{Const iterable:}       & If on const-iterable range                       \\ \hline
+\textbf{Propagates constness:} & Only if on rvalue range                          \\ \hline
+\end{longtable}
+
+The class template std::ranges::take\_view<> defines a view that refers to the first num elements of a passed range. If the passed range does not have enough elements, the view refers to all elements.
+
+For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+for (const auto& elem : std::ranges::take_view{rg, 5}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+1 2 3 4 5
+\end{shell}
+
+\mySamllsection{Range Adaptors for Take Views}
+
+Take views can also (and usually should) be created with a range adaptor:
+
+\begin{cpp}
+std::views::take(rg, n)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::take(rg, 5)) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::take(5)) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+Note that the adaptor might not always yield a take\_view:
+
+\begin{itemize}
+\item
+If an empty\_view is passed, that view is just returned.
+
+\item
+If a sized random-access range is passed, where you can just initialize a range of the same type with the begin being the begin() + num, such a range is returned (this applies to subrange, iota view, string view, and span).
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+std::vector<int> vec;
+
+// using constructors:
+std::ranges::take_view tv1{vec, 5}; // take view of ref view of vector
+std::ranges::take_view tv2{std::vector<int>{}, 5}; // take view of owing view of vector
+std::ranges::take_view tv3{std::views::iota(1,9), 5}; // take view of iota view
+
+// using adaptors:
+auto tv4 = std::views::take(vec, 5); // take view of ref view of vector
+auto tv5 = std::views::take(std::vector<int>{}, 5); // take view of owning view of vector
+auto tv6 = std::views::take(std::views::iota(1,9), 5); // pure iota view
+\end{cpp}
+
+The take view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+The iterators are the iterators of the passed range if it is a sized random-access range or a counted iterator to it and a default sentinel. Therefore, the range is common only if a sized random-access range is passed.
+
+Here is a full example program using take views:
+
+\filename{ranges/takeview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4, 1};
+	
+	print(coll); // 1 2 3 4 1 2 3 4 1
+	print(std::ranges::take_view{coll, 5}); // 1 2 3 4 1
+	print(coll | std::views::take(5)); // 1 2 3 4 1
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 1 2 3 4 1
+1 2 3 4 1
+1 2 3 4 1
+\end{shell}
+
+\mySamllsection{Special Characteristics of Take Views}
+
+Note that a take view is common (has same type for iterator and sentinel) only if the underlying range is a sized range and a common range. To harmonize types, you might have to use a common view.
+
+\mySamllsection{Interface of Take Views}
+
+Table Operations of the class std::ranges::take\_view<> lists the API of a take view.
 
 
-\subsubsection*{\zihao{3} 8.5.2\hspace{0.2cm}Take-While View}
-\addcontentsline{toc}{subsubsection}{8.5.2\hspace{0.2cm}Take-While View}
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+take\_view r\{\}   & Creates a take\_view that refers to a default constructed range        \\ \hline
+take\_view r\{rg, num\} & Creates a take\_view that refers to the first num elements of range rg                             \\ \hline
+r.begin()          & Yields the begin iterator                                              \\ \hline
+r.end()            & Yields the sentinel (end iterator)                                     \\ \hline
+r.empty()          & Yields whether r is empty(available if the range supports it)          \\ \hline
+if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
+r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
+r.front()          & Yields the first element(available if forwarding)                      \\ \hline
+r.back()           & Yields the last element(available if bidirectional and common)         \\ \hline
+r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
+r.data()                & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.14. Operations of the class std::ranges::take\_view<>
+\end{center}
+
+\mySubsubsection{8.5.2}{Take-While View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::take\_while\_view\textless{}\textgreater{}        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All leading elements of a range that match a predicate         \\ \hline
+\textbf{Adaptor:}           & std::views::take\_while() \\ \hline
+\textbf{Element type:}      & Same type as passed range \\ \hline
+\textbf{Requires:}          & At least input range      \\ \hline
+\textbf{Category:}          & Same as passed            \\ \hline
+\textbf{Is sized range:}    & Never                     \\ \hline
+\textbf{Is common range:}   & Never                     \\ \hline
+\textbf{Is borrowed range:} & Never                     \\ \hline
+\textbf{Caches:}            & Nothing                   \\ \hline
+\textbf{Const iterable:}       & If on const-iterable range and predicate works on const values \\ \hline
+\textbf{Propagates constness:} & Only if on rvalue range                                        \\ \hline
+\end{longtable}
+
+The class template std::ranges::take\_while\_view<> defines a view that refers to all leading elements of a passed range that match a certain predicate. For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+for (const auto& elem : std::ranges::take_while_view{rg, [](auto x) {
+									return x % 3 != 0;
+							}}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+1 2
+\end{shell}
+
+\mySamllsection{Range Adaptors for Take-While Views}
+
+ake-while views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::take\_while\_view constructor:
+
+\begin{cpp}
+std::views::take_while(rg, pred)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::take_while(rg, [](auto x) {
+						return x % 3 != 0;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::take_while([](auto x) {
+						return x % 3 != 0;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The passed predicate must be a callable that satisfies the concept std::predicate. This implies the concept std::regular\_invocable, which means that the predicate should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the predicate should at least be declared to take the argument by value or by const reference.
+
+The take-while view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+The iterators are just the iterators of the passed range and a special internal sentinel type.
+
+Here is a full example program using take-while views:
+
+\filename{ranges/takewhileview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4, 1};
+	print(coll); // 1 2 3 4 1 2 3 4 1
+	auto less4 = [] (auto v) { return v < 4; };
+	print(std::ranges::take_while_view{coll, less4}); // 1 2 3
+	print(coll | std::views::take_while(less4)); // 1 2 3
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 1 2 3 4 1
+1 2 3
+1 2 3
+\end{shell}
+
+\mySamllsection{Interface of Take-While Views}
+
+Table Operations of the class std::ranges::take\_while\_view<> lists the API of a take-while view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+take\_while\_view r\{\}         & Creates a take\_while\_view that refers to a default constructed range                             \\ \hline
+take\_while\_view r\{rg. pred\} & Creates a take\_while\_view taht refers to the leading elements of range rg for which pred is true \\ \hline
+r.begin()          & Yields the begin iterator                                              \\ \hline
+r.end()            & Yields the sentinel(end iterator)                                      \\ \hline
+r.empty()          & Yields whether r is empty (available if the range supports it)         \\ \hline
+if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
+r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
+r.front()          & Yields the first element (available if forwarding)                     \\ \hline
+r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
+r.data()                        & Yields a raw pointer to the memory of the elements(available if elements are in contigous memory)  \\ \hline
+r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
+r.pred()           & Yields a reference to the predicate                                    \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.15. Operations of the class std::ranges::take\_while\_view<>
+\end{center}
+
+\mySubsubsection{8.5.3}{Drop View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::drop\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All but the first num elements of a range        \\ \hline
+\textbf{Adaptor:}              & std::views::drop()                               \\ \hline
+\textbf{Element type:}         & Same type as passed range                        \\ \hline
+\textbf{Requires:}             & At least input range                             \\ \hline
+\textbf{Category:}             & Same as passed                                   \\ \hline
+\textbf{Is sized range:}       & If on a sized range                              \\ \hline
+\textbf{Is common range:}      & If on common range                               \\ \hline
+\textbf{Is borrowed range:} & If on borrowed view or on lvalue non-view                           \\ \hline
+\textbf{Caches:}            & Caches begin() if no random-access range or no sized range          \\ \hline
+\textbf{Const iterable:}    & If on const-iterable range that provides random access and is sized \\ \hline
+\textbf{Propagates constness:} & Only if on rvalue range                          \\ \hline
+\end{longtable}
+
+The class template std::ranges::drop\_view<> defines a view that refers to all but the first num elements of a passed range. It yields the opposite elements to the take view.
+
+For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+for (const auto& elem : std::ranges::drop_view{rg, 5}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+6 7 8 9 10 11 12 13
+\end{shell}
+
+\mySamllsection{Range Adaptors for Drop Views}
+
+Drop views can also (and usually should) be created with a range adaptor:
+
+\begin{cpp}
+std::views::drop(rg, n)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::drop(rg, 5)) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::drop(5)) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+Note that the adaptor might not always yield a drop\_view:
+
+\begin{itemize}
+\item
+If an empty view is passed, that view is just returned.
+
+\item
+If a sized random-access range is passed, where you can just initialize a range of the same type with the begin being the begin() + num, such a range is returned (this applies to subrange, iota view, string view, and span).
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+std::vector<int> vec;
+
+// using constructors:
+std::ranges::drop_view dv1{vec, 5}; // drop view of ref view of vector
+std::ranges::drop_view dv2{std::vector<int>{}, 5}; // drop view of owing view of vector
+std::ranges::drop_view dv3{std::views::iota(1,10), 5}; // drop view of iota view
+
+// using adaptors:
+auto dv4 = std::views::drop(vec, 5); // drop view of ref view of vector
+auto dv5 = std::views::drop(std::vector<int>{}, 5); // drop view of owing view of vector
+auto dv6 = std::views::drop(std::views::iota(1,10), 5); // pure iota view
+\end{cpp}
+
+The drop view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+The begin iterator is initialized and cached with the first call of begin(). On a range without random access this takes linear time. Therefore, it is better to reuse a drop view than to create it again from scratch.
+
+Here is a full example program using drop views:
+
+\filename{ranges/dropview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4, 1};
+	
+	print(coll); // 1 2 3 4 1 2 3 4 1
+	print(std::ranges::drop_view{coll, 5}); // 2 3 4 1
+	print(coll | std::views::drop(5)); // 2 3 4 1
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 1 2 3 4 1
+2 3 4 1
+2 3 4 1
+\end{shell}
+
+\mySamllsection{Drop Views and Caching}
+
+For better performance (to get an amortized constant complexity), drop views cache the result of begin() in the view (unless the range is only an input range). This means that the first iteration over the elements of a drop view is more expensive than further iterations.
+
+For this reason, it is better to initialize a drop view once and use it twice:
+
+\begin{cpp}
+// better:
+auto v1 = coll | std::views::drop(5);
+check(v1);
+process(v1);
+\end{cpp}
+
+than to initialize and use it twice:
+
+\begin{cpp}
+// worse:
+check(coll | std::views::drop(5));
+process(coll | std::views::drop(5));
+\end{cpp}
+
+Note that for ranges that have random access (e.g., arrays, vectors, and deques), the cached offset for the beginning is copied with the view. Otherwise, the cached beginning is not copied.
+
+This caching may have functional consequences when the range that a filter view refers to is modified.
+
+For example:
+
+\filename{ranges/dropcache.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <list>
+#include <ranges>
+
+void print(auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector vec{1, 2, 3, 4};
+	std::list lst{1, 2, 3, 4};
+	
+	auto vVec = vec | std::views::drop(2);
+	auto vLst = lst | std::views::drop(2);
+	
+	// insert a new element at the front (=> 0 1 2 3 4)
+	vec.insert(vec.begin(), 0);
+	lst.insert(lst.begin(), 0);
+	
+	print(vVec); // OK: 2 3 4
+	print(vLst); // OK: 2 3 4
+	
+	// insert more elements at the front (=> 98 99 0 -1 0 1 2 3 4)
+	vec.insert(vec.begin(), {98, 99, 0, -1});
+	lst.insert(lst.begin(), {98, 99, 0, -1});
+	
+	print(vVec); // OK: 0 -1 0 1 2 3 4
+	print(vLst); // OOPS: 2 3 4
+	
+	// creating a copy heals:
+	auto vVec2 = vVec;
+	auto vLst2 = vLst;
+	
+	print(vVec2); // OK: 0 -1 0 1 2 3 4
+	print(vLst2); // OK: 0 -1 0 1 2 3 4
+}
+\end{cpp}
+
+Note that formally, the copy of the invalid view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. This means that the view is still valid in that it still contains the range without the first two elements.
+
+As a rule of thumb, \textbf{do not use a drop view for which begin() has been called after the underlying range has been modified.}
+
+\mySamllsection{Drop View and const}
+
+Note that you cannot always iterate over a const drop view. In fact, the referenced range has to be a random-access range and a sized range.
+
+For example:
+
+\begin{cpp}
+void printElems(const auto& coll) {
+	for (const auto elem& e : coll) {
+		std::cout << elem << '\n';
+	}
+}
+
+std::vector vec{1, 2, 3, 4, 5};
+std::list lst{1, 2, 3, 4, 5};
+
+printElems(vec | std::views::drop(3)); // OK
+printElems(lst | std::views::drop(3)); // ERROR
+\end{cpp}
+
+To support this view in generic code, you have to use universal/forwarding references:
+
+\begin{cpp}
+void printElems(auto&& coll) {
+	...
+}
+
+std::list lst{1, 2, 3, 4, 5};
+
+printElems(lst | std::views::drop(3)); // OK
+\end{cpp}
+
+\mySamllsection{Interface of Drop Views}
+
+Table Operations of the class std::ranges::drop\_view<> lists the API of a drop view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+drop\_view r\{\}   & Creates a drop\_view that refers to a default constructed range        \\ \hline
+drop\_view r\{rg, num\} & Creates a drop\_view that refers to all but the first num elements of rnage rg                      \\ \hline
+r.begin()          & Yields the begin iterator                                              \\ \hline
+r.end()            & Yields the sentinel (end iterator)                                     \\ \hline
+r.empty()          & Yields whether r is empty (available if the range supports it)         \\ \hline
+if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
+r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
+r.front()          & Yields the first element(available if forwarfing)                      \\ \hline
+r.back()           & Yields the last element(available if bidirectional and common)         \\ \hline
+r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
+r.data()                & Yields a raw pointer to the memory of the elements (available if elements are in contiguous memory) \\ \hline
+r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.16. Operations of the class std::ranges::drop\_view<>
+\end{center}
+
+\mySubsubsection{8.5.4}{Drop-While View}
 
 
-\subsubsection*{\zihao{3} 8.5.3\hspace{0.2cm}Drop View}
-\addcontentsline{toc}{subsubsection}{8.5.3\hspace{0.2cm}Drop View}
+\mySubsubsection{8.5.5}{Filter View}
 
 
-\subsubsection*{\zihao{3} 8.5.4\hspace{0.2cm}Drop-While View}
-\addcontentsline{toc}{subsubsection}{8.5.4\hspace{0.2cm}Drop-While View}
-
-
-\subsubsection*{\zihao{3} 8.5.5\hspace{0.2cm}Filter View}
-\addcontentsline{toc}{subsubsection}{8.5.5\hspace{0.2cm}Filter View}
 
 

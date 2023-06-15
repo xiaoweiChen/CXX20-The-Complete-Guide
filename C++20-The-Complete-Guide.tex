@@ -70,14 +70,6 @@
 \tcbuselibrary{breakable} % 引入 breakable 库
 \tcbuselibrary{skins} % 引入 skins 库
 
-%展示代码
-\definecolor{mygreen}{rgb}{0,0.6,0}
-\definecolor{mygray}{rgb}{0.5,0.5,0.5}
-\definecolor{mymauve}{rgb}{0.58,0,0.82}
-\definecolor{keywordcolor}{rgb}{0.8,0.1,0.5}
-\definecolor{webgreen}{rgb}{0,.5,0}
-\definecolor{bgcolor}{rgb}{0.92,0.92,0.92}
-
 %定义CMake
 \lstdefinelanguage{CMake}
 {morekeywords={
@@ -349,8 +341,8 @@
 \NewDocumentCommand { \filename } { m } 
 { \noindent \textit { #1 } \vspace*{ -1ex } \nopagebreak[4] }
 
-% Def \samllsection
-\NewDocumentCommand { \samllsection } { m } 
+% Def \mySamllsection
+\NewDocumentCommand { \mySamllsection } { m } 
 { \noindent \hspace*{\fill} \\ \textbf { #1 } \vspace*{ -1ex } \nopagebreak[4] }
 
 % Def \inlcpp
@@ -372,6 +364,12 @@
 \NewDocumentEnvironment { notice } { }
 { \begin { tcolorbox } [ colback = green!5!white, colframe=green!75!black ] } 
 { \end   { tcolorbox } }
+
+\NewDocumentCommand { \mySubsubsection } { mm }
+{ 
+\subsubsection*{\zihao{3} {#1} \hspace{0.2cm}{#2}}
+\addcontentsline{toc}{subsubsection}{{#1}\hspace{0.2cm}{#2}}
+}
 
 \ExplSyntaxOff
 
