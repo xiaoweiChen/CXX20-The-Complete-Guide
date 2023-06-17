@@ -1,14 +1,238 @@
 
 
+This section discusses all views that yield modified values of the elements they iterate over.
+
+\mySubsubsection{8.6.1}{Transform View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::transform\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & The transformed values of all element in a range      \\ \hline
+\textbf{Adaptor:}              & std::views::transform()                               \\ \hline
+\textbf{Element type:}         & The return type from the transformation               \\ \hline
+\textbf{Requires:}             & At least input range                                  \\ \hline
+\textbf{Category:}             & Same as passed but at most random access              \\ \hline
+\textbf{Is sized range:}       & If on sized range                                     \\ \hline
+\textbf{Is common range:}      & If on common range                                    \\ \hline
+\textbf{Is borrowed range:}    & Never                                                 \\ \hline
+\textbf{Caches:}               & Nothing                                               \\ \hline
+\textbf{Const iterable:} & If on const-iterable range and transformation works on const values \\ \hline
+\textbf{Propagates constness:} & Only if on rvalue range                               \\ \hline
+\end{longtable}
+
+The class template std::ranges::transform\_view<> defines a view that yields all elements of an underlying range after applying a passed transformation. For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+// print all elements squared:
+for (const auto& elem : std::ranges::transform_view{rg, [](auto x) {
+							return x * x;
+					}}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+1 4 9 16 25 36 49 64 81 100 121 144 169
+\end{shell}
+
+\mySamllsection{Range Adaptors for Transform Views}
+
+Transform views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::transform\_view constructor.
+
+\begin{cpp}
+std::views::transform(rg, func)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::transform(rg, [](auto x) {
+						return x * x;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::transform([](auto x) {
+						x * x;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+Here is a full example program using transform views:
+
+\filename{ranges/transformview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+#include <cmath> // for std::sqrt()
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4, 1};
+	
+	print(coll); // 1 2 3 4 1
+	auto sqrt = [] (auto v) { return std::sqrt(v); };
+	print(std::ranges::transform_view{coll, sqrt}); // 1 1.41421 1.73205 2 1
+	print(coll | std::views::transform(sqrt)); // 1 1.41421 1.73205 2 1
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 1 2 3 4 1
+1 1.41421 1.73205 2 1 1.41421 1.73205 2 1
+1 1.41421 1.73205 2 1 1.41421 1.73205 2 1
+\end{shell}
+
+The transformation must be a callable that satisfies the concept std::regular\_invocable. That implies that transformation should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the callable should at least be declared to take the argument by value or by const reference.
+
+The transform view yields values that have the return type of the transformation. Therefore, in our example, the transform view yields elements of type double.
+
+The return type of a transformation might even be a reference. For example:
+
+\filename{ranges/transformref.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <utility>
+#include <ranges>
+
+void printPairs(const auto& collOfPairs)
+{
+	for (const auto& elem : collOfPairs) {
+		std::cout << elem.first << '/' << elem.second << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	// initialize collection with pairs of int as elements:
+	std::vector<std::pair<int,int>> coll{{1,9}, {9,1}, {2,2}, {4,1}, {2,7}};
+	printPairs(coll);
+	
+	// function that yields the smaller of the two values in a pair:
+	auto minMember = [] (std::pair<int,int>& elem) -> int& {
+		return elem.second < elem.first ? elem.second : elem.first;
+	};
+	
+	// increment the smaller of the two values in each pair element:
+	for (auto&& member : coll | std::views::transform(minMember)) {
+		++member;
+	}
+	printPairs(coll);
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1/9 9/1 2/2 4/1 2/7
+2/9 9/2 3/2 4/2 3/7
+\end{shell}
+
+Note that the lambda passed to transform here as the transformation has to specify that it returns a reference:
+
+\begin{cpp}
+[] (std::pair<int,int>& elem) -> int& {
+	return ...
+}
+\end{cpp}
+
+Otherwise, the lambda would return a copy of each element so that the members of these copies are incremented and the elements in coll remain unchanged.
+
+The transform view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+\mySamllsection{Special Characteristics of Transform Views}
+
+As usual for standard views, the transform views does not delegate constness to the elements. This means that even when the view is const the elements passed to the transforming function are not const.
+
+For example, using the example transformref.cpp above, you can also implement the following:
+
+\begin{cpp}
+std::vector<std::pair<int,int>> coll{{1,9}, {9,1}, {2,2}, {4,1}, {2,7}};
+
+// function that yields the smaller of the two values in a pair:
+auto minMember = [] (std::pair<int,int>& elem) -> int& {
+	return elem.second < elem.first ? elem.second : elem.first;
+};
+
+// increment the smaller of the two values in each pair element:
+const auto v = coll | std::views::transform(minMember);
+for (auto&& member : v) {
+	++member;
+}
+\end{cpp}
+
+Note that a take view is only common (has same type for iterator and sentinel) if the underlying range is a sized range and a common range. To harmonize types, you might have to use a common view.
+
+Both the begin iterator and the sentinel (end iterator) are special internal helper types.
+
+\mySamllsection{Interface of Transform Views}
+
+Table Operations of the class std::ranges::transform\_view<> lists the API of a transform view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+transform\_view r\{\}         & Creates a transform\_view that refers to a default constructed range                               \\ \hline
+transform\_view r\{rg, func\} & Creates a transform\_view with the values of all elements of range rg transformed by func          \\ \hline
+r.begin()          & Yields the begin iterator                                      \\ \hline
+r.end()            & Yields the sentinel(end iterator)                              \\ \hline
+r.empty()          & Yields whether r is empty (available if the range supports it) \\ \hline
+if (r)             & true if r is not empty(available if empty() is define)         \\ \hline
+r.size()                      & Yields the number of elements (available if it refers to a sized range)                            \\ \hline
+r.front()          & Yields the first element(available if forwarding)              \\ \hline
+r.back)            & Yields the last element(available if bidirectional and common) \\ \hline
+r{[}idx{]}         & Yields the n-th element(available if random access)            \\ \hline
+r.data()                      & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()           & Yields a reference to the range that r refers to or owns       \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.19. Operations of the class std::ranges::transform\_view<>
+\end{center}
+
+\mySubsubsection{8.6.2}{Elements View}
 
 
-\subsubsection*{\zihao{3} 8.6.1\hspace{0.2cm}Transform View}
-\addcontentsline{toc}{subsubsection}{8.6.1\hspace{0.2cm}Transform View}
+
+\mySubsubsection{8.6.3}{Keys and Values View}
 
 
-\subsubsection*{\zihao{3} 8.6.2\hspace{0.2cm}Elements View}
-\addcontentsline{toc}{subsubsection}{8.6.2\hspace{0.2cm}Elements View}
-
-
-\subsubsection*{\zihao{3} 8.6.3\hspace{0.2cm}Keys and Values View}
-\addcontentsline{toc}{subsubsection}{8.6.3\hspace{0.2cm}Keys and Values View}

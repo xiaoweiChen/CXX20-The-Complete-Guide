@@ -595,9 +595,666 @@ Table 8.16. Operations of the class std::ranges::drop\_view<>
 
 \mySubsubsection{8.5.4}{Drop-While View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::drop\_while\_view\textless{}\textgreater{}        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All but the leading elements of a range that match a predicate \\ \hline
+\textbf{Adaptor:}              & std::views::drop\_while()                                      \\ \hline
+\textbf{Element type:}         & Same type as passed range                                      \\ \hline
+\textbf{Requires:}             & At least input range                                           \\ \hline
+\textbf{Category:}             & Same as passed                                                 \\ \hline
+\textbf{Is sized range:}       & If common random-access range passed                           \\ \hline
+\textbf{Is common range:}      & If on common range                                             \\ \hline
+\textbf{Is borrowed range:}    & If on borrowed view or on lvalue non-view                      \\ \hline
+\textbf{Caches:}               & Always caches begin()                                          \\ \hline
+\textbf{Const iterable:}       & Never                                                          \\ \hline
+\textbf{Propagates constness:} & --(cannot call begin() if const)                               \\ \hline
+\end{longtable}
+
+The class template std::ranges::drop\_while\_view<> defines a view that skips all leading elements of a passed range that match a certain predicate. It yields the opposite elements to the take-while view. For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+for (const auto& elem : std::ranges::drop_while_view{rg, [](auto x) {
+						return x % 3 != 0;
+				}}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+3 4 5 6 7 8 9 10 11 12 13
+\end{shell}
+
+\mySamllsection{Range Adaptors for Drop-While Views}
+
+Drop-while views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::drop\_while\_view constructor:
+
+\begin{cpp}
+std::views::drop_while(rg, pred)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::drop_while(rg, [](auto x) {
+						return x % 3 != 0;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::drop_while([](auto x) {
+						return x % 3 != 0;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The passed predicate must be a callable that satisfies the concept std::predicate. This implies the concept std::regular\_invocable, which means that the predicate should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the predicate should at least be declared to take the argument by value or by const reference.
+
+The drop-while view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+The begin iterator is initialized and cached with the first call of begin(), which always takes linear time.
+Therefore, it is better to reuse a drop-while view than creating it again from scratch.
+
+Here is a full example program using drop-while views:
+
+\filename{ranges/dropwhileview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4, 1};
+	
+	print(coll); // 1 2 3 4 1 2 3 4 1
+	auto less4 = [] (auto v) { return v < 4; };
+	print(std::ranges::drop_while_view{coll, less4}); // 4 1 2 3 4 1
+	print(coll | std::views::drop_while(less4)); // 4 1 2 3 4 1
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 1 2 3 4 1
+4 1 2 3 4 1
+4 1 2 3 4 1
+\end{shell}
+
+\mySamllsection{Drop-While Views and Caching}
+
+For better performance (to get an amortized constant complexity), drop-while views cache the result of begin() in the view (unless the range is only an input range). This means that the first iteration over the element of a drop-while view is more expensive than further iterations.
+
+For this reason, it is better to initialize a filter view once and use it twice:
+
+\begin{cpp}
+// better:
+auto v1 = coll | std::views::drop_while(myPredicate);
+check(v1);
+process(v1);
+\end{cpp}
+
+than to initialize and use it twice:
+
+\begin{cpp}
+// worse:
+check(coll | std::views::drop_while(myPredicate));
+process(coll | std::views::drop_while(myPredicate));
+\end{cpp}
+
+The caching may have functional consequences when the range that a filter view refers to is modified. For example:
+
+\filename{ranges/dropwhilecache.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <list>
+#include <ranges>
+
+void print(auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector vec{1, 2, 3, 4};
+	std::list lst{1, 2, 3, 4};
+	
+	auto lessThan2 = [](auto v){
+		return v < 2;
+	};
+	
+	auto vVec = vec | std::views::drop_while(lessThan2);
+	auto vLst = lst | std::views::drop_while(lessThan2);
+	
+	// insert a new element at the front (=> 0 1 2 3 4)
+	vec.insert(vec.begin(), 0);
+	lst.insert(lst.begin(), 0);
+	
+	print(vVec); // OK: 2 3 4
+	print(vLst); // OK: 2 3 4
+	
+	// insert more elements at the front (=> 0 98 99 -1 0 1 2 3 4)
+	vec.insert(vec.begin(), {0, 98, 99, -1});
+	lst.insert(lst.begin(), {0, 98, 99, -1});
+	
+	print(vVec); // OOPS: 99 -1 0 1 2 3 4
+	print(vLst); // OOPS: 2 3 4
+	
+	// creating a copy heals (except with random access):
+	auto vVec2 = vVec;
+	auto vLst2 = vLst;
+	
+	print(vVec2); // OOPS: 99 -1 0 1 2 3 4
+	print(vLst2); // OK: 98 99 -1 0 1 2 3 4
+}
+\end{cpp}
+
+Note that formally, the copy of the invalid view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. This means that the view is still valid in that it still contains a valid range although the begin no longer fits the predicate.
+
+As a rule of thumb, \textbf{do not use a drop-while view for which begin() has been called after the underlying range has been modified}.
+
+\mySamllsection{Drop-While View and const}
+
+Note that you cannot iterate over a const drop-while view.
+
+For example:
+
+\begin{cpp}
+void printElems(const auto& coll) {
+	for (const auto elem& e : coll) {
+		std::cout << elem << '\n';
+	}
+}
+
+std::vector vec{1, 2, 3, 4, 5};
+
+printElems(vec | std::views::drop_while( ... )); // ERROR
+\end{cpp}
+
+The problem is that begin() is provided only for a non-const drop-while view because caching the iterator modifies the view.
+
+To support this view in generic code, you have to use universal/forwarding references:
+
+\begin{cpp}
+void printElems(auto&& coll) {
+	...
+}
+
+std::list lst{1, 2, 3, 4, 5};
+
+printElems(vec | std::views::drop_while( ... )); // OK
+\end{cpp}
+
+\mySamllsection{Interface of Drop-While Views}
+
+Table Operations of the class std::ranges::drop\_while\_view<> lists the API of a drop-while view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                         \\ \hline
+\endfirsthead
+%
+\endhead
+%
+drop\_while\_view r\{\}         & Creates a drop\_while\_view that refers to a default constructed range                                           \\ \hline
+drop\_while\_view r\{rg, pred\} & Creates a drop\_while\_view that refers to all elements of rg except the leading elements for which pred is true \\ \hline
+r.begin()          & Yields the begin iterator                                               \\ \hline
+r.end()            & Yields the sentinel(end iterator)                                       \\ \hline
+r.empty()          & Yields whether r is empty (available if the range supports it)          \\ \hline
+if (r)             & true if r is not empty(available if empty() is defined)                 \\ \hline
+r.size()           & Yields the number of elements (available if it refers to a sized range) \\ \hline
+r.front()          & Yields the first element(available if forwarding)                       \\ \hline
+r.back()           & Yields the last element(available if bidirectional and common)          \\ \hline
+r{[}idx{]}         & Yields the n-th element(available if random access)                     \\ \hline
+r.data()                        & Yields a raw pointer to the memory of the elements (available if elements are in contiguous memory)              \\ \hline
+r.base()           & Yields a reference to the range that r refers to or owns                \\ \hline
+r.pred()           & Yields a reference to the predicate                                     \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.17. Operations of the class std::ranges::drop\_while\_view<>
+\end{center}
 
 \mySubsubsection{8.5.5}{Filter View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}                 & std::ranges::filter\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All elements of a range that match a predicate     \\ \hline
+\textbf{Adaptor:}              & std::views::filter()                               \\ \hline
+\textbf{Element type:}         & Same type as passed range                          \\ \hline
+\textbf{Requires:}             & At least input range                               \\ \hline
+\textbf{Category:}             & Same as passed but at most bidirectional           \\ \hline
+\textbf{Is sized range:}       & Never                                              \\ \hline
+\textbf{Is common range:}      & If on common range                                 \\ \hline
+\textbf{Is borrowed range:}    & Never                                              \\ \hline
+\textbf{Caches:}               & Always caches begin()                              \\ \hline
+\textbf{Const iterable:}       & Never                                              \\ \hline
+\textbf{Propagates constness:} & -- (cannot call begin() if const)                  \\ \hline
+\end{longtable}
 
+The class template std::ranges::filter\_view<> defines a view that iterates only over those elements of the underlying range for which a certain predicate matches. That is, it filters out all elements that do not match the predicate. For example:
 
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+for (const auto& elem : std::ranges::filter_view{rg, [](auto x) {
+							return x % 3 != 0;
+					}}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
 
+The loop prints:
+
+\begin{shell}
+1 2 4 5 7 8 10 11 13
+\end{shell}
+
+\mySamllsection{Range Adaptors for Filter Views}
+
+Filter views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::filter\_view constructor:
+
+\begin{cpp}
+std::views::filter(rg, pred)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::filter(rg, [](auto x) {
+						return x % 3 != 0;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::filter([](auto x) {
+						return x % 3 != 0;
+					})) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The passed predicate must be a callable that satisfies the concept std::predicate. This implies the concept std::regular\_invocable, which means that the predicate should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the predicate should at least be declared to take the argument by value or by const reference.
+
+The filter view is special and you should know when, where, and how to use it, as well as the side effects its use has. In fact, it has a significant impact on the performance of pipelines and restricts write access to elements in a sometimes surprising way.
+
+Therefore, you should use a filter view with care:
+
+\begin{itemize}
+\item
+In a pipeline, you should have it as early as possible.
+
+\item
+Be careful with expensive transformations ahead of filters.
+
+\item
+Do not use it for write access to elements when the write access breaks the predicate.
+\end{itemize}
+
+The filter view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+The begin iterator is initialized and usually cached with the first call of begin(), which always takes linear time. Therefore, it is better to reuse a filter view than to create it again from scratch.
+
+Here is a full example program using filter views:
+
+\filename{ranges/filterview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4, 1};
+	
+	print(coll); // 1 2 3 4 1 2 3 4 1
+	auto less4 = [] (auto v) { return v < 4; };
+	print(std::ranges::filter_view{coll, less4}); // 1 2 3 1 2 3 1
+	print(coll | std::views::filter(less4)); // 1 2 3 1 2 3 1
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 1 2 3 4 1
+1 2 3 1 2 3 1
+1 2 3 1 2 3 1
+\end{shell}
+
+\mySamllsection{Filter Views and Caching}
+
+For better performance (to get an amortized constant complexity), filter views cache the result of begin() in the view (unless the range is only an input range). This means that the first iteration over the element of a filter view is more expensive than further iterations.
+
+For this reason, it is better to initialize a filter view once and use it twice:
+
+\begin{cpp}
+// better:
+auto v1 = coll | std::views::drop_while(myPredicate);
+check(v1);
+process(v1);
+\end{cpp}
+
+than to initialize and use it twice:
+
+\begin{cpp}
+// worse:
+check(coll | std::views::drop_while(myPredicate));
+process(coll | std::views::drop_while(myPredicate));
+\end{cpp}
+
+Note that for ranges that have random access (e.g., arrays, vectors, and deques), the cached offset for the beginning is copied with the view. Otherwise, the cached beginning is not copied.
+
+The caching may have functional consequences when the range that a filter view refers to is modified.
+For example:
+
+\filename{ranges/filtercache.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <list>
+#include <ranges>
+
+void print(auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector vec{1, 2, 3, 4};
+	std::list lst{1, 2, 3, 4};
+	
+	auto lessThan2 = [](auto v){
+		return v < 2;
+	};
+	
+	auto vVec = vec | std::views::filter(biggerThan2);
+	auto vLst = lst | std::views::filter(biggerThan2);
+	
+	// insert a new element at the front (=> 0 1 2 3 4)
+	vec.insert(vec.begin(), 0);
+	lst.insert(lst.begin(), 0);
+	
+	print(vVec); // OK: 3 4
+	print(vLst); // OK: 3 4
+	
+	// insert more elements at the front (=> 98 99 0 -1 0 1 2 3 4)
+	vec.insert(vec.begin(), {98, 99, 0, -1});
+	lst.insert(lst.begin(), {98, 99, 0, -1});
+	
+	print(vVec); // OOPS: -1 3 4
+	print(vLst); // OOPS: 3 4
+	
+	// creating a copy heals (except with random access):
+	auto vVec2 = vVec;
+	auto vLst2 = vLst;
+	
+	print(vVec2); // OOPS: -1 3 4
+	print(vLst2); // OK: 98 99 3 4
+}
+\end{cpp}
+
+Note that formally, the copy of the invalid view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. This means that the view is still valid in that it still contains a valid range although the begin is now the third element regardless of whether it fits the filter.
+
+As a rule of thumb, \textbf{do not use a filter view for which begin() has been called after the underlying range has been modified}.
+
+\mySamllsection{Filter Views When Modifying Elements}
+
+When using filter views, there is an important additional restriction on write access: you have to ensure that the modified value still fulfills the predicate passed to the filter.
+
+To understand why this is the case, consider the following program:
+
+\begin{cpp}
+oid printElems(const auto& coll) {
+	for (const auto elem& e : coll) {
+		std::cout << elem << '\n';
+	}
+}
+
+std::vector vec{1, 2, 3, 4, 5};
+
+printElems(vec | std::views::drop_while( ... )); // ERROR
+\end{cpp}
+
+The problem is that begin() is provided only for a non-const drop-while view because caching the iterator modifies the view.
+
+To support this view in generic code, you have to use universal/forwarding references:
+
+\filename{ranges/viewswrite.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <ranges>
+namespace vws = std::views;
+
+void print(const auto& coll)
+{
+	std::cout << "coll: ";
+	for (int i : coll) {
+		std::cout << i << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector<int> coll{1, 4, 7, 10, 13, 16, 19, 22, 25};
+	
+	// view for all even elements of coll:
+	auto isEven = [] (auto&& i) { return i % 2 == 0; };
+	auto collEven = coll | vws::filter(isEven);
+	
+	print(coll);
+	
+	// modify even elements in coll:
+	for (int& i : collEven) {
+		std::cout << " increment " << i << '\n';
+		i += 1; // ERROR: undefined behavior because filter predicate is broken
+	}
+	print(coll);
+	
+	// modify even elements in coll:
+	for (int& i : collEven) {
+		std::cout << " increment " << i << '\n';
+		i += 1; // ERROR: undefined behavior because filter predicate is broken
+	}
+	print(coll);
+}
+\end{cpp}
+
+We iterate twice over the even elements of a collection and increment them. A naive programmer would assume that we get the following output:
+
+\begin{shell}
+coll: 1 4 7 10 13 16 19 22 25
+coll: 1 5 7 11 13 17 19 23 25
+coll: 1 5 7 11 13 17 19 23 25
+\end{shell}
+
+Instead, the program has the following output:
+
+\begin{shell}
+coll: 1 4 7 10 13 16 19 22 25
+coll: 1 5 7 11 13 17 19 23 25
+coll: 1 6 7 11 13 17 19 23 25
+\end{shell}
+
+With the second iteration, we increment the former first even element once again. Why?
+
+The first time we use the view that ensures that we deal only with even elements it works fine. However, the view caches the position of the first element that matches the predicate so that begin() does not have to recalculate it. Therefore, when we access the value there, the filter does not apply the predicate again because it already knows that this is the first matching element. Therefore, when we iterate the second time, the filter gives back the former first element. However, for all other elements, we have to perform the check again, which means that the filter finds no more elements because they are all odd now.
+
+There has been some discussion about whether one-pass write access with a filter should be well-formed even if it breaks the predicate of the filter. This is because the requirement that a modification should not violate the predicate of a filter invalidates some very reasonable examples: Here is one of them:
+
+\begin{cpp}
+for (auto& m : collOfMonsters | filter(isDead)) {
+	m.resurrect(); // a shaman’s doing, of course
+}
+\end{cpp}
+
+This code usually compiles and works. However, formally, we have undefined behavior again, because the predicate of the filter (“monsters have to be dead”) is broken. Any other “modification” of a (dead) monster would be possible, though (e.g., to “burning” them).
+
+To break the predicate, you have to use an ordinary loop instead:
+
+\begin{cpp}
+for (auto& m : collOfMonsters) {
+	if (m.isDead()) {
+		m.resurrect(); // a shaman’s doing, of course
+	}
+}
+\end{cpp}
+
+\mySamllsection{Filter View and const}
+
+Note that you cannot iterate over a const filter view.
+
+For example:
+
+\begin{cpp}
+void printElems(const auto& coll) {
+	for (const auto elem& e : coll) {
+		std::cout << elem << '\n';
+	}
+}
+
+std::vector vec{1, 2, 3, 4, 5};
+
+printElems(vec | std::views::filter( ... )); // ERROR
+\end{cpp}
+
+The problem is that begin() is provided only for a non-const filter view because caching the iterator modifies the view.
+
+To support this view in generic code, you have to use universal/forwarding references:
+
+\begin{cpp}
+void printElems(auto&& coll) {
+	...
+}
+
+std::list lst{1, 2, 3, 4, 5};
+
+printElems(vec | std::views::filter( ... )); // OK
+\end{cpp}
+
+\mySamllsection{Filter Views in Pipelines}
+
+When using a filter view in a pipeline, there are a couple of issues to consider:
+
+\begin{itemize}
+\item
+In a pipeline, you should have it as early as possible.
+
+\item
+Be careful especially with expensive transformations ahead of filters.
+
+\item
+When using filters while modifying elements, ensure that after these modifications, the predicate of the filter is still satisfied. See below for details.
+\end{itemize}
+
+The reason for this is that views and adaptors in front of the filter view might have to evaluate elements multiple times, once to decide whether they pass the filter and once to finally use their value.
+
+Therefore, a pipeline such as the following:
+
+\begin{cpp}
+rg | std::views::filter(pred) | std::views::transform(func)
+\end{cpp}
+
+has a better performance than
+
+\begin{cpp}
+rg | std::views::transform(func) | std::views::filter(pred)
+\end{cpp}
+
+\mySamllsection{Interface of Filter Views}
+
+Table Operations of the class std::ranges::filter\_view<> lists the API of a filter view.
+
+Filter views never provide size(), data() or the operator [] because they are neither sized nor provide random access.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+filter\_view r\{\}         & Creates a filter\_view that refers to a default constructed range               \\ \hline
+filter\_view r\{rg. pred\} & Creates a filter\_view that refers to all elements or rg for which pred is true \\ \hline
+r.begin()          & Yields the begin iterator                                      \\ \hline
+r.end()            & Yields the sentinel(end iterator)                              \\ \hline
+r.empty()          & Yields whether r is empty(available if the range supports it)  \\ \hline
+if (r)             & true if r is not empty (available if empty() is defined)       \\ \hline
+r.front()          & Yields the first element(available if forwarding)              \\ \hline
+r.back()           & Yields the last element(available if bidirectional and common) \\ \hline
+r.base()           & Yields a reference to the range that r refers to ot owns       \\ \hline
+r.pred()           & Yields a reference to the predicate                            \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.18. Operations of the class std::ranges::filter\_view<>
+\end{center}
