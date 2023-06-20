@@ -231,8 +231,444 @@ Table 8.19. Operations of the class std::ranges::transform\_view<>
 
 \mySubsubsection{8.6.2}{Elements View}
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}              & std::ranges::elements\_view\textless{}\textgreater{}            \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}           & The n-th member/attribute of all tuple-like elements of a range \\ \hline
+\textbf{Adaptor:}           & std::views::elements\textless{}\textgreater{}                   \\ \hline
+\textbf{Element type:}         & Type of the member/attriute \\ \hline
+\textbf{Requires:}             & At least input range        \\ \hline
+\textbf{Category:}          & Same as passed but at most random access                        \\ \hline
+\textbf{Is sized range:}       & If on sized range           \\ \hline
+\textbf{Is common range:}      & If on common range          \\ \hline
+\textbf{Is borrowed range:} & If on borrowed view or on lvalue non-view                       \\ \hline
+\textbf{Caches:}               & Nothing                     \\ \hline
+\textbf{Const iterable:}       & If on const-iterable range  \\ \hline
+\textbf{Propagates constness:} & Only if on rvalue range     \\ \hline
+\end{longtable}
 
+The class template std::ranges::elements\_view<> defines a view that selects the idx-th member/attribute/element of all elements of a passed range. The view calls get<idx>(elem) for each element and can especially be used
 
+\begin{itemize}
+\item
+To get the idx-th members of all std::tuple elements
+
+\item
+To get the idx-th alternative of all std::variant elements
+
+\item
+To get the first or second member of std::pair elements (although, for elements of associative and unordered containers, it is more convenient to use the keys\_view and the values\_view)
+\end{itemize}
+
+Note that for this view, class template argument deduction does not work because you have to specify the index as an argument explicitly and partial argument deduction is not supported for class templates. For this reason, you have to write the following:
+
+\begin{cpp}
+std::vector<std::tuple<std::string, std::string, int>> rg{
+	{"Bach", "Johann Sebastian", 1685}, {"Mozart", "Wolfgang Amadeus", 1756},
+	{"Beethoven", "Ludwig van", 1770}, {"Chopin", "Frederic", 1810},
+};
+
+for (const auto& elem
+	: std::ranges::elements_view<decltype(std::views::all(rg)), 2>{rg}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+1685 1756 1770 1810
+\end{shell}
+
+Note that you have to specify the type of the underlying range with the range adaptor all() if a range is passed that is not a view:
+
+\begin{cpp}
+std::ranges::elements_view<decltype(std::views::all(rg)), 2>{rg} // OK
+\end{cpp}
+
+You can also specify the type directly using std::views::all\_t<>:
+
+\begin{cpp}
+std::ranges::elements_view<std::views::all_t<decltype(rg)&>, 2>{rg} // OK
+std::ranges::elements_view<std::views::all_t<decltype((rg))>, 2>{rg} // OK
+\end{cpp}
+
+However, details matter here. If the range is not a view yet, the parameter to all\_t<> must be an lvalue reference. Therefore, you need a \& after the type of rg or the double parentheses around rg (by rule, decltype yields an lvalue reference if an expression is passed that is an lvalue). Single parentheses without \& do not work:
+
+\begin{cpp}
+std::ranges::elements_view<std::views::all_t<decltype(rg)>, 2>{rg} // ERROR
+\end{cpp}
+
+Therefore, the far easier way to declare the view is by using the corresponding range adaptor.
+
+\mySamllsection{Range Adaptors for Elements Views}
+
+Elements views can also (and usually should) be created with a range adaptor. The adaptor makes the use of the view a lot easier because you do not have to specify the type of the underlying range:
+
+\begin{cpp}
+std::views::elements<idx>(rg)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::elements<2>(rg)) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::elements<2>) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+Using the range adaptor, elements<idx>(rg) is always equivalent to:
+
+\begin{cpp}
+std::ranges::elements_view<std::views::all_t<decltype(rg)&>, idx>{rg}
+\end{cpp}
+
+The elements view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+Both the begin iterator and the sentinel (end iterator) are special internal helper types that are common if the passed range is common.
+
+Here is a full example program using element views:
+
+\filename{ranges/elementsview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+#include <numbers> // for math constants
+#include <algorithm> // for sort()
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector<std::tuple<int, std::string, double>> coll{
+		{1, "pi", std::numbers::pi},
+		{2, "e", std::numbers::e},
+		{3, "golden-ratio", std::numbers::egamma},
+		{4, "euler-constant", std::numbers::phi},
+	};
+	
+	std::ranges::sort(coll, std::less{},
+					  [](const auto& e) {return std::get<2>(e);});
+	print(std::ranges::elements_view<decltype(std::views::all(coll)), 1>{coll});
+	print(coll | std::views::elements<2>);
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+golden-ratio euler-constant e pi
+0.577216 1.61803 2.71828 3.14159
+\end{shell}
+
+Note that you should not sort the elements of coll as follows:
+
+\begin{cpp}
+std::ranges::sort(coll | std::views::elements<2>); // OOPS
+\end{cpp}
+
+This will sort only the values of the elements, not the elements as whole, and will lead to the following output:
+
+\begin{shell}
+pi e golden-ratio euler-constant
+0.577216 1.61803 2.71828 3.14159
+\end{shell}
+
+\mySamllsection{Elements Views for Other Tuple-Like Types}
+
+To be able to use this view for user-defined types, you need to specify a tuple-like API for them. However, with the current specification, it is not really due to a problem in the design of tuple-like APIs in general and the way the corresponding concepts are defined. Therefore, strictly speaking, you can use the class std::ranges::elements\_view or the adaptor std::views::elements<> only for std::pair<> and std::tuple<>.
+
+However, if you ensure that the tuple-like API is defined before header <ranges> is included, it works.
+
+For example:
+
+\filename{ranges/elementsviewhack.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <tuple>
+// don’t include <ranges> yet !!
+
+struct Data {
+	int id;
+	std::string value;
+};
+
+std::ostream& operator<< (std::ostream& strm, const Data& d) {
+	return strm << '[' << d.id << ": " << d.value << ']';
+}
+
+// tuple-like access to Data:
+namespace std {
+	template<>
+	struct tuple_size<Data> : integral_constant<size_t, 2> {
+	};
+	
+	template<>
+	struct tuple_element<0, Data> {
+		using type = int;
+	};
+	template<>
+	struct tuple_element<1, Data> {
+		using type = std::string;
+	};
+	
+	template<size_t Idx> auto get(const Data& d) {
+		if constexpr (Idx == 0) {
+			return d.id;
+		}
+		else {
+			return d.value;
+		}
+	}
+} // namespace std
+\end{cpp}
+
+If you use it as follows:
+
+\filename{ranges/elementsviewhack.cpp}
+
+\begin{cpp}
+// don’t include <ranges> before "elementsview.hpp"
+#include "elementsviewhack.hpp"
+#include <iostream>
+#include <vector>
+#include <ranges>
+
+void print(const auto& coll)
+{
+	std::cout << "coll:\n";
+	for (const auto& elem : coll) {
+		std::cout << "- " << elem << '\n';
+	}
+}
+
+int main()
+{
+	Data d1{42, "truth"};
+	std::vector<Data> coll{d1, Data{0, "null"}, d1};
+	print(coll);
+	print(coll | std::views::take(2));
+	print(coll | std::views::elements<1>);
+}
+\end{cpp}
+
+you have the following output:
+
+\begin{shell}
+coll:
+- [42: truth]
+- [0: null]
+- [42: truth]
+coll:
+- [42: truth]
+- [0: null]
+coll:
+- truth
+- null
+- truth
+\end{shell}
+
+\mySamllsection{Interface of Elements Views}
+
+Table Operations of the class std::ranges::elements\_view<> lists the API of an elements view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}     & \textbf{Effect}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+elements\_view r\{\} & Creates an elements\_view that refers to a default constructed range                               \\ \hline
+elements\_view r\{rg\} & Creates an elements\_view that refers to range rg              \\ \hline
+r.begin()              & Yields the begin iterator                                      \\ \hline
+r.end()                & Yields the sentinel (end iterator)                             \\ \hline
+r.empty()              & Yields whether r is empty (available if the range supports it) \\ \hline
+if (r)                 & true if r is not empty(availabel if empty() is defined)        \\ \hline
+r.size()             & Yields the number of elements(available if it refers to a sized range)                             \\ \hline
+r.front()              & Yields the first element(available if forwarding)              \\ \hline
+r.back()               & Yields the last element(available if bidirectional and common) \\ \hline
+r{[}idx{]}             & Yields the n-th element(available if random access)            \\ \hline
+r.data()             & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()               & Yields a reference to the range that r refers to or owns       \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.20. Operations of the class std::ranges::elements\_view<>
+\end{center}
+
+	
 \mySubsubsection{8.6.3}{Keys and Values View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|ll|}
+\hline
+\textbf{Type:}    & \multicolumn{1}{l|}{std::ranges::keys\_view\textless{}\textgreater{}} & std::ranges::values\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:} & \multicolumn{2}{l|}{The first/second member or attribute of all tuple-like elements of a range}                            \\ \hline
+\textbf{Adaptor:}              & \multicolumn{1}{l|}{std::views::keys}           & std::views::values         \\ \hline
+\textbf{Element type:}         & \multicolumn{1}{l|}{Type of the first member}   & Type of the second member  \\ \hline
+\textbf{Requires:}             & \multicolumn{1}{l|}{At least input range}       & At least input range       \\ \hline
+\textbf{Category:}             & \multicolumn{2}{l|}{Same as passed but at most random access}                \\ \hline
+\textbf{Is sized range:}       & \multicolumn{1}{l|}{If on sized range}          & If on sized range          \\ \hline
+\textbf{Is common range:}      & \multicolumn{1}{l|}{If on common range}         & If on common range         \\ \hline
+\textbf{Is borrowed range:}    & \multicolumn{2}{l|}{If on borrowed view or on lvalue non-view}               \\ \hline
+\textbf{Caches:}               & \multicolumn{1}{l|}{Nothing}                    & Nothing                    \\ \hline
+\textbf{Const iterable:}       & \multicolumn{1}{l|}{If on const-iterable range} & If on const-iterable range \\ \hline
+\textbf{Propagates constness:} & \multicolumn{1}{l|}{Only if on rvalue range}    & Only if on rvalue range    \\ \hline
+\end{longtable}
+
+The class template std::ranges::keys\_view<> defines a view that selects the first member/attribute/element from the elements of a passed range. It is nothing but a shortcut for using the elements view with the index 0. That is, it calls get<0>(elem) for each element.
+
+The class template std::ranges::values\_view<> defines a view that selects the second member/attribute/element from the elements of a passed range. It is nothing but a shortcut for using the elements view with the index 1. That is, it calls get<1>(elem) for each element.
+
+These views can especially be used:
+
+\begin{itemize}
+\item
+To get the member first/second of std::pair elements, which is especially useful for selecting the key/value of the elements of a map, unordered\_map, multimap, and unordered\_multimap
+
+\item
+To get the first/second member of std::tuple elements
+
+\item
+To get the first/second alternative of std::variant elements
+\end{itemize}
+
+However, for the last two applications, it is probably more readable to use the elements\_view directly with the index 0.
+
+Note that class template argument deduction does not work yet for these views.7 For this reason, you have to specify the template parameters explicitly. For example:
+
+\begin{cpp}
+std::map<std::string, int> rg{
+	{"Bach", 1685}, {"Mozart", 1756}, {"Beethoven", 1770},
+	{"Tchaikovsky", 1840}, {"Chopin", 1810}, {"Vivaldi", 1678},
+};
+
+for (const auto& e : std::ranges::keys_view<decltype(std::views::all(rg))>{rg}) {
+	std::cout << e << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+Bach Beethoven Chopin Mozart Tchaikovsky Vivaldi
+\end{shell}
+
+\mySamllsection{Range Adaptors for Keys/Values Views}
+
+Keys and values views can also (and usually should) be created with a range adaptor: The adaptor makes the use of the view a lot easier because you do not have to specify the type of the underlying range:
+
+\begin{cpp}
+std::views::keys(rg)
+std::views::values(rg)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::keys) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::values) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+All other aspects match those of elements views.
+
+Here is a full example program using keys and values views:
+
+\filename{ranges/keysvaluesview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <ranges>
+#include <numbers> // for math constants
+#include <algorithm> // for sort()
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::unordered_map<std::string, double> coll{
+		{"pi", std::numbers::pi},
+		{"e", std::numbers::e},
+		{"golden-ratio", std::numbers::egamma},
+		{"euler-constant", std::numbers::phi},
+	};
+	
+	print(std::ranges::keys_view<decltype(std::views::all(coll))>{coll});
+	print(std::ranges::values_view<decltype(std::views::all(coll))>{coll});
+	
+	print(coll | std::views::keys);
+	print(coll | std::views::values);
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+euler-constant golden-ratio e pi
+1.61803 0.577216 2.71828 3.14159
+euler-constant golden-ratio e pi
+1.61803 0.577216 2.71828 3.14159
+\end{shell}
+
+
+
+
+
+
+
+
 
 

@@ -1,4 +1,249 @@
 
+This section discusses all views that change the order of elements (so far, it is only one view).
 
-\subsubsection*{\zihao{3} 8.7.1\hspace{0.2cm}Reverse View}
-\addcontentsline{toc}{subsubsection}{8.7.1\hspace{0.2cm}Reverse View}
+\mySubsubsection{8.7.1}{Reverse View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}              & std::ranges::reverse\_view\textless{}\textgreater{}                 \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All elements of a range in reverse order \\ \hline
+\textbf{Adaptor:}              & std::views::reverse                      \\ \hline
+\textbf{Element type:}         & Same type as passed range                \\ \hline
+\textbf{Requires:}             & At least bidirectional range             \\ \hline
+\textbf{Category:}             & Same as passed but at most random access \\ \hline
+\textbf{Is sized range:}       & If on sized range                        \\ \hline
+\textbf{Is common range:}      & Always                                   \\ \hline
+\textbf{Is borrowed range:} & If on borrowed view or on lvalue non-view                           \\ \hline
+\textbf{Caches:}            & Caches begin() unless common range or random access and sized range \\ \hline
+\textbf{Const iterable:}       & If on const-iterable common range        \\ \hline
+\textbf{Propagates constness:} & Only if on rvalue range                  \\ \hline
+\end{longtable}
+
+The class template std::ranges::reverse\_view<> defines a view that iterates over the elements of the underlying range in the opposite order.
+
+For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+for (const auto& elem : std::ranges::reverse_view{rg}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loop prints:
+
+\begin{shell}
+13 12 11 10 9 8 7 6 5 4 3 2 1
+\end{shell}
+
+\mySamllsection{Range Adaptors for Reverse Views}
+
+Reverse views can also (and usually should) be created with a range adaptor:
+
+\begin{cpp}
+std::views::reverse(rg)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::reverse(rg)) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : rg | std::views::reverse) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+Note that the adaptor might not always yield a reverse\_view:
+
+\begin{itemize}
+\item
+A reversed reversed range yields the original range.
+
+\item
+If a reversed subrange is passed, the original subrange is returned with the corresponding non-reverse iterators.
+\end{itemize}
+
+The reverse view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+The iterators are just reverse iterators of the passed range.
+
+Here is a full example program using reverse views:
+
+\filename{ranges/reverseview.cpp}
+
+\begin{cpp}
+include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4};
+	
+	print(coll); // 1 2 3 4 1 2 3 4
+	print(std::ranges::reverse_view{coll}); // 4 3 2 1 4 3 2 1
+	print(coll | std::views::reverse); // 4 3 2 1 4 3 2 1
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 1 2 3 4
+4 3 2 1 4 3 2 1
+4 3 2 1 4 3 2 1
+\end{shell}
+
+\mySamllsection{Reverse Views and Caching}
+
+For better performance, reverse views cache the result of begin() in the view (unless the range is only an input range).
+Note that for ranges that have random access (e.g., arrays, vectors, and deques), the cached offset for the beginning is copied with the view. Otherwise, the cached beginning is not copied.
+
+The caching may have functional consequences when the range that a reverse view refers to is modified.
+
+For example:
+
+\filename{ranges/reversecache.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <list>
+#include <ranges>
+
+void print(auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector vec{1, 2, 3, 4};
+	std::list lst{1, 2, 3, 4};
+	
+	auto vVec = vec | std::views::take(3) | std::views::reverse;
+	auto vLst = lst | std::views::take(3) | std::views::reverse;
+	print(vVec); // OK: 3 2 1
+	print(vLst); // OK: 3 2 1
+	
+	// insert a new element at the front (=> 0 1 2 3 4)
+	vec.insert(vec.begin(), 0);
+	lst.insert(lst.begin(), 0);
+	print(vVec); // OK: 2 1 0
+	print(vLst); // OOPS: 3 2 1
+	
+	// creating a copy heals:
+	auto vVec2 = vVec;
+	auto vLst2 = vLst;
+	print(vVec2); // OK: 2 1 0
+	print(vLst2); // OK: 2 1 0
+}
+\end{cpp}
+
+Note that formally, the copy of the view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. Therefore, the view is still valid for the vector.
+Note also that a reverse view on a container as a whole works fine because the end iterator is cached.
+
+As a rule of thumb, \textbf{do not use a reverse view for which begin() has been called after the underlying range has been modified}.
+
+\mySamllsection{Reverse View and const}
+
+Note that you cannot always iterate over a const reverse view. In fact, the referenced range has to be a common range.
+
+For example:
+
+\begin{cpp}
+void printElems(const auto& coll) {
+	for (const auto elem& e : coll) {
+		std::cout << elem << '\n';
+	}
+}
+
+std::vector vec{1, 2, 3, 4, 5};
+
+// leading odd elements of vec:
+auto vecFirstOdd = std::views::take_while(vec, [](auto x) {
+						return x % 2 != 0;
+					});
+					
+printElems(vec | std::views::reverse); // OK
+printElems(vecFirstOdd); // OK
+printElems(vecFirstOdd | std::views::reverse); // ERROR
+\end{cpp}
+
+To support this view in generic code, you have to use universal/forwarding references:
+
+\begin{cpp}
+void printElems(auto&& coll) {
+	...
+}
+
+std::vector vec{1, 2, 3, 4, 5};
+
+// leading odd elements of vec:
+auto vecFirstOdd = std::views::take_while(vec, [](auto x) {
+							return x % 2 != 0;
+						});
+
+printElems(vecFirstOdd | std::views::reverse); // OK
+\end{cpp}
+
+
+\mySamllsection{Interface of Reverse Views}
+
+Table Operations of the class std::ranges::reverse\_view<> lists the API of a reverse view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}    & \textbf{Effect}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+reverse\_view r\{\} & Creates a reverse\_view that refers to a default constructed range                                 \\ \hline
+reverse\_view r\{rg\} & Creaets a reverse\_view that refers to range rg                \\ \hline
+r.begin()             & Yields the begin iterator                                      \\ \hline
+r.end()               & Yields the sentinel (end iterator)                             \\ \hline
+r.empty()             & Yields whether r is empty (available if the range supports it) \\ \hline
+if (r)                & true if r is not empty (available if empty() if defined)       \\ \hline
+r.size()            & Yields the number of element(available if it refers to a sized range)                              \\ \hline
+r.front()             & Yields the first element(available if forwarding)              \\ \hline
+r.back()              & Yields the last element(available if bidirectional and common) \\ \hline
+r{[}idx{]}            & Yields the n-th element(available if random access)            \\ \hline
+r.data()            & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()              & Yields a reference to the range that r refers to or owns       \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.21. Operations of the class std::ranges::reverse\_view<>
+\end{center}
+

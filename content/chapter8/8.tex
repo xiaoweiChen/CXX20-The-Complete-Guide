@@ -1,10 +1,159 @@
 
+This section discusses all views that deal with multiple ranges.
+
+\mySubsubsection{8.8.1}{Split and Lazy-Split View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|ll|}
+\hline
+\textbf{Type:} & \multicolumn{1}{l|}{std::ranges::split\_view\textless{}\textgreater{}} & std::range::laze\_split\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & \multicolumn{2}{l|}{All elements of a range split into multiple views}                       \\ \hline
+\textbf{Adaptor:}              & \multicolumn{1}{l|}{std::views::split()}        & std::views::lazy\_split()                  \\ \hline
+\textbf{Element type:}         & \multicolumn{1}{l|}{Collection of references}   & Collection of references                   \\ \hline
+\textbf{Requires:}             & \multicolumn{1}{l|}{At least forward range}     & At least input range                       \\ \hline
+\textbf{Category:}             & \multicolumn{1}{l|}{Always forward}             & Input or forward                           \\ \hline
+\textbf{Is sized range:}       & \multicolumn{1}{l|}{Never}                      & Never                                      \\ \hline
+\textbf{Is common range:}      & \multicolumn{1}{l|}{If on common forward range} & If on common forward range                 \\ \hline
+\textbf{Is borrowed range:}    & \multicolumn{1}{l|}{Never}                      & Never                                      \\ \hline
+\textbf{Caches:}               & \multicolumn{1}{l|}{Always caches begin()}      & Caches the current value if on input range \\ \hline
+\textbf{Const iterable:}       & \multicolumn{1}{l|}{Never}                      & If on const-iterable forward range         \\ \hline
+\textbf{Propagates constness:} & \multicolumn{1}{l|}{--}                         & Never                                      \\ \hline
+\end{longtable}
+
+Both class templates std::ranges::split\_view<> and std::ranges::lazy\_split\_view<> define a view that refers to multiple sub-views of a range separated by a passed separator.[std::ranges::lazy\_split\_view<> was not part of the original C++20 standard but was added to C++20 afterwards with \url{http://wg21.link/p2210r2}.]
+
+The difference between split\_view<> and lazy\_split\_view<> is as follows:
+
+\begin{itemize}
+\item
+split\_view<> cannot iterate over a const view; lazy\_split\_view<> can (if it refers to a range that is at least a forward range).
+
+\item
+split\_view<> can only deal with ranges that have at least forward iterators (concept forward\_range has to be satisfied).
+
+\item
+split\_view<> elements are just a std::ranges::subrange of the iterator type of the referred range (keeping category of the referred range).
+
+lazy\_split\_views<> elements are views of type std::ranges::lazy\_split\_view that are always forward ranges, meaning that even size() is not supported.
+
+\item
+split\_view<> has the better performance.
+\end{itemize}
+
+This means that you should usually use split\_view<> unless you cannot do that due to using an input range only or the view is used as a const range. For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+...
+for (const auto& sub : std::ranges::split_view{rg, 5}) {
+	for (const auto& elem : sub) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+\end{cpp}
+
+The loops print:
+
+\begin{shell}
+1 2 3 4
+6 7 8 9 10 11 12 13
+\end{shell}
+
+That is, wherever we find an element with value 5 in rg, we end the previous view and start a new view.
+
+\mySamllsection{Range Adaptors for Split and Lazy-Split Views}
+
+Split and lazy-split views can (and usually should) also be created with range adaptors. The adaptors simply pass their parameters to the corresponding view constructor:
+
+\begin{cpp}
+std::views::split(rg, sep)
+std::views::lazy_split(rg, sep)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& sub : std::views::split(rg, 5)) {
+	for (const auto& elem : sub) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& sub : rg | std::views::split(5)) {
+	for (const auto& elem : sub) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+\end{cpp}
+
+The views created might be empty. Thus, for each leading and trailing separator, and whenever two separators are behind each other, an empty view is created. For example:
+
+\begin{cpp}
+std::list<int> rg{5, 5, 1, 2, 3, 4, 5, 6, 5, 5, 4, 3, 2, 1, 5, 5};
+for (const auto& sub : std::ranges::split_view{rg, 5}) {
+	std::cout << "subview: ";
+	for (const auto& elem : sub) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+\end{cpp}
+
+Here, the output is as follows: [The original C++20 standard specified that the last separator is ignored, meaning that we would get only one empty sub-view at the end. This was fixed with \url{http://wg21.link/p2210r2}.]
+
+\begin{shell}
+subview:
+subview:
+subview: 1 2 3 4
+subview: 6
+subview:
+subview: 4 3 2 1
+subview:
+subview:
+\end{shell}
+
+Instead of a single value, you can also pass a sequence of values that serves as a separator. For example:
+
+\begin{cpp}
+std::vector<int> rg{1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3 };
+...
+// split separated by a sequence of 5 and 1:
+for (const auto& sub : std::views::split(rg, std::list{5, 1})) {
+	for (const auto& elem : sub) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+\end{cpp}
+
+The output of this code is
+
+\begin{shell}
+1 2 3 4
+2 3 4
+2 3
+\end{shell}
+
+
+\mySamllsection{Split View and const}
+
+
+\mySamllsection{Interface of Split and Lazy-Split Views}
 
 
 
-\subsubsection*{\zihao{3} 8.8.1\hspace{0.2cm}Split and Lazy-Split View}
-\addcontentsline{toc}{subsubsection}{8.8.1\hspace{0.2cm}Split and Lazy-Split View}
+\mySubsubsection{8.8.2}{Join View}
 
-
-\subsubsection*{\zihao{3} 8.8.2\hspace{0.2cm}Join View}
-\addcontentsline{toc}{subsubsection}{8.8.2\hspace{0.2cm}Join View}
