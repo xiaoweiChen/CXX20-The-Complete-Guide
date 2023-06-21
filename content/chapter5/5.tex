@@ -4,9 +4,7 @@ This section describes some standardized concepts that are mainly specified to i
 
 \mySubsubsection{5.5.1}{Concepts for Specific Type Attributes}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::default\_initializable<T>}
+\mySamllsection{std::default\_initializable<T>}
 
 \begin{itemize}
 \item
@@ -29,9 +27,7 @@ T x; is valid
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::move\_constructible<T>}
+\mySamllsection{std::move\_constructible<T>}
 
 \begin{itemize}
 \item
@@ -60,10 +56,7 @@ std::destructible<T> is satisfied
 \end{itemize}
 \end{itemize}
 
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::copy\_constructible<T>}
+\mySamllsection{std::copy\_constructible<T>}
 
 \begin{itemize}
 \item
@@ -92,10 +85,7 @@ std::destructible<T> is satisfied
 \end{itemize}
 \end{itemize}
 
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::destructible<T>}
+\mySamllsection{std::destructible<T>}
 
 \begin{itemize}
 \item
@@ -111,9 +101,7 @@ The type trait std::is\_nothrow\_destructible\_v<T> yields true
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::swappable<T>}
+\mySamllsection{std::swappable<T>}
 
 \begin{itemize}
 \item
@@ -129,9 +117,7 @@ std::ranges::swap() can be called for two objects of type T
 
 \mySubsubsection{5.5.2}{Concepts for Incrementable Types}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::weakly\_incrementable<T>}
+\mySamllsection{std::weakly\_incrementable<T>}
 
 \begin{itemize}
 \item
@@ -171,11 +157,7 @@ std::iter\_difference\_t<T> is a valid signed integral type
 \end{itemize}
 \end{itemize}
 
-
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::incrementable<T>}
+\mySamllsection{std::incrementable<T>}
 
 \begin{itemize}
 \item

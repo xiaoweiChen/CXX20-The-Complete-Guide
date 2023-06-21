@@ -32,9 +32,7 @@ Note that operator <=> is for implementing types. Outside the implementation of 
 
 The new operator <=> does not return a Boolean value. Instead, it acts similarly to three-way-comparisons yielding a negative value to signal less, a positive value to signal greater, and 0 to signal equal or equivalent. This behavior is similar to the return value of the C function strcmp(); however, there is an important difference: the return value is not an integral value. Instead, the C++ standard library provides three possible return types, which reflect the category of the comparison.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Comparison Categories}
+\mySamllsection{Comparison Categories}
 
 When comparing two values to put them in an order, we have different categories of behavior that could happen:
 
@@ -61,9 +59,7 @@ A typical example of this category are floating-point types, because they might 
 If you have multiple objects, you might not be able to sort them in ascending or descending order (unless you ensure that values that cannot be ordered are not there).
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Comparison Category Types in the Standard Library}
+\mySamllsection{Comparison Category Types in the Standard Library}
 
 \begin{itemize}
 \item

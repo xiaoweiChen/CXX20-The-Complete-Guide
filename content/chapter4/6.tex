@@ -31,9 +31,7 @@ concept MyConcept = requires(T x) {
 
 Here, we use unary constraints that are called for a single parameter or type returned by an expression.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Type Constraints with Multiple Parameters}
+\mySamllsection{Type Constraints with Multiple Parameters}
 
 You can also use constraints with multiple parameters, for which the parameter type or return value is then used as the first argument:
 
@@ -68,9 +66,7 @@ void call(std::invocable<int, std::string> auto op);
 
 The difference between std::invocable and std::regular\_invocable is that the latter guarantees not to modify the passed operation and arguments. That is a semantic difference that helps only to document the intention. Often, just std::invocable is used.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Type Constraints and auto}
+\mySamllsection{Type Constraints and auto}
 
 Type constraints can be used in all places where auto can be used. The major application of this feature is to use the type constraints for the function parameters declared with auto. For example:
 

@@ -154,9 +154,7 @@ Comp std::ranges::less is used as a default comparison criterion. It defines tha
 
 This means that you can pass any range with random-access iterators and sortable elements. For example:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/rangessort.cpp}
+\filename{ranges/rangessort.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -372,9 +370,7 @@ the output would be:
 
 Here is another full program that demonstrates the composability of views with the pipeline syntax:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/viewspipe.cpp}
+\filename{ranges/viewspipe.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -601,9 +597,7 @@ Defining an end iterator becomes easier.
 
 Let us look at a simple example using a sentinel of a different type to iterate over a “range” where the types of the iterators differ:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/sentinel1.cpp}
+\filename{ranges/sentinel1.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -738,9 +732,7 @@ To define ranges of iterators and sentinels, the ranges library provides type st
 
 Let us look at a simple example using subranges:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/sentinel2.cpp}
+\filename{ranges/sentinel2.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -804,9 +796,7 @@ for (char c : std::ranges::subrange{rawString, NullTerm{}}) {
 
 We can make this approach even more generic by defining a class template where you can specify the value that ends a range. Consider the following example:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/sentinel3.cpp}
+\filename{ranges/sentinel3.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -957,9 +947,7 @@ Type functions that, for example, yield the type of an iterator or the type of t
 
 Assume that we want to implement an algorithm that yields the maximum value in a range:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/maxvalue1.hpp}
+\filename{ranges/maxvalue1.hpp}
 
 \begin{cpp}
 #include <ranges>

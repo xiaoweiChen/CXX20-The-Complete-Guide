@@ -15,9 +15,7 @@ However, passing two pointers would compare their addresses instead of the value
 
 \mySubsubsection{3.1.1}{Improving the Template Step by Step}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Using a requires Clause}
+\mySamllsection{Using a requires Clause}
 
 
 To fix that, we can equip the template with a constraint so that it is not available if raw pointers are passed:
@@ -44,9 +42,7 @@ std::cout << maxValue(&x, &y) << '\n'; // ERROR: constraint not met
 
 The requirement is a compile-time check and has no impact on the performance of the compiled code. It merely means that the template cannot be used for raw pointers. When raw pointers are passed, the compiler behaves as if the template were not there.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Defining and Using a concept}
+\mySamllsection{Defining and Using a concept}
 
 Probably, we will need a constraint for pointers more than once. For this reason, we can introduce a concept for the constraint:
 
@@ -68,9 +64,7 @@ T maxValue(T a, T b)
 }
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Overloading with Concepts}
+\mySamllsection{Overloading with Concepts}
 
 By using constraints and concepts, we can even overload the maxValue() template to have one implementation for pointers and one for other types:
 
@@ -111,9 +105,7 @@ int* yp = &y;
 std::cout << maxValue(&xp, &yp) << '\n'; // calls maxValue() for int**
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Overload Resolution with Concepts}
+\mySamllsection{Overload Resolution with Concepts}
 
 Overload resolution considers templates with constraints as more specialized than templates without constraints. Therefore, it is enough to constrain the implementation only for pointers:
 
@@ -136,9 +128,7 @@ However, be careful: overloading once using references and once using non-refere
 
 By using concepts, we can even prefer some constraints over others. However, this requires the use of concepts that subsume other concepts.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Type Constraints}
+\mySamllsection{Type Constraints}
 
 If a constraint is a single concept that is applied to a parameter, there are ways to shortcut the specification of the constraint. First, you can specify it directly as a type constraint when declaring the template parameter:
 
@@ -201,9 +191,7 @@ auto maxValue(auto a, auto b) // maxValue() for values
 
 We could now pass a pointer to an int and a pointer to a double.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Trailing requires Clauses}
+\mySamllsection{Trailing requires Clauses}
 
 Consider the pointer version of maxValue():
 

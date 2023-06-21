@@ -231,9 +231,7 @@ Calls of ordinary functions are preferred over calls of function templates.
 
 Here, however, overload resolution has to decide between a call with a type conversion and a call of a function template. By rule, in that case, the version with the template parameter is preferred.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Fixing Overload Resolution}
+\mySamllsection{Fixing Overload Resolution}
 
 The fix for the wrong overload resolution is pretty simple. Instead of declaring the second parameter with a specific type, we should just require that the value to be inserted has a floating-point type. For this, we can constrain the function template for floating-point values by using the new standard concept std::floating\_point:
 
@@ -296,9 +294,7 @@ std::vector<double> dVec;
 add(dVec, 0.7); // OK: calls add() for floating-point types
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Do Not Differ More Than Necessary}
+\mySamllsection{Do Not Differ More Than Necessary}
 
 If two overloads or specializations have constraints, it is important that overload resolution can decide which one is better. To support this, the signatures should not differ more than necessary.
 
@@ -326,9 +322,7 @@ The latter declaration is no longer a special case of the former declaration. We
 
 If you really want to have different signatures, you have to constrain the first function template not to be available for floating-point values.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Restrictions on Narrowing}
+\mySamllsection{Restrictions on Narrowing}
 
 We have another interesting issue in this example: both function templates allow us to pass a double to add it into a collection of int:
 
@@ -371,9 +365,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Subsuming Constraints}
+\mySamllsection{Subsuming Constraints}
 
 It would probably be enough to define the concept for narrowing conversions above without requiring the concept std::convertible\_to, because the rest checks this implicitly:
 
@@ -424,9 +416,7 @@ We might want to support passing a collection (container or range) to insert mul
 
 Yes, you can argue that these are different functions and that they should have different names and if that works, it is often better to use different names. However, the C++ standard library is a good example of the benefits you can get if different APIs are harmonized. For example, you can use the same generic code to iterate over all containers, although internally, containers use very different ways to go to the next element and access its value.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Using Concepts to Call Different Functions}
+\mySamllsection{Using Concepts to Call Different Functions}
 
 Having just introduced concepts, the “obvious” approach might be to introduce a concept to find out whether a certain function call is supported:
 
@@ -525,9 +515,7 @@ void add(auto& coll, const auto& val)
 }
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Concepts for if constexpr}
+\mySamllsection{Concepts for if constexpr}
 
 We can also use the concept SupportsPushBack directly in an if constexpr condition:
 
@@ -540,9 +528,7 @@ else {
 }
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Combining requires with if constexpr}
+\mySamllsection{Combining requires with if constexpr}
 
 We can even skip introducing a concept and pass the requires expression directly as a condition to the compile-time if:
 
@@ -557,9 +543,7 @@ else {
 
 This is a nice way to switch between two different function calls in generic code. It is especially recommended when introducing a concept is not worthwhile.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Concepts versus Variable Templates}
+\mySamllsection{Concepts versus Variable Templates}
 
 You might wonder why using concepts is better than using a variable template of type bool (like type traits do) such as the following:
 
@@ -585,9 +569,7 @@ They can be used with a compile-time if when using ad-hoc requirements.
 
 If you do not need any of these benefits, the question of whether to prefer the definition of a concept or a variable template of type bool becomes interesting and this is discussed later in detail.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Inserting Single and Multiple Values}
+\mySamllsection{Inserting Single and Multiple Values}
 
 To provide an overload that deals with multiple values passed as one collection, we can simply add constraints for them. The standard concept std::ranges::input\_range can be used for that:
 
@@ -624,9 +606,7 @@ void add(Coll& coll, const T& val)
 
 These helpers are function objects so that using them avoids ADL problems.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Dealing with Multiple Constraints}
+\mySamllsection{Dealing with Multiple Constraints}
 
 By bringing together all useful concepts and requirements, we could place them all in one function at different locations.
 
@@ -753,9 +733,7 @@ As you can see, I decided to use the concept SupportsPushBack for one template p
 
 Constraining templates was already possible before C++20. However, the approaches for doing this were often not easy to use and could provide significant drawbacks.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{SFINAE}
+\mySamllsection{SFINAE}
 
 The major approach for disabling the availability of templates before C++20 was SFINAE. The term “SFINAE” (pronounced like sfee-nay) stands for “substitution failure is not an error” and means the rule that we simply ignore generic code if its declaration is not well-formed instead of raising a compile-time error.
 
@@ -779,9 +757,7 @@ Because we make the call to push\_back() here part of the first template declara
 
 However, that is a very subtle way to place a requirement and programmers might overlook it easily.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::enable\_if<>}
+\mySamllsection{std::enable\_if<>}
 
 For more complicated cases of disabling generic code, since C++11, the C++ standard library provides std::enable\_if<>.
 

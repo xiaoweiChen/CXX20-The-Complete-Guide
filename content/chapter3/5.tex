@@ -37,9 +37,7 @@ They can be used as type constraints directly in front of template parameters or
 They can be used with the compile-time if (if constexpr) as introduced before.
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Benefit From Subsumption}
+\mySamllsection{Benefit From Subsumption}
 
 
 The main benefit of concepts is that they subsume. Type traits do not subsume.
@@ -47,9 +45,7 @@ The main benefit of concepts is that they subsume. Type traits do not subsume.
 Consider the following example, where we overload a function foo() with two requirements defined as
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{type traits:}
+\mySamllsection{type traits:}
 
 \begin{cpp}
 template<typename T, typename U>
@@ -91,9 +87,7 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Benefit From Using Concepts with if constexpr}
+\mySamllsection{Benefit From Using Concepts with if constexpr}
 
 C++17 introduced a compile-time if that allows us to switch between code depending on certain compiletime conditions.
 

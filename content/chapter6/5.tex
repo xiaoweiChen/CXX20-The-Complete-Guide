@@ -27,9 +27,7 @@ void print(const T& coll); // OOPS: might not work for some views
 
 Consider the following concrete example:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/printconst.cpp}
+\filename{ranges/printconst.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -214,9 +212,7 @@ void foo(T&& coll);
 
 Thus, the following program works fine:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/printranges.cpp}
+\filename{ranges/printranges.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -272,9 +268,7 @@ std::cout << maxValue(arr | std::views::filter(odd)) << '\n'; // ERROR
 
 As written, it is better to implement the generic maxValue() function as follows:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/maxvalue2.hpp}
+\filename{ranges/maxvalue2.hpp}
 
 \begin{cpp}
 #include <ranges>
@@ -305,9 +299,7 @@ std::ranges::range_value_t<Range> maxValue(Range&& rg)
 
 That way, we ensure that the passed views are not becoming const, which means that we can also pass a filter view now:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/maxvalue2.cpp}
+\filename{ranges/maxvalue2.cpp}
 
 \begin{cpp}
 #include "maxvalue2.hpp"

@@ -15,9 +15,7 @@ Sometimes, concepts allow programmers to convert semantic constraints into synta
 
 Let us look at some examples of semantic constraints.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::sized\_range}
+\mySamllsection{std::ranges::sized\_range}
 
 An example of a semantic constraint is the concept std::ranges::sized\_range. It guarantees that the number of elements in a range can be computed in constant time (either by calling the member size() or by computing the difference between the beginning and the end).
 
@@ -32,25 +30,19 @@ class MyCont {
 constexpr bool std::ranges::disable_sized_range<MyCont> = true;
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::range vs. std::ranges::view}
+\mySamllsection{std::ranges::range vs. std::ranges::view}
 
 A similar example of a semantic constraint is the concept std::ranges::view. Besides some syntactic constraints, it also guarantees that move constructor/assignment, copy constructor/assignment (if available), and destructor have constant complexity (the time they take does not depend on the number of elements).
 
 An implementor can provide the corresponding guarantee by deriving publicly from either std::ranges::view\_base or std::ranges::view\_interface<> or by setting the template specialization std::ranges::enable\_view<Rg> to true.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::invocable vs. std::regular\_invocable}
+\mySamllsection{std::invocable vs. std::regular\_invocable}
 
 A simple example of a semantic constraint is the difference between the concepts std::invocable and std::regular\_invocable. The latter guarantees not to modify the state of the passed operation and the passed arguments.
 
 However, we cannot check the difference between these two concepts with a compiler. Therefore, the concept std::regular\_invocable documents the intention of the specified API. Often, for simplicity, just std::invocable is used.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::weakly\_incrementable vs. std::incrementable}
+\mySamllsection{std::weakly\_incrementable vs. std::incrementable}
 
 Besides certain syntactic differences, there are also semantic differences between the concepts incrementable and weakly\_incrementable:
 

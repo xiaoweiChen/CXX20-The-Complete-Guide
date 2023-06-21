@@ -17,9 +17,7 @@ Pointers to members (with the type of the object as an additional parameter)
 
 \mySubsubsection{5.4.1}{Basic Concepts for Callables}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::invocable<Op, ArgTypes...>}
+\mySamllsection{std::invocable<Op, ArgTypes...>}
 
 \begin{itemize}
 \item
@@ -74,9 +72,7 @@ std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::regular\_invocable<Op, ArgTypes...>}
+\mySamllsection{std::regular\_invocable<Op, ArgTypes...>}
 
 \begin{itemize}
 \item
@@ -96,9 +92,7 @@ std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::predicate<Op, ArgTypes...>}
+\mySamllsection{std::predicate<Op, ArgTypes...>}
 
 \begin{itemize}
 \item
@@ -118,9 +112,7 @@ std::regular\_invocable<Op> is satisfied
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::relation<Pred, T1, T2>}
+\mySamllsection{std::relation<Pred, T1, T2>}
 
 \begin{itemize}
 \item
@@ -140,9 +132,7 @@ std::predicate is satisfied for pred and any combination of two objects of types
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::equivalence\_relation<Pred, T1, T2}
+\mySamllsection{std::equivalence\_relation<Pred, T1, T2}
 
 \begin{itemize}
 \item
@@ -164,9 +154,7 @@ std::predicate is satisfied for pred and any combination of two objects of types
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::strict\_weak\_order<Pred, T1, T2>}
+\mySamllsection{std::strict\_weak\_order<Pred, T1, T2>}
 
 \begin{itemize}
 \item
@@ -188,9 +176,7 @@ std::predicate is satisfied for pred and any combination of two objects of types
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::uniform\_random\_bit\_generator<Op>}
+\mySamllsection{std::uniform\_random\_bit\_generator<Op>}
 
 \begin{itemize}
 \item
@@ -218,9 +204,7 @@ Expressions Op::min() and Op::max() are supported and yield the same type as the
 
 \mySubsubsection{5.4.2}{Concepts for Callables Used by Iterators}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_unary\_invocable<Op, Pos>}
+\mySamllsection{std::indirectly\_unary\_invocable<Op, Pos>}
 
 \begin{itemize}
 \item
@@ -246,9 +230,7 @@ The results of calling Op with both a value and a reference have a common refere
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_regular\_unary\_invocable<Op, Pos>}
+\mySamllsection{std::indirectly\_regular\_unary\_invocable<Op, Pos>}
 
 \begin{itemize}
 \item
@@ -274,10 +256,7 @@ The results of calling Op with both a value and a reference have a common refere
 \end{itemize}
 \end{itemize}
 
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirect\_unary\_predicate<Pred, Pos>}
+\mySamllsection{std::indirect\_unary\_predicate<Pred, Pos>}
 
 \begin{itemize}
 \item
@@ -300,10 +279,7 @@ All these calls of Pred yield a value that can be used as a Boolean value
 \end{itemize}
 \end{itemize}
 
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirect\_binary\_predicate<Pred, Pos1, Pos2>}
+\mySamllsection{std::indirect\_binary\_predicate<Pred, Pos1, Pos2>}
 
 \begin{itemize}
 \item
@@ -326,9 +302,7 @@ All these calls of Pred yield a value that can be used as a Boolean value
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirect\_equivalence\_relation<Pred, Pos1>, std::indirect\_equivalence\_relation<Pred, Pos1, Pos2>}
+\mySamllsection{std::indirect\_equivalence\_relation<Pred, Pos1>, std::indirect\_equivalence\_relation<Pred, Pos1, Pos2>}
 
 \begin{itemize}
 \item
@@ -354,10 +328,7 @@ All these calls of Pred yield a value that can be used as a Boolean value
 \end{itemize}
 \end{itemize}
 
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirect\_strict\_weak\_order<Pred, Pos1>, std::indirect\_strict\_weak\_order<Pred, Pos1, Pos2>}
+\mySamllsection{std::indirect\_strict\_weak\_order<Pred, Pos1>, std::indirect\_strict\_weak\_order<Pred, Pos1, Pos2>}
 
 \begin{itemize}
 \item

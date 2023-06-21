@@ -9,9 +9,7 @@ Concepts for iterators are declared in the header file <iterator>.
 
 Several concepts are defined to constrain ranges. They correspond with the concepts for iterators and deal with the fact that we have new iterator categories since C++20.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::range<Rg>}
+\mySamllsection{std::ranges::range<Rg>}
 
 \begin{itemize}
 \item
@@ -50,9 +48,7 @@ For an object rg of type Rg, std::ranges::begin(rg) is supported and std::ranges
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::output\_range<Rg, T>}
+\mySamllsection{std::ranges::output\_range<Rg, T>}
 
 \begin{itemize}
 \item
@@ -71,9 +67,7 @@ std::output\_iterator is satisfied for the iterator type and T
 \end{itemize}
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::input\_range<Rg>}
+\mySamllsection{std::ranges::input\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -91,9 +85,7 @@ std::input\_iterator is satisfied for the iterator type
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::forward\_range<Rg>}
+\mySamllsection{std::ranges::forward\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -114,9 +106,7 @@ std::forward\_iterator is satisfied for the iterator type
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::bidirectional\_range<Rg>}
+\mySamllsection{std::ranges::bidirectional\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -137,9 +127,7 @@ std::bidirectional\_iterator is satisfied for the iterator type
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::random\_access\_range<Rg>}
+\mySamllsection{std::ranges::random\_access\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -160,9 +148,7 @@ std::random\_access\_iterator is satisfied for the iterator type
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::contiguous\_range<Rg>}
+\mySamllsection{std::ranges::contiguous\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -210,9 +196,7 @@ Calling std::ranges::size() is supported
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::common\_range<Rg>}
+\mySamllsection{std::ranges::common\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -262,9 +246,7 @@ std::ranges::iterator\_t<Rg> and std::ranges::sentinel\_t<Rg> have the same type
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::borrowed\_range<Rg>}
+\mySamllsection{std::ranges::borrowed\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -288,9 +270,7 @@ Rg is an lvalue or enable\_borrowed\_range<Rg> yields true
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::view<Rg>}
+\mySamllsection{std::ranges::view<Rg>}
 
 \begin{itemize}
 \item
@@ -330,9 +310,7 @@ The variable template std::ranges::enable\_view<Rg> is true
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::ranges::viewable\_range<Rg>}
+\mySamllsection{std::ranges::viewable\_range<Rg>}
 
 \begin{itemize}
 \item
@@ -360,13 +338,9 @@ Note that support of the operator -> is not required for these concepts.
 These concepts are declared in the header file <iterator>.
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Basic Concepts for Indirect Support}
+\mySamllsection{Basic Concepts for Indirect Support}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_writable<P, Val>}
+\mySamllsection{std::indirectly\_writable<P, Val>}
 
 \begin{itemize}
 \item
@@ -377,9 +351,7 @@ Satisfied by non-const raw pointers, smart pointers, and iterators provided Val 
 \end{itemize}
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_readable<P>}
+\mySamllsection{std::indirectly\_readable<P>}
 
 \begin{itemize}
 \item
@@ -400,15 +372,11 @@ std::iter\_value\_t<P> must be valid. The type does not have to support the oper
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Concepts for Indirectly Readable Objects}
+\mySamllsection{Concepts for Indirectly Readable Objects}
 
 For pointer-like concepts that are indirectly readable, you can check additional constraints:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_movable<InP,OutP>}
+\mySamllsection{std::indirectly\_movable<InP,OutP>}
 
 \begin{itemize}
 \item
@@ -434,9 +402,7 @@ std::indirectly\_writable is satisfied for rvalue references of the values of In
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_movable\_storable<InP,OutP>}
+\mySamllsection{std::indirectly\_movable\_storable<InP,OutP>}
 
 \begin{itemize}
 \item
@@ -469,9 +435,7 @@ Rvalues that InP refers to are copy/move constructible and assignable
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_copyable<InP, OutP>}
+\mySamllsection{std::indirectly\_copyable<InP, OutP>}
 
 \begin{itemize}
 \item
@@ -497,9 +461,7 @@ std::indirectly\_writable is satisfied for references of the values of InP to (t
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_copyable\_storable<InP, OutP>}
+\mySamllsection{std::indirectly\_copyable\_storable<InP, OutP>}
 
 \begin{itemize}
 \item
@@ -532,9 +494,7 @@ The values InP refers to are copy/move constructible and assignable
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_swappable<P>, std::indirectly\_swappable<P1, P2>}
+\mySamllsection{std::indirectly\_swappable<P>, std::indirectly\_swappable<P1, P2>}
 
 \begin{itemize}
 \item
@@ -551,9 +511,7 @@ For any two objects of types P1 and P2, std::ranges::iter\_swap() is supported
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::indirectly\_comparable<P1, P2, Comp>, std::indirectly\_comparable<P1, P2, Comp, Proj1>, std::indirectly\_comparable<P1, P2, Comp, Proj1, Proj2>}
+\mySamllsection{std::indirectly\_comparable<P1, P2, Comp>, std::indirectly\_comparable<P1, P2, Comp, Proj1>, std::indirectly\_comparable<P1, P2, Comp, Proj1, Proj2>}
 
 \begin{itemize}
 \item
@@ -576,9 +534,7 @@ This section lists the concepts for requiring different types of iterators. They
 
 These concepts are provided in the header file <iterator>.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::input\_output\_iterator<Pos>}
+\mySamllsection{std::input\_output\_iterator<Pos>}
 
 \begin{itemize}
 \item
@@ -597,9 +553,7 @@ The operator * yields a reference
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::output\_iterator<Pos, T>}
+\mySamllsection{std::output\_iterator<Pos, T>}
 
 \begin{itemize}
 \item
@@ -626,9 +580,7 @@ std::indirectly\_writable<Pos, I> is satisfied
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::input\_iterator<Pos>}
+\mySamllsection{std::input\_iterator<Pos>}
 
 \begin{itemize}
 \item
@@ -651,10 +603,7 @@ Pos has an iterator category derived from std::input\_iterator\_tag
 \end{itemize}
 \end{itemize}
 
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::forward\_iterator<Pos>}
+\mySamllsection{std::forward\_iterator<Pos>}
 
 \begin{itemize}
 \item
@@ -677,9 +626,7 @@ Pos has an iterator category derived from std::forward\_iterator\_tag
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::bidirectional\_iterator<Pos>}
+\mySamllsection{std::bidirectional\_iterator<Pos>}
 
 \begin{itemize}
 \item
@@ -702,9 +649,7 @@ Pos has an iterator category derived from std::bidirectional\_iterator\_tag
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::random\_access\_iterator<Pos>}
+\mySamllsection{std::random\_access\_iterator<Pos>}
 
 \begin{itemize}
 \item
@@ -801,9 +746,7 @@ std::disable\_sized\_sentinel\_for<S, Pos> is not defined to yield true
 
 \mySubsubsection{5.3.4}{Iterator Concepts for Algorithms}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::permutable<Pos>}
+\mySamllsection{std::permutable<Pos>}
 
 \begin{itemize}
 \item
@@ -823,9 +766,7 @@ std::indirectly\_swappable<Pos> is satisfied
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::mergeable<Pos1, Pos2, ToPos>,
+\mySamllsection{std::mergeable<Pos1, Pos2, ToPos>,
 std::mergeable<Pos1, Pos2, ToPos, Comp>,
 std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1>,
 std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1, Proj2>,}
@@ -862,9 +803,7 @@ std::strict\_weak\_order<Comp> is satisfied for Comp\& and the (projected) value
 \end{itemize}
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{std::sortable<Pos>
+\mySamllsection{std::sortable<Pos>
 	std::sortable<Pos, Comp>
 	std::sortable<Pos, Comp, Proj>}
 

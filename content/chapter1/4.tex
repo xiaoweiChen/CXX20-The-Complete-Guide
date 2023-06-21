@@ -1,9 +1,7 @@
 Let us finally elaborate on the evaluation of expressions with comparison operators with the support of rewritten calls.
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Calling Equality Operators}
+\mySamllsection{Calling Equality Operators}
 
 To compile
 
@@ -63,9 +61,7 @@ A free-standing or member operator == (note that the member operator == may be g
 
 Note that a rewritten expression never tries to call a member operator !=.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Calling Relational Operators}
+\mySamllsection{Calling Relational Operators}
 
 For the relational operators we have similar behavior, except that the rewritten statements fall back on the new operator <=> and compare the result with 0. The operator behaves like a three-way comparison function returning a negative value for less, 0 for equal, and a positive value for greater (the returned value is not a numeric value; it is only a value that supports the corresponding comparisons).
 

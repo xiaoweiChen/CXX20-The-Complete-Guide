@@ -125,9 +125,7 @@ public:
 
 Since C++20, a couple of things have changed regarding comparison operators.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Operator == Implies Operator !=}
+\mySamllsection{Operator == Implies Operator !=}
 
 To check for inequality, it is now enough to define operator ==.
 
@@ -199,9 +197,7 @@ Note that thanks to rewriting, implicit type conversions for the first operand a
 
 See the example sentinel1.cpp for how to benefit from this feature by only defining a member operator == when != with a different order of operands is called.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Operator <=>}
+\mySamllsection{Operator <=>}
 
 There is no equivalent rule that for all relational operators it is enough to have operator < defined. However, you only have to define the new operator <=>.
 
@@ -288,9 +284,7 @@ Note that you have to include header <compare> when defaulting or using operator
 
 However, most header files for standard types (strings, containers, <utility>) include this header anyway.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Implementing Operator <=>}
+\mySamllsection{Implementing Operator <=>}
 
 To have more control over the generated comparison operators, you can define operator== and operator<=> yourself. For example:
 

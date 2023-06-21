@@ -209,9 +209,7 @@ If we need the value of an element of a view, we compute its value by performing
 
 Consider the following program:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/filttrans.cpp}
+\filename{ranges/filttrans.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -383,9 +381,7 @@ Assume that we want to iterate over a view multiple times. It seems a waste of p
 
 Let us change the program above so that it iterates twice over the elements of the view vColl:
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/filttrans2.cpp}
+\filename{ranges/filttrans2.cpp}
 
 \begin{cpp}
 #include <iostream>
@@ -552,9 +548,7 @@ As another consequence, caching might require that a view cannot be const while 
 
 The pull model also has its drawbacks. To demonstrate that, let us change the order of the two views involved (above) so that we first call transform() and then filter():
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textit{ranges/transfilt.cpp}
+\filename{ranges/transfilt.cpp}
 
 \begin{cpp}
 #include <iostream>
