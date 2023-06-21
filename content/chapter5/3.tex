@@ -5,9 +5,7 @@ Note that the concepts for ranges are provided in the namespace std::ranges inst
 
 Concepts for iterators are declared in the header file <iterator>.
 
-
-\subsubsection*{\zihao{3} 5.3.1\hspace{0.2cm}Concepts for Ranges and Views}
-\addcontentsline{toc}{subsubsection}{5.3.1\hspace{0.2cm}Concepts for Ranges and Views}
+\mySubsubsection{5.3.1}{Concepts for Ranges and Views}
 
 Several concepts are defined to constrain ranges. They correspond with the concepts for iterators and deal with the fact that we have new iterator categories since C++20.
 
@@ -353,8 +351,7 @@ std::range<Rg> is satisfied
 \end{itemize}
 \end{itemize}
 
-\subsubsection*{\zihao{3} 5.3.2\hspace{0.2cm}Concepts for Pointer-Like Objects}
-\addcontentsline{toc}{subsubsection}{5.3.2\hspace{0.2cm}Concepts for Pointer-Like Objects}
+\mySubsubsection{5.3.2}{Concepts for Pointer-Like Objects}
 
 This section lists all standard concepts for objects for which you can use the operator * to deal with a value they point to. This usually applies to raw pointers, smart pointers, and iterators. Therefore, these concepts are usually used as base constraints for concepts that deal with iterators and algorithms.
 
@@ -573,8 +570,7 @@ std::projected<P1, Proj1> and std::projected<P2, Proj2> are satisfied with std::
 \end{itemize}
 \end{itemize}
 
-\subsubsection*{\zihao{3} 5.3.3\hspace{0.2cm}Concepts for Iterators}
-\addcontentsline{toc}{subsubsection}{5.3.3\hspace{0.2cm}Concepts for Iterators}
+\mySubsubsection{5.3.3}{Concepts for Iterators}
 
 This section lists the concepts for requiring different types of iterators. They deal with the fact that we have new iterator categories since C++20 and they correspond with the concepts for ranges.
 
@@ -803,10 +799,7 @@ std::disable\_sized\_sentinel\_for<S, Pos> is not defined to yield true
 \end{itemize}
 \end{itemize}
 
-
-\subsubsection*{\zihao{3} 5.3.4\hspace{0.2cm}Iterator Concepts for Algorithms}
-\addcontentsline{toc}{subsubsection}{5.3.4\hspace{0.2cm}Iterator Concepts for Algorithms}
-
+\mySubsubsection{5.3.4}{Iterator Concepts for Algorithms}
 
 \noindent
 \hspace*{\fill} \\ %插入空行

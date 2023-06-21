@@ -1,8 +1,7 @@
 
 Let us look at some aspects of abbreviated function templates in detail.
 
-\subsubsection*{\zihao{3} 2.3.1\hspace{0.2cm}Basic Constraints for auto Parameters}
-\addcontentsline{toc}{subsubsection}{2.3.1\hspace{0.2cm}Basic Constraints for auto Parameters}
+\mySubsubsection{2.3.1}{Basic Constraints for auto Parameters}
 
 Using auto to declare a function parameter follows the same rules as using it to declare a parameter of a lambda:
 
@@ -41,8 +40,7 @@ foo<std::string>("hello", 42); // x has type std::string, y has type int
 foo<std::string, long>("hello", 42); // x has type std::string, y has type long
 \end{cpp}
 
-\subsubsection*{\zihao{3} 2.3.2\hspace{0.2cm}Combining Template and auto Parameters}
-\addcontentsline{toc}{subsubsection}{2.3.2\hspace{0.2cm}Combining Template and auto Parameters}
+\mySubsubsection{2.3.2}{Combining Template and auto Parameters}
 
 Abbreviated function templates can still have explicitly specified template parameters. The generated template parameters for the placeholder types are added after the specified parameters:
 

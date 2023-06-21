@@ -1,7 +1,6 @@
 The following sections explain the details of the handling of the comparison operators since C++20.
 
-\subsubsection*{\zihao{3} 1.2.1\hspace{0.2cm}Using Operator<=>}
-\addcontentsline{toc}{subsubsection}{1.2.1\hspace{0.2cm}Using Operator<=>}
+\mySubsubsection{1.2.1}{Using Operator<=>}
 
 Operator <=> is a new binary operator. It is defined for all fundamental data types for which the relational operators are defined. As usual, it can be user-defined as operator<=>().
 
@@ -29,8 +28,7 @@ Most header files for standard types (strings, containers, <utility>) include th
 
 Note that operator <=> is for implementing types. Outside the implementation of an operator<=>, programmers should never invoke <=> directly. Although you can, you should never write a<=>b < 0 instead of a<b.
 
-\subsubsection*{\zihao{3} 1.2.2\hspace{0.2cm}Comparison Category Types}
-\addcontentsline{toc}{subsubsection}{1.2.2\hspace{0.2cm}Comparison Category Types}
+\mySubsubsection{1.2.2}{Comparison Category Types}
 
 The new operator <=> does not return a Boolean value. Instead, it acts similarly to three-way-comparisons yielding a negative value to signal less, a positive value to signal greater, and 0 to signal equal or equivalent. This behavior is similar to the return value of the C function strcmp(); however, there is an important difference: the return value is not an integral value. Instead, the C++ standard library provides three possible return types, which reflect the category of the comparison.
 
@@ -115,8 +113,7 @@ Note that all types have the values less, greater, and equivalent. However, stro
 
 Stronger comparison types have implicit type conversions to weaker comparison types. This means that you can use any strong\_ordering value as weak\_ordering or partial\_ordering value (equal then becomes equivalent).
 
-\subsubsection*{\zihao{3} 1.2.3\hspace{0.2cm}Using Comparison Categories with operator<=>}
-\addcontentsline{toc}{subsubsection}{1.2.3\hspace{0.2cm}Using Comparison Categories with operator<=>}
+\mySubsubsection{1.2.3}{Using Comparison Categories with operator<=>}
 
 The new operator <=> should return a value of one of the comparison category types, representing the result of the comparison combined with the information about whether this result is able to create a strong/total, weak, or partial ordering.
 
@@ -157,8 +154,7 @@ class MyType {
 
 This not only returns the right value; it also ensures that the return value has the right comparison category type depending on the type of the member value.
 
-\subsubsection*{\zihao{3} 1.2.4\hspace{0.2cm}Calling Operator <=> Directly}
-\addcontentsline{toc}{subsubsection}{1.2.4\hspace{0.2cm}Calling Operator <=> Directly}
+\mySubsubsection{1.2.4}{Calling Operator <=> Directly}
 
 You can call any defined operator <=> directly:
 
@@ -223,8 +219,7 @@ if (x <= y && y <= x) // might call operator<=> to check for equality
 
 Note that operator!= is never rewritten to call operator<=>. However, it might call an operator== member that is implicitly generated due to a defaulted operator<=> member.
 
-\subsubsection*{\zihao{3} 1.2.5\hspace{0.2cm}Dealing with Multiple Ordering Criteria}
-\addcontentsline{toc}{subsubsection}{1.2.5\hspace{0.2cm}Dealing with Multiple Ordering Criteria}
+\mySubsubsection{1.2.5}{Dealing with Multiple Ordering Criteria}
 
 To compute the result of operator<=> based on multiple attributes, you can usually implement just a chain of sub-comparisons until the result is not equal/equivalent or you reach the final attribute to be compared:
 

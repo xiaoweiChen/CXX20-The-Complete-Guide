@@ -1,8 +1,7 @@
 
 Views usually have reference semantics. Often, they refer to ranges that exist outside themselves. This means that care must be taken because you can only use views as long as the underlying ranges exist and references to them stored in the views or its iterators are valid.
 
-\subsubsection*{\zihao{3} 6.4.1\hspace{0.2cm}Lifetime Dependencies Between Views and Their Ranges}
-\addcontentsline{toc}{subsubsection}{6.4.1\hspace{0.2cm}Lifetime Dependencies Between Views and Their Ranges}
+\mySubsubsection{6.4.1}{Lifetime Dependencies Between Views and Their Ranges}
 
 All views that operate on a range passed as an lvalue (as a first constructor argument or using a pipe) store a reference to the passed range internally.
 
@@ -42,8 +41,7 @@ auto getValues()
 }
 \end{cpp}
 
-\subsubsection*{\zihao{3} 6.4.2\hspace{0.2cm}Views with Write Access}
-\addcontentsline{toc}{subsubsection}{6.4.2\hspace{0.2cm}Views with Write Access}
+\mySubsubsection{6.4.2}{Views with Write Access}
 
 Views should never modify a passed argument or call a non-const operation for it. That way, views and their copies have the same behavior for the same input.
 
@@ -70,8 +68,7 @@ for (auto& elem : coll | vws::drop(5)) {
 }
 \end{cpp}
 
-\subsubsection*{\zihao{3} 6.4.3\hspace{0.2cm}Views on Ranges That Change}
-\addcontentsline{toc}{subsubsection}{6.4.3\hspace{0.2cm}Views on Ranges That Change}
+\mySubsubsection{6.4.3}{Views on Ranges That Change}
 
 Views that cache begin() may run into significant problems if they are not used ad hoc and the underlying ranges change (note that I am writing about problems that occur when both the range and calling begin() for it are still valid).
 
@@ -175,8 +172,7 @@ New elements that fit the predicate might not be used by later iterations.
 New elements that do not fit might be used by later iterations.
 \end{itemize}
 
-\subsubsection*{\zihao{3} 6.4.4\hspace{0.2cm}Copying Views Might Change Behavior}
-\addcontentsline{toc}{subsubsection}{6.4.4\hspace{0.2cm}Copying Views Might Change Behavior}
+\mySubsubsection{6.4.4}{Copying Views Might Change Behavior}
 
 Finally, note that the previous example demonstrates that copying a view may sometimes invalidate the cache:
 

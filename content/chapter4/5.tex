@@ -3,9 +3,7 @@ By defining a concept, you can introduce a name for one or more constraints.
 
 Templates (function, class, variable, and alias templates) can use concepts to constrain their ability (via a requires clause or as a direct type constraint for a template parameter). However, concepts are also Boolean compile-time expressions (type predicates) that you can use wherever you have to check something for a type (such as in an if constexpr condition).
 
-
-\subsubsection*{\zihao{3} 4.5.1\hspace{0.2cm}Defining Conceptss}
-\addcontentsline{toc}{subsubsection}{4.5.1\hspace{0.2cm}Defining Concepts}
+\mySubsubsection{4.5.1}{Defining Conceptss}
 
 Concepts are defined as follows:
 
@@ -32,8 +30,7 @@ The template parameters may not have constraints (you cannot use a concept to de
 
 You cannot define concepts inside a function (as is the case for all templates).
 
-\subsubsection*{\zihao{3} 4.5.2\hspace{0.2cm}Special Abilities of Concepts}
-\addcontentsline{toc}{subsubsection}{4.5.2\hspace{0.2cm}Special Abilities of Concepts}
+\mySubsubsection{4.5.2}{Special Abilities of Concepts}
 
 Concepts have special abilities.
 
@@ -79,8 +76,7 @@ Concepts are the only way to give constraints a name, which means that you need 
 Concepts subsume. To let the compiler decide whether a constraint implies another constraint (and is therefore special), the constraints have to be formulated as concepts.
 \end{itemize}
 
-\subsubsection*{\zihao{3} 4.5.3\hspace{0.2cm}Concepts for Non-Type Template Parameters}
-\addcontentsline{toc}{subsubsection}{4.5.3\hspace{0.2cm}Concepts for Non-Type Template Parameters}
+\mySubsubsection{4.5.3}{Concepts for Non-Type Template Parameters}
 
 Concepts can also be applied to non-type template parameters (NTTP). For example:
 

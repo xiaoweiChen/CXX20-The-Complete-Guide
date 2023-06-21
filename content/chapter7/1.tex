@@ -18,8 +18,7 @@ std::views::common() is a range adaptor that converts a range with different typ
 
 These adaptors are described in this section.
 
-\subsubsection*{\zihao{3} 7.1.1\hspace{0.2cm}std::views::all()}
-\addcontentsline{toc}{subsubsection}{7.1.1\hspace{0.2cm}std::views::all()}
+\mySubsubsection{7.1.1}{std::views::all()}
 
 The range adaptor std::views::all() is the adaptor for converting any range that is not a view yet into a view. That way, you guarantee that you have a cheap handle for dealing with the elements of a range.
 
@@ -180,8 +179,7 @@ std::ranges::viewable_range<std::ranges::iota_view<int>> // true
 std::ranges::viewable_range<std::queue<int>> // false
 \end{cpp}
 
-\subsubsection*{\zihao{3} 7.1.2\hspace{0.2cm}std::views::counted()}
-\addcontentsline{toc}{subsubsection}{7.1.2\hspace{0.2cm}std::views::counted()}
+\mySubsubsection{7.1.2}{std::views::counted()}
 
 The range factory std::views::counted() provides the most flexible way to create a view from a begin iterator and a count. By calling
 
@@ -260,8 +258,7 @@ auto v3 = std::views::counted(lst5, 3); // view to element 5 and two more elems 
 
 Note that this code is at risk because it creates undefined behavior if there is no 5 in the collection with two elements behind it. Therefore, you should check this if you are not sure that this is the case.
 
-\subsubsection*{\zihao{3} 7.1.3\hspace{0.2cm}std::views::common()}
-\addcontentsline{toc}{subsubsection}{7.1.3\hspace{0.2cm}std::views::common()}
+\mySubsubsection{7.1.3}{std::views::common()}
 
 The range adaptor std::views::common() yields a view with harmonized types for the begin iterator and the sentinel (end iterator) for the passed range. It acts like the range adaptor std::views::all(), with the additional behavior of creating a std::ranges::common\_view from the passed argument if its iterators have different types.
 

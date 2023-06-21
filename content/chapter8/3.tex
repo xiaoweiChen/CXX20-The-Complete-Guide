@@ -1,8 +1,7 @@
 
 This section discusses all features of C++20 that create views that refer to existing external values (usually passed as a single range parameter, as begin iterator and a sentinel, or as a begin iterator and a count).
 
-\subsubsection*{\zihao{3} 8.3.1\hspace{0.2cm}Subrange}
-\addcontentsline{toc}{subsubsection}{8.3.1\hspace{0.2cm}Subrange}
+\mySubsubsection{8.3.1}{Subrange}
 
 \begin{table}[H]
 \centering
@@ -342,8 +341,7 @@ std::same_as<decltype(std::ranges::subrange{a1}),
 
 Note that this works only for raw arrays. For std::array<> and other containers, iterators (may) have different types, meaning that a harmonization of the types with a subrange is at least not portable.
 
-\subsubsection*{\zihao{3} 8.3.2\hspace{0.2cm}Ref View}
-\addcontentsline{toc}{subsubsection}{8.3.2\hspace{0.2cm}Ref View}
+\mySubsubsection{8.3.2}{Ref View}
 
 \begin{table}[H]
 \centering
@@ -508,8 +506,7 @@ Table 8.5. Operations of the class std::ranges::ref\_view<>
 
 Note that there is no default constructor provided for this view.
 
-\subsubsection*{\zihao{3} 8.3.3\hspace{0.2cm}Owning View}
-\addcontentsline{toc}{subsubsection}{8.3.3\hspace{0.2cm}Owning View}
+\mySubsubsection{8.3.3}{Owning View}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -698,9 +695,7 @@ The default constructor is provided only if the iterator is default initializabl
 Table 8.6. Operations of the class std::ranges::owning\_view<>
 \end{center}
 
-
-\subsubsection*{\zihao{3} 8.3.4\hspace{0.2cm}Common View}
-\addcontentsline{toc}{subsubsection}{8.3.4\hspace{0.2cm}Common View}
+\mySubsubsection{8.3.4}{Common View}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}

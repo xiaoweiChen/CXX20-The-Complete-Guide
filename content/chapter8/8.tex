@@ -147,13 +147,415 @@ The output of this code is
 2 3
 \end{shell}
 
+The passed collection of elements must be a valid view and a forward\_range. Therefore, when specifying the sub-sequence in a container, you have to convert it into a view. For example:
+
+\begin{cpp}
+// split with specified pattern of 4 and 5:
+std::array pattern{4, 5};
+for (const auto& sub : std::views::split(rg, std::views::all(pattern))) {
+	...
+}
+\end{cpp}
+
+You can use split views to split strings. For example:
+
+\begin{cpp}
+std::string str{"No problem can withstand the assault of sustained thinking"};
+for (auto sub : std::views::split(str, "th"sv)) { // split by "th"
+	std::cout << std::string_view{sub} << '\n';
+}
+\end{cpp}
+
+Each sub-string sub is of type std::ranges::subrange<decltype(str.begin())>. Code like this will not work with a lazy-split view.
+
+A split or lazy-split view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+
+Both the begin iterator and the sentinel (end iterator) are special internal helper types that are common if the passed range is common.
+
+Here is a full example program using split views:
+
+\filename{ranges/splitview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <array>
+#include <ranges>
+
+void print(auto&& obj, int level = 0)
+{
+	if constexpr(std::ranges::input_range<decltype(obj)>) {
+		std::cout << '[';
+		for (const auto& elem : obj) {
+			print(elem, level+1);
+		}
+		std::cout << ']';
+	}
+	else {
+		std::cout << obj << ' ';
+	}
+	if (level == 0) std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 1, 2, 3, 4};
+	
+	print(coll); // [1 2 3 4 1 2 3 4 ]
+	print(std::ranges::split_view{coll, 2}); // [[1 ][3 4 1 ][3 4 ]]
+	print(coll | std::views::split(3)); // [[1 2 ][4 1 2 ][4 ]]
+	print(coll | std::views::split(std::array{4, 1})); // [[1 2 3 ][2 3 4 ]]
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+[1 2 3 4 1 2 3 4 ]
+[[1 ][3 4 1 ][3 4 ]]
+[[1 2 ][4 1 2 ][4 ]]
+[[1 2 3 ][2 3 4 ]]
+\end{shell}
 
 \mySamllsection{Split View and const}
 
+Note that you cannot iterate over a const split view.
+
+For example:
+
+\begin{cpp}
+std::vector<int> coll{5, 1, 5, 1, 2, 5, 5, 1, 2, 3, 5, 5, 5};
+...
+const std::ranges::split_view sv{coll, 5};
+for (const auto& sub : sv) { // ERROR for const split view
+	std::cout << sub.size() << ' ';
+}
+\end{cpp}
+
+This is a problem especially if you pass the view to a generic function that takes the parameter as a const reference:
+
+\begin{cpp}
+void printElems(const auto& coll) {
+	...
+}
+printElems(std::views::split(rg, 5)); // ERROR
+\end{cpp}
+
+To support this view in generic code, you have to use universal/forwarding references:
+
+\begin{cpp}
+void printElems(auto&& coll) {
+	...
+}
+\end{cpp}
+
+Alternatively, you can use a lazy\_split\_view. Then, however, the sub-view elements can only be used as forward ranges, meaning that you cannot do things like calling size(), iterating backward, or sorting the elements:
+
+\begin{cpp}
+std::vector<int> coll{5, 1, 5, 1, 2, 5, 5, 1, 2, 3, 5, 5, 5};
+...
+const std::ranges::lazy_split_view sv{coll, 5};
+for (const auto& sub : sv) { // OK for const lazy-split view
+	std::cout << sub.size() << ' '; // ERROR
+	std::sort(sub); // ERROR
+	for (const auto& elem : sub) { // OK
+		std::cout << elem << ' ';
+	}
+}
+\end{cpp}
 
 \mySamllsection{Interface of Split and Lazy-Split Views}
 
+Table Operations of the classes std::ranges::split\_view<> and std::ranges::split\_view<> lists the API of a split or lazy-split view.
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}  & \textbf{Effect}                                                 \\ \hline
+\endfirsthead
+%
+\endhead
+%
+split\_view r\{\} & Creates a split\_view that refers to a default constructed range                                   \\ \hline
+split\_view r\{rg\} & Creates a split\_view that refers to range rg                   \\ \hline
+r.begin()           & Yields the begin iterator                                       \\ \hline
+r.end()             & Yields the sentinel (end iterator)                              \\ \hline
+r.empty()           & Yields whether r is empty (available if the range supportes it) \\ \hline
+if (r)              & true if r is not empty(available if empty() is defined)         \\ \hline
+r.size()          & Yields the number of element(available if it refers to a sized range)                              \\ \hline
+r.front()           & Yields the first element(available if forwarding)               \\ \hline
+r.back()            & Yields the last element(available if bidirectional and common)  \\ \hline
+r{[}idx{]}          & Yields the n-th element (available if random access)            \\ \hline
+r.data()          & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()            & Yields a reference to the range that r refers to or owns        \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.22. Operations of the classes std::ranges::split\_view<> and std::ranges::split\_view<>
+\end{center}
 
 \mySubsubsection{8.8.2}{Join View}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Type:}           & std::ranges::join\_view\textless{}\textgreater{}                        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}        & All elements of a range of multiple ranges as one view                  \\ \hline
+\textbf{Adaptor:}              & std::views::join()         \\ \hline
+\textbf{Element type:}         & Same type as passed ranges \\ \hline
+\textbf{Requires:}             & At least input range       \\ \hline
+\textbf{Category:}             & Input to bidirectional     \\ \hline
+\textbf{Is sized range:}       & Never                      \\ \hline
+\textbf{Is common range:}      & Varies                     \\ \hline
+\textbf{Is borrowed range:}    & Never                      \\ \hline
+\textbf{Caches:}               & Nothing                    \\ \hline
+\textbf{Const iterable:} & If on const-iterable range and elements are still references with const \\ \hline
+\textbf{Propagates constness:} & Only if on rvalue range    \\ \hline
+\end{longtable}
+
+The class template std::ranges::join\_view<> defines a view that iterates over all elements of a view of multiple ranges.
+
+For example:
+
+\begin{cpp}
+std::vector<int> rg1{1, 2, 3, 4};
+std::vector<int> rg2{0, 8, 15};
+std::vector<int> rg3{5, 4, 3, 2, 1, 0};
+std::array coll{rg1, rg2, rg3};
+...
+for (const auto& elem : std::ranges::join_view{coll}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+The loops print:
+
+\begin{shell}
+1 2 3 4 0 8 15 5 4 3 2 1 0
+\end{shell}
+
+\mySamllsection{Range Adaptors for Join Views}
+
+Join views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::join\_view constructor:
+
+\begin{cpp}
+std::views::join(rg)
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+for (const auto& elem : std::views::join(coll)) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+or:
+
+\begin{cpp}
+for (const auto& elem : coll | std::views::join) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+Here is a full example program using join views:
+
+\filename{ranges/joinview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <array>
+#include <ranges>
+#include "printcoll.hpp"
+
+int main()
+{
+	std::vector<std::string> rg1{"he", "hi", "ho"};
+	std::vector<std::string> rg2{"---", "|", "---"};
+	std::array coll{rg1, rg2, rg1};
+	
+	printColl(coll); // ranges of ranges of strings
+	printColl(std::ranges::join_view{coll}); // range of strings
+	printColl(coll | std::views::join); // range of strings
+	printColl(coll | std::views::join | std::views::join); // ranges of chars
+}
+\end{cpp}
+
+It uses a helper function that can print collections recursively:
+
+\filename{ranges/printcoll.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <ranges>
+
+template<typename T>
+void printColl(T&& obj, int level = 0)
+{
+	if constexpr(std::same_as<std::remove_cvref_t<T>, std::string>) {
+		std::cout << "\"" << obj << "\"";
+	}
+	else if constexpr(std::ranges::input_range<T>) {
+		std::cout << '[';
+		for (auto pos = obj.begin(); pos != obj.end(); ++pos) {
+			printColl(*pos, level+1);
+			if (std::ranges::next(pos) != obj.end()) {
+				std::cout << ' ';
+			}
+		}
+		std::cout << ']';
+	}
+	else {
+		std::cout << obj;
+	}
+	if (level == 0) std::cout << '\n';
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+[["he" "hi" "ho"] ["---" "|" "---"] ["he" "hi" "ho"]]
+["he" "hi" "ho" "---" "|" "---" "he" "hi" "ho"]
+["he" "hi" "ho" "---" "|" "---" "he" "hi" "ho"]
+[h e h i h o - - - | - - - h e h i h o]
+\end{shell}
+
+Together with type std::ranges::subrange, you can use a join view to join elements of multiple arrays.
+
+For example:
+
+\begin{cpp}
+int arr1[]{1, 2, 3, 4, 5};
+int arr2[] = {0, 8, 15};
+int arr3[10]{1, 2, 3, 4, 5};
+...
+std::array<std::ranges::subrange<int*>, 3> coll{arr1, arr2, arr3};
+for (const auto& elem : std::ranges::join_view{coll}) {
+	std::cout << elem << ' ';
+}
+\end{cpp}
+
+Alternatively, you can declare coll as follows:
+
+\begin{cpp}
+std::array coll{std::ranges::subrange{arr1},
+				std::ranges::subrange{arr2},
+				std::ranges::subrange{arr3}};
+\end{cpp}
+
+The join view is the only view in C++20 that deals with ranges of ranges. Therefore, it has outer and inner iterators. And the properties of the resulting view might depend on both.
+
+Note that the internal iterators do not support iterator traits. For this reason, you should prefer the utilities like std::ranges::next() over std::next(). Otherwise, code might not compile.
+
+\mySamllsection{Join View and const}
+
+Note that you cannot always iterate over a const join view. This happens if the ranges are not const iterable or if the inner ranges yield plain values instead of references.
+
+For the latter case, consider the following example:
+
+\filename{ranges/joinconst.cpp}
+
+\begin{cpp}
+#include <vector>
+#include <array>
+#include <ranges>
+#include "printcoll.hpp"
+
+void printConstColl(const auto& coll)
+{
+	printColl(coll);
+}
+
+int main()
+{
+	std::vector<int> rg1{1, 2, 3, 4};
+	std::vector<int> rg2{0, 8, 15};
+	std::vector<int> rg3{5, 4, 3, 2, 1, 0};
+	std::array coll{rg1, rg2, rg3};
+	
+	printConstColl(coll);
+	printConstColl(coll | std::views::join);
+	
+	auto collTx = [] (const auto& coll) { return coll; };
+	auto coll2values = coll | std::views::transform(collTx);
+	
+	printConstColl(coll2values);
+	printConstColl(coll2values | std::views::join); // ERROR
+}
+\end{cpp}
+
+When we use join the elements of the array of three ranges, we can call printConstColl(), which takes the range as a const reference. We get the following output:
+
+\begin{shell}
+[[1 2 3 4] [0 8 15] [5 4 3 2 1 0]]
+[1 2 3 4 0 8 15 5 4 3 2 1 0]
+\end{shell}
+
+However, when we create we pass the whole array to a transform view that yields all inner ranges back by value, calling printConstColl() is an error.
+
+Calling printColl() for the view, for which the inner ranges yield plain values, works fine. Note that this requires that printColl() uses std::ranges::next() instead of std::next(). Otherwise, even the following doe not compile:
+
+\begin{cpp}
+printColl(coll2values | std::views::join); // ERROR if std::next() used
+\end{cpp}
+
+\mySamllsection{Special Characteristics of Join Views}
+
+The resulting category is bidirectional if both the outer and the inner ranges are at least bidirectional and the inner ranges are common ranges. Otherwise, the resulting category is forward if both the outer and the inner ranges are at least forward ranges. Otherwise, the resulting category is input range.
+
+\mySamllsection{Interface of Join Views}
+
+Table Operations of the class std::ranges::join\_view<> lists the API of a join view.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+join\_view r\{\}   & Creates a join\_view that refers to a default constructed range        \\ \hline
+join\_view r\{rg\} & Creates a join\_view that refers to range rg                           \\ \hline
+r.begin()          & Yields the begin iterator                                              \\ \hline
+r.end()            & Yields the sentinel(end iterator)                                      \\ \hline
+r.empty()          & Yields whether r is empty(available if tht range supports it)          \\ \hline
+if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
+r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
+r.front()          & Yields the first element(available if forwarding)                      \\ \hline
+r.back()           & Yields the last element(available if bidirectional and common)         \\ \hline
+r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
+r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 8.23. Operations of the class std::ranges::join\_view<>
+\end{center}
+
+
+
+
+
+
+
+
+
+
+
+
 

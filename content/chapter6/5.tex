@@ -16,8 +16,7 @@ There are more or less good reasons for these problems. Some of them have to do 
 
 There are fixes under way that at least fix the broken constness of cbegin() and cend(). Unfortunately, the C++ standards committee decided not to apply them to C++20. These will come (and change behavior) with C++23. See \url{http://wg21.link/p2278r4} for details.
 
-\subsubsection*{\zihao{3} 6.5.1\hspace{0.2cm}Lifetime Dependencies Between Views and Their Ranges}
-\addcontentsline{toc}{subsubsection}{6.5.1\hspace{0.2cm}Lifetime Dependencies Between Views and Their Ranges}
+\mySubsubsection{6.5.1}{Lifetime Dependencies Between Views and Their Ranges}
 
 It is surprisingly complicated to implement a generic function that can iterate over the elements of every type of containers and views with good performance. For example, declaring a function that shall print all elements as follows does not always work:
 
@@ -452,8 +451,7 @@ print(vec | std::views::take(3)); // OK
 
 However, remember that copying a view might create a view with different state and behavior than the source view. For this reason, it is anyway questionable whether it is good to pass all views by value.
 
-\subsubsection*{\zihao{3} 6.5.2\hspace{0.2cm}Views with Write Access}
-\addcontentsline{toc}{subsubsection}{6.5.2\hspace{0.2cm}Views with Write Access}
+\mySubsubsection{6.5.2}{Views with Write Access}
 
 Containers have deep constness. Because they have value semantics and own their elements, they propagate any constness to their elements. When a containers is const, its elements are const. As a consequence, the following code fails to compile:
 
@@ -564,8 +562,7 @@ void foo(const auto& rg) // if rg would propagate constness for views on lvalues
 
 The initialization would act kind of a const\_cast<>. However, if this is generic code for containers programmers are already used not to copy a passed collection, because it is expensive to do so. Therefore, we now have another good reason not to copy a passed range. And the effect of declaring ranges (containers and views) as const would be way more consistent. However, the design decision is done now and as a programmer you have to deal with it.
 
-\subsubsection*{\zihao{3} 6.5.3\hspace{0.2cm}Views on Ranges That Change}
-\addcontentsline{toc}{subsubsection}{6.5.3\hspace{0.2cm}Views on Ranges That Change}
+\mySubsubsection{6.5.3}{Views on Ranges That Change}
 
 As we have learned, using const for ranges that are views is a problem for two reasons:
 

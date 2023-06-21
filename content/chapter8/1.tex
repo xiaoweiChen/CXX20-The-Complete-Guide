@@ -3,8 +3,7 @@ C++20 provides a significant number of different views. Some of them wrap elemen
 
 This chapter gives a brief overview of all view types available in C++20. Note that for almost all of these types, there are auxiliary range adaptors/factories that allow programmers to create the views by calling a function or piping into them. In general, you should use these adaptors and factories instead of directly initializing views because the adaptors and factories perform additional optimizations (such as choosing the best among different views), work in more situations, double check requirements, and are just easier to use.
 
-\subsubsection*{\zihao{3} 8.1.1\hspace{0.2cm}Overview of Wrapping and Generating Views}
-\addcontentsline{toc}{subsubsection}{8.1.1\hspace{0.2cm}Overview of Wrapping and Generating Views}
+\mySubsubsection{8.1.1}{Overview of Wrapping and Generating Views}
 
 Table Wrapping and generating views lists the standard views that can only be source elements of a pipeline.
 These views might be
@@ -64,8 +63,7 @@ All other view types are provided in the namespace std::ranges.
 
 In general, it is better to use the range adaptors and factories. For example, you should always favor the adaptor std::views::all() instead of using the types std::ranges::ref\_view<> and std::ranges::owning\_view<> directly. However, in some situations, there is no adaptor/factory provided, which means that you have to use the view types directly. The most important example is when you have to create a view from a pair of iterators. In that case, you have to initialize a std::ranges::subrange directly.
 
-\subsubsection*{\zihao{3} 8.1.2\hspace{0.2cm}Overview of Adapting Views}
-\addcontentsline{toc}{subsubsection}{8.1.2\hspace{0.2cm}Overview of Adapting Views}
+\mySubsubsection{8.1.2}{Overview of Adapting Views}
 
 Table Adapting views lists the standard views that adapt, in some way, elements of given ranges (filter out elements, modify the values of elements, change the order of elements, or combine or create sub-ranges). They can especially be used inside pipelines of views.
 

@@ -92,8 +92,7 @@ Table 6.3. Source views
 Table 6.4. Adapting views
 \end{center}
 
-\subsubsection*{\zihao{3} 6.3.1\hspace{0.2cm}Views on Ranges}
-\addcontentsline{toc}{subsubsection}{6.3.1\hspace{0.2cm}Views on Ranges}
+\mySubsubsection{6.3.1}{Views on Rangess}
 
 Containers and strings are not views. This is because they are not lightweight enough: they provide no cheap copy constructors because they have to copy the elements.
 
@@ -196,8 +195,7 @@ for (const auto& elem : getColl() | std::views::take(5) | std::views::drop(2)) {
 
 This is remarkable, because in general, it is a fatal runtime error to use a reference to a temporary as a collection a range-based for loop iterates over (a bug that the C++ standards committee has not been willing to fix for years now; see \url{http://wg21.link/p2012}). Because passing a temporary range object (rvalue) moves the range into an owning\_view, the view does not refer to an external container and therefore there is no runtime error.
 
-\subsubsection*{\zihao{3} 6.3.2\hspace{0.2cm}Lazy Evaluation}
-\addcontentsline{toc}{subsubsection}{6.3.2\hspace{0.2cm}Lazy Evaluation}
+\mySubsubsection{6.3.2}{Lazy Evaluation}
 
 It is important to understand when exactly views are processed. Views do not start processing when they are defined; instead, they run on demand:
 
@@ -379,8 +377,7 @@ trans 0
 
 Another benefit of the pull model is that sequences or pipelines of views can even operate on infinite ranges. We do not compute an unlimited number of values not knowing how many are used; we compute as many values as requested by the user of the view.
 
-\subsubsection*{\zihao{3} 6.3.3\hspace{0.2cm}Caching in Views}
-\addcontentsline{toc}{subsubsection}{6.3.3\hspace{0.2cm}Caching in Views}
+\mySubsubsection{6.3.3}{Caching in Views}
 
 Assume that we want to iterate over a view multiple times. It seems a waste of performance if we compute the first valid element again and again. And indeed, views that might skip leading elements cache the begin() once it is called.
 
@@ -551,8 +548,7 @@ However, due to caching, using a view not ad hoc can have pretty surprising cons
 
 As another consequence, caching might require that a view cannot be const while iterating over its elements. The consequences are even more severe and are discussed later.
 
-\subsubsection*{\zihao{3} 6.3.4\hspace{0.2cm}Performance Issues with Filters}
-\addcontentsline{toc}{subsubsection}{6.3.4\hspace{0.2cm}Performance Issues with Filters}
+\mySubsubsection{6.3.4}{Performance Issues with Filters}
 
 The pull model also has its drawbacks. To demonstrate that, let us change the order of the two views involved (above) so that we first call transform() and then filter():
 

@@ -2,8 +2,7 @@
 
 When passing a range as a single argument to an algorithm, you get lifetime problems. This section describes how the ranges library deals with this issue.
 
-\subsubsection*{\zihao{3} 6.2.1\hspace{0.2cm}Borrowed Iterators}
-\addcontentsline{toc}{subsubsection}{6.2.1\hspace{0.2cm}Borrowed Iterators}
+\mySubsubsection{6.2.1}{Borrowed Iterators}
 
 Many algorithms return iterators to the ranges they operate on. However, when passing ranges as a single argument, we can get a new problem that was not possible when a range required two arguments (the begin iterator and the end iterator): if you pass a temporary range (such as a range returned by a function) and return an iterator to it, the returned iterator might become invalid at the end of the statement when the range is destroyed. Using the returned iterator (or a copy of it) would result in undefined behavior.
 
@@ -128,8 +127,7 @@ if (pos != data.end()) { // OK
 }
 \end{cpp}
 
-\subsubsection*{\zihao{3} 6.2.2\hspace{0.2cm}Borrowed Ranges}
-\addcontentsline{toc}{subsubsection}{6.2.2\hspace{0.2cm}Borrowed Ranges}
+\mySubsubsection{6.2.2}{Borrowed Ranges}
 
 Range types can claim that they are borrowed ranges. This means that their iterators can still be used when the range itself no longer exists.
 

@@ -126,9 +126,7 @@ std::regular subsumes std::semiregular, while both subsume std::copyable and std
 std::sortable subsumes std::permutable and both subsume std::indirectly\_swappable for both parameters being the same type.
 \end{itemize}
 
-
-\subsubsection*{\zihao{3} 4.7.1\hspace{0.2cm}Indirect Subsumptions}
-\addcontentsline{toc}{subsubsection}{4.7.1\hspace{0.2cm}Indirect Subsumptions}
+\mySubsubsection{4.7.1}{Indirect Subsumptions}
 
 Constraints can even subsume indirectly.3 This means that overload resolution can still prefer one overload
 or specialization over the other, even though their constraints are not defined in terms of each other.
@@ -199,8 +197,7 @@ On the one hand, ContMove is more constrained because contiguous\_range implies 
 
 To avoid confusion, do not make too many assumptions about concepts subsuming each other. When in doubt, specify all the concepts you require.
 
-\subsubsection*{\zihao{3} 4.7.2\hspace{0.2cm}Defining Commutative Concepts}
-\addcontentsline{toc}{subsubsection}{4.7.2\hspace{0.2cm}Defining Commutative Concepts}
+\mySubsubsection{4.7.2}{Defining Commutative Concepts}
 
 To implement subsumptions correctly, you have to be careful. A good example is the implementation of the concept std::same\_as, which checks whether two template parameters have the same type.
 

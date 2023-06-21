@@ -1,8 +1,7 @@
 
 After introducing the new rules for comparisons, it turned out that C++20 introduces some issues that may be a problem when switching from older C++ versions.
 
-\subsubsection*{\zihao{3} 1.6.1\hspace{0.2cm}Delegating Free-Standing Comparison Operators}
-\addcontentsline{toc}{subsubsection}{1.6.1\hspace{0.2cm}Delegating Free-Standing Comparison Operators}
+\mySubsubsection{1.6.1}{Delegating Free-Standing Comparison Operators}
 
 The following example demonstrates the essence of the most typical problem:
 
@@ -93,8 +92,7 @@ bool operator==(int i, const MyType& t) {
 Use a feature test macro to disable the code as soon as the new feature is available:
 \end{itemize}
 
-\subsubsection*{\zihao{3} 1.6.2\hspace{0.2cm}Inheritance with Protected Members}
-\addcontentsline{toc}{subsubsection}{1.6.2\hspace{0.2cm}Inheritance with Protected Members}
+\mySubsubsection{1.6.2}{Inheritance with Protected Members}
 
 For derived classes with defaulted comparison operators, there might be problems if the base class has the operators as protected members.
 

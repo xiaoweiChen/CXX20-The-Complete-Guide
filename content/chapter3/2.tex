@@ -51,8 +51,7 @@ concept IsIntegralValType = std::ranges::sized_range<T> &&
 \end{cpp}
 
 
-\subsubsection*{\zihao{3} 3.2.1\hspace{0.2cm}Constraining Alias Templates}
-\addcontentsline{toc}{subsubsection}{3.2.1\hspace{0.2cm}Constraining Alias Templates}
+\mySubsubsection{3.2.1}{Constraining Alias Templates}
 
 Here is an example of constraining alias templates (generic using declarations):
 
@@ -77,8 +76,7 @@ ValueType<std::vector<int>> vt2; // int
 ValueType<std::list<double>> vt3; // double
 \end{cpp}
 
-\subsubsection*{\zihao{3} 3.2.2\hspace{0.2cm}Constraining Variable Templates}
-\addcontentsline{toc}{subsubsection}{3.2.2\hspace{0.2cm}Constraining Variable Templates}
+\mySubsubsection{3.2.2}{Constraining Variable Templates}
 
 Here is an example of constraining variable templates:
 
@@ -103,9 +101,7 @@ bool b2 = IsIntegralValType<std::vector<int>>; // true
 bool b3 = IsIntegralValType<std::list<double>>; // false
 \end{cpp}
 
-
-\subsubsection*{\zihao{3} 3.2.3\hspace{0.2cm}Constraining Member Functions}
-\addcontentsline{toc}{subsubsection}{3.2.3\hspace{0.2cm}Constraining Member Functions}
+\mySubsubsection{3.2.3}{Constraining Member Functions}
 
 Requires clauses can also be part of the declaration of member functions. That way, programmers can specify different APIs based on requirements and concepts.
 
@@ -186,9 +182,7 @@ void foo() requires std::numeric_limits<char>::is_signed // ERROR
 
 One example of a constraining member function inside the C++standard library is the conditional availability of begin() for const views.
 
-
-\subsubsection*{\zihao{3} 3.2.4\hspace{0.2cm}Constraining Non-Type Template Parameters}
-\addcontentsline{toc}{subsubsection}{3.2.4\hspace{0.2cm}Constraining Non-Type Template Parameters}
+\mySubsubsection{3.2.4}{Constraining Non-Type Template Parameters}
 
 It is not only types that you can constrain. You can also constrain values that are template parameters (non-type template parameters (NTTP)). For example:
 

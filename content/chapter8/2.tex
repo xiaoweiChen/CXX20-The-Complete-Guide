@@ -3,8 +3,7 @@ Views have a common type that provides most of their member functions, which is 
 
 This section also discusses, why range adaptors and factories use a special namespace.
 
-\subsubsection*{\zihao{3} 8.2.1\hspace{0.2cm}Base Class for Views}
-\addcontentsline{toc}{subsubsection}{8.2.1\hspace{0.2cm}Base Class for Views}
+\mySubsubsection{8.2.1}{Base Class for Views}
 
 All standard views are derived from the class std::ranges::view\_interface<viewType>.[In the published C++20 standard, view\_interface<> was also derived from an empty base class std::ranges::view\_base. However, that was fixed with \url{http://wg21.link/lwg3549}.]
 
@@ -48,8 +47,7 @@ Based on the return types of begin() and end(), your type then automatically pro
 
 C++23 will add the members cbegin() and cend(), which map to std::ranges::cbegin() and std::ranges::cend() (they were added with \url{http://wg21.link/p2278r4}).
 
-\subsubsection*{\zihao{3} 8.2.2\hspace{0.2cm}Why Range Adaptors/Factories Have Their Own Namespace}
-\addcontentsline{toc}{subsubsection}{8.2.2\hspace{0.2cm}Why Range Adaptors/Factories Have Their Own Namespace}
+\mySubsubsection{8.2.2}{Why Range Adaptors/Factories Have Their Own Namespace}
 
 Range adaptors and factories have their own namespace, std::ranges::views, for which the namespace alias std::views is defined:
 

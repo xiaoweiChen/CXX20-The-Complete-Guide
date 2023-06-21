@@ -57,8 +57,7 @@ template<typename Coll>
 	}
 \end{cpp}
 
-\subsubsection*{\zihao{3} 4.4.1\hspace{0.2cm}Simple Requirements}
-\addcontentsline{toc}{subsubsection}{4.4.1\hspace{0.2cm}Simple Requirements}
+\mySubsubsection{4.4.1}{Simple Requirements}
 
 Simple requirements are just expressions that have to be well-formed. This means that the calls have to compile. The calls are not performed, meaning that it does not matter what the operations yield.
 
@@ -127,8 +126,7 @@ template<typename T>
 	};
 \end{cpp}
 
-\subsubsection*{\zihao{3} 4.4.2\hspace{0.2cm}Type Requirements}
-\addcontentsline{toc}{subsubsection}{4.4.2\hspace{0.2cm}Type Requirements}
+\mySubsubsection{4.4.2}{Type Requirements}
 
 Type requirements are expressions that have to be well-formed when using a name of a type. This means that the specified name has to be defined as a valid type.
 
@@ -256,9 +254,7 @@ template<typename T>
 }
 \end{cpp}
 
-
-\subsubsection*{\zihao{3} 4.4.3\hspace{0.2cm}Compound Requirements}
-\addcontentsline{toc}{subsubsection}{4.4.3\hspace{0.2cm}Compound Requirements}
+\mySubsubsection{4.4.3}{Compound Requirements}
 
 Compound requirements allow us to combine the abilities of simple and type requirements. In this case, you can specify an expression (inside a block of braces) and then add one or both of the following:
 
@@ -338,8 +334,7 @@ concept Check = requires(T p) {
 
 Alternatively, you have to use a nested requirement.
 
-\subsubsection*{\zihao{3} 4.4.4\hspace{0.2cm}Nested Requirements}
-\addcontentsline{toc}{subsubsection}{4.4.4\hspace{0.2cm}Nested Requirements}
+\mySubsubsection{4.4.4}{Nested Requirements}
 
 Nested requirements can be used to specify additional constraints inside a requires expression. They start with requires followed by a compile-time Boolean expression, which might itself again be or use a requires expression. The benefit of nested requirements is that we can ensure that a compile-time expression (that uses parameters or sub-expressions of the requires expression) yields a certain result instead of ensuring only that the expression is valid.
 

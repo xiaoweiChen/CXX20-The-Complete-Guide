@@ -2,8 +2,7 @@
 
 Let us look at the role of ranges and views by looking at a few examples that use them and discussing the basic principles without going into too much detail yet.
 
-\subsubsection*{\zihao{3} 6.1.1\hspace{0.2cm}Passing Containers to Algorithms as Ranges}
-\addcontentsline{toc}{subsubsection}{6.1.1\hspace{0.2cm}Passing Containers to Algorithms as Ranges}
+\mySubsubsection{6.1.1}{Passing Containers to Algorithms as Ranges}
 
 Since the first C++ standard published in C++98, we iterate over half-open ranges when dealing with collections of elements. By passing the begin and the end of a range (often coming from the begin() and end() member functions of a container), you can specify which elements have to be processed:
 
@@ -119,8 +118,7 @@ std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
 std::ranges::sort(coll); // sort all elements of the collection
 \end{cpp}
 
-\subsubsection*{\zihao{3} 6.1.2\hspace{0.2cm}Constraints and Utilities for Ranges}
-\addcontentsline{toc}{subsubsection}{6.1.2\hspace{0.2cm}Constraints and Utilities for Ranges}
+\mySubsubsection{6.1.2}{Constraints and Utilities for Ranges}
 
 The new standard algorithms for ranges declare range parameters as template parameters (there is no common type you can use for them). To specify and validate the necessary requirements when dealing with these range parameters, C++20 introduces several range concepts. In addition, utilities help you to apply these concepts.
 
@@ -266,8 +264,7 @@ Table 6.2. Other range concepts
 
 For details, see the discussion of range concepts.
 
-\subsubsection*{\zihao{3} 6.1.3\hspace{0.2cm}Views}
-\addcontentsline{toc}{subsubsection}{6.1.3\hspace{0.2cm}Views}
+\mySubsubsection{6.1.3}{Views}
 
 To deal with ranges, C++20 also introduces views. Views are lightweight ranges that are cheap to create and copy/move: Views can:
 
@@ -544,8 +541,7 @@ Inserting or removing elements in the underlying range may have significant impa
 
 Therefore, it is strongly recommended to use views right before you need them. Create views to use them ad hoc. If modifications happen between initializing a view and using it, care has to be taken.
 
-\subsubsection*{\zihao{3} 6.1.4\hspace{0.2cm}Sentinels}
-\addcontentsline{toc}{subsubsection}{6.1.4\hspace{0.2cm}Sentinels}
+\mySubsubsection{6.1.4}{Sentinels}
 
 To deal with ranges, we have to introduce a new term, sentinels, which represent the end of a range.
 
@@ -704,8 +700,7 @@ std::for_each(rawString, NullTerm{}, // ERROR: begin and end have different type
 
 If you have two iterators of different types, type std::common\_iterator provides a way to harmonize them for traditional algorithms. This can be useful because numeric algorithms, parallel algorithms, and containers still require that the begin and the end iterator have the same type.
 
-\subsubsection*{\zihao{3} 6.1.5\hspace{0.2cm}Range Definitions with Sentinels and Counts}
-\addcontentsline{toc}{subsubsection}{6.1.5\hspace{0.2cm}Range Definitions with Sentinels and Counts}
+\mySubsubsection{6.1.5}{Range Definitions with Sentinels and Counts}
 
 Ranges can be more than just containers or a pair of iterators. Ranges can be defined by:
 
@@ -903,8 +898,7 @@ Note that you should use counted() only when you really have an iterator and a c
 
 For more details, see the description of std::views::counted().
 
-\subsubsection*{\zihao{3} 6.1.6\hspace{0.2cm}Projections}
-\addcontentsline{toc}{subsubsection}{6.1.6\hspace{0.2cm}Projections}
+\mySubsubsection{6.1.6}{Projections}
 
 sort() and many other algorithms for ranges usually have an additional optional template parameter, a projection:
 
@@ -949,9 +943,7 @@ As you can see, the requirement that the elements have to be sortable takes the 
 requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
 \end{cpp}
 
-
-\subsubsection*{\zihao{3} 6.1.7\hspace{0.2cm}Utilities for Implementing Code for Ranges}
-\addcontentsline{toc}{subsubsection}{6.1.7\hspace{0.2cm}Utilities for Implementing Code for Ranges}
+\mySubsubsection{6.1.7}{Utilities for Implementing Code for Ranges}
 
 To make it easy to program against all the different kinds of ranges, the ranges library provides the following utilities:
 
@@ -1021,8 +1013,7 @@ std::ranges::range_value_t<Range> maxValue(Range&& rg)
 
 This is discussed later in detail.
 
-\subsubsection*{\zihao{3} 6.1.8\hspace{0.2cm}Limitations and Drawbacks of Ranges}
-\addcontentsline{toc}{subsubsection}{6.1.8\hspace{0.2cm}Limitations and Drawbacks of Ranges}
+\mySubsubsection{6.1.8}{Limitations and Drawbacks of Ranges}
 
 In C++20, ranges also have some major limitations and drawbacks that should be mentioned in a general introduction to them:
 

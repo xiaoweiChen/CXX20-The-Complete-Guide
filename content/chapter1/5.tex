@@ -1,8 +1,7 @@
 
 In generic code, the new operator <=> provides some challenges. This is because there might be types that provide operator <=> and there might be types that provide some or all of the basic comparison operators.
 
-\subsubsection*{\zihao{3} 1.5.1\hspace{0.2cm}compare\_three\_way}
-\addcontentsline{toc}{subsubsection}{1.5.1\hspace{0.2cm}compare\_three\_way}
+\mySubsubsection{1.5.1}{compare\_three\_way}
 
 std::compare\_three\_way is a new function object type for calling operator <=>, just like std::less is a function object type for calling operator <.
 
@@ -43,8 +42,7 @@ struct Value {
 };
 \end{cpp}
 
-\subsubsection*{\zihao{3} 1.5.2\hspace{0.2cm}Algorithm lexicographical\_compare\_three\_way()}
-\addcontentsline{toc}{subsubsection}{1.5.2\hspace{0.2cm}Algorithm lexicographical\_compare\_three\_way()}
+\mySubsubsection{1.5.2}{Algorithm lexicographical\_compare\_three\_way()}
 
 To be able to compare two ranges and yield a value of the matching comparison category, C++20 also introduced the algorithm lexicographical\_compare\_three\_way(). This algorithm is particularly helpful for implementing operator<=> for members that are collections.
 

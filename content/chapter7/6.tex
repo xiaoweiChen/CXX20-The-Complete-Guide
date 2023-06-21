@@ -3,8 +3,7 @@ With the support to pass ranges as one argument and be able to process sentinels
 
 However, they come with some restrictions and not all algorithms support passing ranges as a whole yet.
 
-\subsubsection*{\zihao{3} 7.6.1\hspace{0.2cm}Benefits and Restrictions for Range Algorithms}
-\addcontentsline{toc}{subsubsection}{7.6.1\hspace{0.2cm}Benefits and Restrictions for Range Algorithms}
+\mySubsubsection{7.6.1}{Benefits and Restrictions for Range Algorithms}
 
 For some algorithms, there are no range versions that allow programmers to pass ranges as a single argument yet:
 
@@ -92,17 +91,14 @@ int main()
 
 The program has the following output:
 
-{\footnotesize
 \begin{shell}
 processed in: 1 2 3 4 5 6 7
 rest of in:
 written out: 1 4 9 16 25 36 49
 rest of out: 8 9 10
 \end{shell}
-}
 
-\subsubsection*{\zihao{3} 7.6.2\hspace{0.2cm}Algorithm Overview}
-\addcontentsline{toc}{subsubsection}{7.6.2\hspace{0.2cm}Algorithm Overview}
+\mySubsubsection{7.6.2}{Algorithm Overview}
 
 The situation of all algorithms becomes more and more complex. Some of them can be used in parallel, some not. Some of them are supported by the ranges library, some not. This section gives an overview of which algorithms are available in which form (without going into detail about what each algorithm does).
 

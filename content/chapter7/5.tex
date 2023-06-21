@@ -3,8 +3,7 @@ This section lists all new auxiliary type functions and utilities provided by th
 
 As for the generic helper functions, several of these utilities already existed before C++20 with the same name or a slightly different name in the namespace std (and are still provided for backward compatibility). However, the range utilities usually provide better support for the specified functionality. They might fix flaws that the old versions have or use concepts to constrain their use.
 
-\subsubsection*{\zihao{3} 7.5.1\hspace{0.2cm}Generic Types of Ranges}
-\addcontentsline{toc}{subsubsection}{7.5.1\hspace{0.2cm}Generic Types of Ranges}
+\mySubsubsection{7.5.1}{Generic Types of Ranges}
 
 Table Generic functions that yield the types involved when using ranges lists all generic type definitions for ranges. They are defined as alias templates.
 
@@ -33,8 +32,7 @@ std::iter_value_t<std::ranges::iterator_t<Rg>>
 
 It should be preferred over Rg::value\_type.
 
-\subsubsection*{\zihao{3} 7.5.2\hspace{0.2cm}Generic Types of Iterators}
-\addcontentsline{toc}{subsubsection}{7.5.2\hspace{0.2cm}Generic Types of Iterators}
+\mySubsubsection{7.5.2}{Generic Types of Iterators}
 
 The ranges library also introduced new type traits for iterators. Note that these traits are not defined in the namespace std::ranges, but rather in the namespace std.
 
@@ -61,9 +59,7 @@ Note that due to better support for the new iterator categories, you should pref
 
 These functions are described in detail in the section about iterator traits.
 
-
-\subsubsection*{\zihao{3} 7.5.3\hspace{0.2cm}New Functional Types}
-\addcontentsline{toc}{subsubsection}{7.5.3\hspace{0.2cm}New Functional Types}
+\mySubsubsection{7.5.3}{New Functional Types}
 
 Table New functional types lists the new types that can be used as helper functions. They are defined in <functional>.
 
@@ -109,8 +105,7 @@ find(R&& r, const T& value, Proj proj = {});
 
 The function object type std::compare\_three\_way is a new function object type for specifying that the new operator <=> shall be called/used (just like std::less or std::ranges::less stand for calling the operator <). It is described in the chapter about the operator <=>.
 
-\subsubsection*{\zihao{3} 7.5.4\hspace{0.2cm}Other New Types for Dealing with Iterators}
-\addcontentsline{toc}{subsubsection}{7.5.4\hspace{0.2cm}Other New Types for Dealing with Iterators}
+\mySubsubsection{7.5.4}{Other New Types for Dealing with Iterators}
 
 Table Other new types for iterators lists all new types for dealing with iterators. They are defined in <iterator>.
 

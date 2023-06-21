@@ -18,8 +18,7 @@ std::unreachable\_sentinel\_t for an end iterator that can never be reached, mea
 std::move\_sentinel for an end iterator that maps copies to moves
 \end{itemize}
 
-\subsubsection*{\zihao{3} 7.3.1\hspace{0.2cm}std::counted\_iterator}
-\addcontentsline{toc}{subsubsection}{7.3.1\hspace{0.2cm}std::counted\_iterator}
+\mySubsubsection{7.3.1}{std::counted\_iterator}
 
 A counted iterator is an iterator that has a counter for the maximum number of elements to iterate over.
 
@@ -79,8 +78,7 @@ The counted iterator does not increment more than count times
 The counted iterator does not access elements beyond the count-th element (as usual, the position behind the last element is valid)
 \end{itemize}
 
-\subsubsection*{\zihao{3} 7.3.2\hspace{0.2cm}std::common\_iterator}
-\addcontentsline{toc}{subsubsection}{7.3.2\hspace{0.2cm}std::common\_iterator}
+\mySubsubsection{7.3.2}{std::common\_iterator}
 
 Type std::common\_iterator<> is used to harmonize the type of two iterators. It wraps the two iterators so that from the outside, both iterators have the same type. Internally, a value of one of the two types is stored (for this, the iterator typically uses a std::variant<>).
 
@@ -120,9 +118,7 @@ void callAlgo(BegT beg, EndT end)
 }
 \end{cpp}
 
-
-\subsubsection*{\zihao{3} 7.3.3\hspace{0.2cm}std::default\_sentinel}
-\addcontentsline{toc}{subsubsection}{7.3.3\hspace{0.2cm}std::default\_sentinel}
+\mySubsubsection{7.3.3}{std::default\_sentinel}
 
 A default sentinel is an iterator that provides no operations at all. C++20 provides a corresponding object std::default\_sentinel, which has type std::default\_sentinel\_t. It is provided in <iterator>. The type has no members:
 
@@ -232,9 +228,7 @@ Split view iterators can compare with operator == and !=
 \end{itemize}
 \end{itemize}
 
-
-\subsubsection*{\zihao{3} 7.3.4\hspace{0.2cm}std::unreachable\_sentinel}
-\addcontentsline{toc}{subsubsection}{7.3.4\hspace{0.2cm}std::unreachable\_sentinel}
+\mySubsubsection{7.3.4}{std::unreachable\_sentinel}
 
 The value std::unreachable\_sentinel of type std::unreachable\_sentinel\_t was introduced in C++20 to specify a sentinel (end iterator of a range) that is not reachable. It effectively says “Do not compare with me at all.” This type and value can be used to specify unlimited ranges.
 
@@ -251,8 +245,7 @@ Normally, the algorithm would compare against both, 42 and coll.end() (or whatev
 
 The iota view provides an example of using unreachable\_sentinel for endless ranges.
 
-\subsubsection*{\zihao{3} 7.3.5\hspace{0.2cm}std::move\_sentinel}
-\addcontentsline{toc}{subsubsection}{7.3.5\hspace{0.2cm}std::move\_sentinel}
+\mySubsubsection{7.3.5}{std::move\_sentinel}
 
 Since C++11, the C++ standard library has an iterator type std::move\_iterator, which can be used to map the behavior of an iterator from copying to moving values. C++20 introduces the corresponding sentinel type.
 

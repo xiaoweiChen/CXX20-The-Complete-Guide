@@ -1,8 +1,7 @@
 
 This section discusses all features of C++20 for creating views that generate values themselves (meaning that they do not refer to elements or values outside the view).
 
-\subsubsection*{\zihao{3} 8.4.1\hspace{0.2cm}Iota View}
-\addcontentsline{toc}{subsubsection}{8.4.1\hspace{0.2cm}Iota View}
+\mySubsubsection{8.4.1}{Iota View}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -258,8 +257,7 @@ auto v2 = dropFirst(v1); // iota view with elems from 2 to 8
 
 In this case, the availability of the member functions size() and operator[] depends on the support for these operators in the passed range.
 
-\subsubsection*{\zihao{3} 8.4.2\hspace{0.2cm}Single View}
-\addcontentsline{toc}{subsubsection}{8.4.2\hspace{0.2cm}Single View}
+\mySubsubsection{8.4.2}{Single View}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -447,8 +445,7 @@ The constructor taking a value either copies or moves this values into the view.
 
 Because begin() and end() yield the same value, the view is always a common range. Because iterators refer to the value stored in the view to be able to modify it, the single view is not a borrowed range (the lifetime of its iterators does depend on the view)
 
-\subsubsection*{\zihao{3} 8.4.3\hspace{0.2cm}Empty View}
-\addcontentsline{toc}{subsubsection}{8.4.3\hspace{0.2cm}Empty View}
+\mySubsubsection{8.4.3}{Empty View}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -603,8 +600,7 @@ void foo(std::ranges::random_access_range auto&& rg)
 foo(std::ranges::empty_view<int>{}); // OK
 \end{cpp}
 
-\subsubsection*{\zihao{3} 8.4.4\hspace{0.2cm}IStream View}
-\addcontentsline{toc}{subsubsection}{8.4.4\hspace{0.2cm}IStream View}
+\mySubsubsection{8.4.4}{IStream View}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -848,8 +844,7 @@ auto v6 = std::views::istream<int>(myStrm); // OK
 \end{cpp}
 \end{itemize}
 
-\subsubsection*{\zihao{3} 8.4.5\hspace{0.2cm}String View}
-\addcontentsline{toc}{subsubsection}{8.4.5\hspace{0.2cm}String View}
+\mySubsubsection{8.4.5}{String View}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -952,8 +947,7 @@ In addition to the usual interface of views, the type also provides the full API
 
 For more details, take a look at my book C++17 - The Complete Guide (see \url{http://www.cppstd17.com}).
 
-\subsubsection*{\zihao{3} 8.4.6\hspace{0.2cm}Span}
-\addcontentsline{toc}{subsubsection}{8.4.6\hspace{0.2cm}Span}
+\mySubsubsection{8.4.6}{Span}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}

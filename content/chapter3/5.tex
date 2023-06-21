@@ -1,8 +1,7 @@
 
 Let us look at some guidelines for how to use concepts. Note that concepts are new and we are still learning how to use them best. In addition, improved support for concepts might change some guidelines over time.
 
-\subsubsection*{\zihao{3} 3.5.1\hspace{0.2cm}Concepts Should Group Requirements}
-\addcontentsline{toc}{subsubsection}{3.5.1\hspace{0.2cm}Concepts Should Group Requirements}
+\mySubsubsection{3.5.1}{Concepts Should Group Requirements}
 
 
 Introducing a concept for each attribute or functionality of types is certainly too fine-grained. As a consequence, we would get far too many concepts that a compiler has to deal with and that we would all have to specify as constraints.
@@ -13,9 +12,7 @@ The C++ standard library provides a good example of a design that might follow t
 
 The consequence is a pretty complex subsumption graph. The chapter that describes the C++ standard concepts groups the concepts accordingly.
 
-
-\subsubsection*{\zihao{3} 3.5.2\hspace{0.2cm}Define Concepts with Care}
-\addcontentsline{toc}{subsubsection}{3.5.2\hspace{0.2cm}Define Concepts with Care}
+\mySubsubsection{3.5.2}{Define Concepts with Care}
 
 Concepts subsume, which means that a concept can be a subset of another concept, so that in overload resolution the more constrained concept is preferred.
 
@@ -23,8 +20,7 @@ However, requirements and constraints can be defined in various ways. For a comp
 
 For example, when a concept for two template parameters is commutative (so that the order of two parameters should not matter), a concept needs careful design. For details and an example, see the discussion of how the concept std::same\_as is defined.
 
-\subsubsection*{\zihao{3} 3.5.3\hspace{0.2cm}Concepts versus Type Traits and Boolean Expressions}
-\addcontentsline{toc}{subsubsection}{3.5.3\hspace{0.2cm}Concepts versus Type Traits and Boolean Expressions}
+\mySubsubsection{3.5.3}{Concepts versus Type Traits and Boolean Expressions}
 
 Concepts are more than just expressions that evaluate Boolean results at compile time. You should usually prefer them over type traits and other compile-time expressions.
 

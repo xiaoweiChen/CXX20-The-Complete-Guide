@@ -9,8 +9,7 @@ This means that they do not support argument-dependent lookup (ADL).[You can arg
 
 For this reason, you should prefer std::ranges utilities over std utilities.
 
-\subsubsection*{\zihao{3} 7.4.1\hspace{0.2cm}Functions for Dealing with the Elements of Ranges (and Arrays)}
-\addcontentsline{toc}{subsubsection}{7.4.1\hspace{0.2cm}Functions for Dealing with the Elements of Ranges (and Arrays)}
+\mySubsubsection{7.4.1}{Functions for Dealing with the Elements of Ranges (and Arrays)}
 
 Table Generic functions for dealing with the elements of ranges lists the new free-standing functions for dealing with ranges and their elements. They also work for raw arrays.
 
@@ -111,9 +110,7 @@ The trick is that begin is not a function that uses argument-dependent lookup, b
 
 And that applies to all utilities that are defined in std::ranges. Therefore, code that uses std::ranges utilities generally supports more types and more complex use cases.
 
-
-\subsubsection*{\zihao{3} 7.4.2\hspace{0.2cm}Functions for Dealing with Iterators}
-\addcontentsline{toc}{subsubsection}{7.4.2\hspace{0.2cm}Functions for Dealing with Iterators}
+\mySubsubsection{7.4.2}{Functions for Dealing with Iterators}
 
 Table Generic functions for dealing with iterators lists all generic functions for moving iterators, looking ahead or back, and computing the distance between iterators. Note that the next subsection describes functions for swapping and moving elements that iterators refer to.
 
@@ -134,8 +131,7 @@ Table 7.4. Generic functions for dealing with iterators
 
 Again, you should prefer these utilities over the corresponding traditional utilities in the namespace std. For example, in contrast to std::ranges::next(), the old utility std::next() requires to provide std::iterator\_traits<It>::difference\_type for a passed iterator It. However, some internal iterators of view types do not support iterator traits, so that code might not compile, if you use std::next().
 
-\subsubsection*{\zihao{3} 7.4.3\hspace{0.2cm}Functions for Swapping and Moving Elements/Values}
-\addcontentsline{toc}{subsubsection}{7.4.3\hspace{0.2cm}Functions for Swapping and Moving Elements/Values}
+\mySubsubsection{7.4.3}{Functions for Swapping and Moving Elements/Values}
 
 The ranges library also provides functions for swapping and moving values. These functions are listed in table Generic functions for swapping and moving elements/values. They cannot only be used for ranges.
 
@@ -259,8 +255,7 @@ using std::swap;
 swap(*it1, *it2);
 \end{cpp}
 
-\subsubsection*{\zihao{3} 7.4.4\hspace{0.2cm}Functions for Comparisons of Values}
-\addcontentsline{toc}{subsubsection}{7.4.4\hspace{0.2cm}Functions for Comparisons of Values}
+\mySubsubsection{7.4.4}{Functions for Comparisons of Values}
 
 Table Generic functions for comparison criteria lists all range utilities that you can use as comparison criteria now. They are defined in <functional>.
 

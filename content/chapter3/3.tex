@@ -22,9 +22,7 @@ Constraints can be used to overload or specialize generic code so that different
 
 Let us take a closer look at these reasons by developing another example step by step. This way, we can also introduce a couple of additional details about constraints, requirements, and concepts.
 
-
-\subsubsection*{\zihao{3} 3.3.1\hspace{0.2cm}Using Concepts to Understand Code and Error Messages}
-\addcontentsline{toc}{subsubsection}{3.3.1\hspace{0.2cm}Using Concepts to Understand Code and Error Messages}
+\mySubsubsection{3.3.1}{Using Concepts to Understand Code and Error Messages}
 
 Assume we want to write generic code that inserts the value of an object into a collection. Thanks to templates, we can implement it once as generic code that is compiled for the types of passed objects once we know them:
 
@@ -181,8 +179,7 @@ prog.cpp:25:18: required from here
 
 See rangessort.cpp for another example of algorithms that check the constraints of their parameters.
 
-\subsubsection*{\zihao{3} 3.3.2\hspace{0.2cm}Using Concepts to Disable Generic Code}
-\addcontentsline{toc}{subsubsection}{3.3.2\hspace{0.2cm}Using Concepts to Disable Generic Code}
+\mySubsubsection{3.3.2}{Using Concepts to Disable Generic Code}
 
 Assume we want to provide a special implementation for an add() function template like the one introduced above. When dealing with floating-point values, something different or extra should happen.
 
@@ -413,8 +410,7 @@ In the same way, concepts can subsume other concepts, which means that they coun
 
 We will discuss details of subsumption later.
 
-\subsubsection*{\zihao{3} 3.3.3\hspace{0.2cm}Using Requirements to Call Different Functions}
-\addcontentsline{toc}{subsubsection}{3.3.3\hspace{0.2cm}Using Requirements to Call Different Functions}
+\mySubsubsection{3.3.3}{Using Requirements to Call Different Functions}
 
 Finally, we should make our add() function template more flexible:
 
@@ -664,8 +660,7 @@ void add(Coll& coll, const T& val)
 
 Both ways of declaring the function template are equivalent.
 
-\subsubsection*{\zihao{3} 3.3.4\hspace{0.2cm}The Example as a Whole}
-\addcontentsline{toc}{subsubsection}{3.3.4\hspace{0.2cm}The Example as a Whole}
+\mySubsubsection{3.3.4}{The Example as a Whole}
 
 The previous subsections provided a huge amount of flexibility. So, let us bring all options together to have at least one full example as a whole:
 
@@ -754,8 +749,7 @@ int main()
 
 As you can see, I decided to use the concept SupportsPushBack for one template parameter inside the various function templates with if constexpr.
 
-\subsubsection*{\zihao{3} 3.3.5\hspace{0.2cm}Former Workarounds}
-\addcontentsline{toc}{subsubsection}{3.3.5\hspace{0.2cm}Former Workarounds}
+\mySubsubsection{3.3.5}{Former Workarounds}
 
 Constraining templates was already possible before C++20. However, the approaches for doing this were often not easy to use and could provide significant drawbacks.
 
