@@ -50,16 +50,17 @@ This feature is used when the view adaptor std::ranges::counted() yields a subra
 
 Table Operations of class std::counted\_iterator<> lists the API of a counted iterator.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Operation} &
 	\textbf{Effect} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}countedItor pos\{\}\\ countedItor pos\{pos2, num\}\\ countedItor pos\{pos2\}\\ pos.count()\\ pos.base()\\ ...\\ pos == std::default\_sentinel\\ pos != std::default\_sentinel\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Create a counted iterator that refers to no element(count is 0)\\ Create a counted iterator of num elements starting with pos2\\ Create a counted iterator as a (type converted) copy of a counted iterator pos2\\ Yields how many elements are left (0 means we are at the end)\\ Yileds(a copy of) the underlying iterator\\ All standard iterator operations of the underlying iterator type\\ Yields whether the iterator is at the end\\ Yields whether the iterator is not at the end\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.2. Operations of class std::counted\_iterator<>

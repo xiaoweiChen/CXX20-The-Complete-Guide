@@ -31,14 +31,16 @@ All of the views provide move (and optional copy) operations with constant compl
 
 The range factories/adaptors all(), counted(), and common() are described in a special section. Details of all view types and the other adaptors and factories are described in the chapter about View Types in Detail.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|}
+\begin{longtable}[c]{|l|l|l|}
 	\hline
 	\textbf{Adaptor/Factory} &
 	\textbf{Type} &
 	\textbf{Effect} \\ \hline
 	all(rg) &
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}Varies:\\ type of rg\\ ref\_view\\ owning\_view\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Yields rang rg as view\\ - Yields rg if it is already a view\\ - Yields a ref\_view if rg is an lvalue\\ - Yields an owning\_view if rg is an rvalue\end{tabular} \\ \hline
 	counted(beg, sz) &
@@ -59,18 +61,19 @@ The range factories/adaptors all(), counted(), and common() are described in a s
 	\begin{tabular}[c]{@{}l@{}}istream\textless{}T\textgreater{}(s)\\ -\\ -\\ -\\ -\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}istream\_view\\ wistream\_view\\ std::basic\_string\_view\\ std::span\\ subrange\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Yields a view that reads Ts from char stream s\\ Yields a view that reads Ts from wchar\_t stream s\\ Yields a read-only view to a character array\\ Yields a view to elements in contiguous memory\\ Yields a view for a begin iterator and a sentinel\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 6.3. Source views
 \end{center}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|}
+\begin{longtable}[c]{|l|l|l|}
 	\hline
 	\textbf{Adaptor} & \textbf{Type}   & \textbf{Effect}                                       \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	take(num)        & Varies          & The frist(up to) num elements                         \\ \hline
 	take\_while(pred)                    & take\_while\_view & All leading elements that match a predicate                        \\ \hline
 	drop(num)        & Varies          & All except the first num elements                     \\ \hline
@@ -85,8 +88,7 @@ Table 6.3. Source views
 	split(sep)       & split\_view     & All elements of a range split info multiple ranges    \\ \hline
 	lazy\_split(sep)                     & lazy\_split\_view & All elements of an input or const range split into multiple ranges \\ \hline
 	common           & Varies          & All elements with same type for iterator and sentinel \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 6.4. Adapting views

@@ -9,11 +9,13 @@ All standard views are derived from the class std::ranges::view\_interface<viewT
 
 The class template std::ranges::view\_interface<> introduces several basic member functions based on the definitions of begin() and end() of a derived view type that had to be passed to this base class as a template parameter. Table Operations of std::ranges::view\_interface<> lists the API the class provides for views.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|}
+\begin{longtable}[c]{|l|l|l|}
 	\hline
 	\textbf{Operation} & \textbf{Effect}                             & \textbf{Provided if}                       \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	r.empty()          & Yields whether r is empty(begin() == end()) & At least forward iterators                 \\ \hline
 	if (r)             & true if r is not empty                      & At least forward iterators                 \\ \hline
 	r.size()           & Yields the number of elements               & Can compute the difference between and end \\ \hline
@@ -21,9 +23,7 @@ The class template std::ranges::view\_interface<> introduces several basic membe
 	r.back() & Yields the last element                            & At least bidirectional iterators and end() yields the same type as begin() \\ \hline
 	r{[}idx{]}         & Yields the n-th element                     & At least random-access iterators           \\ \hline
 	r.data() & Yields a raw pointer to the memory of the elements & Elements are in contiguous memory                                          \\ \hline
-\end{tabular}
-\end{table}
-
+\end{longtable}
 
 \begin{center}
 Table 8.3. Operations of std::ranges::view\_interface<>

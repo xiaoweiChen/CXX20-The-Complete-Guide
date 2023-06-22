@@ -37,16 +37,17 @@ One problem is argument-dependent lookup (ADL).
 Another problem is const correctness.
 \end{itemize}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::ranges::empty(rg)\\ std::ranges::size(rg)\\ std::ranges::ssize(rg)\\ std::ranges::begin(rg)\\ std::ranges::end(rg)\\ std::ranges::cbegin(rg)\\ std::ranges::cend(rg)\\ std::ranges::rbegin(rg)\\ std::ranges::rend(rg)\\ std::ranges::crbegin(rg)\\ std::ranges::crend(rg)\\ std::ranges::data(rg)\\ std::ranges::cdata(rg)\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Yields whether the range is empty\\ Yields the size of the range\\ Yields the size of the range as the value of a signed type\\ Yields an iterator to the first element of the range\\ Yields a sentinel (an iterator to the end) of the range\\ Yields a constant iterator to the first element of the range\\ Yields a constant sentinel (a constant iterator to the end) of the range\\ Yields a reverse iterator to the first element of the range\\ Yields a reverse sentinel (am iterator to the end) of the range\\ Yields a reverse constant iterator to the first element of the range\\ Yields a reverse constant sentinel (a constant iterator to the end) of the range\\ Yields the raw data of the range\\ Yields the raw data of the range with const elements\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.3. Generic functions for dealing with the elements of ranges
@@ -114,16 +115,17 @@ And that applies to all utilities that are defined in std::ranges. Therefore, co
 
 Table Generic functions for dealing with iterators lists all generic functions for moving iterators, looking ahead or back, and computing the distance between iterators. Note that the next subsection describes functions for swapping and moving elements that iterators refer to.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::ranges::distance(from, to)\\ std::ranges::distance(rg)\\ std::ranges::next(pos)\\ std::ranges::next(pos, n)\\ std::ranges::next(pos, to)\\ std::ranges::next(pos, n, maxpos)\\ std::ranges::prev(pos)\\ std::ranges::prev(pos, n)\\ std::ranges::prev(pos, n, minpos)\\ std::ranges::advance(pos, n)\\ std::ranges::advance(pos, to)\\ std::ranges::advance(pos, n, maxpos)\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Yields the distance (number of elements) between from and to\\ Yields the number of elements in rg (size even for ranges that have no size())\\ Yields the position of the next element behind pos\\ Yields the position of the n-th next element behind pos\\ Yields the postition to behind pos\\ Yields the position of the n-th element after pos but not behind maxpos\\ Yields the position of the element before pos\\ Yields the position of the n-th element before pos\\ Yields the position of the n-th element before pos but not before minpos\\ Advances pos forward/backward n elements\\ Advances pos forward to to\\ Advances pos forward/backward n elements but not further than maxpos\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.4. Generic functions for dealing with iterators
@@ -135,16 +137,17 @@ Again, you should prefer these utilities over the corresponding traditional util
 
 The ranges library also provides functions for swapping and moving values. These functions are listed in table Generic functions for swapping and moving elements/values. They cannot only be used for ranges.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::ranges::swap(val1, val2)\\ std::ranges::iter\_swap(pos1, pos2)\\ std::ranges::iter\_move(pos)\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Swaps the values val1 and val2 (using move semantics)\\ Swaps the values that iterators pos1 and pos2 refer to (using move semantics)\\ Yields the value that iterator pos refers to for a move\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.5. Generic functions for swapping and moving elements/values
@@ -258,16 +261,17 @@ swap(*it1, *it2);
 Table Generic functions for comparison criteria lists all range utilities that you can use as comparison criteria now. They are defined in <functional>.
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::ranges::equal\_to(val1, val2)\\ std::ranges::not\_equal\_to(val1, val2)\\ std::ranges::less(val1, val2)\\ std::ranges::greater(val1, val2)\\ std::ranges::less\_equal(val1, val2)\\ std::ranges::greater\_equal(val1, val2)\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Yields whether val1 is equal to val2\\ Yields whether val1 is not equal to val2\\ Yields whether val1 is less than val2\\ Yields whether val1 is greater than val2\\ Yields whether val1 is less than or equal to val2\\ Yields whether val1 is greater than or equal to val2\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.6. Generic functions for comparison criteria

@@ -3,11 +3,13 @@ This section discusses all features of C++20 that create views that refer to exi
 
 \mySubsubsection{8.3.1}{Subrange}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Type:}                 & std::ranges::subrange\textless{}\textgreater{} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\textbf{Content:}              & All elements from passed begin to passed end   \\ \hline
 	\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::counted()\\ std::views::reverse() on reversed subrange\end{tabular} \\ \hline
 	\textbf{Element type:}         & Value type of passed iterators                 \\ \hline
@@ -19,8 +21,7 @@ This section discusses all features of C++20 that create views that refer to exi
 	\textbf{Caches:}               & Nothing                                        \\ \hline
 	\textbf{Const iterable:}       & If passed iterators are copyable               \\ \hline
 	\textbf{Propagates constness:} & Never                                          \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 The class template std::ranges::subrange<> defines a view to the elements of a range that is usually passed as a pair of begin iterator and sentinel (end iterator). However, you can also pass a single range object and indirectly, a begin iterator and a count. Internally, the view itself represents the elements by storing begin (iterator) and end (sentinel).
 
@@ -92,11 +93,9 @@ int main()
 
 The program has the following output:
 
-{\footnotesize
 \begin{shell}
 smart:klug smart:elegant smart:raffiniert
 \end{shell}
-}
 
 After equal\_range() gives us a pair of the beginning and the end of all elements in dict that have the key "smart", we use a subrange to convert these two iterators into a view (here, a view of elements that are pairs of strings):
 
@@ -119,9 +118,7 @@ coll.push_back(9);
 print(v2); // 1 0 2 3 4 5 6 7 8 9
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Range Factories for Subranges}
+\mySamllsection{Range Factories for Subranges}
 
 There is no range factory for initializing a subrange from a begin (iterator) and an end (sentinel). However, there is a range factory that might create a subrange from begin and a count:[C++20 originally stated that all() might also yield a subrange. However, that option was removed later when owning views were introduced (see \url{http://wg21.link/p2415})]
 
@@ -197,19 +194,15 @@ int main()
 
 The program has the following output:
 
-{\footnotesize
 \begin{shell}
 trait:Merkmal car:Auto smart:klug smart:elegant smart:raffiniert strange:fremd
 trait:Merkmal car:Auto smart:klug
 \end{shell}
-}
 
 Note that in rare cases, std::views::reverse() might also yield a subrange. This happens when you reverse a reversed subrange. In that case, you get back the original subrange.
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Special Characteristics of Subranges}
+\mySamllsection{Special Characteristics of Subranges}
 
 A subrange may or may not be a sized range. The way this is implemented is that a subrange has a third template parameter of the enumeration type std::ranges::subrange\_kind, which can have the values std::ranges::unsized or std::ranges::sized. That value of this template parameter can be specified or is derived from the concept std::sized\_sentinel\_for called for the iterator and sentinel type.
 
@@ -249,9 +242,7 @@ std::cout << std::ranges::sized_range<decltype(sl2)>; // true
 It is undefined behavior if you initialize the view with the wrong size or use the view after elements have been inserted or deleted between the begin and end.
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Interface of Subranges}
+\mySamllsection{Interface of Subranges}
 
 Table Operations of the class std::ranges::subrange<> lists the API of a subrange.
 
@@ -261,9 +252,7 @@ The constructors taking a szHint allow programmers to convert an unsized range i
 
 Iterators of a subrange refer to the underlying (or temporarily created) range. Therefore, a subrange is a borrowed range. However, note that iterators can still dangle when the underlying range is no longer there.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Tuple-Like Interface of Subranges}
+\mySamllsection{Tuple-Like Interface of Subranges}
 
 std::ranges::subrange also has a tuple-like interface to support structured bindings (introduced to C++ with C++17). Thus, you can easily initialize a begin iterator and a sentinel (end iterator) doing something like the following:
 
@@ -284,11 +273,13 @@ Specializations of std::tuple\_element<>
 get<>() functions for the indexes 0 and 1
 \end{itemize}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Operation}      & \textbf{Effect}                                                           \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	subrange r\{\}          & Creates an empty subrange                                                 \\ \hline
 	subrange r\{rg\}        & Creates a subrange with the elements of range rg                          \\ \hline
 	subrange r\{rg, szHint\}       & Creates a subrange with the elements of range rg specifying that the range has szHint elements           \\ \hline
@@ -309,16 +300,13 @@ get<>() functions for the indexes 0 and 1
 	r.prev(n)               & Yields a subrange starting with the n-th element before the first element \\ \hline
 	r.advance(dist)                & Modifies r so that it starts num elements later (starts earlier with negative num)                       \\ \hline
 	auto {[}beg, end{]} = r & initializes beg and end with begin and end/sentinel of r                  \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 8.4. Operations of the class std::ranges::subrange<>
 \end{center}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Using Subranges to Harmonize Raw Array Types}
+\mySamllsection{Using Subranges to Harmonize Raw Array Types}
 
 The type of subranges depends only on the type of the iterators (and whether or not size() is provided).
 This can be used to harmonize the type of raw arrays.
@@ -339,11 +327,13 @@ Note that this works only for raw arrays. For std::array<> and other containers,
 
 \mySubsubsection{8.3.2}{Ref View}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Type:}                 & std::ranges::ref\_view\textless{}\textgreater{} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\textbf{Content:}              & All elements of a range   \\ \hline
 	\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::all() and all other adaptors on lvalues\end{tabular} \\ \hline
 	\textbf{Element type:}         & Same type as passed range                 \\ \hline
@@ -355,8 +345,7 @@ Note that this works only for raw arrays. For std::array<> and other containers,
 	\textbf{Caches:}               & Nothing                                        \\ \hline
 	\textbf{Const iterable:}       & If on const-iterable range               \\ \hline
 	\textbf{Propagates constness:} & Never                                          \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 The class template std::ranges::ref\_view<> defines a view that simply refers to a range. That way, passing the view by value has an effect like passing the range by reference.
 
@@ -420,9 +409,7 @@ int main()
 }
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Range Adaptors for Ref Views}
+\mySamllsection{Range Adaptors for Ref Views}
 
 Ref views can also (and usually should) be created with a range factory:
 
@@ -458,16 +445,12 @@ However, using the adaptor, some optimizations might apply.
 
 For more details, see the description of std::views::all().
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Special Characteristics of Ref Views}
+\mySamllsection{Special Characteristics of Ref Views}
 
 The ref view stores a reference to the underlying range. Therefore, the ref view is a borrowed range. It can be used as long as the referred view is valid. For example, if the underlying view is a vector, a reallocation does not invalidate this view. However, note that iterators can still dangle when the underlying range is no longer there.
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Interface of Ref Views}
+\mySamllsection{Interface of Ref Views}
 
 Table Operations of the class std::ranges::ref\_view<> lists the API of a ref\_view.
 
@@ -575,9 +558,7 @@ foo(std::ranges::owning_view{std::move(coll)}); // OK: move coll as view
 
 Converting a range to an owning view is usually done implicitly by passing a temporary container to a range adaptor (see below).
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Range Adaptors for Owning Views}
+\mySamllsection{Range Adaptors for Owning Views}
 
 Owning views can also (and usually should) be created with a range factory:
 
@@ -645,15 +626,11 @@ The way this happens is that the drop view indirectly calls all() for the passed
 For more details, see the description of std::views::all().
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Special Characteristics of Owning Views}
+\mySamllsection{Special Characteristics of Owning Views}
 
 The owning view moves the passed range into itself. Therefore, the owning view is a borrowed range if the range it owns is a borrowed range.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Interface of Owning Views}
+\mySamllsection{Interface of Owning Views}
 
 Table Operations of the class std::ranges::owning\_view<> lists the API of an owning\_view.
 

@@ -28,12 +28,14 @@ uniform\_random\_bit\_generator is defined in <random>.
 
 Almost all concepts are defined in the namespace std. The only exceptions to this rule are the ranges concepts, which are defined in the namespace std::ranges.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Concept} &
 	\textbf{Constraint} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}integral\\ signed\_integral\\ unsigned\_integral\\ floating\_point\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Integral type\\ Signed integral type\\ Unsigned integral type\\ Floating-point type\end{tabular} \\ \hline
 	\begin{tabular}[c]{@{}l@{}}movable\\ copyable\\ semiregular\\ regular\end{tabular} &
@@ -44,33 +46,36 @@ Almost all concepts are defined in the namespace std. The only exceptions to thi
 	\begin{tabular}[c]{@{}l@{}}Type supports checks for equality\\ Can check two types for equality\\ Types support a strict weak ordering\\ Can check two types for strict weak ordering\\ Can apply all comparison operators(includeing the operator\textless{}=\textgreater{})\\ Can compare two types with all comparison operators(including \textless{}=\textgreater{})\end{tabular} \\ \hline
 	\begin{tabular}[c]{@{}l@{}}invocable\\ regular\_invocable\\ predicate\\ relation\\ equivalence\_relation\\ strict\_weak\_order\\ uniform\_random\_bit\_generator\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Type is a callable for specified arguments\\ Type is a callable for specified arguments(no modifications)\\ Type is a predicate(callable that returns a Boolean value)\\ A callable type defines a relationship between two types\\ A callable type defines an equality relationship between two types\\ A callable type defines an ordering relationship between two types\\ A callable type can be used as a random number generator\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 5.1. Basic concepts for types and objects
 \end{center}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Concept} &
 	\textbf{Constraint} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}default\_initializable\\ move\_constructible\\ copy\_constructible\\ destructible\\ swappable\\ weakly\_incrementables\\ incrementable\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Type is default initializable\\ Type supports move initializations\\ Type supports copy initializations\\ Type is destructible\\ Type is swappable\\ Type supports the increment operators\\ Type supports equality-preserving increment operator\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 5.2. Auxiliary concepts
 \end{center}
 
-\begin{table}[H]
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Concept} &
 	\textbf{Constraint} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}range\\ output\_range\\ input\_range\\ forward\_range\\ bidirectional\_range\\ random\_access\_range\\ contiguous\_range\\ sized\_range\\ common\_range\\ borrowed\_range\\ view\\ vieable\_range\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Type is a range\\ Type is a range to write to\\ Type is a range to read from\\ Type is a range to read from multiple times\\ Type is a range to read forward and backward from\\ Type is a range that supports jumping around over elements\\ Type is a range with elements in contiguous memory\\ Type is a range with cheap size support\\ Type is a range with iterators and sentinels that have the same type\\ Type is an lvalue or a borrowed range\\ Type is a view\\ Type is or can be converted to a view\end{tabular} \\ \hline
 	\begin{tabular}[c]{@{}l@{}}indirectly\_writable\\ indirectly\_readable\\ indirectly\_movable\\ indirectly\_movable\_storable\\ indirectly\_copyable\\ indirectly\_copyable\_storable\\ indirectly\_swappable\\ indirectly\_comparable\end{tabular} &
@@ -81,8 +86,7 @@ Table 5.2. Auxiliary concepts
 	\begin{tabular}[c]{@{}l@{}}Type is(at least) a forward iterator that can reorder elements\\ Two types can be used to merge sorted elements into a third type\\ A type is sortable(according to a comparison and projection)\end{tabular} \\ \hline
 	\begin{tabular}[c]{@{}l@{}}indirectly\_unary\_invocable\\ indirectly\_regular\_unary\_invocable\\ indirect\_unary\_predicate\\ indirect\_binary\_predicate\\ indirect\_equivalence\_relation\\ indirect\_strict\_weak\_order\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Operation can be called with the value type of an iterator\\ Stateless operation can be called with the value types of an iterator\\ Unary predicate can be called with the value type of an iterator\\ Binary predicate can be called with the value types of two iterators\\ Predicate can be used to check two values of the passed iterator(s) for equality\\ Predicate can be used to order two values of the passed iterator(s)\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 5.3. Concepts for ranges, iterators, and algorithms

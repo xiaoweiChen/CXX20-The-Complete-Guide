@@ -7,16 +7,17 @@ As for the generic helper functions, several of these utilities already existed 
 
 Table Generic functions that yield the types involved when using ranges lists all generic type definitions for ranges. They are defined as alias templates.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Type Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::ranges::iterator\_t\textless{}Rg\textgreater\\ std::ranges::sentinel\_t\textless{}Rg\textgreater\\ std::ranges::range\_value\_t\textless{}Rg\textgreater\\ std::ranges::range\_reference\_t\textless{}Rg\textgreater\\ std::ranges::range\_difference\_t\textless{}Rg\textgreater\\ std::ranges::range\_size\_t\textless{}Rg\textgreater\\ std::ranges::range\_rvalue\_reference\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_iterator\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_subrange\_t\textless{}Rg\textgreater{}\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Type of an iterator that iterates over Rg (what begin() yields)\\ Type of an end iterator for Rg (what end() yields)\\ Type of the element in the range\\ Type of a reference to the element type\\ Type of the difference between two iterators\\ Type of what the size() function returns\\ Type of an rvalue reference to the element type\\ std::ranges::iterator\_t\textless{}Rg\textgreater for a borrowed range, otherwise std::ranges::dangling\\ The subrange type of the iterator type for a borrowed range, otherwise std::ranges::dangling\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.7. Generic functions that yield the types involved when using ranges
@@ -39,17 +40,17 @@ The ranges library also introduced new type traits for iterators. Note that thes
 Table Generic functions that yield the types involved when using iterators lists all generic type traits for iterators. They are defined as alias templates.
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Type Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::iter\_value\_t\textless{}It\textgreater\\ std::iter\_reference\_t\textless{}It\textgreater\\ std::iter\_rvalue\_reference\_t\textless{}It\textgreater\\ std::iter\_common\_reference\_t\textless{}It\textgreater\\ std::iter\_difference\textless{}It\textgreater{}\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Type of the value that the iterator refers to\\ Type of a reference to the value type\\ Type of an rvalue reference to the value type\\ The common type of the reference type and a reference to the value type\\ Type of the difference between two iterators\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
-
+\end{longtable}
 
 \begin{center}
 Table 7.8. Generic functions that yield the types involved when using iterators
@@ -63,17 +64,17 @@ These functions are described in detail in the section about iterator traits.
 
 Table New functional types lists the new types that can be used as helper functions. They are defined in <functional>.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Type Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::identity\\ std::compare\_three\_way\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}A function object that returns itself\\ A function object to call the operator \textless{}=\textgreater{}\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
-
+\end{longtable}
 
 \begin{center}
 Table 7.9. New functional types
@@ -110,16 +111,17 @@ The function object type std::compare\_three\_way is a new function object type 
 Table Other new types for iterators lists all new types for dealing with iterators. They are defined in <iterator>.
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Type Function} &
 	\textbf{Meaning} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::incrementable\_traits\textless{}It\textgreater\\ std::projected\textless{}It1, It2\textgreater{}\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}A helper type to yield the difference\_type of two iterator\\ A type to formulate constraints for projections\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.10. Other new types for iterators

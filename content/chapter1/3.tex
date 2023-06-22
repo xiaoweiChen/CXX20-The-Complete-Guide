@@ -11,18 +11,20 @@ Or as a free-standing function taking two parameters
 \end{itemize}
 
 
-\begin{table}[H]
-\begin{tabular}{|l|l|}
-	\hline
-	\textbf{Function Object in std::} & \textbf{Effect}                                             \\ \hline
-	strong\_order()                   & Maps to a strong order value also for floating-point values \\ \hline
-	weak\_order()                     & Maps to a weak order value also for floating-point values   \\ \hline
-	partial\_order()                  & Maps to a partial order value                               \\ \hline
-	compare\_strong\_order\_fallback()  & Maps to a strong order value even if only == and \textless are defined  \\ \hline
-	compare\_weak\_order\_fallback()    & Maps to a weak order value even if only == and \textless are defined    \\ \hline
-	compare\_partial\_order\_fallback() & Maps to a partial order value even if only == and \textless are defined \\ \hline
-\end{tabular}
-\end{table}
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Function Object in std::} & \textbf{Effect}                                             \\ \hline
+\endfirsthead
+%
+\endhead
+%
+strong\_order()                   & Maps to a strong order value also for floating-point values \\ \hline
+weak\_order()                     & Maps to a weak order value also for floating-point values   \\ \hline
+partial\_order()                  & Maps to a partial order value                               \\ \hline
+compare\_strong\_order\_fallback()  & Maps to a strong order value even if only == and \textless are defined  \\ \hline
+compare\_weak\_order\_fallback()    & Maps to a weak order value even if only == and \textless are defined    \\ \hline
+compare\_partial\_order\_fallback() & Maps to a partial order value even if only == and \textless are defined \\ \hline
+\end{longtable}
 
 \begin{center}
 Table 1.1. Function objects for mapping comparison category types

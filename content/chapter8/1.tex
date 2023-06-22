@@ -17,11 +17,13 @@ Factory views, which generate elements themselves
 \end{itemize}
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|}
+\begin{longtable}[c]{|l|l|l|}
 	\hline
 	\textbf{Type}             & \textbf{Adaptor/Factory}                                              & \textbf{Effect}                                \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	std::ranges::red\_view    & all(rg)                                                               & Reference to a range                           \\ \hline
 	std::ranges::owning\_view & all(rg)                                                               & View containing a range                        \\ \hline
 	std::ranges::subrange     & counted(beg, sz)                                                      & Begin iterator and sentinel                    \\ \hline
@@ -35,8 +37,7 @@ Factory views, which generate elements themselves
 	\begin{tabular}[c]{@{}l@{}}std::basic\_string\_view\\   std::string\_view\\   std::u8string\_view\\   std::u16string\_view\\   std::u32string\_view\\   std::wstring\_view\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}-\\ -\\ -\\ -\\ -\\ -\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Read-only view to characters\\   To a char sequence\\   To a char8\_t sequence\\   To a char16\_t sequence\\   To a char32\_t sequence\\   To a wchar\_t sequence\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 8.1. Wrapping and generating views
@@ -68,11 +69,13 @@ In general, it is better to use the range adaptors and factories. For example, y
 Table Adapting views lists the standard views that adapt, in some way, elements of given ranges (filter out elements, modify the values of elements, change the order of elements, or combine or create sub-ranges). They can especially be used inside pipelines of views.
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|}
+\begin{longtable}[c]{|l|l|l|}
 	\hline
 	\textbf{Type}                & \textbf{Adaptor} & \textbf{Effect}                               \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	std::ranges::ref\_view       & all(rg)          & Reference to a range                          \\ \hline
 	std::ranges::owning\_view    & all(rg)          & View containing a range                       \\ \hline
 	std::ranges::take\_view      & take(num)        & The first (up to) num elements                \\ \hline
@@ -89,8 +92,7 @@ Table Adapting views lists the standard views that adapt, in some way, elements 
 	std::ranges::lazy\_split\_view & lazy\_split(sep)                     & All elements of an input or const range split into sub-rnages \\ \hline
 	std::ranges::join\_view      & join             & All elements of a range of multiple ranges    \\ \hline
 	std::ranges::common\_view      & common()                             & All elements with same type for iterator and sentiel          \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 8.2. Adapting views

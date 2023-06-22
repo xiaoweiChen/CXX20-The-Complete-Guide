@@ -36,18 +36,19 @@ They might return borrowed iterators, signaling that the iterator is no valid it
 \end{itemize}
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|}
+\begin{longtable}[c]{|l|l|l|}
 	\hline
 	\textbf{Type} &
 	\textbf{Meaning} &
 	\textbf{Members} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}std::ranges::in\_in\_result\\ std::ranges::in\_out\_result\\ std::ranges::in\_in\_out\_result\\ std::ranges::in\_out\_out\_result\\ std::ranges::in\_fun\_result\\ std::ranges::min\_max\_result\\ std::ranges::in\_found\_result\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}For the positions of two input ranges\\ For one position of an input range and one position of an output range\\ For the positions of two input ranges and one position of an output range\\ For one position of an input range and the position of two output ranges\\ For one position of an input range and a function\\ For one maximum and one minimum position/value\\ For one position of an input range and a Boolean value\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}in1, in2\\ in, out\\ in1, in2, out\\ in, out1, out2\\ in, out\\ min, max\\ in, found\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.11. New return types for range algorithms
@@ -117,11 +118,13 @@ Borrowed signals whether the algorithm returns borrowed iterators
 
 Table Non-modifying algorithms lists the available non-modifying standard algorithms of C++20.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|l|l|l|}
+\begin{longtable}[c]{|l|l|l|l|l|l|}
 	\hline
 	\textbf{Name}                          & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	for\_each()                & C++98 & yes & yes       & in\_fun  & yes \\ \hline
 	for\_each\_n()             & C++17 & yes & yes       & in\_fun  &     \\ \hline
 	count()                    & C++98 & yes & yes       &          &     \\ \hline
@@ -154,8 +157,7 @@ Table Non-modifying algorithms lists the available non-modifying standard algori
 	all\_of()                  & C++11 & yes & yes       &          &     \\ \hline
 	any\_of()                  & C++11 & yes & yes       &          &     \\ \hline
 	none\_of()                 & C++11 & yes & yes       &          &     \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.12. Non-modifying algorithms
@@ -165,11 +167,13 @@ Note that the algorithms std::ranges::min(), std::ranges::max(), and std::ranges
 
 Table Modifying algorithms lists the available modifying standard algorithms in C++20.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|l|l|l|}
+\begin{longtable}[c]{|l|l|l|l|l|l|}
 	\hline
 	\textbf{Name}              & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	for\_each()         & C++98 & yes & yes & in\_fun & yes \\ \hline
 	for\_each\_n()      & C++17 & yes & yes & in\_fun &     \\ \hline
 	copy()              & C++98 & yes & yes & in\_out & yes \\ \hline
@@ -191,8 +195,7 @@ Table Modifying algorithms lists the available modifying standard algorithms in 
 	replace\_if()       & C++98 & yes & yes &         & yes \\ \hline
 	replcae\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
 	replace\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.13. Modifying algorithms
@@ -201,19 +204,20 @@ Table 7.13. Modifying algorithms
 Table Removing algorithms lists the available “removing” standard algorithms in C++20. Note that algorithms never really remove elements. This still applies when they take whole ranges as single arguments. They change the order so that the elements not removed are packed to the front and return the new end.
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|l|l|l|}
+\begin{longtable}[c]{|l|l|l|l|l|l|}
 	\hline
 	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	remove()           & C++98 & yes & yes &         & yes \\ \hline
 	remove\_if()       & C++98 & yes & yes &         & yes \\ \hline
 	remove\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
 	remove\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
 	unique()           & C++98 & yes & yes &         & yes \\ \hline
 	unique\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.14. Removing algorithms
@@ -223,11 +227,13 @@ Table Mutating algorithms lists the available mutating standard algorithms in C+
 
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|l|l|l|}
+\begin{longtable}[c]{|l|l|l|l|l|l|}
 	\hline
 	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	reverse()           & C++98 & yes & yes &           & yes \\ \hline
 	reverse\_copy()     & C++98 & yes & yes & in\_out   & yes \\ \hline
 	rotate()            & C++98 & yes & yes &           & yes \\ \hline
@@ -242,8 +248,8 @@ Table Mutating algorithms lists the available mutating standard algorithms in C+
 	partition()         & C++98 & yes & yes &           &     \\ \hline
 	stable\_partition() & C++98 & yes & yes &           &     \\ \hline
 	partition\_copy()   & C++11 & yes & yes &           &     \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
+
 
 \begin{center}
 Table 7.15. Mutating algorithms
@@ -252,11 +258,13 @@ Table 7.15. Mutating algorithms
 Table Sorting algorithms lists the available sorting standard algorithms in C++20.
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|l|l|l|}
+\begin{longtable}[c]{|l|l|l|l|l|l|}
 	\hline
 	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	sort()                & C++98 & yes & yes &              & yes \\ \hline
 	stable\_sort()        & C++98 & yes & yes &              & yes \\ \hline
 	partial\_sort()       & C++98 & yes & yes &              & yes \\ \hline
@@ -269,8 +277,7 @@ Table Sorting algorithms lists the available sorting standard algorithms in C++2
 	push\_heap()          & C++98 & no  & yes &              & yes \\ \hline
 	pop\_heap()           & C++98 & no  & yes &              & yes \\ \hline
 	sort\_heap()          & C++98 & no  & yes &              & yes \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.16. Sorting algorithms
@@ -278,11 +285,13 @@ Table 7.16. Sorting algorithms
 
 Table Algorithms for sorted ranges lists the available standard algorithms for sorted ranges in C++20.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|l|l|l|}
+\begin{longtable}[c]{|l|l|l|l|l|l|}
 	\hline
 	\textbf{Name}                & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	binary\_search()    & C++98 & no  & yes &             &     \\ \hline
 	includes()          & C++98 & yes & yes &             &     \\ \hline
 	lower\_bound()      & C++98 & no  & yes &             & yes \\ \hline
@@ -295,9 +304,7 @@ Table Algorithms for sorted ranges lists the available standard algorithms for s
 	set\_difference()   & C++98 & yes & yes & in\_out     & yes \\ \hline
 	set\_symmetric\_difference() & C++98          & yes               & yes             & in\_in\_out       & yes               \\ \hline
 	partition\_point()  & C++11 & no  & yes &             & yes \\ \hline
-\end{tabular}
-\end{table}
-
+\end{longtable}
 
 \begin{center}
 Table 7.17. Algorithms for sorted ranges
@@ -306,11 +313,13 @@ Table 7.17. Algorithms for sorted ranges
 Table Numeric algorithms lists the available numeric standard algorithms in C++20.
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|l|l|l|}
+\begin{longtable}[c]{|l|l|l|l|l|l|}
 \hline
 \textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\endfirsthead
+%
+\endhead
+%
 accumulate()                 & C++98 & no  & no &  &  \\ \hline
 reduce()                     & C++17 & yes & no &  &  \\ \hline
 transform\_reduce()          & C++17 & yes & no &  &  \\ \hline
@@ -322,8 +331,7 @@ exclusive\_scan()            & C++17 & yes & no &  &  \\ \hline
 transform\_inclusive\_scan() & C++17 & yes & no &  &  \\ \hline
 transform\_exclusive\_scan() & C++17 & yes & no &  &  \\ \hline
 iota                         & C++11 & no  & no &  &  \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.18. Numeric algorithms

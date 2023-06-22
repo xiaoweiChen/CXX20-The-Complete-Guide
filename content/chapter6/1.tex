@@ -210,16 +210,17 @@ std::ranges::sort(coll3); // ERROR: concept sortable not satisfied
 
 Table Basic range concepts lists the basic concepts to define requirements for ranges.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Concept(in std::ranges)} &
 	\textbf{Requires} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}range\\ output\_range\\ input\_range\\ forward\_range\\ bidirectional\_range\\ random\_access\_range\\ contiguous\_range\\ sized\_range\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Can be iterated from begin to end\\ Rnage of elements to write values to\\ Rnage to read element values from\\ Range you can iterate over the elements multiple times\\ Range you can iterate over the elements forward and backward\\ Range with random access (jump back and forth between elements)\\ Range with all elements in contiguous memory\\ Range with constant-time size()\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 6.1. Basic range concepts
@@ -245,16 +246,17 @@ Note that the iterator and corresponding range categories changed slightly with 
 
 Table Other range concepts lists a few other range concepts for special cases that are introduced later.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|}
+\begin{longtable}[c]{|l|l|}
 	\hline
 	\textbf{Concept(in std::range)} &
 	\textbf{Requires} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}view\\ viewable\_range\\ borrowed\_range\\ common\_range\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Range that is cheap to copy or move and assign\\ Range that can be converted to a view (with std::ranges::all())\\ Range with iterators that are not tied  to the lifetime of the range\\ Ranges where begin and end(sentine) have the same type\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 6.2. Other range concepts

@@ -1,17 +1,18 @@
 Iterators have different abilities. These abilities are important because some algorithms require special iterator abilities. For example, sorting algorithms require iterators that can perform random access because otherwise, the performance would be poor. For this reason, iterators have different categories, which were extended in C++20 by a new category: contiguous iterator. The abilities of these categories are listed in table Iterator categories.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|l|l|}
+\begin{longtable}[c]{|l|l|l|}
 	\hline
 	\textbf{Iterator Category} &
 	\textbf{Ability} &
 	\textbf{Providers} \\ \hline
+	\endfirsthead
+	%
+	\endhead
+	%
 	\begin{tabular}[c]{@{}l@{}}Output\\ Input\\ Forward\\ Bidirectional\\ Random-access\\ Contiguous\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}Writes forward\\ Reads forward once\\ Reads forward\\ Reads forward and backward\\ Reads with random access\\ Reads elements stored in contiguous memory\end{tabular} &
 	\begin{tabular}[c]{@{}l@{}}osteram iterator, inserter\\ istream iterator\\ std::forward\_list\textless{}\textgreater{}, unordered containers\\ list\textless{}\textgreater{}, set\textless{}\textgreater{}, multset\textless{}\textgreater{}, map\textless{}\textgreater{}, multimap\textless{}\textgreater\\ deque\textless{}\textgreater\\ array\textless{}\textgreater{}, vector\textless{}\textgreater{}, string, C-style array\end{tabular} \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \begin{center}
 Table 7.1. Iterator categories
