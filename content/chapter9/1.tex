@@ -1,0 +1,526 @@
+
+Let us look at some first examples of using spans. First, however, we have to discuss how the number of elements in a span can be specified.
+
+\mySubsubsection{9.1.1}{Fixed and Dynamic Extent}
+
+When you declare a span, you can choose between a specified fixed number of elements or leave the number of elements open so that the number of elements the span refers to can change.
+
+A span with a specified fix number of elements is called a span with fixed extent. It is declared by specifying the element type and the size as template parameters or by initializing it either with an array (raw array or std::array<>) with an iterator and a size:
+
+\begin{cpp}
+int a5[5] = {1, 2, 3, 4, 5};
+std::array arr5{1, 2, 3, 4, 5};
+std::vector vec{1, 2, 3, 4, 5, 6, 7, 8};
+
+std::span sp1 = a5; // span with fixed extent of 5 elements
+std::span sp2{arr5}; // span with fixed extent of 5 elements
+std::span<int, 5> sp3 = arr5; // span with fixed extent of 5 elements
+std::span<int, 3> sp4{vec}; // span with fixed extent of 3 elements
+std::span<int, 4> sp5{vec.data(), 4}; // span with fixed extent of 4 elements
+std::span sp6 = sp1; // span with fixed extent of 5 elements
+\end{cpp}
+
+For such a span, the member function size() always yields the size specified as part of the type. The default constructor cannot be called here (unless the extent is 0).
+
+A span where the number of elements is not stable over its lifetime is called a span with dynamic extent. The number of elements depends on the sequence of elements the span refers to and might change due to the assignment of a new underlying range (there is no other way to change the number of elements). For example:
+
+\begin{cpp}
+int a5[5] = {1, 2, 3, 4, 5};
+std::array arr5{1, 2, 3, 4, 5};
+std::vector vec{1, 2, 3, 4, 5, 6, 7, 8};
+
+std::span<int> sp1; // span with dynamic extent (initially 0 elements)
+std::span sp2{a5, 3}; // span with dynamic extent (initially 3 elements)
+std::span<int> sp3{arr5}; // span with dynamic extent (initially 5 elements)
+std::span sp4{vec}; // span with dynamic extent (initially 8 elements)
+std::span sp5{arr5.data(), 3}; // span with dynamic extent (initially 3 elements)
+std::span sp6{a5+1, 3}; // span with dynamic extent (initially 3 elements)
+\end{cpp}
+
+Note that it is up to the programmer to ensure that the span refers to a valid range that has enough elements.
+
+For both cases, let us look at complete examples.
+
+\mySubsubsection{9.1.2}{Example Using a Span with a Dynamic Extent}
+
+Here is a first example using a span with dynamic extent:
+
+\filename{lib/spandyn.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+#include <algorithm>
+#include <span>
+
+template<typename T, std::size_t Sz>
+void printSpan(std::span<T, Sz> sp)
+{
+	for (const auto& elem : sp) {
+		std::cout << '"' << elem << "\" ";
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
+	
+	// define view to first 3 elements:
+	std::span<const std::string> sp{vec.data(), 3};
+	std::cout << "first 3: ";
+	printSpan(sp);
+	
+	// sort elements in the referenced vector:
+	std::ranges::sort(vec);
+	std::cout << "first 3 after sort(): ";
+	printSpan(sp);
+	
+	// insert a new element:
+	// - must reassign the internal array of the vector if it reallocated new memory
+	auto oldCapa = vec.capacity();
+	vec.push_back("Cairo");
+	if (oldCapa != vec.capacity()) {
+		sp = std::span{vec.data(), 3};
+	}
+	std::cout << "first 3 after push_back(): ";
+	printSpan(sp);
+
+	// let span refer to the vector as a whole:
+	sp = vec;
+	std::cout << "all: ";
+	printSpan(sp);
+
+	// let span refer to the last five elements:
+	sp = std::span{vec.end()-5, vec.end()};
+	std::cout << "last 5: ";
+	printSpan(sp);
+	
+	// let span refer to the last four elements:
+	sp = std::span{vec}.last(4);
+	std::cout << "last 4: ";
+	printSpan(sp);
+}
+\end{cpp}
+
+The output of the program is as follows:
+
+\begin{shell}
+first 3:              "New York" "Tokyo" "Rio"
+first 3 after sort(): "Berlin" "New York" "Rio"
+first 3 after push_back(): "Berlin" "New York" "Rio"
+all:   "Berlin" "New York" "Rio" "Sydney" "Tokyo" "Cairo"
+last 5: "New York" "Rio" "Sydney" "Tokyo" "Cairo"
+last 4: "Rio" "Sydney" "Tokyo" "Cairo"
+\end{shell}
+
+Let us go through the example step by step.
+
+\mySamllsection{Declaring a Span}
+
+In main(), we first initialize a span of three constant strings with the first three elements of a vector:
+
+\begin{cpp}
+std::vector<std::string> vec{"New York", "Rio", "Tokyo", "Berlin", "Sydney"};
+
+std::span<const std::string> sp{vec.data(), 3};
+\end{cpp}
+
+For initialization, we pass the beginning of the sequence and the number of elements. In this case, we refer to the first three elements of vec.
+
+There are a lot of things to note about this declaration:
+
+\begin{itemize}
+\item
+It is up to the programmer to ensure that the number of elements matches the extent of the span and that the elements are valid. If the vector does not have enough elements, the behavior is undefined:
+
+\begin{cpp}
+std::span<const std::string> sp{vec.begin(), 10}; // undefined behavior
+\end{cpp}
+
+\item
+By specifying that the elements are const std::string, we cannot modify them via the span. Note that declaring the span itself as const does not provide read-only access to the referenced elements (as usual for views, const is not propagated):
+
+\begin{cpp}
+std::span<const std::string> sp1{vec.begin(), 3}; // elements cannot be modified
+const std::span<std::string> sp2{vec.begin(), 3}; // elements can be modified
+\end{cpp}
+
+\item
+Using a different element type for the span than for the referenced elements looks makes it look like you can use any type for a span that converts to the underlying element type. However, that is not true. You can only add qualifiers such as const:
+
+\begin{cpp}
+std::vector<int> vec{ ... };
+std::span<long> sp{vec.data(), 3}; // ERROR
+\end{cpp}
+\end{itemize}
+
+\mySamllsection{Passing and Printing a Span}
+
+Next, we print the span, passing it to a generic print function:
+
+\begin{cpp}
+printSpan(sp);
+\end{cpp}
+
+The print function can deal with any span (as long as an output operator is defined for the elements):
+
+\begin{cpp}
+template<typename T, std::size_t Sz>
+void printSpan(std::span<T, Sz> sp)
+{
+	for (const auto& elem : sp) {
+		std::cout << '"' << elem << "\" ";
+	}
+	std::cout << '\n';
+}
+\end{cpp}
+
+You might be surprised that the function template printSpan<>() can be called even though it has a nontype template parameter for the size of the span. It works because a std::span<T> is a shortcut for a span that has the pseudo size std::dynamic\_extent:
+
+\begin{cpp}
+std::span<int> sp; // equivalent to std::span<int, std::dynamic_extent>
+\end{cpp}
+
+In fact, the class template std::span<> is declared as follows:
+
+\begin{cpp}
+namespace std {
+	template<typename ElementType, size_t Extent = dynamic_extent>
+	class span {
+		...
+	};
+}
+\end{cpp}
+
+This allows programmers to provide generic code like printSpan<>() that works for both spans with fixed extent and spans with dynamic extent. When calling printSpan<>() with a span with a fixed extent, the extent is passed as a template parameter:
+
+\begin{cpp}
+std::span<int, 5> sp{ ... };
+
+printSpan(sp); // calls printSpan<int, 5>(sp)
+\end{cpp}
+
+As you can see, the span is passed by value. That is the recommended way to pass spans because they are cheap to copy because internally, a span is just a pointer and a size.
+
+Inside the print function, we use a range-based for loop to iterate over the elements of the span. This is possible because a span provides iterator support with begin() and end().
+
+However, beware: regardless of we pass the span by value or by const reference, inside the function we can still modify the elements as long as they are not declared to be const. That is why declaring the elements of the span to be const usually makes sense.
+
+\mySamllsection{Dealing with Reference Semantics}
+
+Next, we sort the elements that the span refers to (we use the new std::ranges::sort() here, which takes the container as a whole):
+
+\begin{cpp}
+std::ranges::sort(vec);
+\end{cpp}
+
+Because the span has reference semantics, this sorting also affects the elements of the span, with the result that the span now refers to different values.
+
+If we did not have a span of const elements, we would also be able to call sort() passing the span.
+
+Reference semantics means that you have to be careful when using a span, which demonstrates the next statements in the example. Here, we insert a new element into the vector that holds the elements the span refers to. Due to the reference semantics of a span, this is something we have to be very careful about, because if the vector allocates new memory, it invalidates all iterators and pointers to its elements. Therefore, a reallocation also invalidates a span that refers to the elements of the vector. The span refers to elements that are no longer there.
+
+For this reason, we double check the capacity (maximum number of elements for which memory is allocated) before and after the insertion. If the capacity changes, we reinitialize the span to refer to the first three elements in the new memory:
+
+\begin{cpp}
+auto oldCapa = vec.capacity();
+vec.push_back("Cairo");
+if (oldCapa != vec.capacity()) {
+	sp = std::span{vec.data(), 3};
+}
+\end{cpp}
+
+We can only perform this reinitialization because the span itself is not const.
+
+\mySamllsection{Assigning a Container to a Span}
+
+Next, we assign the vector as a whole to the span and print it out:
+
+\begin{cpp}
+std::span<const std::string> sp{vec.begin(), 3};
+...
+sp = vec;
+\end{cpp}
+
+Here, you can see that an assignment to the span with dynamic extent can change the number of elements. Spans can take any type of container or range that hold the elements in contiguous memory, provided the container yields access to the elements with the member function data().
+
+However, due to the limitations of template type deduction, you cannot pass such a container to a function that expects a span. You have to specify explicitly that you want to convert a vector to a span:
+
+\begin{cpp}
+printSpan(vec); // ERROR: template type deduction doesn’t work here
+printSpan(std::span{vec}); // OK
+\end{cpp}
+
+\mySamllsection{Assigning a Different Subsequence}
+
+In general, the assignment operator of a span allows us to assign another sequence of elements.
+
+The example uses this to later refer to the last three elements in the vector:
+
+\begin{cpp}
+std::span<const std::string> sp{vec.data(), 3};
+...
+// assign view to last five elements:
+sp = std::span{vec.end()-5, vec.end()};
+\end{cpp}
+
+Here, you can also see that we can specify the referenced sequence with two iterators defining the beginning and the end of the sequence as a half-open range (the value at the beginning included, the value at the end excluded). The requirement is that the concept std::sized\_sentinel\_for is satisfied for the beginning and end so that the constructor can compute the difference.
+
+However, as the following statement demonstrates, the last n elements can also be assigned using the member functions of spans:
+
+\begin{cpp}
+std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
+std::span<const std::string> sp{vec.data(), 3};
+...
+// assign view to last four elements:
+sp = std::span{vec}.last(4);
+\end{cpp}
+
+Spans are the only views that provide a way to yield a sequence of elements in the middle or at the end of a range.
+
+As long as the element type fits, you can pass any sequence of elements of any other type. For example:
+
+\begin{cpp}
+std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
+std::span<const std::string> sp{vec.begin(), 3};
+...
+std::array<std::string, 3> arr{"Tick", "Trick", "Track"};
+sp = arr; // OK
+\end{cpp}
+
+However, note that spans do not support implicit type conversions for the element types (except adding const). For example, the following code does not compile:
+
+\begin{cpp}
+std::span<const std::string> sp{vec.begin(), 3};
+...
+std::array arr{"Tick", "Trick", "Track"}; // deduces std::array<const char*, 3>
+sp = arr; // ERROR: different element types
+\end{cpp}
+
+\mySubsubsection{9.1.3}{Example Using a Span with Non-const Elements}
+
+When initializing spans, we can use class template argument deduction so that the type of the elements (and the extent) is deduced:
+
+\begin{cpp}
+std::span sp{vec.begin(), 3}; // deduces: std::span<std::string>
+\end{cpp}
+
+The span then declares the type of the elements to have the element type of the underlying range, which means that you can even modify the value of the underlying range provided the underlying range does not declare its elements as const.
+
+This feature can be used to allow spans to modify elements of a range in one statement. For example, you can sort a subset of the elements, as the following example demonstrates:
+
+\filename{lib/spanview.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+#include <algorithm>
+#include <span>
+
+void print(std::ranges::input_range auto&& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << '"' << elem << "\" ";
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
+	print(vec);
+	
+	// sort the three elements in the middle:
+	std::ranges::sort(std::span{vec}.subspan(1, 3));
+	print(vec);
+	
+	// print last three elements:
+	print(std::span{vec}.last(3));
+}
+\end{cpp}
+
+Here, we create temporary spans to sort a subset of the elements in the vector vec and print the last three elements of the vector.
+
+The program has the following output:
+
+\begin{shell}
+"New York" "Tokyo" "Rio" "Berlin" "Sydney"
+"New York" "Berlin" "Rio" "Tokyo" "Sydney"
+"Rio" "Tokyo" "Sydney"
+\end{shell}
+
+Spans are views. To deal with the first n elements of a range, you can also use the range factory std::views::counted(), which creates a span with dynamic extent if called for an iterator to a range with elements in contiguous memory:
+
+\begin{cpp}
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of vec
+\end{cpp}
+
+\mySubsubsection{9.1.4}{Example Using a Span with Fixed Extent}
+
+As a first example of a span with a fixed extent, let us convert the previous example but declare the span with a fixed extent:
+
+\filename{lib/spanfix.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ranges>
+#include <algorithm>
+#include <span>
+
+template<typename T, std::size_t Sz>
+void printSpan(std::span<T, Sz> sp)
+{
+	for (const auto& elem : sp) {
+		std::cout << '"' << elem << "\" ";
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
+	
+	// define view to first 3 elements:
+	std::span<const std::string, 3> sp3{vec.data(), 3};
+	std::cout << "first 3: ";
+	printSpan(sp3);
+	
+	// sort referenced elements:
+	std::ranges::sort(vec);
+	std::cout << "first 3 after sort(): ";
+	printSpan(sp3);
+	
+	// insert a new element:
+	// - must reassign the internal array of the vector if it reallocated new memory
+	auto oldCapa = vec.capacity();
+	vec.push_back("Cairo");
+	if (oldCapa != vec.capacity()) {
+		sp3 = std::span<std::string, 3>{vec.data(), 3};
+	}
+	std::cout << "first 3: ";
+	printSpan(sp3);
+	
+	// let span refer to the last three elements:
+	sp3 = std::span<const std::string, 3>{vec.end()-3, vec.end()};
+	std::cout << "last 3: ";
+	printSpan(sp3);
+	
+	// let span refer to the last three elements:
+	sp3 = std::span{vec}.last<3>();
+	std::cout << "last 3: ";
+	printSpan(sp3);
+}
+\end{cpp}
+
+The output of the program is as follows:
+
+\begin{shell}
+first 3:              "New York" "Tokyo" "Rio"
+first 3 after sort(): "Berlin" "New York" "Rio"
+first 3: "Berlin" "New York" "Rio"
+last 3: "Sydney" "Tokyo" "Cairo"
+last 3: "Sydney" "Tokyo" "Cairo"
+\end{shell}
+
+Again, let us go through the remarkable parts of the program example step by step.
+
+\mySamllsection{Declaring a Span}
+
+This time, we first initialize a span of three constant strings with fixed extent:
+
+\begin{cpp}
+std::vector<std::string> vec{"New York", "Rio", "Tokyo", "Berlin", "Sydney"};
+
+std::span<const std::string, 3> sp3{vec.data(), 3};
+\end{cpp}
+
+For the fixed extent, we specify both the type of the elements and the size.
+Again, it is up to the programmer to ensure that the number of elements matches the extent of the span.
+
+If the count passed as the second argument does not match the extent, the behavior is undefined.
+
+\begin{cpp}
+std::span<const std::string, 3> sp3{vec.begin(), 4}; // undefined behavior
+\end{cpp}
+
+\mySamllsection{Assigning a Different Subsequence}
+
+For spans with fixed extent, you can only assign new underlying ranges with the same number of elements.
+
+Therefore, this time, we assign only spans with three elements:
+
+\begin{cpp}
+std::span<const std::string, 3> sp3{vec.data(), 3};
+...
+sp3 = std::span<const std::string, 3>{vec.end()-3, vec.end()};
+\end{cpp}
+
+Note that the following would no longer compile:
+
+\begin{cpp}
+std::span<const std::string, 3> sp3{vec.data(), 3};
+...
+sp3 = std::span{vec}.last(3); // ERROR
+\end{cpp}
+
+The reason for this is that the expression on the right hand side of the assignment creates a span with dynamic extent. However, by using last() with a syntax that specifies the number of elements as template parameters, we get a span with the corresponding fixed extent:
+
+\begin{cpp}
+std::span<const std::string, 3> sp3{vec.data(), 3};
+...
+sp3 = std::span{vec}.last<3>(); // OK
+\end{cpp}
+
+We can still use class template argument deduction to assign the elements of an array or even assign it directly:
+
+\begin{cpp}
+std::span<const std::string, 3> sp3{vec.data(), 3};
+...
+std::array<std::string, 3> arr{"Tic", "Tac", "Toe"};
+sp3 = std::span{arr}; // OK
+sp3 = arr; // OK
+\end{cpp}
+
+\mySubsubsection{9.1.5}{Fixed vs. Dynamic Extent}
+
+Both fixed and dynamic extent have their benefits.
+
+Specifying a fixed size enables compilers to detect size violations at runtime or even at compile time. For example, you cannot assign a std::array<> with the wrong number of elements to a span with a fixed extent:
+
+\begin{cpp}
+std::vector vec{1, 2, 3};
+std::array arr{1, 2, 3, 4, 5, 6};
+std::span<int, 3> sp3{vec};
+std::span sp{vec};
+sp3 = arr; // compile-time ERROR
+sp = arr; // OK
+\end{cpp}
+
+Spans with a fixed extent also need less memory because they do not need to have a member for the actual size (the size is part of the type).
+
+Using spans with dynamic extent provides more flexibility:
+
+\begin{cpp}
+std::span<int> sp; // OK
+...
+std::vector vec{1, 2, 3, 4, 5};
+sp = vec; // OK (span has 5 elements)
+sp = {vec.data()+1, 3}; // OK (span has 3 elements)
+\end{cpp}
+
+
+
+
+
+
+
+

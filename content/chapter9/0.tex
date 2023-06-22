@@ -1,0 +1,7 @@
+To deal with ranges, C++20 introduced a couple of view types. Usually, these view types do not store elements in their own memory; they refer to elements stored in other ranges or views. The std::span<> class template is one of these views.
+
+Historically, however, spans are a generalization of string views, which were introduced in C++17. Spans refer to arbitrary arrays of any element type. Being just a combination of a raw pointer and a size, they provide the usual interface of collections for reading and writing elements that are stored in contiguous memory.
+
+By requiring that spans can refer only to elements in contiguous memory, the iterators can just be raw pointers, which makes them cheap. It also means that the collection provides random access (so that you can jump to any position of the range), which means that you can use this view to sort elements or you can use operations that yield a subsequence of n elements located in the middle or at the end of the underlying range.
+
+Using a span is cheap and fast (you should always pass it by value). However, it is also potentially dangerous because, in the same way as for raw pointers, it is up to the programmer to ensure that the referred element sequence is still valid when using a span. In addition, the fact that a span supports write access can introduce situations where const correctness is broken (or at least does not work in the way you might expect).
