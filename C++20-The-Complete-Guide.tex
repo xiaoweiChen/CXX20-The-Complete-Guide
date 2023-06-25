@@ -371,6 +371,20 @@
 \addcontentsline{toc}{subsubsection}{{#1}\hspace{0.2cm}{#2}}
 }
 
+\NewDocumentCommand { \mySubsection } { mmm }
+{
+\subsection*{\zihao{3}{#1}\hspace{0.2cm}{#2}}
+\addcontentsline{toc}{subsection}{{#1}\hspace{0.2cm}{#2}}
+\subfile{{#3}}
+}
+
+\NewDocumentCommand { \mySection } { mmm }
+{
+\section*{\zihao{2}{#1}\hspace{0.5cm}{#2}}
+\addcontentsline{toc}{section}{{#2}}
+\subfile{{#3}}
+}
+
 \ExplSyntaxOff
 
 \begin{document}
@@ -407,183 +421,61 @@
 		
 		\setsecnumdepth{section}
 		
-		\section*{\zihao{2} 前言}
-		\addcontentsline{toc}{section}{前言}
-		\subfile{content/preface.tex}
+		\mySection{}{前言}{content/preface.tex}
 		\newpage
 		
-		\section*{\zihao{2}About This Book}
-		\addcontentsline{toc}{section}{About This Book}
-		\subfile{content/chapter0/0.tex}
-		
-		\subsection*{\zihao{3}What You Should Know Before Reading This Book}
-		\addcontentsline{toc}{subsection}{What You Should Know Before Reading This Book}
-		\subfile{content/chapter0/1.tex}
-		
-		\subsection*{\zihao{3}Overall Structure of the Book}
-		\addcontentsline{toc}{subsection}{Overall Structure of the Book}
-		\subfile{content/chapter0/2.tex}
-		
-		\subsection*{\zihao{3}How to Read This Book}
-		\addcontentsline{toc}{subsection}{How to Read This Book}
-		\subfile{content/chapter0/3.tex}
-		
-		\subsection*{\zihao{3}The Way I Implement}
-		\addcontentsline{toc}{subsection}{The Way I Implement}
-		\subfile{content/chapter0/4.tex}
-		
-		\subsection*{\zihao{3}The C++ Standards}
-		\addcontentsline{toc}{subsection}{The C++ Standards}
-		\subfile{content/chapter0/5.tex}
-		
-		\subsection*{\zihao{3}Example Code and Additional Information}
-		\addcontentsline{toc}{subsection}{Example Code and Additional Information}
-		\subfile{content/chapter0/6.tex}
-		
-		\subsection*{\zihao{3}Feedback}
-		\addcontentsline{toc}{subsection}{Feedback}
-		\subfile{content/chapter0/7.tex}
+		\mySection{}{About This Book}{content/chapter0/0.tex}
+		\mySubsection{}{What You Should Know Before Reading This Book}{content/chapter0/1.tex}		
+		\mySubsection{}{Overall Structure of the Book}{content/chapter0/2.tex}		
+		\mySubsection{}{How to Read This Book}{content/chapter0/3.tex}		
+		\mySubsection{}{The Way I Implement}{content/chapter0/4.tex}		
+		\mySubsection{}{The C++ Standards}{content/chapter0/5.tex}		
+		\mySubsection{}{Example Code and Additional Information}{content/chapter0/6.tex}
+		\mySubsection{}{Feedback}{content/chapter0/7.tex}
 		\newpage
 		
-		\section*{\zihao{2} 第1章\hspace{0.5cm}Comparisons and Operator <=>}
-		\addcontentsline{toc}{section}{第1章\hspace{0.5cm}Comparisons and Operator <=>}
-		\subfile{content/chapter1/0.tex}
-		
-		\subsection*{\zihao{3} 1.1.\hspace{0.2cm}Motivation for Operator<=>}
-		\addcontentsline{toc}{subsection}{1.1.\hspace{0.2cm}Motivation for Operator<=>}
-		\subfile{content/chapter1/1.tex}
-		
-		\subsection*{\zihao{3} 1.2.\hspace{0.2cm}Defining and Using Comparisons}
-		\addcontentsline{toc}{subsection}{1.2.\hspace{0.2cm}Defining and Using Comparisons}
-		\subfile{content/chapter1/2.tex}
-		
-		\subsection*{\zihao{3} 1.3.\hspace{0.2cm}Defining operator<=> and operator==}
-		\addcontentsline{toc}{subsection}{1.3.\hspace{0.2cm}Defining operator<=> and operator==}
-		\subfile{content/chapter1/3.tex}
-		
-		\subsection*{\zihao{3} 1.4.\hspace{0.2cm}Overload Resolution with Rewritten Expressions}
-		\addcontentsline{toc}{subsection}{1.4.\hspace{0.2cm}Overload Resolution with Rewritten Expressions}
-		\subfile{content/chapter1/4.tex}
-		
-		\subsection*{\zihao{3} 1.5.\hspace{0.2cm}Using Operator <=> in Generic Code}
-		\addcontentsline{toc}{subsection}{1.5.\hspace{0.2cm}Using Operator <=> in Generic Code}
-		\subfile{content/chapter1/5.tex}
-		
-		\subsection*{\zihao{3} 1.6.\hspace{0.2cm}Compatibility Issues with the Comparison Operators}
-		\addcontentsline{toc}{subsection}{1.6.\hspace{0.2cm}Compatibility Issues with the Comparison Operators}
-		\subfile{content/chapter1/6.tex}
-		
-		\subsection*{\zihao{3} 1.7.\hspace{0.2cm}Afternotes}
-		\addcontentsline{toc}{subsection}{1.7.\hspace{0.2cm}Afternotes}
-		\subfile{content/chapter1/7.tex}
+		\mySection{第1章}{Comparisons and Operator <=>}{content/chapter1/0.tex}	
+		\mySubsection{1.1.}{Motivation for Operator<=>}{content/chapter1/1.tex}
+		\mySubsection{1.2.}{Defining and Using Comparisons}{content/chapter1/2.tex}
+		\mySubsection{1.3.}{Defining operator<=> and operator==}{content/chapter1/3.tex}
+		\mySubsection{1.4.}{Overload Resolution with Rewritten Expressions}{content/chapter1/4.tex}
+		\mySubsection{1.5.}{Using Operator <=> in Generic Code}{content/chapter1/5.tex}
+		\mySubsection{1.6.}{Compatibility Issues with the Comparison Operators}{content/chapter1/6.tex}
+		\mySubsection{1.7.}{Afternotes}{content/chapter1/7.tex}
 		\newpage
 		
-		\section*{\zihao{2} 第2章\hspace{0.5cm}Placeholder Types for Function Parameters}
-		\addcontentsline{toc}{section}{第2章\hspace{0.5cm}Placeholder Types for Function Parameters}
-		\subfile{content/chapter2/0.tex}
-		
-		\subsection*{\zihao{3} 2.1.\hspace{0.2cm}auto for Parameters of Ordinary Functions}
-		\addcontentsline{toc}{subsection}{2.1.\hspace{0.2cm}auto for Parameters of Ordinary Functions}
-		\subfile{content/chapter2/1.tex}
-		
-		\subsection*{\zihao{3} 2.2.\hspace{0.2cm}Using auto for Parameters in Practice}
-		\addcontentsline{toc}{subsection}{2.2.\hspace{0.2cm}Using auto for Parameters in Practice}
-		\subfile{content/chapter2/2.tex}
-		
-		\subsection*{\zihao{3} 2.3.\hspace{0.2cm}auto for Parameters in Detail}
-		\addcontentsline{toc}{subsection}{2.3.\hspace{0.2cm}auto for Parameters in Detail}
-		\subfile{content/chapter2/3.tex}
-		
-		\subsection*{\zihao{3} 2.4.\hspace{0.2cm}Afternotes}
-		\addcontentsline{toc}{subsection}{2.4.\hspace{0.2cm}Afternotes}
-		\subfile{content/chapter2/4.tex}
+		\mySection{第2章}{Placeholder Types for Function Parameters}{content/chapter2/0.tex}
+		\mySubsection{2.1.}{auto for Parameters of Ordinary Functions}{content/chapter2/1.tex}
+		\mySubsection{2.2.}{Using auto for Parameters in Practice}{content/chapter2/2.tex}
+		\mySubsection{2.3.}{auto for Parameters in Detail}{content/chapter2/3.tex}
+		\mySubsection{2.4.}{Afternotes}{content/chapter2/4.tex}
 		\newpage
 		
-		\section*{\zihao{2} 第3章\hspace{0.5cm}Concepts, Requirements, and Constraints}
-		\addcontentsline{toc}{section}{第3章\hspace{0.5cm}Concepts, Requirements, and Constraints}
-		\subfile{content/chapter3/0.tex}
-		
-		\subsection*{\zihao{3} 3.1.\hspace{0.2cm}Motivating Example of Concepts and Requirements}
-		\addcontentsline{toc}{subsection}{3.1.\hspace{0.2cm}Motivating Example of Concepts and Requirements}
-		\subfile{content/chapter3/1.tex}
-		
-		\subsection*{\zihao{3} 3.2.\hspace{0.2cm}Where Constraints and Concepts Can Be Used}
-		\addcontentsline{toc}{subsection}{3.2.\hspace{0.2cm}Where Constraints and Concepts Can Be Used}
-		\subfile{content/chapter3/2.tex}
-		
-		\subsection*{\zihao{3} 3.3.\hspace{0.2cm}Typical Applications of Concepts and Constraints in Practice}
-		\addcontentsline{toc}{subsection}{3.3.\hspace{0.2cm}Typical Applications of Concepts and Constraints in Practice}
-		\subfile{content/chapter3/3.tex}
-		
-		\subsection*{\zihao{3} 3.4.\hspace{0.2cm}Semantic Constraints}
-		\addcontentsline{toc}{subsection}{3.4.\hspace{0.2cm}Semantic Constraints}
-		\subfile{content/chapter3/4.tex}
-		
-		\subsection*{\zihao{3} 3.5.\hspace{0.2cm}Design Guidelines for Concepts}
-		\addcontentsline{toc}{subsection}{3.5.\hspace{0.2cm}Design Guidelines for Concepts}
-		\subfile{content/chapter3/5.tex}
-		
-		\subsection*{\zihao{3} 3.6.\hspace{0.2cm}Afternotes}
-		\addcontentsline{toc}{subsection}{3.6.\hspace{0.2cm}Afternotes}
-		\subfile{content/chapter3/6.tex}
+		\mySection{第3章}{Concepts, Requirements, and Constraints}{content/chapter3/0.tex}
+		\mySubsection{3.1.}{Motivating Example of Concepts and Requirements}{content/chapter3/1.tex}
+		\mySubsection{3.2.}{Where Constraints and Concepts Can Be Used}{content/chapter3/2.tex}
+		\mySubsection{3.3.}{Typical Applications of Concepts and Constraints in Practice}{content/chapter3/3.tex}
+		\mySubsection{3.4.}{Semantic Constraints}{content/chapter3/4.tex}
+		\mySubsection{3.5.}{Design Guidelines for Concepts}{content/chapter3/5.tex}
+		\mySubsection{3.6.}{Afternotes}{content/chapter3/6.tex}
 		\newpage
 		
-		\section*{\zihao{2} 第4章\hspace{0.5cm}Concepts, Requirements, and Constraints in Detail}
-		\addcontentsline{toc}{section}{第4章\hspace{0.5cm}Concepts, Requirements, and Constraints in Detail}
-		\subfile{content/chapter4/0.tex}
-		
-		\subsection*{\zihao{3} 4.1.\hspace{0.2cm}Constraints}
-		\addcontentsline{toc}{subsection}{4.1.\hspace{0.2cm}Constraints}
-		\subfile{content/chapter4/1.tex}
-		
-		\subsection*{\zihao{3} 4.2.\hspace{0.2cm}requires Clauses}
-		\addcontentsline{toc}{subsection}{4.2.\hspace{0.2cm}requires Clauses}
-		\subfile{content/chapter4/2.tex}
-		
-		\subsection*{\zihao{3} 4.3.\hspace{0.2cm}Ad-hoc Boolean Expressions}
-		\addcontentsline{toc}{subsection}{4.3.\hspace{0.2cm}Ad-hoc Boolean Expressions}
-		\subfile{content/chapter4/3.tex}
-		
-		\subsection*{\zihao{3} 4.4.\hspace{0.2cm}requires Expressions}
-		\addcontentsline{toc}{subsection}{4.4.\hspace{0.2cm}requires Expressions}
-		\subfile{content/chapter4/4.tex}
-		
-		\subsection*{\zihao{3} 4.5.\hspace{0.2cm}Concepts in Detail}
-		\addcontentsline{toc}{subsection}{4.5.\hspace{0.2cm}Concepts in Detail}
-		\subfile{content/chapter4/5.tex}
-		
-		\subsection*{\zihao{3} 4.6.\hspace{0.2cm}Using Concepts as Type Constraints}
-		\addcontentsline{toc}{subsection}{4.6.\hspace{0.2cm}Using Concepts as Type Constraints}
-		\subfile{content/chapter4/6.tex}
-		
-		\subsection*{\zihao{3} 4.7.\hspace{0.2cm}Subsuming Constraints with Concepts}
-		\addcontentsline{toc}{subsection}{4.7.\hspace{0.2cm}Subsuming Constraints with Concepts}
-		\subfile{content/chapter4/7.tex}
+		\mySection{第4章}{Concepts, Requirements, and Constraints in Detail}{content/chapter4/0.tex}
+		\mySubsection{4.1.}{Constraints}{content/chapter4/1.tex}
+		\mySubsection{4.2.}{requires Clauses}{content/chapter4/2.tex}
+		\mySubsection{4.3.}{Ad-hoc Boolean Expressions}{content/chapter4/3.tex}
+		\mySubsection{4.4.}{requires Expressions}{content/chapter4/4.tex}
+		\mySubsection{4.5.}{Concepts in Detail}{content/chapter4/5.tex}
+		\mySubsection{4.6.}{Using Concepts as Type Constraints}{content/chapter4/6.tex}
+		\mySubsection{4.7.}{Subsuming Constraints with Concepts}{content/chapter4/7.tex}
 		\newpage
 		
-		\section*{\zihao{2} 第5章\hspace{0.5cm}Standard Concepts in Detail}
-		\addcontentsline{toc}{section}{第5章\hspace{0.5cm}Standard Concepts in Detail}
-		\subfile{content/chapter5/0.tex}
-		
-		\subsection*{\zihao{3} 5.1.\hspace{0.2cm}Overview of All Standard Concepts}
-		\addcontentsline{toc}{subsection}{5.1.\hspace{0.2cm}Overview of All Standard Concepts}
-		\subfile{content/chapter5/1.tex}
-		
-		\subsection*{\zihao{3} 5.2.\hspace{0.2cm}Language-Related Concepts}
-		\addcontentsline{toc}{subsection}{5.2.\hspace{0.2cm}Language-Related Concepts}
-		\subfile{content/chapter5/2.tex}
-		
-		\subsection*{\zihao{3} 5.3.\hspace{0.2cm}Concepts for Iterators and Ranges}
-		\addcontentsline{toc}{subsection}{5.3.\hspace{0.2cm}Concepts for Iterators and Ranges}
-		\subfile{content/chapter5/3.tex}
-		
-		\subsection*{\zihao{3} 5.4.\hspace{0.2cm}Concepts for Callables}
-		\addcontentsline{toc}{subsection}{5.4.\hspace{0.2cm}Concepts for Callables}
-		\subfile{content/chapter5/4.tex}
-		
-		\subsection*{\zihao{3} 5.5.\hspace{0.2cm}Auxiliary Concepts}
-		\addcontentsline{toc}{subsection}{5.5.\hspace{0.2cm}Auxiliary Concepts}
-		\subfile{content/chapter5/5.tex}
+		\mySection{第5章}{Standard Concepts in Detail}{content/chapter5/0.tex}
+		\mySubsection{5.1.}{Overview of All Standard Concepts}{content/chapter5/1.tex}
+		\mySubsection{5.2.}{Language-Related Concepts}{content/chapter5/2.tex}
+		\mySubsection{5.3.}{Concepts for Iterators and Ranges}{content/chapter5/3.tex}
+		\mySubsection{5.4.}{Concepts for Callables}{content/chapter5/4.tex}
+		\mySubsection{5.5.}{Auxiliary Concepts}{content/chapter5/5.tex}
 		\newpage
 		
 		\section*{\zihao{2} 第6章\hspace{0.5cm}Ranges and Views}

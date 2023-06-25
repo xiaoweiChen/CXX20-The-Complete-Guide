@@ -1,9 +1,270 @@
 
+Designing a type that refers to a sequence of elements is not easy. A lot of aspects and trade-offs have to be thought out and decided on:
+
+\begin{itemize}
+\item
+Performance versus safety
+
+\item
+const correctness
+
+\item
+Possible implicit and explicit type conversions
+
+\item
+Requirements for the supported types
+
+\item
+Supported APIs
+\end{itemize}
+
+Let me first clarify what a span not is:
+
+\begin{itemize}
+\item
+A span is not a container. It might have several aspects of a container (e.g., the ability to iterate over elements with begin() and end()), but there are already several issues due to its reference semantics:
+
+\begin{itemize}
+\item
+Should elements also be const if the span is const?
+
+\item
+What does an assignment do: assign a new sequence or assign new values to the referenced elements?
+
+\item
+Should we provide swap() and what does it do?
+\end{itemize}
+
+\item
+A span is not a pointer (with a size). It does not make sense to provide the operators * and ->.
+\end{itemize}
+
+Type std::span is a very specific reference to a sequence of elements. And it is important to understand these specific aspects to use this type correctly.
+
+There is a very helpful blog post by Barry Revzin about this that I strongly recommend you to read: \url{http://brevzin.github.io/c++/2018/12/03/span-best-span/}.
+
+Note that C++20 provides also other ways for dealing with references to (sub-)sequences, such as subranges. They also work for sequences that are not stored in contiguous memory. By using the range factory std::views::counted(), you can let the compiler decide, which type is best for a range defined by a beginning and a size.
 
 \mySubsubsection{9.3.1}{Lifetime Dependencies of Spans}
 
+Due to their reference semantics you can only iterate over spans while the underlying sequence of values exists. However, the iterators are not bound to the lifetime of the spans they are created from.
+
+Iterators of spans do not refer to the span that they are created from. Instead, they refer to the underlying range directly. Therefore, a span is a borrowed range. This means that you can use the iterators even when the span no longer exists (the sequence of elements still has to exist, of course). However, note that iterators can still dangle when the underlying range is no longer there.
+
 \mySubsubsection{9.3.2}{Performance of Spans}
+
+Spans are designed with best performance as a goal. Internally, they use just a raw pointer to the sequence of elements. However, raw pointers expect elements to be stored sequentially in one chunk of memory (otherwise raw pointers could to compute the position of elements when they jump back and forth). For this reason, spans require that the elements are stored in contiguous memory.
+
+With this requirement, spans can provide the best performance of all types of views. Spans do not need any allocation and do not come with any indirection. The only overhead on using a span is the overhead of constructing it. Spans check whether a referred sequence has its elements in contiguous memory using concepts at compile time. When a sequence is initialized or a new sequence is assigned, iterators have to satisfy the concept std::contiguous\_iterator and containers or ranges have to satisfy the two concepts std::ranges::contiguous\_range and std::ranges::sized\_range.
+
+Because spans are just a pointer and a size internally, it is very cheap to copy them. For this reason, you should prefer passing spans by value instead of passing them by const reference (which, however, is a problem for generic functions dealing with both containers and views).
+
+\mySamllsection{Type Erasure}
+
+The fact that spans perform element access with raw pointers to the memory means that a span type erases the information of where the elements are stored. A span to the elements of a vector has the same type as a span to the elements of an array (provided they have the same extent):
+
+\begin{cpp}
+std::array arr{1, 2, 3, 4, 5};
+std::vector vec{1, 2, 3, 4, 5};
+
+std::span<int> vecSpanDyn{vec};
+std::span<int> arrSpanDyn{arr};
+std::same_as<decltype(arrSpanDyn), decltype(vecSpanDyn)> // true
+\end{cpp}
+
+However, note that class template argument deduction for spans deduces a fixed extent from arrays and a dynamic extent from vectors. That means:
+
+\begin{cpp}
+std::array arr{1, 2, 3, 4, 5};
+std::vector vec{1, 2, 3, 4, 5};
+std::span arrSpan{arr}; // deduces std::span<int, 5>
+std::span vecSpan{vec}; // deduces std::span<int>
+std::span<int, 5> vecSpan5{vec};
+
+std::same_as<decltype(arrSpan), decltype(vecSpan)> // false
+std::same_as<decltype(arrSpan), decltype(vecSpan5)> // true
+\end{cpp}
+
+\mySamllsection{Spans vs. Subranges}
+
+The requirement for contiguous storage of the elements is the major difference to subranges, which are also introduced with C++20. Internally, subranges still use iterators and can therefore refer to all types of containers and ranges. However, that may lead to significantly more overhead.
+
+In addition, spans do not require iterator support for the type they refer to. You can pass any type that provides a data() member for access to a sequence of elements.
 
 \mySubsubsection{9.3.3}{const Correctness of Spans}
 
-\mySubsubsection{9.3.4}{ Using Spans as Parameters in Generic Code}
+Spans are views that have reference semantics. In that sense, they behave like pointers: if a span is const, it does not automatically mean that the elements the span refers to are const.
+
+This means that you have write access to the elements of a const span (provided the elements are not const):
+
+\begin{cpp}
+std::array a1{1, 2, 3, 4, 5, 6,7 ,8, 9, 10};
+std::array a2{0, 8, 15};
+
+const std::span<int> sp1{a1}; // span/view is const
+std::span<const int> sp2{a1}; // elements are const
+
+sp1[0] = 42; // OK
+sp2[0] = 42; // ERROR
+
+sp1 = a2; // ERROR
+sp2 = a2; // OK
+\end{cpp}
+
+Note that as long as the elements of a std::span<> are not declared to be const, a couple of operations provide write access to the elements even for const spans where you might not expect it (following the rules for ordinary containers):
+
+\begin{itemize}
+\item
+operator[], first(), last()
+
+\item
+data()
+
+\item
+begin(), end(), rbegin(), rend()
+
+\item
+std::cbegin(), std::cend(), std::crbegin(), std::crend()
+
+\item
+std::ranges::cbegin(), std::ranges::cend(), std::ranges::crbegin(), std::ranges::crend()
+\end{itemize}
+
+Yes, all the c* functions that were designed to ensure that the elements are const are broken by std::span.
+
+For example:
+
+\begin{cpp}
+template<typename T>
+void modifyElemsOfConstColl (const T& coll)
+{
+	coll[0] = {}; // OK for spans, ERROR for regular containers
+	
+	auto ptr = coll.data();
+	*ptr = {}; // OK for spans, ERROR for regular containers
+	
+	for (auto pos = std::cbegin(coll); pos != std::cend(coll); ++pos) {
+		*pos = {}; // OK for spans, ERROR for regular containers
+	}
+}
+
+std::array arr{1, 2, 3, 4, 5, 6, 7 ,8, 9, 10};
+
+modifyElemsOfConstColl(arr); // ERROR: elements are const
+modifyElemsOfConstColl(std::span{arr}); // OOPS: compiles and modifies elements of a1
+\end{cpp}
+
+The problem here is not that std::span is broken; the problem is that functions like std::cbegin() and std::ranges::cbegin() are currently broken for collections with reference semantics (such as views).
+
+To ensure that a function only takes sequences where you cannot modify the elements that way, you can require that begin() for a const container returns an iterator to const elements:
+
+\begin{cpp}
+template<typename T>
+void ensureReadOnlyElemAccess (const T& coll)
+requires std::is_const_v<std::remove_reference_t<decltype(*coll.begin())>>
+{
+	...
+}
+\end{cpp}
+
+The fact that even std::cbegin() and std::ranges::cbegin() provide write access is something under discussion after standardizing C++20. The whole point of providing cbegin() and cend() is to ensure that elements cannot be modified when iterating over them. Originally, spans did provide members for types const\_iterator, cbegin(), and cend() to ensure that you could not modify elements. However, at the last minute before C++20 was finished, it turned out that std::cbegin() still iterates over mutable elements (and std::ranges::cbegin() has the same problem). However, instead of fixing std::cbegin() and std::ranges::cbegin(), the members for const iterators in spans were removed (see \url{http://wg21.link/lwg3320}), which made the problem even worse because in C++20 there is now no easy way to do a read-only iteration over a span unless the elements are const. It appears that std::ranges::cbegin() will be fixed with C++23 (see \url{http://wg21.link/p2278}). However, std::cbegin() will still be broken (sigh).
+
+\mySubsubsection{9.3.4}{Using Spans as Parameters in Generic Code}
+
+As written, you can implement a generic function just for all spans with the following declaration:
+
+\begin{cpp}
+template<typename T, std::size_t Sz>
+void printSpan(std::span<T, Sz> sp);
+\end{cpp}
+
+This even works for spans with dynamic extent, because they just use the special value std::dynamic\_extent as size.
+
+Therefore, in the implementation, you can deal with the difference between fixed and dynamic extent as follows:
+
+\filename{lib/spanprint.hpp}
+
+\begin{cpp}
+#ifndef SPANPRINT_HPP
+#define SPANPRINT_HPP
+
+#include <iostream>
+#include <span>
+
+template<typename T, std::size_t Sz>
+void printSpan(std::span<T, Sz> sp)
+{
+	std::cout << '[' << sp.size() << " elems";
+	if constexpr (Sz == std::dynamic_extent) {
+		std::cout << " (dynamic)";
+	}
+	else {
+		std::cout << " (fixed)";
+	}
+	std::cout << ':';
+	for (const auto& elem : sp) {
+		std::cout << ' ' << elem;
+	}
+	std::cout << "]\n";
+	} 
+#endif // SPANPRINT_HPP
+\end{cpp}
+
+You might also consider declaring the element type to be const:
+
+\begin{cpp}
+printSpan(vec); // ERROR: template type deduction doesn’t work
+printSpan(std::span{vec}); // OK
+printSpan<int, std::dynamic_extent>(vec); // OK (provided it is a vector of ints)
+\end{cpp}
+
+For this reason, std::span<> should not be used as a vocabulary type for generic functions that deal with sequences of elements stored in contiguous memory.
+
+For performance reasons, you might do something like this:
+
+\begin{cpp}
+template<typename E>
+void processSpan(std::span<typename E>) {
+	... // span specific implementation
+}
+
+template<typename T>
+void print(const T& t) {
+	if constexpr (std::ranges::contiguous_range<T> t) {
+		processSpan<std::ranges::range_value_t<T>>(t);
+	}
+	else {
+		... // generic implementations for all containers/ranges
+	}
+}
+\end{cpp}
+
+\mySamllsection{Using Spans as Ranges and Views}
+
+Because spans are views, they satisfy the concept std::ranges::view[The original C++20 standard did require that views have to have a default constructor, which is not the case for fixed spans. However, that requirement was removed later with \url{http://wg21.link/P2325R3}.]. This means that spans can be used in all algorithms and functions for ranges and views. In the chapter that discusses the details of all views, we list the view-specific properties of spans.
+
+One property of spans is that they are borrowed ranges, meaning that the lifetime of iterators does not depend on the lifetime of the span. For that reason, we can use a temporary span as a range in algorithms that yield iterators to it:
+
+\begin{cpp}
+std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
+auto pos1 = std::ranges::find(std::span{coll.data(), 3}, 42); // OK
+std::cout << *pos1 << '\n';
+\end{cpp}
+
+However, note that it is an error if the span refers to a temporary object. The following code compiles even though an iterator to a destroyed temporary object is returned:
+
+\begin{cpp}
+auto pos2 = std::ranges::find(std::span{getData().data(), 3}, 42);
+std::cout << *pos2 << '\n'; // runtime ERROR
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+

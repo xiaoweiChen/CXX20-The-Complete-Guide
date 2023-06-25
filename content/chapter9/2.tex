@@ -1,0 +1,73 @@
+Spans refer to a sequence of external values. They therefore have the usual problems that types with reference semantics have. It is up to the programmer to ensure that the sequence a span refers to is valid.
+
+Errors happen pretty fast. For example, if a function getData() returns a collection of ints by value (e.g., as vector, std::array, or raw array), the following statements create fatal runtime errors:
+
+\begin{cpp}
+std::span<int, 3> first3{getData()}; // ERROR: reference to temporary object
+
+std::span sp{getData().begin(), 3}; // ERROR: reference to temporary object
+
+sp = getData(); // ERROR: reference to temporary object
+\end{cpp}
+
+This can look a little bit more subtle, such as using the range-based for loop:
+
+\begin{cpp}
+// for the last 3 returned elements:
+for (auto s : std::span{arrayOfConst()}.last(3)) // fatal runtime ERROR
+\end{cpp}
+
+This code causes undefined behavior because due to a bug in the range-based for loop, iterating over a reference to a temporary object uses the values when they are already destroyed (see \url{http://wg21.link/p2012} for details).
+
+Compilers could detect these problems with special “lifetime checks” for standard types, which is currently being implemented for major compilers. However, that can detect only simple lifetime dependencies like the one between a span and the object it is initialized with.
+
+In addition, you have to ensure that the referenced sequence of elements remains valid. This can be a problem if other parts of the program end the lifetime of a referred sequence while the span is still in use.
+
+If we refer into objects (such as into a vector), this validity issue can even happen while the vector is still alive. Consider:
+
+\begin{cpp}
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8};
+
+std::span sp{vec}; // view to the memory of vec
+...
+vec.push_back(9); // might reallocate memory
+std::cout << sp[0]; // fatal runtime ERROR (referenced array no longer valid)
+\end{cpp}
+
+As a workaround, you have to reinitialize the span with the original vector.
+
+In general, using spans is as dangerous as using raw pointers and other view types. Use them with care.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

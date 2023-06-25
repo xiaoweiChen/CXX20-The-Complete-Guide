@@ -1,7 +1,341 @@
 
+This section describes the types and operations of spans in detail.
 
 \mySubsubsection{9.4.1}{Span Operations and Member Types Overview}
 
+Table Span operations lists all operations that are provided for spans.
+
+It is worth noting all the operations that are not supported:
+
+\begin{itemize}
+\item
+Comparisons (not even ==)
+
+\item
+swap()
+
+\item
+assign()
+
+\item
+swap()
+
+\item
+at()
+
+\item
+I/O operators
+
+\item
+cbegin(), cend(), crbegin(), crend()
+
+\item
+Hashing
+
+\item
+Tuple-like API for structured bindings
+\end{itemize}
+
+That is, spans are neither containers (in the traditional C++ STL sense) nor regular types.
+
+Regarding static members and member types, spans provide the usual members of containers (except const\_iterator) plus two special ones: element\_type and extent (see table Static and type members of spans).
+
+Note that std::value\_type is not the specified element type (as the value\_type for std::array and several other types usually is). It is the element type with const and volatile removed.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                      \\ \hline
+\endfirsthead
+%
+\endhead
+%
+constructors       & Creates or copies a span                                             \\ \hline
+destructor         & Destorys a span                                                      \\ \hline
+=                  & Assignes a new sequence of values                                    \\ \hline
+empty()            & Returns whether the span is empty                                    \\ \hline
+size()             & Returns the bumber of elements                                       \\ \hline
+size\_bytes()      & Returns the size of memory used for all elements                     \\ \hline
+{[}{]}             & Accesses an element                                                  \\ \hline
+front(),back()     & Accesses the first or last element                                   \\ \hline
+begin(), end()     & Provides iterator support (no const\_iterator support)               \\ \hline
+rbegin(), rend()   & Provides constant reverse iterator support                           \\ \hline
+first(n)           & Returns a sub-span with dynamic extent of the first n elements       \\ \hline
+first\textless{}n\textgreater{}()         & Returns a sub-span with fixed extent of the first n elements            \\ \hline
+last(n)            & Returns a sub-span with dynamic extent of the last n elements        \\ \hline
+last\textless{}n\textgreater{}()          & Returns a sub-span with fixed extent of the last n elements             \\ \hline
+subspan(offs)                             & Returns a sub-span with dynamic extent skipping the first offs elements \\ \hline
+subspan(offs, n)   & Returns a sub-span with dynamic extent of n after offs elements      \\ \hline
+subspan\textless{}offs\textgreater{}()    & Returns a sub-span with same extent skipping the first offs elements    \\ \hline
+subspan\textless{}offs, n\textgreater{}() & Returns a sub-span with fixed extent of n after offs elements           \\ \hline
+data()             & Returns a raw pointer to the elements                                \\ \hline
+as\_bytes()        & Returns the memory of the elements as a span of read-only std::bytes \\ \hline
+as\_writeable\_bytes()                    & Returns the memory of the elements as a span of writable std::bytes     \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 9.1. Span operations
+\end{center}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Member} & \textbf{Effect}                      \\ \hline
+\endfirsthead
+%
+\endhead
+%
+extent            & Number of elements or std::dynamic\_extent if size varies              \\ \hline
+size\_type      & Type of extent (always std::size\_t) \\ \hline
+difference\_type  & Difference type for pointers to element(always std::differernce\_type) \\ \hline
+element\_type   & Specified type of the elements       \\ \hline
+pointer         & Type of a pointer to the elements    \\ \hline
+const\_pointer    & Type of a pointer for read-only access to the elements                 \\ \hline
+reference       & Type of a reference to the elements  \\ \hline
+const\_reference  & Type of a reference for read-only access to the elements               \\ \hline
+iterator        & Type of an iterator to the elements  \\ \hline
+reverse\_iterator & Type of a reverse iterator to the elements                             \\ \hline
+value\_type       & Type of elements withoiut const or volatile                            \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 9.2. Static and type members of spans
+\end{center}
+
 \mySubsubsection{9.4.2}{Constructors}
 
+For spans, the default constructor is provided only if it has a dynamic extent or the extent is 0:
+
+\begin{cpp}
+std::span<int> sp0a; // OK
+std::span<int, 0> sp0b; // OK
+std::span<int, 5> sp0c; // compile-time ERROR
+\end{cpp}
+
+If this initialization is valid, size() is 0 and data() is nullptr.
+
+In principle, you can initialize a span for an array, a beginning with a sentinel (end iterator), and a beginning with a size. The latter is used by the view std::views::counted(beg, sz) if beg points to elements in contiguous memory. Class template argument deduction is also supported.
+
+This means that when initializing the span with a raw array or std::array<>, a span with a fixed extent is deduced (unless only the element type is specified):
+
+\begin{cpp}
+int a[10] {};
+std::array arr{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+std::span sp1a{a}; // std::span<int, 10>
+std::span sp1b{arr}; // std::span<int, 15>
+std::span<int> sp1c{arr}; // std::span<int>
+std::span sp1d{arr.begin() + 5, 5}; // std::span<int>
+auto sp1e = std::views::counted(arr.data() + 5, 5); // std::span<int>
+\end{cpp}
+
+When initializing the span with a std::vector<>, a span with a dynamic extent is deduced unless a size is specified explicitly:
+
+\begin{cpp}
+std::vector vec{1, 2, 3, 4, 5};
+std::span sp2a{vec}; // std::span<int>
+
+std::span<int> sp2b{vec}; // std::span<int>
+std::span<int, 2> sp2c{vec}; // std::span<int, 2>
+std::span<int, std::dynamic_extent> sp2d{vec}; // std::span<int>
+std::span<int, 2> sp2e{vec.data() + 2, 2}; // std::span<int, 2>
+std::span sp2f{vec.begin() + 2, 2}; // std::span<int>
+auto sp2g = std::views::counted(vec.data() + 2, 2); // std::span<int>
+\end{cpp}
+
+If you initialize a span from an rvalue (temporary object), the elements have to be const:
+
+\begin{cpp}
+std::span sp3a{getArrayOfInt()}; // ERROR: rvalue and not const
+std::span<int> sp3b{getArrayOfInt()}; // ERROR: rvalue and not const
+std::span<const int> sp3c{getArrayOfInt()}; // OK
+std::span sp3d{getArrayOfConstInt()}; // OK
+
+std::span sp3e{getVectorOfInt()}; // ERROR: rvalue and not const
+std::span<int> sp3f{getVectorOfInt()}; // ERROR: rvalue and not const
+std::span<const int> sp3g{getVectorOfInt()}; // OK
+\end{cpp}
+
+Initializing a span with a returned temporary collection can result in a fatal runtime error. For example, you should never use a range-based for loop to iterate over a span that is initialized directly:
+
+\begin{cpp}
+for (auto elem : std::span{getCollOfConst()}) ... // fatal runtime error
+
+for (auto elem : std::span{getCollOfConst()}.last(2)) ... // fatal runtime error
+
+for (auto elem : std::span<const Type>{getColl()}) ... // fatal runtime error
+\end{cpp}
+
+The problem is that the range-based for loop causes undefined behavior when iterating over a reference returned for a temporary object because the temporary object is destroyed before the loop starts to iterate internally. This is a bug that the C++ standards committee has not been willing to fix for years now (see \url{http://wg21.link/p2012}).
+
+As a workaround, you can use the new range-based for loop with initialization:
+
+\begin{cpp}
+for (auto&& coll = getCollOfConst(); auto elem : std::span{coll}) ... // OK
+\end{cpp}
+
+Regardless of whether you initialize a span with an iterator and a length or with two iterators that define a valid range, the iterators have to refer to elements in contiguous memory (satisfy the concept std::contiguous\_iterator):
+
+\begin{cpp}
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+std::span<int> sp6a{vec}; // OK, refers to all elements
+std::span<int> sp6b{vec.data(), vec.size()}; // OK, refers to all elements
+std::span<int> sp6c{vec.begin(), vec.end()}; // OK, refers to all elements
+std::span<int> sp6d{vec.data(), 5}; // OK, refers to first 5 elements
+std::span<int> sp6e{vec.begin()+2, 5}; // OK, refers to elements 3 to 7 (including)
+std::list<int> lst{ ... };
+std::span<int> sp6f{lst.begin(), lst.end()}; // compile-time ERROR
+\end{cpp}
+
+If the span has a fixed extent, it must match the number of elements in the passed range. In general, compilers cannot check this at compile time:
+
+\begin{cpp}
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+std::span<int, 10> sp7a{vec}; // OK, refers to all elements
+std::span<int, 5> sp7b{vec}; // runtime ERROR (undefined behavior)
+std::span<int, 20> sp7c{vec}; // runtime ERROR (undefined behavior)
+std::span<int, 5> sp7d{vec, 5}; // compile-time ERROR
+std::span<int, 5> sp7e{vec.begin(), 5}; // OK, refers to first 5 elements
+std::span<int, 3> sp7f{vec.begin(), 5}; // runtime ERROR (undefined behavior)
+std::span<int, 8> sp7g{vec.begin(), 5}; // runtime ERROR (undefined behavior)
+std::span<int, 5> sp7h{vec.begin()}; // compile-time ERROR
+\end{cpp}
+
+You can also create and initialize a span directly with a raw array or a std::array. In that case, some runtime errors due to an invalid number of elements become a compile-time error:
+
+\begin{cpp}
+int raw[10];
+std::array arr{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+std::span<int> sp8a{raw}; // OK, refers to all elements
+std::span<int> sp8b{arr}; // OK, refers to all elements
+std::span<int, 5> sp8c{raw}; // compile-time ERROR
+std::span<int, 5> sp8d{arr}; // compile-time ERROR
+std::span<int, 5> sp8e{arr.data(), 5}; // OK
+\end{cpp}
+
+That is: either you pass a container with sequential elements as a whole, or you pass two arguments to specify the initial range of elements. In any case, the number of elements must match a specified fixed extent.
+
+\mySamllsection{Construction with Implicit Conversions}
+
+Spans have to have the element type of the elements of the sequence they refer to. Conversions (even implicit standard conversions) are not supported. However, additional qualifiers such as const are allowed. This also applies to copy constructors:
+
+\begin{cpp}
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+std::span<const int> sp9a{vec}; // OK: element type with const
+std::span<long> sp9b{vec}; // compile-time ERROR: invalid element type
+std::span<int> sp9c{sp9a}; // compile-time ERROR: removing constness
+std::span<const long> sp9d{sp9a}; // compile-time ERROR: different element type
+\end{cpp}
+
+To allow containers to refer to the elements of user-defined containers, these containers have to signal that they or their iterators require that all elements are in contiguous memory. For that, they have to fulfill the concept contiguous\_iterator.
+
+The constructors also allow the following type conversions between spans:
+
+\begin{itemize}
+\item
+Spans with a fixed extent convert to spans with the same fixed extent and additional qualifiers.
+
+\item
+Spans with a fixed extent convert to spans with dynamic extent.
+
+\item
+Spans with a dynamic extent convert to spans with a fixed extent, provided the current extent fits.
+\end{itemize}
+
+Using a conditional explicit, only the constructors of spans with fixed extent are explicit. In that case, copy initialization (using a =) is not possible if the initial value has to be converted:
+
+\begin{cpp}
+std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+std::span<int> spanDyn{vec.begin(), 5}; // OK
+std::span<int> spanDyn2 = {vec.begin(), 5}; // OK
+std::span<int, 5> spanFix{vec.begin(), 5}; // OK
+std::span<int, 5> spanFix2 = {vec.begin(), 5}; // ERROR
+\end{cpp}
+
+As a consequence, conversions are only implicitly supported when converting to a span with a dynamic or the same fixed extent:
+
+\begin{cpp}
+void fooDyn(std::span<int>);
+void fooFix(std::span<int, 5>);
+
+fooDyn({vec.begin(), 5}); // OK
+fooDyn(spanDyn); // OK
+fooDyn(spanFix); // OK
+fooFix({vec.begin(), 5}); // ERROR
+fooFix(spanDyn); // ERROR
+fooFix(spanFix); // OK
+
+spanDyn = spanDyn; // OK
+spanDyn = spanFix; // OK
+spanFix = spanFix; // OK
+spanFix = spanDyn; // ERROR
+\end{cpp}
+
 \mySubsubsection{9.4.3}{Operations for Sub-Spans}
+
+The member functions that create a sub-span can create spans with dynamic or fixed extent. Passing a size as a call parameter usually yields a span with dynamic extent. Passing a size as a template parameter usually yields a span with fixed extent. This is at least always the case for the member functions first() and last():
+
+\begin{cpp}
+std::vector vec{1.1, 2.2, 3.3, 4.4, 5.5};
+std::span spDyn{vec};
+
+auto sp1 = spDyn.first(2); // first 2 elems with dynamic extent
+auto sp2 = spDyn.last(2); // last 2 elems with dynamic extent
+auto sp3 = spDyn.first<2>(); // first 2 elems with fixed extent
+auto sp4 = spDyn.last<2>(); // last 2 elems with fixed extent
+
+std::array arr{1.1, 2.2, 3.3, 4.4, 5.5};
+std::span spFix{arr};
+
+auto sp5 = spFix.first(2); // first 2 elems with dynamic extent
+auto sp6 = spFix.last(2); // last 2 elems with dynamic extent
+auto sp7 = spFix.first<2>(); // first 2 elems with fixed extent
+auto sp8 = spFix.last<2>(); // last 2 elems with fixed extent
+\end{cpp}
+
+However, for subspan(), the result may sometimes be surprising. Passing call parameters always yields spans with dynamic extent:
+
+\begin{cpp}
+std::vector vec{1.1, 2.2, 3.3, 4.4, 5.5};
+std::span spDyn{vec};
+
+auto s1 = spDyn.subspan(2); // 3rd to last elem with dynamic extent
+auto s2 = spDyn.subspan(2, 2); // 3rd to 4th elem with dynamic extent
+auto s3 = spDyn.subspan(2, std::dynamic_extent); // 3rd to last with dynamic extent
+
+std::array arr{1.1, 2.2, 3.3, 4.4, 5.5};
+std::span spFix{arr};
+
+auto s4 = spFix.subspan(2); // 3rd to last elem with dynamic extent
+auto s5 = spFix.subspan(2, 2); // 3rd to 4th elem with dynamic extent
+auto s6 = spFix.subspan(2, std::dynamic_extent); // 3rd to last with dynamic extent
+\end{cpp}
+
+However, when passing template parameters, the result might be different than what you expect:
+
+\begin{cpp}
+std::vector vec{1.1, 2.2, 3.3, 4.4, 5.5};
+std::span spDyn{vec};
+
+auto s1 = spDyn.subspan<2>(); // 3rd to last with dynamic extent
+auto s2 = spDyn.subspan<2, 2>(); // 3rd to 4th with fixed extent
+auto s3 = spDyn.subspan<2, std::dynamic_extent>(); // 3rd to last with dynamic extent
+
+std::array arr{1.1, 2.2, 3.3, 4.4, 5.5};
+std::span spFix{arr};
+
+auto s4 = spFix.subspan<2>(); // 3rd to last with fixed extent
+auto s5 = spFix.subspan<2, 2>(); // 3rd to 4th with fixed extent
+auto s6 = spFix.subspan<2, std::dynamic_extent>(); // 3rd to last with fixed extent
+\end{cpp}
+
+
