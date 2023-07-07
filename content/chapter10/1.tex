@@ -1,8 +1,169 @@
 
+Before we go into details, let us look at some motivating examples.
 
 \mySubsubsection{10.1.1}{Using std::format()}
 
+The basic function of the formatting library for application programmers is std::format(). It allows them to combine a formatting string to be filled with values of passed arguments according to the formatting specified inside a pair of braces. A simple example is to use the values of each passed argument:
+
+\begin{cpp}
+#include <format>
+
+std::string str{"hello"};
+...
+std::cout << std::format("String '{}' has {} chars\n", str, str.size());
+\end{cpp}
+
+The function std::format(), defined in <format>, takes a format string (a string literal, string, or string view known at compile time) in which {...} stands for the value of the next argument (here, using the default formatting of its type). It yields a std::string, for which it allocates memory.
+
+The output of this first example is as follows:
+
+\begin{shell}
+String ’hello’ has 5 chars
+\end{shell}
+
+An optional integral value right after the opening braces specifies the index of the argument so that you can process the arguments in different order or use them multiple times. For example:
+
+\begin{cpp}
+std::cout << std::format("{1} is the size of string '{0}'\n", str, str.size());
+\end{cpp}
+
+has the following output:
+
+\begin{shell}
+5 is the size of string ’hello’
+\end{shell}
+
+Note that you do not have to explicitly specify the type of the argument. This means that you can easily use std::format() in generic code. Consider the following example:
+
+\begin{cpp}
+void print2(const auto& arg1, const auto& arg2)
+{
+	std::cout << std::format("args: {} and {}\n", arg1, arg2);
+}
+\end{cpp}
+
+If you call this function as follows:
+
+\begin{cpp}
+print2(7.7, true);
+print2("character:", '?');
+\end{cpp}
+
+it has the following output:
+
+\begin{shell}
+args: 7.7 and true
+args: character: and ?
+\end{shell}
+
+The formatting even works for user-defined types if formatted output is supported. Formatted output of the chrono library is one example. A call such as the following
+
+\begin{cpp}
+print2(std::chrono::system_clock::now(), std::chrono::seconds{13});
+\end{cpp}
+
+might have the following output:
+
+\begin{shell}
+args: 2022-06-19 08:46:45.3881410 and 13s
+\end{shell}
+
+For your own types you need a formatter, which is described later.
+
+Inside the placeholder for formatting after a colon, you can specify details of the formatting of the passed argument. For example, you can define a field width:
+
+\begin{cpp}
+std::format("{:7}", 42) // yields " 42"
+std::format("{:7}", 42.0) // yields " 42"
+std::format("{:7}", 'x') // yields "x "
+std::format("{:7}", true) // yields "true "
+\end{cpp}
+
+Note that the different types have different default alignments. Note also that for a bool, the values false and true are printed instead of 0 and 1 as for iostream output with the operator <{}<.
+
+You can also specify the alignment explicitly (< for left, \^{} for center, and > for right) and specify a fill character:
+
+\begin{cpp}
+std::format("{:*<7}", 42) // yields "42*****"
+std::format("{:*>7}", 42) // yields "*****42"
+std::format("{:*^7}", 42) // yields "**42***"
+\end{cpp}
+
+Several additional formatting specifications are possible to force a specific notation, a specific precision (or limit strings to a certain size), fill characters, or a positive sign:
+
+\begin{cpp}
+std::format("{:7.2f} Euro", 42.0) // yields " 42.00 Euro"
+std::format("{:7.4}", "corner") // yields "corn "
+\end{cpp}
+
+By using the position of the argument, we can print a value in multiple forms. For example:
+
+\begin{cpp}
+std::cout << std::format("'{0}' has value {0:02X} {0:+4d} {0:03o}\n", '?');
+std::cout << std::format("'{0}' has value {0:02X} {0:+4d} {0:03o}\n", 'y');
+\end{cpp}
+
+print the hexadecimal, decimal, and octal value of ’?’ and ’y’ using the actual character set, which might look as follows:
+
+\begin{shell}
+’?’ has value 3F +63 077
+’y’ has value 79 +121 171
+\end{shell}
+
 \mySubsubsection{10.1.2}{Using std::format\_to\_n()}
+
+The implementation of std::format() has a pretty good performance when compared with other ways of formatting. However, memory has to be allocated for the resulting string. To save time, you can use std::format\_to\_n(), which writes to a preallocated array of characters. You have to specify both the buffer to write to and its size. For example:
+
+\begin{cpp}
+char buffer[64];
+...
+auto ret = std::format_to_n(buffer, std::size(buffer) - 1,
+							"String '{}' has {} chars\n", str, str.size());
+*(ret.out) = '\0';
+\end{cpp}
+
+or:
+
+\begin{cpp}
+std::array<char, 64> buffer;
+...
+auto ret = std::format_to_n(buffer.begin(), buffer.size() - 1,
+							"String '{}' has {} chars\n", str, str.size());
+*(ret.out) = '\0'; // write trailing null terminator
+\end{cpp}
+
+Note that std::format\_to\_n() does not write a trailing null terminator. However, the return value holds all information to deal with this. It is a data structure of type std::format\_to\_n\_result that has two members:
+
+\begin{itemize}
+\item 
+out for the position of the first character not written
+
+\item 
+size for the number of characters that would have been written without truncating them to the passed size.
+\end{itemize}
+
+For that reason, we store a null terminator at the end, where ret.out points to. Note that we only pass buffer.size()-1 to std::format\_to\_n() to ensure we have memory for the trailing null terminator:
+
+\begin{cpp}
+auto ret = std::format_to_n(buffer.begin(), buffer.size() - 1, ... );
+*(ret.out) = '\0';
+\end{cpp}
+
+Alternatively, we can initialize the buffer with {} to ensure that all characters are initialized with the null terminator.
+
+It is not an error if the size does not fit for the value. In that case, the written value is simply cut. For example:
+
+\begin{cpp}
+std::array<char, 5> mem{};
+std::format_to_n(mem.data(), mem.size()-1, "{}", 123456.78);
+std::cout << mem.data() << '\n';
+\end{cpp}
+
+has the following output:
+
+\begin{shell}
+1234
+\end{shell}
 
 \mySubsubsection{10.1.3}{Using std::format\_to()}
 
