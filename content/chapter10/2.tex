@@ -1,3 +1,54 @@
 
+One reason to still use sprintf() was that it has a significantly better performance than using output string streams or std::to\_string(). The formatting library was designed with the goal of doing this better. It should format at least as fast as sprintf() or even faster.
+
+Current (draft) implementations show that an equal or even better performance is possible. Rough measurements show that
+
+\begin{itemize}
+\item 
+std::format() should be as fast as or even better than sprintf()
+
+\item 
+std::format\_to() and std::format\_to\_n() should be even better
+\end{itemize}
+
+The fact that compilers can usually check format strings at compile time does help a lot. It helps to avoid mistakes with formatting as well as to get a significantly better performance.
+
+However, the performance ultimately depends on the quality of the implementation of the formatting libraries on your specific platform.[For example, while writing this book, for Visual C++, the option /utf-8 improves the formatting performance significantly.] Therefore, you should measure the performance yourself. The program format/formatperf.cpp might give you some hints abut the situation on your platform.
 
 \mySubsubsection{10.2.1}{Using std::vformat() and vformat\_to()}
+
+To support this goal, an important fix was adopted for the formatting library after C++20 was standardized (see \url{http://wg21.link/p2216r3}). With this fix, the functions std::format(), std::format\_to(), and std::format\_to\_n() require that the format string is a compile-time value. You have to pass a string literal or a constexpr string. For example:
+
+\begin{cpp}
+const char* fmt1 = "{}\n"; // runtime format string
+std::cout << std::format(fmt1, 42); // compile-time ERROR: runtime format
+
+constexpr const char* fmt2 = "{}\n"; // compile-time format string
+std::cout << std::format(fmt2, 42); // OK
+\end{cpp}
+
+As a consequence, invalid format specifications become compile-time errors:
+
+\begin{cpp}
+std::cout << std::format("{:7.2f}\n", 42); // compile-time ERROR: invalid format
+
+constexpr const char* fmt2 = "{:7.2f}\n"; // compile-time format string
+std::cout << std::format(fmt2, 42); // compile-time ERROR: invalid format
+\end{cpp}
+
+Of course, applications sometimes have to compute formatting details at runtime (such as computing the best width according to the passed values). In that case, you have to use std::vformat() or std::vformat\_to() and pass all arguments with std::make\_format\_args() to these functions:
+
+\begin{cpp}
+const char* fmt3 = "{} {}\n"; // runtime format
+std::cout << std::vformat(fmt3, std::make_format_args(42, 1.7)); // OK
+\end{cpp}
+
+If a runtime format string is used and the formatting is not valid for the passed argument, the call throws a runtime error of type std::format\_error:
+
+\begin{cpp}
+const char* fmt4 = "{:7.2f}\n";
+std::cout << std::vformat(fmt4, std::make_format_args(42)); // runtime ERROR:
+// throws std::format_error excep
+\end{cpp}
+
+

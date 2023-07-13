@@ -1,9 +1,402 @@
 
+This section describes the syntax of formatting in detail.
 
 \mySubsubsection{10.3.1}{General Format of Format Strings}
 
+The general way to specify the formatting of arguments is to pass a format string that can have replacement fields specified by \{...\} and characters. All other characters are printed as they are. To print the characters \{ and \}, use \{\{ and \}\}.
+
+For example:
+
+\begin{cpp}
+std::format("With format {{}}: {}", 42); // yields "With format {}: 42"
+\end{cpp}
+
+The replacement fields may have an index to specify the argument and a format specifier after a colon:
+
+\begin{itemize}
+\item 
+\{\}
+
+Use the next argument with its default formatting
+
+\item 
+\{n\}
+
+Use the n-th argument (first argument has index 0) with its default formatting
+
+\item 
+\{:fmt\}
+
+Use the next argument formatted according to fmt
+
+\item 
+\{n:fmt\}
+
+Use the n-th argument formatted according to fmt
+\end{itemize}
+
+You can either have none of the arguments specified by an index or all of them:
+
+\begin{cpp}
+std::format("{}: {}", key, value); // OK
+std::format("{1}: {0}", value, key); // OK
+std::format("{}: {} or {0}", value, key); // ERROR
+\end{cpp}
+
+Additional arguments are ignored.
+
+The syntax of the format specifier depends on the type of the passed argument.
+
+\begin{itemize}
+\item 
+For arithmetic types, strings, and raw pointers, a standard format has been defined by the formatting library itself.
+
+\item 
+In addition, C++20 specifies a standard formatting of chrono types (durations, timepoints, and calendrical types).
+\end{itemize}
+
 \mySubsubsection{10.3.2}{Standard Format Specifiers}
+
+Standard format specifiers have the following format (each specifier is optional):
+
+\begin{shell}
+fill align sign # 0 width .prec L type
+\end{shell}
+
+\begin{itemize}
+\item 
+fill is the character to fill the value up to width (default: space). It can only be specified if align is also specified.
+
+\item 
+align is
+
+\begin{itemize}
+\item 
+< left-aligned
+
+\item 
+> right-aligned
+
+\item 
+\^{} centered
+\end{itemize}
+
+The default alignment depends on the type.
+
+\item 
+sign is
+
+\begin{itemize}
+\item 
+- only the negative sign for negative values (default)
+
+\item 
++ positive or negative sign
+
+\item 
+space negative sign or space
+\end{itemize}
+
+\item 
+\# switches to an alternative form of some notations:
+
+\begin{itemize}
+\item 
+It writes a prefix such as 0b, 0, and 0x for the binary, octal, and hexadecimal notation of integral values.
+
+\item 
+It forces the floating-point notation to always write a dot.
+\end{itemize}
+
+\item 
+0 in front of width pads arithmetic values with zeros.
+
+\item 
+width specifies a minimum field width.
+
+\item 
+prec after a dot specifies the precision:
+
+\begin{itemize}
+\item 
+For floating-point types, it specifies how many digits are printed after the dot or in total (depending on the notation).
+
+\item 
+For string types, it specifies the maximum number of characters processed from the string.
+\end{itemize}
+
+\item 
+L activates locale-dependent formatting (this may impact the format of arithmetic types and bool)
+
+\item 
+type specifies the general notation of the formatting. This allows you to print characters as integral values (or vice versa) or choose the general notation of floating-point values.
+\end{itemize}
 
 \mySubsubsection{10.3.3}{Width, Precision, and Fill Characters}
 
+For all values printed, a positive integral value after the colon (without a leading dot) specifies a minimal field width for the output of the value as a whole (including sign etc.). It can be used together with a specification of the alignment: For example:
+
+\begin{cpp}
+std::format("{:7}", 42);     // yields "           42"
+std::format("{:7}", "hi");   // yields "hi           "
+std::format("{:^7}", "hi");  // yields "      hi     "
+std::format("{:>7}", "hi");  // yields "           hi"
+\end{cpp}
+
+You can also specify padding zeros and a fill character. The padding 0 can be used only for arithmetic types (except char and bool) and is ignored if an alignment is specified:
+
+\begin{cpp}
+std::format("{:07}", 42);    // yields "0000042"
+std::format("{:^07}", 42);   // yields "  42   "
+std::format("{:>07}", -1);   // yields "     -1"
+\end{cpp}
+
+A padding 0 is different from the general fill character that can be specified immediately after the colon (in front of the alignment):
+
+\begin{cpp}
+std::format("{:^07}", 42);   // yields "  42   "
+std::format("{:0^7}", 42);   // yields "0042000"
+std::format("{:07}", "hi");  // invalid (padding 0 not allowed for strings)
+std::format("{:0<7}", "hi"); // yields "hi00000"
+\end{cpp}
+
+The precision is used for floating-point types and strings:
+
+\begin{itemize}
+\item 
+For floating-point types, you can specify a different precision than the usual default 6:
+
+\begin{cpp}
+std::format("{}", 0.12345678);         // yields "0.12345678"
+std::format("{:.5}", 0.12345678);      // yields "0.12346"
+std::format("{:10.5}", 0.12345678);    // yields "   0.12346"
+std::format("{:^10.5}", 0.12345678);   // yields " 0.12346  "
+\end{cpp}
+
+Note that depending on the floating-point notation, the precision might apply to the value as a whole or to the digits after the dot.
+
+\item 
+For strings, you can use it to specify a maximum number of characters:
+
+\begin{cpp}
+std::format("{}", "counterproductive");            // yields "counterproductive"
+std::format("{:20}", "counterproductive");         // yields "counterproductive    "
+std::format("{:.7}", "counterproductive");         // yields "counter"
+std::format("{:20.7}", "counterproductive");       // yields "counter              "
+std::format("{:^20.7}", "counterproductive");      // yields "        counter      "
+\end{cpp}
+\end{itemize}
+
+Note that width and precision can be parameters themselves. For example, the following code:
+
+\begin{cpp}
+int width = 10;
+int precision = 2;
+for (double val : {1.0, 12.345678, -777.7}) {
+	std::cout << std::format("{:+{}.{}f}\n", val, width, precision);
+}
+\end{cpp}
+
+has the following output:
+
+\begin{shell}
+    +1.00
+   +12.35
+  -777.70
+\end{shell}
+
+Here, we specify at runtime that we have a minimum field width of 10 with two digits after the dot (using the fixed notation).
+
 \mySubsubsection{10.3.4}{Format/Type Specifiers}
+
+By specifying a format or type specifier, you can force various notations for integral types, floating-point types, and raw pointers.
+
+\mySamllsection{Specifiers for Integral Types}
+
+Table Formatting Options for integral types lists the possible formatting type options for integral types (including bool and char).[ According to \url{http://wg21.link/lwg3648}, the support for specifier c for bool is probably an error and will be removed.]
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|l|l|}
+\hline
+\textbf{Spec.} & \textbf{42} & \textbf{'@'} & \textbf{true}       & \textbf{Meaning}                 \\ \hline
+\endfirsthead
+%
+\endhead
+%
+none           & 42          & @            & true                & Default format                   \\ \hline
+d              & 42          & 64           & 1                   & Decimal notation                 \\ \hline
+b/B            & 101010      & 1000000      & 1                   & Binary notation                  \\ \hline
+\#b            & 0b101010    & 0b1000000    & 0b1                 & Binary notation with prefix      \\ \hline
+\#B            & 0B101010    & 0B1000000    & 0B1                 & Binary notation with prefix      \\ \hline
+o              & 52          & 100          & 1                   & Octal notation                   \\ \hline
+x              & 2a          & 40           & 1                   & Hexadecimal notation             \\ \hline
+X              & 2A          & 40           & 1                   & Hexadecimal notation             \\ \hline
+\#x            & 0x2a        & 0x40         & 0x1                 & Hexadecimal notation with prefix \\ \hline
+\#X            & 0X2A        & 0X40         & 0X1                 & Hexadecimal notation with prefix \\ \hline
+c              & *           & @            & '\textbackslash{}1' & As character with the value      \\ \hline
+s              & invalid     & invalid      & true                & bool as string                   \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 10.1. Formatting options for integral types
+\end{center}
+
+For example:
+
+\begin{cpp}
+std::cout << std::format("{:#b} {:#b} {:#b}\n", 42, '@', true);
+\end{cpp}
+
+will print:
+
+\begin{shell}
+0b101010 0b1000000 0b1
+\end{shell}
+
+Note the following:
+
+\begin{itemize}
+\item 
+The default notations are:
+
+\begin{itemize}
+\item 
+d (decimal) for integer types
+
+\item 
+c (as character) for character types
+
+\item 
+s (as string) for type bool
+\end{itemize}
+
+\item 
+If L is specified after the notation, the locale-dependent character sequence for Boolean values and the locale-dependent thousands separator and decimal point characters for arithmetic values are used.
+\end{itemize}
+
+\mySamllsection{Specifiers for Floating-Point Types}
+
+Table Formatting options for floating-point types lists the possible formatting type options for floating-point types.
+
+For example:
+
+\begin{cpp}
+std::cout << std::format("{0} {0:#} {0:#g} {0:e}\n", -1.0);
+\end{cpp}
+
+will print:
+
+\begin{shell}
+-1 -1. -1.00000 -1.000000e+00
+\end{shell}
+
+Note that passing the integer -1 instead would be a formatting error.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|l|l|}
+\hline
+\textbf{Spec.} & \textbf{-1.0} & \textbf{0.0009765625} & \textbf{1785856.0} & \textbf{Meaning}                                         \\ \hline
+\endfirsthead
+%
+\endhead
+%
+none           & -1            & 0.0009765625          & 1.785856e+06       & Default format                                           \\ \hline
+\#             & -1.           & 0.0009765628          & 1.785856e+06       & Forces decimal point                                     \\ \hline
+f/F            & -1.000000     & 0.000977              & 1785856.000000     & Fixed notation(default precision after dot: 6)           \\ \hline
+g              & -1            & 0.000976562           & 1.78586e+06        & Fixed or exponential notation(default full precision: 6) \\ \hline
+G              & -1            & 0.000976562           & 1.78586E+06        & Fixed or exponential notation(default full precision: 6  \\ \hline
+\#g            & -1.00000      & 0.000976562           & 1.78586e+06        & Fixed or exponential notation(forced dot and zeros)      \\ \hline
+\#G            & -1.00000      & 0.000976562           & 1.78586E+06        & Fixed or exponential notation(forced dot and zeros)      \\ \hline
+e              & -1.00000e00   & 9.765625e-04          & 1.7858560e+06      & Exponential notation(default percision after dot: 6)     \\ \hline
+E              & -1.00000E00   & 9.765625E-04          & 1.7858560E+06      & Exponential notation(default percision after dot: 6)     \\ \hline
+a              & -1p+0         & 1p-10                 & 1.b4p+20           & Hexadec. floating-point notation                         \\ \hline
+A              & -1P+0         & 1P-10                 & 1.B4P+20           & Hexadec. floating-point notation                         \\ \hline
+\#a            & -1.p+0        & 1.p-10                & 1.b4p+20           & Hexadec. floating-point notation                         \\ \hline
+\#A            & -1.P+0        & 1.P-10                & 1.B4P+20           & Hexadec. floating-point notation                         \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 10.2. Formatting options for floating-point types
+\end{center}
+
+\mySamllsection{Specifiers for Strings}
+
+For string types, the default format specifier is s. However, you do not have to provide this specifier, because it is default. Note also that for strings, you can specify a certain precision, which is interpreted as the maximum number of characters used:
+
+\begin{cpp}
+std::format("{}", "counter"); // yields "counter"
+std::format("{:s}", "counter"); // yields "counter"
+std::format("{:.5}", "counter"); // yields "count"
+std::format("{:.5}", "hi"); // yields "hi"
+\end{cpp}
+
+Note that only the standard string types of the character types char and wchar\_t are supported. There is no support for strings and sequences of the types u8string and char8\_t, u16string and char16\_t, or u32string and char32\_t. In fact, the C++ standard library provides formatters for the following types:
+
+\begin{itemize}
+\item 
+char* and const char*
+
+\item 
+const char[n] (string literals)
+
+\item 
+std::string and std::basic\_string<char, traits, allocator>
+
+\item 
+std::string\_view and std::basic\_string\_view<char, traits>
+
+\item 
+wchar\_t* and const wchar\_t*
+
+\item 
+const wchar\_t[n] (wide string literals)
+
+\item 
+std::wstring and std::basic\_string<wchar\_t, traits, allocator>
+
+\item 
+std::wstring\_view and std::basic\_string\_view<wchar\_t, traits>
+\end{itemize}
+
+Note that the format string and arguments for them must have the same character type:
+
+\begin{cpp}
+auto ws1 = std::format("{}", L"K\u00F6ln"); // compile-time ERROR
+std::wstring ws2 = std::format(L"{}", L"K\u00F6ln"); // OK
+\end{cpp}
+
+\mySamllsection{Specifiers for Pointers}
+
+For pointer types, the default format specifier is p, which usually writes the address in hexadecimal notation with the prefix 0x. On platforms that have no type uintptr\_t the format is implementation-defined:
+
+\begin{cpp}
+void* ptr = ... ;
+std::format("{}", ptr) // usually yields a value such as 0x7ff688ee64
+std::format("{:p}", ptr) // usually yields a value such as 0x7ff688ee64
+\end{cpp}
+
+Note that only the following pointer types are supported:
+
+\begin{itemize}
+\item 
+void* and const void*
+
+\item 
+ std::nullptr\_t
+\end{itemize}
+
+Thus, you can either pass nullptr or a raw pointer, which you have to cast to type (const) void*:
+
+\begin{cpp}
+int i = 42;
+std::format("{}", &i) // compile-time error
+std::format("{}", static_cast<void*>(&i)) // OK (e.g., 0x7ff688ee64)
+std::format("{:p}", static_cast<void*>(&i)) // OK (e.g., 0x7ff688ee64)
+std::format("{}", static_cast<const void*>("hi")) // OK (e.g., 0x7ff688ee64)
+std::format("{}", nullptr) // OK (usually 0x0)
+std::format("{:p}", nullptr) // OK (usually 0x0)
+\end{cpp}

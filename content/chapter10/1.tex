@@ -167,5 +167,35 @@ has the following output:
 
 \mySubsubsection{10.1.3}{Using std::format\_to()}
 
+The formatting library also provides std::format\_to(), which writes an unlimited number of characters for formatted output. Using this function for limited memory is a risk because if the value needs too much memory, you have undefined behavior. However, by using an output stream buffer iterator, you can safely use it to write directly to a stream:
+
+\begin{cpp}
+std::format_to(std::ostreambuf_iterator<char>{std::cout},
+				"String '{}' has {} chars\n", str, str.size());
+\end{cpp}
+
+In general, std::format\_to() takes any output iterator for characters. For example, you can also use a back inserter to append the characters to a string:
+
+\begin{cpp}
+std::string s;
+std::format_to(std::back_inserter(s),
+				"String '{}' has {} chars\n", str, str.size());
+\end{cpp}
+
+The helper function std::back\_inserter() creates an object that calls push\_back() for each character. Note that the implementation of std::format\_to() can recognize that back insert iterators are passed and write multiple characters for certain containers at once so that we still have good performance.
+
 \mySubsubsection{10.1.4}{Using std::formatted\_size()}
+
+To know in advance how many characters would be written by a formatted output (without writing any), you can use std::formatted\_size(). For example:
+
+\begin{cpp}
+auto sz = std::formatted_size("String '{}' has {} chars\n", str, str.size());
+\end{cpp}
+
+That would allow you to reserve enough memory or double check that the reserved memory fits.
+
+
+
+
+
 
