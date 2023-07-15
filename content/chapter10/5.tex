@@ -1,0 +1,89 @@
+Ideally, C++ compilers should detect bugs at compile time rather than at runtime. Because string literals are known at compile time, C++ can check for format violations when string literals are used as format strings and does so in std::format() [The requirement to check format strings at compile time was proposed with \url{http://wg21.link/p2216r3} and accepted as a fix against C++20 after C++20 was standardized.]:
+
+\begin{cpp}
+std::format("{:d}", 42) // OK
+std::format("{:s}", 42) // compile-time ERROR
+\end{cpp}
+
+If you pass a format string that has already been initialized or computed, the formatting library handles format errors as follows:
+
+\begin{itemize}
+\item
+std::format(), std::format\_to(), and format\_to\_n() take only format strings known at compile time:
+
+\begin{itemize}
+\item
+String literals
+
+\item
+constexpr character pointers
+
+\item
+Compile-time strings that can be converted to a compile-time string view
+\end{itemize}
+
+\item
+To use format strings computed at runtime, use
+
+\begin{itemize}
+\item
+std::vformat()
+
+\item
+std::vformat\_to()
+\end{itemize}
+
+\item
+For std::formatted\_size(), you can only use format strings known at compile time.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+const char* fmt1 = "{:d}"; // runtime format string
+std::format(fmt1, 42); // compile-time ERROR
+std::vformat(fmt1, std::make_format_args(42)); // OK
+
+constexpr const char* fmt2 = "{:d}"; // compile-time format string
+std::format(fmt2, 42); // OK
+\end{cpp}
+
+Using fmt1 does not compile because the passed argument is not a compile-time string and std::format() is used. However, using fmt1 with std::vformat() works fine (but you have to convert all arguments with std::make\_format\_args()). Using fmt2 does compile when you pass it to std::format() because it is initialized as a compile-time string.
+
+If you want to use multiple arguments with std::vformat(), you have to pass them all to one call of std::make\_format\_args():
+
+\begin{cpp}
+const char* fmt3 = "{} {}";
+std::vformat(fmt3, std::make_format_args(x, y))
+\end{cpp}
+
+If a format failure is detected at runtime, an exception of type std::format\_error is thrown. This new standard exception type is derived from std::runtime\_error and offers the usual API of standard exceptions to initialize the exception with a string for the error message you get by calling what().
+
+For example:
+
+\begin{cpp}
+try {
+	const char* fmt4 = "{:s}";
+	std::vformat(fmt4, std::make_format_args(42)) // throws std::format_error
+}
+catch (const std::format_error& e) {
+	std::cerr << "FORMATTING EXCEPTION: " << e.what() << std::endl;
+}
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

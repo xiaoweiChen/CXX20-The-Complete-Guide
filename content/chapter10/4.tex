@@ -1,0 +1,98 @@
+If L is specified for a format, the locale-specific notation is used:
+
+\begin{itemize}
+\item 
+For bool, the locale strings on std::numpunct::truename and std::numpunct::falsename are used.
+
+\item 
+For integral values, the locale-dependent thousands separator character is used.
+
+\item 
+For floating-point values, the locale-dependent decimal point and thousands separator characters are used.
+
+\item 
+For several notations of types in the chrono library (durations, timepoints, etc), their locale-specific formats are used.
+\end{itemize}
+
+To activate the locale-specific notation, you also have to pass a locale to std::format(). For example:
+
+\begin{cpp}
+// initialize a locale for “German in Germany”:
+#ifdef _MSC_VER
+std::locale locG{"deu_deu.1252"};
+#else
+std::locale locG{"de_DE"};
+#endif
+
+// use it for formatting:
+std::format(locG, "{0} {0:L}", 1000.7) // yields 1000.7 1.000,7
+\end{cpp}
+
+See format/formatgerman.cpp for a complete example.
+
+Note that the locale is used only if you use the locale specifier L. Without this, the default locale "C" is used, which uses the American formatting.
+
+Alternatively, you can set the global locale and use the L specifier:
+
+\begin{cpp}
+std::locale::global(locG); // set German locale globally
+std::format("{0} {0:L}", 1000.7) // yields 1000.7 1.000,7
+\end{cpp}
+
+You might have to create your own locale (usually based on an existing locale with modified facets). For example:
+
+\filename{format/formatbool.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <locale>
+#include <format>
+
+// define facet for German bool names:
+class GermanBoolNames : public std::numpunct_byname<char> {
+	public:
+	GermanBoolNames (const std::string& name)
+	: std::numpunct_byname<char>(name) {
+	}
+	protected:
+	virtual std::string do_truename() const {
+		return "wahr";
+	}
+	virtual std::string do_falsename() const {
+		return "falsch";
+	}
+};
+
+int main()
+{
+	// create locale with German bool names:
+	std::locale locBool{std::cin.getloc(),
+						new GermanBoolNames{""}};
+						
+	// use locale to print Boolean values:
+	std::cout << std::format(locBool, "{0} {0:L}\n", false); // false falsch
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+false falsch
+\end{shell}
+
+To print values with wide-character strings (which is an issue especially with Visual C++), both the format string and the arguments have to be wide-character strings. For example:
+
+\begin{cpp}
+std::wstring city = L"K\u00F6ln"; // K¨oln
+auto ws1 = std::format("{}", city); // compile-time ERROR
+std::wstring ws2 = std::format(L"{}", city); // OK: ws2 is std::wstring
+std::wcout << ws2 << '\n'; // OK
+\end{cpp}
+
+Strings of types char8\_t (UTF-8 characters), char16\_t, and char32\_t are not supported, yet.
+
+
+
+
+
+
