@@ -1,11 +1,399 @@
 
+Now that you have learned about the new features and types of the chrono library, this section discusses how to use them in practice.
 
-
-
-
+See also \url{http://github.com/HowardHinnant/date/wiki/Examples-and-Recipes} for more examples and recipes.
 
 \mySubsubsection{11.5.1}{Invalid Dates}
 
+Values of calendrical types may not be valid. This can happen in two ways:
+
+\begin{itemize}
+\item 
+By an initialization with an invalid value. For example:
+
+\begin{cpp}
+std::chrono::day d{0}; // invalid day
+std::chrono::year_month ym{2021y/13}; // invalid year_month
+std::chrono::year_month_day ymd{2021y/2/31}; // invalid year_month_day
+\end{cpp}
+
+\item 
+By a computation that results in an invalid date. For example:
+
+\begin{cpp}
+auto ymd1 = std::chrono::year{2021}/1/31; // January 31, 2021
+ymd1 += std::chrono::months{1}; // February 31, 2021 (invalid)
+
+auto ymd0 = std::chrono::year{2020}/2/29; // February 29, 2020
+ymd1 += std::chrono::years{1}; // February 29, 2021 (invalid)
+\end{cpp}
+\end{itemize}
+
+Table Valid values of standard date attributes lists the internal types and possible values of the different attributes of a date.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|}
+\hline
+\textbf{Attribute} & \textbf{Internal Type} & \textbf{Vaild Values}                                                  \\ \hline
+\endfirsthead
+%
+\endhead
+%
+Day           & unsigned char & 1 to 31         \\ \hline
+Month         & unsigned char & 1 to 12         \\ \hline
+Year          & short         & -32767 to 32767 \\ \hline
+Weekday            & unsigned char          & 0(Sunday) to 6(Saturday) and 7 (again Sunday), which is converted to 0 \\ \hline
+Weekday index & unsigned char & 1 to 5          \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.10. Valid values of standard date attributes
+\end{center}
+
+All combined types are valid if the individual components are valid (e.g., a valid month\_weekday is valid if both the month and the weekday are valid). However, additional checks may apply:
+
+\begin{itemize}
+\item 
+A full date of type year\_month\_day has to exist which means that it takes leap years into account. For example:
+
+\begin{cpp}
+2020y/2/29; // valid (there is a February 29 in 2020)
+2021y/2/29; // invalid (there is no February 29 in 2021)
+\end{cpp}
+
+\item 
+A month\_day is valid only if the day could be valid in that month. For February, 29 is valid but 30 is not.
+
+For example:
+
+\begin{cpp}
+February/29; // valid (a February can have 29 days)
+February/30; // invalid (no February can have 30 days)
+\end{cpp}
+
+\item 
+A year\_month\_weekday is valid only if the weekday index can exist in the specified month of a year.
+
+For example:
+
+\begin{cpp}
+2020y/1/Thursday[5]; // valid (there is a fifth Thursday in January 2020)
+2020y/1/Sunday[5]; // invalid (there is no fifth Sunday in January 2020)
+\end{cpp}
+\end{itemize}
+
+Each calendrical type provides a member function ok() to check whether the value is valid. Default output operators signal invalid dates.
+
+The way to handle invalid dates depends on your programming logic. For the typical scenario where you have created a day too high for a month, you have the following options:
+
+\begin{itemize}
+\item 
+Round down to the last day of the month:
+
+\begin{cpp}
+auto ymd = std::chrono::year{2021}/1/31;
+ymd += std::chrono::months{1};
+if (!ymd.ok()) {
+	ymd = ymd.year()/ymd.month()/std::chrono::last; // February 28, 2021
+}
+\end{cpp}
+
+Note that the expression on the right creates a year\_month\_last which is then converted to type year\_month\_day.
+
+\item 
+Round up to the first day of the next month:
+
+\begin{cpp}
+auto ymd = std::chrono::year{2021}/1/31;
+ymd += std::chrono::months{1};
+if (!ymd.ok()) {
+	ymd = ymd.year()/ymd.month()/1 + std::chrono::months{1}; // March 1, 2021
+}
+\end{cpp}
+
+Do not just add 1 to the month because for December, you create an invalid month.
+
+\item
+Round up to the date according to all overflown days:
+
+\begin{cpp}
+auto ymd = std::chrono::year{2021}/1/31;
+ymd += std::chrono::months{1}; // March 3, 2021
+if (!ymd.ok()) {
+	ymd = std::chrono::sys_days(ymd);
+}
+\end{cpp}
+
+This uses a special feature of the conversion of a year\_month\_day where all overflown days are logically added to the next month. However, this does work only for a few days (you cannot add 1000 days that way).
+\end{itemize}
+
+If the date is not a valid value, the default output format will signal that with “is not a valid type.” For example:
+
+\begin{cpp}
+std::chrono::day d{0}; // invalid day
+std::chrono::year_month_day ymd{2021y/2/31}; // invalid year_month_day
+std::cout << "day: " << d << '\n';
+std::cout << "ymd: " << ymd << '\n';
+\end{cpp}
+
+This code will output:[Note that the specification in the C++20 standard is a little inconsistent here and is currently fixed. For example, it states that for an invalid year\_month\_days “is not a valid date” is the output.]
+
+\begin{shell}
+day: 00 is not a valid day
+ymd: 2021-02-31 is not a valid year_month_day
+\end{shell}
+
+The same happens when using the default formatting (just {}) of formatted output. By using specific conversion specifiers, you can disable the “is not a valid” output (in software for banking or quarterly processing, a day such as June 31 is sometimes even used):
+
+\begin{cpp}
+std::chrono::year_month_day ymd{2021y/2/31};
+std::cout << ymd << '\n'; // “2021-02-31 is not a valid year_month_day”
+std::cout << std::format("{:%F}\n", ymd); // “2021-02-31”
+std::cout << std::format("{:%Y-%m-%d}\n", ymd); // “2021-02-31”
+\end{cpp}
+
 \mySubsubsection{11.5.2}{Dealing with months and years}
 
+Because std::chrono::months and std::chrono::years are not integral multiples of days, you have to be careful when using them.
+
+\begin{itemize}
+\item 
+For standard types that have their own value just for the year (month, year, year\_month, year\_month\_day, year\_month\_weekday\_last, ...), they work fine when adding a specific number of months or years to a date.
+
+\item
+For standard timepoint types that have one value for the date as a whole (time\_point, sys\_time, sys\_seconds, and sys\_days), they add the corresponding average fractional period to a date, which might not result in the date you expect. 
+\end{itemize}
+
+For example, let us look at the different effects of adding four months or four years to December 31, 2020:
+
+\begin{itemize}
+\item 
+When dealing with year\_month\_day:
+
+\begin{cpp}
+chr::year_month_day ymd0 = chr::year{2020}/12/31;
+auto ymd1 = ymd0 + chr::months{4}; // OOPS: April 31, 2021
+auto ymd2 = ymd0 + chr::years{4}; // OK: December 31, 2024
+
+std::cout << "ymd: " << ymd0 << '\n'; // 2020-12-31
+std::cout << " +4months: " << ymd1 << '\n'; // 2021-04-31 is not a valid ...
+std::cout << " +4years: " << ymd2 << '\n'; // 2024-12-31
+\end{cpp}
+
+\item 
+When dealing with year\_month\_day\_last:
+
+\begin{cpp}
+chr::year_month_day_last yml0 = chr::year{2020}/12/chr::last;
+auto yml1 = yml0 + chr::months{4}; // OK: last day of April 2021
+auto yml2 = yml0 + chr::years{4}; // OK: last day of Dec. 2024
+
+std::cout << "yml: " << yml0 << '\n'; // 2020/Dec/last
+std::cout << " +4months: " << yml1 << '\n'; // 2021/Apr/last
+std::cout << " as date: "
+		  << chr::sys_days{yml1} << '\n'; // 2021-04-30
+std::cout << " +4years: " << yml2 << '\n'; // 2024/Dec/last
+\end{cpp}
+
+\item 
+When dealing with sys\_days:
+
+\begin{cpp}
+chr::sys_days day0 = chr::year{2020}/12/31;
+auto day1 = day0 + chr::months{4}; // OOPS: May 1, 2021 17:56:24
+auto day2 = day0 + chr::years{4}; // OOPS: Dec. 30, 2024 23:16:48
+
+std::cout << "day: " << day0 << '\n'; // 2020-12-31
+std::cout << " with time: "
+		  << chr::sys_seconds{day0} << '\n'; // 2020-12-31 00:00:00
+std::cout << " +4months: " << day1 << '\n'; // 2021-05-01 17:56:24
+std::cout << " +4years: " << day2 << '\n'; // 2024-12-30 23:16:48
+\end{cpp}
+
+This feature is supported only to allow you to model things such as physical or biological processes that do not care about the intricacies of human calendars (weather, gestation periods, etc.) and the feature should not be used for other purposes.
+\end{itemize}
+
+Note that both the output values and the default output formats differ. That is a clear sign that different types are used:
+
+\begin{itemize}
+\item 
+When you add months or years to calendrical types, these types process the correct logical date (the same day or again the last day of the next month or year). Please note that this might result in invalid dates such as April 31, which the default output operator even signals in its output as follows:[Due to some inconsistencies, the exact format of invalid dates might not match the C++20 standard, which specifies “is not a valid date” here.]
+
+\begin{shell}
+2021-04-31 is not a valid year_month_day
+\end{shell}
+
+\item
+When you add months or years to a day of type std::chrono::sys\_days, the result is not of type sys\_days. As usual in the chrono library, the result has the best type that is able to represent any possible result:
+
+\begin{itemize}
+\item 
+Adding months yields a type with a unit of 54 seconds.
+
+\item 
+Adding years yields a type with a unit of 216 seconds.
+\end{itemize}
+
+Both units are a multiple of a second, which means that they can be used as std::chrono::sys\_seconds. By default, the corresponding output operator prints both the day and the time in seconds, which, as you can see, is not the same day and time of a later month or year. Both timepoints are no longer the 31st or last day of a month and the time is no longer midnight:
+
+\begin{shell}
+2021-05-01 17:56:24
+2024-12-30 23:16:48
+\end{shell}
+
+\end{itemize}
+
+Both can be useful. However, using months and years with timepoints is usually only useful for computing the approximate day after many months and/or years.
+
 \mySubsubsection{11.5.3}{Parsing Timepoints and Durations}
+
+If you have a timepoint or duration, you can access the different fields as demonstrated by the following program:
+
+\filename{lib/chronoattr.cpp}
+
+\begin{cpp}
+#include <chrono>
+#include <iostream>
+
+int main()
+{
+	auto now = std::chrono::system_clock::now(); // type is sys_time<>
+	auto today = std::chrono::floor<std::chrono::days>(now); // type is sys_days
+	std::chrono::year_month_day ymd{today};
+	std::chrono::hh_mm_ss hms{now - today};
+	std::chrono::weekday wd{today};
+	
+	std::cout << "now: " << now << '\n';
+	std::cout << "today: " << today << '\n';
+	std::cout << "ymd: " << ymd << '\n';
+	std::cout << "hms: " << hms << '\n';
+	std::cout << "year: " << ymd.year() << '\n';
+	std::cout << "month: " << ymd.month() << '\n';
+	std::cout << "day: " << ymd.day() << '\n';
+	std::cout << "hours: " << hms.hours() << '\n';
+	std::cout << "minutes: " << hms.minutes() << '\n';
+	std::cout << "seconds: " << hms.seconds() << '\n';
+	std::cout << "subsecs: " << hms.subseconds() << '\n';
+	std::cout << "weekday: " << wd << '\n';
+	
+	try {
+		std::chrono::sys_info info{std::chrono::current_zone()->get_info(now)};
+		std::cout << "timezone: " << info.abbrev << '\n';
+	}
+	catch (const std::exception& e) {
+		std::cerr << "no timezone database: (" << e.what() << ")\n";
+	}
+}
+\end{cpp}
+
+The output of the program might be, for example, as follows:
+
+\begin{shell}
+now:      2021-04-02 13:37:34.059858000
+today:    2021-04-02
+ymd:      2021-04-02
+hms:      13:37:34.059858000
+year:     2021
+month:    Apr
+day:      02
+hours:    13h
+minutes:  37min
+seconds:  34s
+subsecs:  59858000ns
+weekday:  Fri
+timezone: CEST
+\end{shell}
+
+The function now() yields a timepoint with the granularity of the system clock:
+
+\begin{cpp}
+auto now = std::chrono::system_clock::now();
+\end{cpp}
+
+The result has type std::chrono::sys\_time<> with some implementation-specific duration type for the resolution.
+
+If you want to deal with the local time, you have to implement the following:
+
+\begin{cpp}
+auto tpLoc = std::chrono::zoned_time{std::chrono::current_zone(),
+										std::chrono::system_clock::now()
+									}.get_local_time();
+\end{cpp}
+
+To deal with the date part of the timepoint, we need the granularity of days, which we get with:
+
+\begin{cpp}
+auto today = std::chrono::floor<std::chrono::days>(now);
+\end{cpp}
+
+The initialized variable today has the type std::chrono::sys\_days. You can assign this to an object of type std::chrono::year\_month\_day, so that you can access year, month, and day with the corresponding member functions:
+
+\begin{cpp}
+std::chrono::year_month_day ymd{today};
+std::cout << "year: " << ymd.year() << '\n';
+std::cout << "month: " << ymd.month() << '\n';
+std::cout << "day: " << ymd.day() << '\n';
+\end{cpp}
+
+To deal with the time part of the timepoint we need a duration, which we get when we compute the difference between our original timepoint and its value at midnight. We use the duration to initialize a hh\_mm\_ss object:
+
+\begin{cpp}
+std::chrono::hh_mm_ss hms{now - today};
+\end{cpp}
+
+From this, you can get the hour, minute, second, and subseconds directly:
+
+\begin{cpp}
+std::cout << "hours: " << hms.hours() << '\n';
+std::cout << "minutes: " << hms.minutes() << '\n';
+std::cout << "seconds: " << hms.seconds() << '\n';
+std::cout << "subsecs: " << hms.subseconds() << '\n';
+\end{cpp}
+
+For the subseconds, hh\_mm\_ss determines the necessary granularity and uses the appropriate unit. In our case, it is printed as nanoseconds:
+
+\begin{shell}
+hms:      13:37:34.059858000
+hours:    13h
+minutes:  37min
+seconds:  34s
+subsecs:  59858000ns
+\end{shell}
+
+For the weekday, you only have to initialize it with a type of granularity day. This works for sys\_days, local\_days, and year\_month\_day (because the latter implicitly converts to std::sys\_days):
+
+\begin{cpp}
+std::chrono::weekday wd{today}; // OK (today has day granularity)
+std::chrono::weekday wd{ymd}; // OK due to implicit conversion to sys_days
+\end{cpp}
+
+For timezone aspects, you have to combine the timepoint (here now) with a timezone (here the current timezone). The resulting std::chrono::sys\_info object contains information such as the abbreviated timezone name:
+
+\begin{cpp}
+std::chrono::sys_info info{std::chrono::current_zone()->get_info(now)};
+std::cout << "timezone: " << info.abbrev << '\n';
+\end{cpp}
+
+Note that not every C++ platform will support the timezone database. Therefore, on some systems this part of the program might throw an exception.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,10 +1,675 @@
 
-
+C++20 provides new support for directly outputting and parsing almost all chrono types.
 
 \mySubsubsection{11.4.1}{Default Output Formats}
 
+For more or less all chrono types, the standard output operator has been defined since C++20. If useful, it not only prints the value but also uses an appropriate format and the unit. Locale-dependent formatting is possible.
+
+All calendrical types print out the value as listed with the output formats of calendrical types.
+
+All duration types print out the value with the unit type as listed in table Output units for durations. This fits any literal operator if provided.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Unit}                          & \textbf{Output Suffix} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+atto                                   & as                     \\ \hline
+femto                                  & fs                     \\ \hline
+pico                                   & ps                     \\ \hline
+nano                                   & ns                     \\ \hline
+micro                                  & μs or us               \\ \hline
+milli                                  & ms                     \\ \hline
+centi                                  & cs                     \\ \hline
+deci                                   & ds                     \\ \hline
+ratio\textless{}1\textgreater{}        & s                      \\ \hline
+deca                                   & das                    \\ \hline
+hecto                                  & hs                     \\ \hline
+kilo                                   & ks                     \\ \hline
+mega                                   & Ms                     \\ \hline
+giga                                   & Gs                     \\ \hline
+tera                                   & Ts                     \\ \hline
+peta                                   & Ps                     \\ \hline
+exa                                    & Es                     \\ \hline
+ratio\textless{}60\textgreater{}       & min                    \\ \hline
+ratio\textless{}3600\textgreater{}     & h                      \\ \hline
+ratio\textless{}86400\textgreater{}    & d                      \\ \hline
+ratio\textless{}num, 1\textgreater{}   & {[}num{]}s             \\ \hline
+ratio\textless{}num, den\textgreater{} & {[}num/den{]}s         \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.8. Output units for durations
+\end{center}
+
+For all standard timepoint types, an output operator prints date and optionally time in the following format:
+
+\begin{itemize}
+\item 
+year-month-day for an integral granularity unit implicitly convertible to days
+
+\item 
+year-month-day hour:minutes:seconds for an integral granularity unit equal to or less than days
+\end{itemize}
+
+If the type of the timepoint value (member rep) has a floating-point type, no output operator is defined.[This is a gap that will hopefully be fixed with C++23.]
+
+For the time part, the output operator of type hh\_mm\_ss is used. This corresponds with the \%F \%T conversion specifier for formatted output.
+
+For example:
+
+\begin{cpp}
+auto tpSys = std::chrono::system_clock::now();
+std::cout << tpSys << '\n'; // 2021-04-25 13:37:02.936314000
+
+auto tpL = chr::zoned_time{chr::current_zone(), tpSys}.get_local_time();
+std::cout << tpL; // 2021-04-25 15:37:02.936314000
+std::cout << chr::floor<chr::milliseconds>(tpL); // 2021-04-25 15:37:02.936
+std::cout << chr::floor<chr::seconds>(tpL); // 2021-04-25 15:37:02
+std::cout << chr::floor<chr::minutes>(tpL); // 2021-04-25 15:37:00
+std::cout << chr::floor<chr::days>(tpL); // 2021-04-25
+std::cout << chr::floor<chr::weeks>(tpL); // 2021-04-22
+
+auto tp3 = std::chrono::floor<chr::duration<long long, std::ratio<1, 3>>>(tpSys);
+std::cout << tp3 << '\n'; // 2021-04-25 13:37:02.666666
+
+chr::sys_time<chr::duration<double, std::milli>> tpD{tpSys};
+std::cout << tpD << '\n'; // ERROR: no output operator defined
+
+std::chrono::gps_seconds tpGPS;
+std::cout << tpGPS << '\n'; // 1980-01-06 00:00:00
+
+auto tpStd = std::chrono::steady_clock::now();
+std::cout << "tpStd: " << tpStd; // ERROR: no output operator defined
+\end{cpp}
+
+The zoned\_time<> type outputs like the timepoint type extended with the abbreviated timezone name. The following timezone abbreviations are used for the standard clocks:
+
+\begin{itemize}
+\item 
+UTC for sys\_clock, utc\_clock, and file\_clock
+
+\item 
+TAI for tai\_clock
+
+\item 
+GPS for gps\_clock
+\end{itemize}
+
+Finally, note that sys\_info and local\_info have output operators with an undefined format. They should only be used for debugging purposes.
+
 \mySubsubsection{11.4.2}{Formatted Output}
+
+Chrono supports the new library for formatted output. That means you can use date/time types for arguments of std::format() and std::format\_to().
+
+For example:
+
+\begin{cpp}
+auto t0 = std::chrono::system_clock::now();
+...
+auto t1 = std::chrono::system_clock::now();
+
+std::cout << std::format("From {} to {}\nit took {}\n", t0, t1, t1-t0);
+\end{cpp}
+
+This would use the default output formats of the date/time types. For example, we might have the following output:
+
+\begin{shell}
+From 2021-04-03 15:21:33.197859000 to 2021-04-03 15:21:34.686544000
+it took 1488685000ns
+\end{shell}
+
+From 2021-04-03 15:21:33.197859000 to 2021-04-03 15:21:34.686544000 it took 1488685000ns
+
+\begin{cpp}
+std::cout << std::format("From {:%T} to {:%T} it took {:%S}s\n", t0, t1, t1-t0);
+\end{cpp}
+
+This might have the following output then:
+
+\begin{shell}
+From 15:21:34.686544000 to 15:21:34.686544000 it took 01.488685000s
+\end{shell}
+
+The format specifiers for chrono types are part of the syntax for standard format specifiers (each specifier is optional):
+
+\begin{shell}
+fill align width .prec L spec
+\end{shell}
+
+\begin{itemize}
+\item 
+fill, align, with, and prec mean the same as for standard format specifiers.
+
+\item 
+spec specifies the general notation of the formatting, starting with \%.
+
+\item 
+L also as usual turns on locale-dependent formatting for specifiers that support it.
+\end{itemize}
+
+Table Conversion specifiers for chrono types lists all conversion specifiers for formatted output of date/time types with an example based on Sunday, June 9, 2019 17:33:16 and 850 milliseconds.
+
+Without using a specific conversion specifier, the default output operator is used, which marks invalid dates. When using specific conversion specifiers, this is not the case:
+
+\begin{cpp}
+std::chrono::year_month_day ymd{2021y/2/31}; // February 31, 2021
+std::cout << std::format("{}", ymd); // 2021-02-31 is not a valid ...
+std::cout << std::format("{:%F}", ymd); // 2021-02-31
+std::cout << std::format("{:%Y-%m-%d}", ymd); // 2021-02-31
+\end{cpp}
+
+If the date/time value type does not provide the necessary information for a conversion specifier, a std::format\_error exception is thrown. For example, an exception is thrown when:
+
+\begin{itemize}
+\item 
+A year specifier is used for a month\_day
+
+\item 
+A weekday specifier is used for a duration
+
+\item 
+A month or weekday name should be printed and the value is not valid
+
+\item 
+A timezone specifier is used for a local timepoint
+\end{itemize}
+
+In addition, note the following about conversion specifiers:
+
+\begin{itemize}
+\item 
+A negative duration or hh\_mm\_ss value print the minus sign in front of the whole value. For example:
+
+\begin{cpp}
+std::cout << std::format("{:%H:%M:%S}", -10000s); // outputs: -02:46:40
+\end{cpp}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|lll|}
+\hline
+\multicolumn{1}{|l|}{\textbf{Spec.}} & \multicolumn{1}{l|}{\textbf{Example}}  & \textbf{Meaning}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\multicolumn{1}{|l|}{\%c} & \multicolumn{1}{l|}{Sun Jun  9 17:33:16 2019} & Standard or locale's date and time representation               \\ \hline
+\multicolumn{3}{|l|}{\textbf{Dates}}                                                                                                            \\ \hline
+\multicolumn{1}{|l|}{\%x}            & \multicolumn{1}{l|}{06/09/19}          & Standard or locale's date representation                        \\ \hline
+\multicolumn{1}{|l|}{\%F}            & \multicolumn{1}{l|}{2019-06-09}        & year-month-day with four and two digits                         \\ \hline
+\multicolumn{1}{|l|}{\%D}            & \multicolumn{1}{l|}{06/09/19}          & month/day/year with two digits                                  \\ \hline
+\multicolumn{1}{|l|}{\%e}            & \multicolumn{1}{l|}{9}                 & Day with leading space if signle digit                          \\ \hline
+\multicolumn{1}{|l|}{\%d}            & \multicolumn{1}{l|}{09}                & Day as two digit                                                \\ \hline
+\multicolumn{1}{|l|}{\%b}            & \multicolumn{1}{l|}{Jun}               & Standard or locale's abbreviated month name                     \\ \hline
+\multicolumn{1}{|l|}{\%h}            & \multicolumn{1}{l|}{Jun}               & 同上                                                              \\ \hline
+\multicolumn{1}{|l|}{\%B}            & \multicolumn{1}{l|}{June}              & Standard or locale's month name                                 \\ \hline
+\multicolumn{1}{|l|}{\%m}            & \multicolumn{1}{l|}{06}                & Month with two digits                                           \\ \hline
+\multicolumn{1}{|l|}{\%Y}            & \multicolumn{1}{l|}{2019}              & Year with four digits                                           \\ \hline
+\multicolumn{1}{|l|}{\%y}            & \multicolumn{1}{l|}{19}                & Year without century as two digits                              \\ \hline
+\multicolumn{1}{|l|}{\%G}            & \multicolumn{1}{l|}{2019}              & ISO-week-based year as four digits (week according to \%V)      \\ \hline
+\multicolumn{1}{|l|}{\%g}            & \multicolumn{1}{l|}{19}                & ISO-week-based year as two digits (week according to \%V)       \\ \hline
+\multicolumn{1}{|l|}{\%C}            & \multicolumn{1}{l|}{20}                & Century as two digits                                           \\ \hline
+\multicolumn{3}{|l|}{\textbf{Weekdays and weeks:}}                                                                                              \\ \hline
+\multicolumn{1}{|l|}{\%a}            & \multicolumn{1}{l|}{Sun}               & Standard or locale's abbreviated weekday name                   \\ \hline
+\multicolumn{1}{|l|}{\%A}            & \multicolumn{1}{l|}{Sunday}            & Standard or locale's weekday name                               \\ \hline
+\multicolumn{1}{|l|}{\%w}            & \multicolumn{1}{l|}{0}                 & Weekday as decimal number (Sunday as 0 until Saturday as 6)     \\ \hline
+\multicolumn{1}{|l|}{\%u}            & \multicolumn{1}{l|}{7}                 & Weekday as decimal number (Monday as 1 suntil Sunday as 7)      \\ \hline
+\multicolumn{1}{|l|}{\%W}            & \multicolumn{1}{l|}{22}                & Week of the year (00 ... 53 , week 01 starts with first Monday) \\ \hline
+\multicolumn{1}{|l|}{\%U}            & \multicolumn{1}{l|}{23}                & Week of the year (00 ... 53, week 01 starts with first Sunday)  \\ \hline
+\multicolumn{1}{|l|}{\%V}            & \multicolumn{1}{l|}{23}                & ISO week of the year (01 ... 53, week 01 has Jan. 4th)          \\ \hline
+\multicolumn{3}{|l|}{\textbf{Times:}}                                                                                                           \\ \hline
+\multicolumn{1}{|l|}{\%X}            & \multicolumn{1}{l|}{17:33:16}          & Standard or locale's time representation                        \\ \hline
+\multicolumn{1}{|l|}{\%r}            & \multicolumn{1}{l|}{05:33:16 PM}       & Standard or locale's 12-hour clock time                         \\ \hline
+\multicolumn{1}{|l|}{\%T} & \multicolumn{1}{l|}{17:33:16.850}             & hour:minutes:seconds(locale-dependent subseconds as needed)     \\ \hline
+\multicolumn{1}{|l|}{\%R}            & \multicolumn{1}{l|}{17:33}             & hour:minutes with two digits each                               \\ \hline
+\multicolumn{1}{|l|}{\%H}            & \multicolumn{1}{l|}{17}                & 24-hour clock hour as two digits                                \\ \hline
+\multicolumn{1}{|l|}{\%I}            & \multicolumn{1}{l|}{05}                & 12-hour clock hour as two digits                                \\ \hline
+\multicolumn{1}{|l|}{\%p}            & \multicolumn{1}{l|}{PM}                & AM or PM according to the 12-hour clock                         \\ \hline
+\multicolumn{1}{|l|}{\%M}            & \multicolumn{1}{l|}{33}                & Minute with two digits                                          \\ \hline
+\multicolumn{1}{|l|}{\%S} & \multicolumn{1}{l|}{16.850}                   & Seconds as decimal number (local-specific subseconds as needed) \\ \hline
+\multicolumn{3}{|l|}{\textbf{Other:}}                                                                                                           \\ \hline
+\multicolumn{1}{|l|}{\%Z}            & \multicolumn{1}{l|}{CEST}              & Timezone abbreviation (may also be UTC, TAI, or GPS)            \\ \hline
+\multicolumn{1}{|l|}{\%z}            & \multicolumn{1}{l|}{+0200}             & Offset(hours and minutes) from UTC (\%Ez or \%Oz for +02:00)    \\ \hline
+\multicolumn{1}{|l|}{\%j}            & \multicolumn{1}{l|}{160}               & Day of the year with three digits (Jan. 1st is 001)             \\ \hline
+\multicolumn{1}{|l|}{\%q}            & \multicolumn{1}{l|}{ms}                & Unit suffix according to the time's duration                    \\ \hline
+\multicolumn{1}{|l|}{\%Q}            & \multicolumn{1}{l|}{6196850}           & Value according to the time's duration                          \\ \hline
+\multicolumn{1}{|l|}{\%n}            & \multicolumn{1}{l|}{\textbackslash{}n} & Newline character                                               \\ \hline
+\multicolumn{1}{|l|}{\%t}            & \multicolumn{1}{l|}{\textbackslash{}t} & Tabulator character                                             \\ \hline
+\multicolumn{1}{|l|}{\%\%}           & \multicolumn{1}{l|}{\%}                & \% character                                                    \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.9. Conversion specifiers for chrono types
+\end{center}
+
+\item 
+Different week number and year formats might result in different output values.
+For example, Sunday, January 1, 2023 yields:
+
+\begin{itemize}
+\item 
+Week 00 with \%W (week before first Monday)
+
+\item 
+Week 01 with \%U (week with first Monday)
+
+\item 
+Week 52 with \%V (ISO week: week before Monday of week 01, which has January 4th)
+\end{itemize}
+
+Because the ISO week might be the last week of the previous year, the ISO year, which is the year of that week, may be one less:
+
+\begin{itemize}
+\item 
+Year 2023 with \%Y
+
+\item 
+Year 23 with \%y
+
+\item 
+Year 2022 with \%G (ISO year of the ISO week \%V, which is the last week of the previous month)
+
+\item 
+Year 22 with \%g (ISO year of the ISO week \%V, which is the last week of the previous month)
+\end{itemize}
+
+\item 
+The following timezone abbreviations are used for the standard clocks:
+
+\begin{itemize}
+\item 
+UTC for sys\_clock, utc\_clock, and file\_clock
+
+\item 
+TAI for tai\_clock
+
+\item 
+GPS for gps\_clock
+\end{itemize}
+\end{itemize}
+
+All conversion specifiers except \%q and \%Q can also be used for formatted parsing.
 
 \mySubsubsection{11.4.3}{Locale-Dependent Output}
 
+The default output operator for the various types uses a locale-dependent format if the output stream is imbued by a locale that has its own format. For example:
+
+\begin{cpp}
+using namespace std::literals;
+auto dur = 42.2ms;
+
+std::cout << dur << '\n'; // 42.2ms
+
+#ifdef _MSC_VER
+	std::locale locG("deu_deu.1252");
+#else
+	std::locale locG("de_DE");
+#endif
+std::cout.imbue(locG); // switch to German locale
+std::cout << dur << '\n'; // 42,2ms
+\end{cpp}
+
+Formatted output with std::format() is handled as usual: [This behavior was specified as a bug fix to C++20 with \url{http://wg21.link/p2372}, which means that the original wording of C++20 does not specify this behavior.]
+
+\begin{itemize}
+\item 
+By default, formatted output uses the locale-independent "C" locale.
+
+\item 
+By specifying L, you can switch to a locale-dependent output specified via a locale parameter or as a global locale
+\end{itemize}
+
+This means that to use a locale-dependent notation, you have to use the L specifier and either pass the locale as the first argument to std::format() or set the global locale before calling it. For example:
+
+\begin{cpp}
+using namespace std::literals;
+auto dur = 42.2ms; // duration to print
+
+#ifdef _MSC_VER
+	std::locale locG("deu_deu.1252");
+#else
+	std::locale locG("de_DE");
+#endif
+
+std::string s1 = std::format("{:%S}", dur); // "00.042s" (not localized)
+std::string s3 = std::format(locG, "{:%S}", dur); // "00.042s" (not localized)
+std::string s2 = std::format(locG, "{:L%S}", dur); // "00,042s" (localized)
+
+std::locale::global(locG); // set German locale globally
+std::string s4 = std::format("{:L%S}", dur); // "00,042s" (localized)
+\end{cpp}
+
+In several cases, you can even use an alternative locale’s representation according to strftime() and ISO 8601:2004, which you can specify with a leading O or E in front of the conversion specifier:
+
+\begin{itemize}
+\item 
+E can be used as the locale’s alternate representations in front of c, C, x, X, y, Y, and z
+
+\item 
+O can be used as the locale’s alternate numeric symbols in front of d, e, H, I, m, M, S, u, U V, w, W, y, and z
+\end{itemize}
+
 \mySubsubsection{11.4.4}{Formatted Input}
+
+The chrono library also supports formatted input. You have two options:
+
+\begin{itemize}
+\item 
+A free-standing function std::chrono::from\_stream() is provided by certain date/time types to read in a specific value according to a passed format string.
+
+\item 
+A manipulator std::chrono::parse() allows us to use from\_stream() as part of a bigger parsing with the input operator >{}>.
+\end{itemize}
+
+\mySamllsection{Using from\_stream()}
+
+The following code demonstrates how to use from\_stream() by parsing a full timepoint:
+
+\begin{cpp}
+std::chrono::sys_seconds tp;
+std::istringstream sstrm{"2021-2-28 17:30:00"};
+
+std::chrono::from_stream(sstrm, "%F %T", tp);
+if (sstrm) {
+	std::cout << "tp: " << tp << '\n';
+}
+else {
+	std::cerr << "reading into tp failed\n";
+}
+\end{cpp}
+
+The code generates the following output:
+
+\begin{shell}
+tp: 2021-02-28 17:30:00
+\end{shell}
+
+As another example, you can parse a year\_month from a sequence of characters specifying the full month name and the year, among other things, as follows:
+
+\begin{cpp}
+std::chrono::year_month m;
+std::istringstream sstrm{"Monday, April 5, 2021"};
+std::chrono::from_stream(sstrm, "%A, %B %d, %Y", m);
+if (sstrm) {
+	std::cout << "month: " << m << '\n'; // prints: month: 2021/Apr
+}
+\end{cpp}
+
+The format string accepts all conversion specifiers of formatted output except \%q and \%Q with improved flexibility. For example:
+
+\begin{itemize}
+\item 
+\%d stands for one or two characters to specify the day and with \%4d, you can specify that even up to four characters are parsed.
+
+\item 
+\%n stands for exactly one whitespace character.
+
+\item 
+\%t stands for zero or one whitespace character.
+
+\item 
+A whitespace character such as a space represents an arbitrary number of whitespaces (including zero whitespaces).
+\end{itemize}
+
+from\_stream() is provided for the following types:
+
+\begin{itemize}
+\item 
+A duration<> of any type
+
+\item 
+A sys\_time<>, utc\_time<>, gps\_time<>, tai\_time<>, local\_time<>, or file\_time<> of any duration
+
+\item 
+A day, a month, or a year
+
+\item 
+A year\_month, a month\_day, or a year\_month\_day
+
+\item 
+A weekday
+\end{itemize}
+
+The format has to be a C string of type const char*. It must match the characters in the input stream and the value to parse. The parsing fails if:
+
+\begin{itemize}
+\item 
+The input sequence of characters does not match the required format
+
+\item 
+The format does not provide enough information for the value
+
+\item 
+The parsed date is not valid
+\end{itemize}
+
+In that case, the failbit of the stream is set, which you can test with by calling fail() or using the stream as a Boolean value.
+
+\mySamllsection{A Generic Function for Parsing Dates/Times}
+
+In practice, dates and times are rarely hard-coded. However, when testing code, you often need an easy way to specify a date/time value.
+
+Here is a little helper function I used to test the examples in this book:
+
+\filename{lib/chronoparse.hpp}
+
+\begin{cpp}
+#include <chrono>
+#include <string>
+#include <sstream>
+#include <cassert>
+
+// parse year-month-day with optional hour:minute and optional :sec
+// - returns a time_point<> of the passed clock (default: system_clock)
+// in seconds
+template<typename Clock = std::chrono::system_clock>
+auto parseDateTime(const std::string& s)
+{
+	// return value:
+	std::chrono::time_point<Clock, std::chrono::seconds> tp;
+	
+	// string stream to read from:
+	std::istringstream sstrm{s}; // no string_view support
+	
+	auto posColon = s.find(":");
+	if (posColon != std::string::npos) {
+		if (posColon != s.rfind(":")) {
+			// multiple colons:
+			std::chrono::from_stream(sstrm, "%F %T", tp);
+		}
+		else {
+			// one colon:
+			std::chrono::from_stream(sstrm, "%F %R", tp);
+		}
+	}
+	else {
+		// no colon:
+		std::chrono::from_stream(sstrm, "%F", tp);
+	}
+	
+	// handle invalid formats:
+	assert((!sstrm.fail()));
+	
+	return tp;
+}
+\end{cpp}
+
+You can use parseDateTime() as follows:
+
+\filename{lib/chronoparse.cpp}
+
+\begin{cpp}
+#include "chronoparse.hpp"
+#include <iostream>
+
+int main()
+{
+	auto tp1 = parseDateTime("2021-1-1");
+	std::cout << std::format("{:%F %T %Z}\n", tp1);
+	
+	auto tp2 = parseDateTime<std::chrono::local_t>("2021-1-1");
+	std::cout << std::format("{:%F %T}\n", tp2);
+	
+	auto tp3 = parseDateTime<std::chrono::utc_clock>("2015-6-30 23:59:60");
+	std::cout << std::format("{:%F %T %Z}\n", tp3);
+	
+	auto tp4 = parseDateTime<std::chrono::gps_clock>("2021-1-1 18:30");
+	std::cout << std::format("{:%F %T %Z}\n", tp4);
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+2021-01-01 00:00:00 UTC
+2021-01-01 00:00:00
+2015-06-30 23:59:60 UTC
+2021-01-01 18:30:00 GPS
+\end{shell}
+
+Note that for a local timepoint, you cannot use \%Z to print its timezone (doing so would raise an exception).
+
+\mySamllsection{Using the parse() Manipulator}
+
+Instead of calling from\_stream()
+
+\begin{cpp}
+std::chrono::from_stream(sstrm, "%F %T", tp);
+\end{cpp}
+
+you could also call:
+
+\begin{cpp}
+sstrm >> std::chrono::parse("%F %T", tp);
+\end{cpp}
+
+Please note that the original C++20 standard does not formally allow you to pass the format directly as a string literal, which means that you have to call
+
+\begin{cpp}
+sstrm >> std::chrono::parse(std::string{"%F %T"}, tp);
+\end{cpp}
+
+However, this should be fixed with \url{http://wg21.link/lwg3554}.
+
+std::chrono::parse() is an I/O stream manipulator. It allows you to parse multiple values inside one statement reading from an input stream. In addition, thanks to move semantics, you can even pass a temporary input stream. For example:
+
+\begin{cpp}
+chr::sys_days tp;
+chr::hours h;
+chr::minutes m;
+// parse date into tp, hour into h and minute into m:
+std::istringstream{"12/24/21 18:00"} >> chr::parse("%D", tp)
+									 >> chr::parse(" %H", h)
+									 >> chr::parse(":%M", m);
+std::cout << tp << " at " << h << ' ' << m << '\n';
+\end{cpp}
+
+This code outputs:
+
+\begin{shell}
+2021-12-24 at 18h 0min
+\end{shell}
+
+Again, note that you might have to explicitly convert the string literals "\%D", " \%H", and ":\%M" to strings.
+
+\mySamllsection{Parsing Timezones}
+
+Parsing timezones is a little tricky because timezone abbreviations are not unique: To help here, from\_stream() has the following formats:
+
+\begin{shell}
+istream from_stream(istream, format, value)
+istream from_stream(istream, format, value, abbrevPtr)
+istream from_stream(istream, format, value, abbrevPtr, offsetPtr)
+\end{shell}
+
+As you can see, you can optionally pass the address of a std::string to store a parsed timezone abbreviation into the string and the address of a std::chrono::minutes object to store a parsed timezone offset into that string. In both cases nullptr can be passed.
+
+However, you still have to be careful:
+
+\begin{itemize}
+\item 
+The following works:
+
+\begin{cpp}
+chr::sys_seconds tp;
+std::istringstream sstrm{"2021-4-13 12:00 UTC"};
+chr::from_stream(sstrm, "%F %R %Z", tp);
+std::cout << std::format("{:%F %R %Z}\n", tp); // 2021-04-13 12:00 UTC
+\end{cpp}
+
+However, it works only because system timepoints use UTC anyway.
+
+\item
+The following does not work because it ignores the timezone:
+
+\begin{cpp}
+chr::sys_seconds tp;
+std::istringstream sstrm{"2021-4-13 12:00 MST"};
+chr::from_stream(sstrm, "%F %R %Z", tp);
+std::cout << std::format("{:%F %R %Z}", tp); // 2021-04-13 12:00 UTC
+\end{cpp}
+
+\%Z is used to parse MST but there is no parameter to store the value.
+
+\item
+The following seems to work:
+
+\begin{cpp}
+chr::sys_seconds tp;
+std::string tzAbbrev;
+std::istringstream sstrm{"2021-4-13 12:00 MST"};
+chr::from_stream(sstrm, "%F %R %Z", tp, &tzAbbrev);
+std::cout << tp << '\n'; // 2021-04-13 12:00
+std::cout << tzAbbrev << '\n'; // MST
+\end{cpp}
+
+However, if you compute the zoned time, you see that you are converting a UTC time to a different timezone:
+
+\begin{cpp}
+chr::zoned_time zt{tzAbbrev, tp}; // OK: MST exists
+std::cout << zt << '\n'; // 2021-04-13 05:00:00 MST
+\end{cpp}
+
+\item
+The following really does seem to work:
+
+\begin{cpp}
+chr::local_seconds tp; // local time
+std::string tzAbbrev;
+std::istringstream sstrm{"2021-4-13 12:00 MST"};
+chr::from_stream(sstrm, "%F %R %Z", tp, &tzAbbrev);
+std::cout << tp << '\n'; // 2021-04-13 12:00
+std::cout << tzAbbrev << '\n'; // MST
+chr::zoned_time zt{tzAbbrev, tp}; // OK: MST exists
+std::cout << zt << '\n'; // 2021-04-13 12:00:00 MST
+\end{cpp}
+
+However, we were lucky that MST is one of the few abbreviations available as a deprecated entry in the timezone database. The moment you use this code with CEST or CST, it throws an exception when initializing the zoned\_time.
+
+\item
+Therefore, either use only tzAbbrev instead of zoned\_time and \%Z:
+
+\begin{cpp}
+chr::local_seconds tp; // local time
+std::string tzAbbrev;
+std::istringstream sstrm{"2021-4-13 12:00 CST"};
+chr::from_stream(sstrm, "%F %R %Z", tp, &tzAbbrev);
+std::cout << std::format("{:%F %R} {}", tp, tzAbbrev); // 2021-04-13 12:00 CST
+\end{cpp}
+
+or you have to deal with code to map a timezone abbreviation to a timezone.
+\end{itemize}
+
+Note that \%Z cannot parse the pseudo timezones GPS and TAI.
+
+
+
+
+

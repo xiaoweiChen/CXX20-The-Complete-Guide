@@ -1,0 +1,53 @@
+The chrono library was designed to be able to deal with the fact that timers and clocks might be different on different systems and improve in precision over time. To avoid having to introduce a new time type every 10 years or so, the basic goal established with C++11 was to provide a precision-neutral concept by separating duration and point of time (“timepoint”). C++20 extends these basic concepts with support for dates and timezones and a few other extensions.
+
+As a result, the core of the chrono library consists of the following types or concepts:
+
+\begin{itemize}
+\item 
+A duration of time is defined as a specific number of ticks over a time unit. One example is a duration such as “3 minutes” (3 ticks of a “minute”). Other examples are “42 milliseconds” or “86,400 seconds,” which represents the duration of 1 day. This approach also allows the specification of something like “1.5 times a third of a second,” where 1.5 is the number of ticks and “a third of a second” the time unit used.
+
+\item
+A timepoint is defined as combination of a duration and a beginning of time (the so-called epoch).
+
+A typical example is a system timepoint that represents midnight on December 31, 2000. Because the system epoch is specified as Unix/POSIX birth, the timepoint would be defined as “946,684,800 seconds since January 1, 1970” (or 946,684,822 seconds when taking leap seconds into account, which some timepoints do).
+
+Note that the epoch might be unspecified or a pseudo epoch. For example, a local timepoint is associated with whatever local time we have. It still needs a certain value for the epoch, but the exact point in time it represents is not clear until we apply this timepoint to a specific timezone. Midnight on December 31 is a good example of that: the celebration and fireworks start at different times in the world depending on the timezone we are in.
+
+\item
+A clock is the object that defines the epoch of a timepoint. Thus, different clocks have different epochs.
+
+Each timepoint is parameterized by a clock.
+C++11 introduced two basic clocks (a system\_clock to deal with the system time and a steady\_clock for measurements and timers that should not be influenced by changes of the system clock). C++20 adds new clocks to deal with UTC timepoints (supporting leap seconds), GPS timepoints, TAI (international atomic time) timepoints, and timepoints of the filesystem.
+
+To deal with local timepoints, C++20 also adds a pseudo clock local\_t, which is not bound to a specific epoch/origin.
+
+Operations that deal with multiple timepoints, such as processing the duration/difference between two timepoints, usually require use of the same epoch/clock. However, conversions between different clocks are possible.
+
+A clock (if not local) provides a convenience function now() to yield the current point in time.
+
+\item
+A calendrical type (introduced with C++20) allows us to deal with the attributes of calendars using the common terminology of days, months, and years. These types can be used to represent a single attribute of a date (day, month, year, and weekday) and combinations of them (such as year\_month or year\_month\_day for a full date).
+
+Different symbols such as Wednesday, November, and last allow us to use common terminology for partial and full dates, such as “last Wednesday of November.” 
+
+Fully specified calendrical dates (having a year, month, and day or specific weekday of the month) can be converted to or from timepoints using the system clock or the pseudo clock for the local time.
+
+\item
+A timezone (introduced with C++20) allows us to deal with the fact that simultaneous events result in different times when different timezones come into play. If we meet online at 18:30 UTC, the local time of the meeting would be significantly later in Asia but significantly earlier in America.
+
+Thus, timezones give timepoints a (different) meaning by applying or converting them to a different local time.
+
+\item
+A zoned time (introduced with C++20) is the combination of a timepoint with a timezone. It can be used to apply a local timepoint to a specific timezone (which might be the “current” timezone) or convert timepoints to different timezones.
+
+A zoned time can be seen as a date and time object, which is the combination of an epoch (the origin of a timepoint), a duration (the distance from the origin), and a timezone (to adjust the resulting time).
+\end{itemize}
+
+For all of these concepts and types, C++20 adds support for output (even formatted) and parsing. That way, you can decide whether you print date/time values in formats such as the following:
+
+\begin{shell}
+Nov/24/2011
+24.11.2011
+2011-11-24 16:30:00 UTC
+Thursday, November 11, 2011
+\end{shell}

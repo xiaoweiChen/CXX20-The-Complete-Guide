@@ -1,14 +1,449 @@
 
 
-
+In large countries or for international communication, it is not enough to say “let us meet at noon” because we have different timezones. The new chrono library supports this fact by having an API to deal with the different timezones we have on Earth, including dealing with standard (“winter”) and daylight saving (“summer”) time.
 
 \mySubsubsection{11.6.1}{Characteristics of Timezones}
 
+Dealing with timezones is a little tricky because it is a topic that can become pretty complex. For example, you have to take the following into account:
+
+\begin{itemize}
+\item 
+imezone differences are not necessarily multiples of hours. In fact, we also have differences of 30 or even 15/45 minutes. For example, a significant part of Australia (the Northern Territory and South Australia with Adelaide) has the standard timezone of UTC+9:30 and Nepal has the timezone of UTC+5:45.
+Two timezones may also have 0 minutes difference (such as timezones in North and South America).
+
+\item 
+Timezone abbreviations might refer to different timezones. For example, CST might stand for Central Standard Time (the standard timezone of Chicago, Mexico City, and Costa Rica) or China Standard Time (the international name of the timezone of Beijing and Shanghai), or Cuba Standard Time (the standard timezone of Havana).
+
+\item 
+Timezones change. This can happen, for example, when countries decide to change their zone(s) or when daylight saving time starts. As a consequence, you might have to take multiple updates per year into account when dealing with timezones.
+\end{itemize}
+
 \mySubsubsection{11.6.2}{The IANA Timezone Database}
+
+To deal with timezones, the C++ standard library uses the IANA timezone database, which is available at \url{http://www.iana.org/time-zones}. Note again that the timezone database might not be available on all platforms.
+
+The key entry for the timezone database is a timezone name, which is usually
+
+\begin{itemize}
+\item 
+A city in a certain area or country representing the timezone.
+
+For example: America/Chicago, Asia/Hong\_Kong, Europe/Berlin, Pacific/Honolulu
+
+\item 
+A GMT entry with the negated offset from UTC time.
+
+For example: Etc/GMT, Etc/GMT+6, which stands for UTC-6, or Etc/GMT-8, which stands for UTC+8 
+
+Yes, the UTC timezone offsets are intentionally inverted as GMT entries; you cannot search for something like UTC+6 or UTC+5:45.
+\end{itemize}
+
+A few additional canonical and alias names are supported (e.g., UTC or GMT) and also some deprecated entries are available (e.g., PST8PDT, US/Hawaii, Canada/Central, or just Japan). However, you cannot search for a single timezone abbreviation entry such as CST or PST. We will discuss later how to deal with timezone abbreviations.
+
+See also \url{http://en.wikipedia.org/wiki/List_of_tz_database_time_zones} for a list of timezone names.
+
+\mySamllsection{Accessing the Timezone Database}
+
+The IANA timezone database has multiple updates each year to ensure that it is up to date when timezones change so that programs can react accordingly.
+
+The way systems handle the timezone database is implementation-specific. The operating systems have to decide how to provide the necessary data and how to keep it up to date. An update of the timezone database is usually done as part of an operating system update. Such updates generally require a reboot of the machine, and so no C++ application runs during an update.
+
+The C++20 standard provides low-level support to this database, which is used by high-level functions dealing with timezones:
+
+\begin{itemize}
+\item 
+std::chrono::get\_tzdb\_list() yields a reference to the timezone database, which is a singleton of type std::chrono::tzdb\_list.
+
+It is a list of timezone database entries to be able to support multiple versions of them in parallel.
+
+\item 
+std::chrono::get\_tzdb() yields a reference to the current timezone database entry of type std::chrono::tzdb. This type has multiple members such as the following:
+
+\begin{itemize}
+\item 
+version, a string for the version of the database entry
+
+\item 
+zones, a vector of timezone information of type std::chrono::time\_zone
+\end{itemize}
+
+Standard functions that deal with timezones (e.g., std::chrono::current\_zone() or the constructors of type std::chrono::zoned\_time) internally use these calls.
+
+For example, std::chrono::current\_zone() is a shortcut for:
+
+\begin{cpp}
+std::chrono::get_tzdb().current_zone()
+\end{cpp}
+\end{itemize}
+
+When platforms do not provide the timezone database, these functions will throw an exception of type std::runtime\_error.
+
+For systems that support updating the IANA timezone database without a reboot std::chrono::reload\_tzdb() is provided. An update does not delete memory from the old database because the application may still have (time\_zone) pointers into it. Instead, the new database is atomically pushed onto the front of the timezone database list.
+
+You can check the current version of your timezone database with the string member version of the type tzdb returned by get\_tzdb(). For example:
+
+\begin{cpp}
+std::cout << "tzdb version: " << chr::get_tzdb().version << '\n';
+\end{cpp}
+
+Usually, the output is a year and an ascending alphabetic character for the update of that year (e.g., "2021b"). remote\_version() provides the version of the latest available timezone database, which you can use to decide whether to call reload\_tzdb().
+
+If a long-running program is using the chrono timezone database but never calls reload\_tzdb(), that program will not be aware of any updates of the database. It will continue to use whatever version of the database existed when the program first accessed it.
+
+See \url{http://github.com/HowardHinnant/date/wiki/Examples-and-Recipes#tzdb_manage} for more details and examples about reloading the IANA timezone database for long-running programs.
 
 \mySubsubsection{11.6.3}{Using Timezones}
 
+To deal with timezones, two types play a basic role:
+
+\begin{itemize}
+\item 
+std::chrono::time\_zone, a type that represents a specific timezone.
+
+\item 
+std::chrono::zoned\_time, a type that represents a specific point of time associated with a specific timezone.
+\end{itemize}
+
+Let us look at them in detail.
+
+\mySamllsection{Type time\_zone}
+
+All possible timezone values are predefined by the IANA timezone database. Therefore, you cannot create a time\_zone object by just declaring it. The values come from the timezone database and what you are usually dealing with is are pointers to these objects:
+
+\begin{itemize}
+\item 
+std::chrono::current\_zone() yields a pointer to the current timezone.
+
+\item 
+std::chrono::locate\_zone(name) yields a pointer to the timezone name.
+
+\item 
+The timezone database returned by std::chrono::get\_tzdb() has non-pointer collections with all timezone entries:
+
+\begin{itemize}
+\item 
+Member zones has all canonical entries.
+
+\item 
+Member links has all alias entries with links to them.
+\end{itemize}
+
+You can use this to find timezones by characteristics such as their abbreviated name.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+auto tzHere = std::chrono::current_zone(); // type const time_zone*
+auto tzUTC = std::chrono::locate_zone("UTC"); // type const time_zone*
+...
+std::cout << tzHere->name() << '\n';
+std::cout << tzUTC->name() << '\n';
+\end{cpp}
+
+The output depends on your current timezone. For me in Germany, it looks like this:
+
+\begin{shell}
+Europe/Berlin
+Etc/UTC
+\end{shell}
+
+As you can see, you can search for any entry in the timezone database (such as "UTC") but what you get is the canonical entry of it. For example, "UTC" is just a timezone link to "Etc/UTC". If locate\_zone() finds no corresponding entry with that name, a std::runtime\_error exception is thrown.
+
+You cannot do much with a time\_zone. The most important thing is to combine it with a system timepoint or with a local timepoint.
+
+If you output a time\_zone you get some implementation-specific output only for debugging purposes:
+
+\begin{cpp}
+std::cout << *tzHere << '\n'; // some implementation-specific debugging output
+\end{cpp}
+
+The chrono library also allows you to define and use types for custom timezones.
+
+\mySamllsection{Type zoned\_time}
+
+Objects of type std::chrono::zoned\_time apply timepoints to timezones. You have two options for performing this conversion:
+
+\begin{itemize}
+\item 
+Apply a system timepoint (a timepoint that belongs to the system clock) to a timezone. In that case, we convert the timepoint of an event to happen simultaneously with the local time of the other timezone.
+
+\item
+Apply a local timepoint (a timepoint that belongs to the pseudo clock local\_t) to a timezone. In that case, we apply a timepoint as it is as local time to another timezone.
+\end{itemize}
+
+In addition, you can convert the point of time of a zoned\_time to a different timezone by initializing a new zoned\_time object with another zoned\_time object.
+
+For example, let us schedule both a local party at every office at 18:00 and a company party over multiple timezones at the end of September 2021:
+
+\begin{cpp}
+auto day = 2021y/9/chr::Friday[chr::last]; // last Friday of month
+chr::local_seconds tpOfficeParty{chr::local_days{day} - 6h}; // 18:00 the day before
+chr::sys_seconds tpCompanyParty{chr::sys_days{day} + 17h}; // 17:00 that day
+
+std::cout << "Berlin Office and Company Party:\n";
+std::cout << " " << chr::zoned_time{"Europe/Berlin", tpOfficeParty} << '\n';
+std::cout << " " << chr::zoned_time{"Europe/Berlin", tpCompanyParty} << '\n';
+
+std::cout << "New York Office and Company Party:\n";
+std::cout << " " << chr::zoned_time{"America/New_York", tpOfficeParty} << '\n';
+std::cout << " " << chr::zoned_time{"America/New_York", tpCompanyParty} << '\n';
+\end{cpp}
+
+The output of this code is as follows:
+
+\begin{shell}
+Berlin Office and Company Party:
+  2021-09-23 18:00:00 CEST
+  2021-09-24 19:00:00 CEST
+New York Office and Company Party:
+  2021-09-23 18:00:00 EDT
+  2021-09-24 13:00:00 EDT
+\end{shell}
+
+Details matter when combining timepoints and timezones. For example, consider the following code:
+
+\begin{cpp}
+auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
+auto locTime = chr::zoned_time{chr::current_zone(), sysTp}; // local time
+...
+std::cout << "sysTp:         " << sysTp << '\n';
+std::cout << "locTime:       " << locTime << '\n';
+\end{cpp}
+
+First, we initialize sysTp as the current system timepoint in seconds and combine this timepoint with the current timezone. The output shows the system and the local timepoint of the same point in time:
+
+\begin{shell}
+sysTp:      2021-04-13 13:40:02
+locTime:    2021-04-13 15:40:02 CEST
+\end{shell}
+
+Now let us initialize a local timepoint. One way to do this is just to convert a system timepoint to a local timepoint. To do this we need a timezone. If we use the current timezone, the local time is converted to UTC:
+
+\begin{cpp}
+auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
+auto curTp = chr::current_zone()->to_local(sysTp); // local timepoint
+std::cout << "sysTp:            " << sysTp << '\n';
+std::cout << "locTp:            " << locTp << '\n';
+\end{cpp}
+
+The corresponding output is as follows:
+
+\begin{shell}
+sysTp:     2021-04-13 13:40:02
+curTp:     2021-04-13 13:40:02
+\end{shell}
+
+However, if we use UTC as the timezone, the local time is used as local time without an associated timezone:
+
+\begin{cpp}
+auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
+auto locTp = std::chrono::locate_zone("UTC")->to_local(sysTp); // use local time as is
+std::cout << "sysTp:              " << sysTp << '\n';
+std::cout << "locTp:              " << locTp << '\n';
+\end{cpp}
+
+According to the output, both timepoints look the same:
+
+\begin{shell}
+sysTp:     2021-04-13 13:40:02
+locTp:     2021-04-13 13:40:02
+\end{shell}
+
+However, they are not the same. sysTp has an associated UTC epoch but locTp does not. If we now apply the local timepoint to a timezone, we do not convert; we specify the missing timezone, leaving the time as it is:
+
+\begin{cpp}
+auto timeFromSys = chr::zoned_time{chr::current_zone(), sysTp}; // converted time
+auto timeFromLoc = chr::zoned_time{chr::current_zone(), locTp}; // applied time
+std::cout << "timeFromSys: " << timeFromSys << '\n';
+std::cout << "timeFromLoc: " << timeFromLoc << '\n';
+\end{cpp}
+
+Thus, the output is as follows:
+
+\begin{shell}
+timeFromSys: 2021-04-13 15:40:02 CEST
+timeFromLoc: 2021-04-13 13:40:02 CEST
+\end{shell}
+
+Now let us combine all four objects with the timezone of New York:
+
+\begin{cpp}
+std::cout << "NY sysTp: "
+		  << std::chrono::zoned_time{"America/New_York", sysTp} << '\n';
+std::cout << "NY locTP: "
+		  << std::chrono::zoned_time{"America/New_York", locTp} << '\n';
+std::cout << "NY timeFromSys: "
+		  << std::chrono::zoned_time{"America/New_York", timeFromSys} << '\n';
+std::cout << "NY timeFromLoc: "
+		  << std::chrono::zoned_time{"America/New_York", timeFromLoc} << '\n';
+\end{cpp}
+
+The output is as follows:
+
+\begin{shell}
+Y sysTp:        2021-04-13 09:40:02 EDT
+NY locTP:       2021-04-13 13:40:02 EDT
+NY timeFromSys: 2021-04-13 09:40:02 EDT
+NY timeFromLoc: 2021-04-13 07:40:02 EDT
+\end{shell}
+
+The system timepoint and the local time derived from it both convert the time now to the timezone of New York. As usual, the local timepoint is applied to New York so that we now have the same value as the original time with the timezone removed. timeFromLoc is the initial local time 13:40:02 in Central Europe applied to the timezone of New York.
+
 \mySubsubsection{11.6.4}{Dealing with Timezone Abbreviations}
 
+Because timezone abbreviations might refer to different timezones, you cannot define a unique timezone by its abbreviation. Instead, you have to map the abbreviation to one of multiple IANA timezone entries.
+
+The following program demonstrates this for the timezone abbreviation CST:
+
+\filename{lib/chronocst.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <chrono>
+using namespace std::literals;
+
+int main(int argc, char** argv)
+{
+	auto abbrev = argc > 1 ? argv[1] : "CST";
+	
+	auto day = std::chrono::sys_days{2021y/1/1};
+	auto& db = std::chrono::get_tzdb();
+	
+	// print time and name of all timezones with abbrev:
+	std::cout << std::chrono::zoned_time{"UTC", day}
+			  << " maps to these '" << abbrev << "' entries:\n";
+	// iterate over all timezone entries:
+	for (const auto& z : db.zones) {
+		// and map to those using my passed (or default) abbreviation:
+		if (z.get_info(day).abbrev == abbrev) {
+			std::chrono::zoned_time zt{&z, day};
+			std::cout << " " << zt << " " << z.name() << '\n';
+		}
+	}
+}
+\end{cpp}
+
+The program passing no command-line argument or "CST" may have the followi
+
+\begin{shell}
+2021-01-01 00:00:00 UTC maps these ’CST’ entries:
+  2020-12-31 18:00:00 CST America/Bahia_Banderas
+  2020-12-31 18:00:00 CST America/Belize
+  2020-12-31 18:00:00 CST America/Chicago
+  2020-12-31 18:00:00 CST America/Costa_Rica
+  2020-12-31 18:00:00 CST America/El_Salvador
+  2020-12-31 18:00:00 CST America/Guatemala
+  2020-12-31 19:00:00 CST America/Havana
+  2020-12-31 18:00:00 CST America/Indiana/Knox
+  2020-12-31 18:00:00 CST America/Indiana/Tell_City
+  2020-12-31 18:00:00 CST America/Managua
+  2020-12-31 18:00:00 CST America/Matamoros
+  2020-12-31 18:00:00 CST America/Menominee
+  2020-12-31 18:00:00 CST America/Merida
+  2020-12-31 18:00:00 CST America/Mexico_City
+  ...
+  2020-12-31 18:00:00 CST America/Winnipeg
+  2021-01-01 08:00:00 CST Asia/Macau
+  2021-01-01 08:00:00 CST Asia/Shanghai
+  2021-01-01 08:00:00 CST Asia/Taipei
+  2020-12-31 18:00:00 CST CST6CDT
+\end{shell}
+
+Because CST may stand for Central Standard Time, China Standard Time, or Cuba Standard Time, you can see a 14 hour difference between most of the entries for America and China. In addition, Havana in Cuba has a 1 or 13 hour difference to those entries.
+
+Note that the output is significantly smaller when we search for "CST" on a day in the summer, because the US entries and Cuba’s entry then switch to "CDT" (the corresponding daylight saving time). However, we still have some entries because, for example, China and Costa Rica do not have daylight saving time.
+
+Note also that for CST, you might find no entry at all, because the timezone database is not available or uses something like GMT-6 instead of CST.
+
 \mySubsubsection{11.6.5}{Custom Timezones}
+
+The chrono library allows you to use custom timezones. One common example is the need to have a timezone that has an offset from UTC that is not known until run time.
+
+Here is an example that supplies a custom timezone OffsetZone that can hold a UTC offset with minutes precision:
+
+\filename{lib/offsetzone.hpp}
+
+\begin{cpp}
+#include <chrono>
+#include <iostream>
+#include <type_traits>
+
+class OffsetZone
+{
+	private:
+	std::chrono::minutes offset; // UTC offset
+	public:
+	explicit OffsetZone(std::chrono::minutes offs)
+	: offset{offs} {
+	}
+	
+	template<typename Duration>
+	auto to_local(std::chrono::sys_time<Duration> tp) const {
+		// define helper type for local time:
+		using LT
+		= std::chrono::local_time<std::common_type_t<Duration,
+													std::chrono::minutes>>;
+		// convert to local time:
+		return LT{(tp + offset).time_since_epoch()};
+	}
+	
+	template<typename Duration>
+	auto to_sys(std::chrono::local_time<Duration> tp) const {
+		// define helper type for system time:
+		using ST
+		= std::chrono::sys_time<std::common_type_t<Duration,
+													std::chrono::minutes>>;
+		// convert to system time:
+		return ST{(tp - offset).time_since_epoch()};
+	}
+	
+	template<typename Duration>
+	auto get_info(const std::chrono::sys_time<Duration>& tp) const {
+		return std::chrono::sys_info{};
+	}
+};
+\end{cpp}
+
+As you can see, all you have to define are conversions between the local time and the system time.
+
+You can use the timezone just like any other time\_zone pointer:
+
+\filename{lib/offsetzone.cpp}
+
+\begin{cpp}
+#include "offsetzone.hpp"
+#include <iostream>
+
+int main()
+{
+	using namespace std::literals; // for h and min suffix
+	// timezone with 3:45 offset:
+	OffsetZone p3_45{3h + 45min};
+	
+	// convert now to timezone with offset:
+	auto now = std::chrono::system_clock::now();
+	std::chrono::zoned_time<decltype(now)::duration, OffsetZone*> zt{&p3_45, now};
+	
+	std::cout << "UTC: " << zt.get_sys_time() << '\n';
+	std::cout << "+3:45: " << zt.get_local_time() << '\n';
+	std::cout << zt << '\n';
+}
+\end{cpp}
+
+The program might have the following output:
+
+\begin{shell}
+UTC:    2021-05-31 13:01:19.0938339
++3:45:  2021-05-31 16:46:19.0938339
+\end{shell}
+
+
+
+
+
+
+
+
+
 

@@ -1,16 +1,507 @@
 
-
-
-
+Before we discuss how to use the chrono library in detail, let us introduce all the basic types and symbols.
 
 \mySubsubsection{11.3.1}{Duration Types}
 
+C++20 introduces additional duration types for days, weeks, months, and years. Table Standard duration types since C++20 lists all duration types C++ now provides, together with the standard literal suffix you can use to create a value and the default output suffix used when printing values.
+
+Be careful when using std::chrono::months and std::chrono::years. months and years represent the average duration of a month or year, which is a fractional day. The duration of an average year is computed by taking leap years into account:
+
+\begin{itemize}
+\item 
+Every 4 years we have one more day (366 instead of 365 days)
+
+\item 
+However, every 100 years we do not have one more day
+
+\item 
+However, every 400 years we have one more day again
+\end{itemize}
+
+Therefore, the value is 400 ∗ 365 + 100 − 4 + 1 divided by 400. The duration of an average month is one twelfth of this.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|l|}
+\hline
+\textbf{Type}         & \textbf{Defined as}     & \textbf{Literal} & \textbf{Output Suffix}   \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{nanoseconds}  & 1/1,000,000,000 seconds & \textbf{ns}      & \textbf{ns}              \\ \hline
+\textbf{microseconds} & 1,000 nanoseconds       & \textbf{us}      & \textbf{μs or us}        \\ \hline
+\textbf{milliseconds} & 1,000 microseconds      & \textbf{ms}      & \textbf{ms}              \\ \hline
+\textbf{seconds}      & 1,000 milliseconds      & \textbf{s}       & \textbf{s}               \\ \hline
+\textbf{minutes}      & 60 seconds              & \textbf{min}     & \textbf{min}             \\ \hline
+\textbf{hours}        & 60 minutes              & \textbf{h}       & \textbf{h}               \\ \hline
+\textbf{days}         & 24 hours                & \textbf{d}       & \textbf{d}               \\ \hline
+\textbf{weeks}        & 7 days                  & \textbf{}        & \textbf{{[}604800{]}s}   \\ \hline
+\textbf{months}       & 30.436875 days          & \textbf{}        & \textbf{{[}2629746{]}s}  \\ \hline
+\textbf{years}        & 365.2425 days           & \textbf{y}       & \textbf{{[}31556952{]}s} \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.1. Standard duration types since C++20
+\end{center}
+
 \mySubsubsection{11.3.2}{Clocks}
+
+C++20 introduces a couple of new clocks (remember, clocks define the origin/epoch of a timepoint).
+
+Table Standard clock types since C++20 describes the names and meanings of all clocks that are provided now by the C++ standard library.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|}
+\hline
+\textbf{Type}                    & \textbf{Meaning}                           & \textbf{Epoch} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{system\_clock} & Associated with the clock of the system(since C++11) & UTC time   \\ \hline
+\textbf{utc\_clock}              & Clock for UTC time values                  & UTC time       \\ \hline
+\textbf{gps\_clock}              & Clock for GPS values                       & GPS tims       \\ \hline
+\textbf{tai\_clock}              & Clock for international atomic time values & TAI time       \\ \hline
+\textbf{file\_clock}   & Clock for timepoints of the filesystem library       & impl.spec. \\ \hline
+\textbf{local\_t}                & Pseudo clock for local timepoints          & open           \\ \hline
+\textbf{steady\_clock}           & Clock for measurements(since C++11)        & impl.spec.     \\ \hline
+\textbf{high\_resolution\_clock} & (see text)                                 &                \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.2. Standard clock types since C++20
+\end{center}
+
+The column Epoch specifies whether the clock specifies a unique point in time so that you always have a specific UTC time defined. This requires a stable specified epoch. For the file\_clock, the epoch is system-specific but will be stable across multiple runs of a program. The epoch of the steady\_clock might change from one run of your application to the next (e.g., when the system rebooted). For the pseudo clock local\_t, the epoch is interpreted as “local time,” which means you have to combine it with a timezone to know which point in time it represents.
+
+The C++ standard also provides a high\_resolution\_clock since C++11. However, its use can introduce subtle issues when porting code from one platform to another. In practice, high\_resolution\_clock is an alias for either system\_clock or steady\_clock, which means that the clock is sometimes steady and sometimes not, and that this clock might or might not support conversions to other clocks or time\_t.
+
+Because the high\_resolution\_clock is no finer than the steady\_clock on any platform, you should use the steady\_clock instead.
+
+We will discuss the following details of clocks later:
+
+\begin{itemize}
+\item 
+The difference between the clocks in detail
+
+\item 
+Conversions between clocks
+
+\item 
+How clocks deal with leap seconds
+\end{itemize}
 
 \mySubsubsection{11.3.3}{Timepoint Types}
 
+C++20 introduces a couple of new types for timepoints. Based on the general definition available since C++11:
+
+\begin{cpp}
+template<typename Clock, typename Duration = typename Clock::duration>
+class time_point;
+\end{cpp}
+
+the new types provide a more convenient way of using timepoints with the different clocks.
+
+Table Standard timepoint types since C++20 describes the names and meanings of the convenient timepoint types.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|}
+\hline
+\textbf{Type}                                  & \textbf{Meaning}            & \textbf{Defined as}                                         \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{local\_time\textless{}Dur\textgreater{}} & Local timepoint      & time\_point\textless{}LocalTime, Dur\textgreater{}      \\ \hline
+\textbf{local\_seconds}                        & Local timepoint in seconds  & time\_point\textless{}LocalTime, seconds\textgreater{}      \\ \hline
+\textbf{local\_days}                           & Local timepoint in days     & time\_point\textless{}LocalTime, days\textgreater{}         \\ \hline
+\textbf{sys\_time\textless{}Dur\textgreater{}}   & System timepoint     & time\_point\textless{}systime\_clock, Dur\textgreater{} \\ \hline
+\textbf{sys\_seconds}                          & System timepoint in seconds & time\_point\textless{}systime\_clock, seconds\textgreater{} \\ \hline
+\textbf{sys\_days}                             & System timepoint in days    & time\_point\textless{}systime\_clodk, days\textgreater{}    \\ \hline
+\textbf{utc\_time\textless{}Dur\textgreater{}} & UTC timepoint               & time\_point\textless{}utc\_clock, Dur\textgreater{}         \\ \hline
+\textbf{utc\_seconds}                          & UTC timepoint in seconds    & time\_point\textless{}utc\_clock, seconds\textgreater{}     \\ \hline
+\textbf{tai\_time\textless{}Dur\textgreater{}} & TAI timepoint               & time\_point\textless{}tai\_clock, Dur\textgreater{}         \\ \hline
+\textbf{tai\_seconds}                          & TAI timepoint in seconds    & time\_point\textless{}tai\_clock, seconds\textgreater{}     \\ \hline
+\textbf{gps\_time\textless{}Dur\textgreater{}} & GPS timepoint               & time\_point\textless{}gps\_clock, Dur\textgreater{}         \\ \hline
+\textbf{gps\_seconds}                          & GPS timepoint in seconds    & time\_point\textless{}gps\_clock, seconds\textgreater{}     \\ \hline
+\textbf{file\_time\textless{}Dur\textgreater{}}  & Filesystem timepoint & time\_point\textless{}file\_clock, Dur\textgreater{}    \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.3. Standard timepoint types since C++20
+\end{center}
+
+For each standard clock (except the steady clock), we have a corresponding \_time<> type, which allows us to declare objects that represent a date or timepoint of the clock. In addition, the ...\_seconds types allow us to define date/time objects of the corresponding type with the granularity of seconds. For system and local time, the ...\_days type allow us to define date/time objects of the corresponding type with the granularity of days. For example:
+
+\begin{cpp}
+std::chrono::sys_days x; // time_point<system_clock, days>
+std::chrono::local_seconds y; // time_point<local_t, seconds>
+std::chrono::file_time<std::chrono::seconds> z; // time_point<file_clock, seconds>
+\end{cpp}
+
+Please note that objects of this type still represent one timepoint, although the type unfortunately has a plural name. For example, sys\_days means a single day defined as a system timepoint (the name comes from “system timepoint with granularity days”).
+
 \mySubsubsection{11.3.4}{Calendrical Types}
+
+As an extension to timepoint types, C++20 introduces types for the civil (Gregorian) calendar to the chrono library.
+
+While timepoints are specified as durations from an epoch, calendrical types have distinct and combined types and values for years, months, weekdays, and days of a month. Both are useful to use:
+
+\begin{itemize}
+\item 
+Timepoint types are great as long as we only compute with seconds, hours, and days (such as doing something on each day of a year).
+
+\item 
+Calendrical types are great for date arithmetic where the fact that months and years have a different number of days comes into account. In addition, you can deal with something like “the third Monday of the month” or “the last day of the month.”
+\end{itemize}
+
+Table Standard calendrical types lists the new calendrical types together with their default output format.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|}
+\hline
+\textbf{Type}                   & \textbf{Meaning}                       & \textbf{Output Format} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{day}                    & Day                                    & 05                     \\ \hline
+\textbf{month}                  & Month                                  & Feb                    \\ \hline
+\textbf{year}                   & Year                                   & 1999                   \\ \hline
+\textbf{weekday}                & Weekday                                & Mon                    \\ \hline
+\textbf{weekday\_indexed}       & nth weekday                            & Mon{[}2{]}             \\ \hline
+\textbf{weekday\_last}          & Last weekday                           & Mon{[}last{]}          \\ \hline
+\textbf{month\_day}             & Day of a month                         & Feb/05                 \\ \hline
+\textbf{month\_day\_last}       & Last day of a month                    & Feb/last               \\ \hline
+\textbf{month\_weekday}         & nth weekday of a month                 & Feb/Mon{[}2{]}         \\ \hline
+\textbf{month\_weekday\_last}   & Last weekday of a month                & Feb/Mon{[}last{]}      \\ \hline
+\textbf{year\_month}            & Month of a year                        & 1999/Feb               \\ \hline
+\textbf{year\_month\_day}       & A full date (day of a month of a year) & 1999-02-05             \\ \hline
+\textbf{year\_month\_day\_last} & Last day of a month of a year          & 1999/Feb/last          \\ \hline
+\textbf{year\_month\_weekday}       & nth weekday of a month of a year  & 1999/Feb/Mon{[}2{]}    \\ \hline
+\textbf{year\_month\_weekday\_last} & Last weekday of a month of a year & 1999/Feb/Mon{[}last{]} \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.4. Standard calendrical types
+\end{center}
+
+Remember that these type names do not imply the order in which the elements of the date can be passed for initialization or are written to formatted output. For example, type std::chrono::year\_month\_day can be used as follows:
+
+\begin{cpp}
+using namespace std::chrono;
+
+year_month_day d = January/31/2021; // January 31, 2021
+std::cout << std::format("{:%D}", d); // writes 01/31/21
+\end{cpp}
+
+Calendrical types such as year\_month\_day allow us to compute precisely the date of the same day next month:
+
+\begin{cpp}
+std::chrono::year_month_day start = ... ; // 2021/2/5
+auto end = start + std::chrono::months{1}; // 2021/3/5
+\end{cpp}
+
+If you use timepoints such as sys\_days, the corresponding code would not really work because it uses the average duration of a month:
+
+\begin{cpp}
+std::chrono::sys_days start = ... ; // 2021/2/5
+auto end = start + std::chrono::months{1}; // 2021/3/7 10:29:06
+\end{cpp}
+
+Note that in this case, end has a different type because with months, fractional days come into play.
+
+When adding 4 weeks or 28 days, timepoints types are better, because for them, this is a simple arithmetic operation and does not have to take the different lengths of months or years into account:
+
+\begin{cpp}
+std::chrono::sys_days start = ... ; // 2021/1/5
+auto end = start + std::chrono::weeks{4}; // 2021/2/2
+\end{cpp}
+
+Details of using months and years are discussed later.
+
+As you can see, there are specific types for dealing with weekdays and the nth and last weekday within a month. This allows us to iterate over all second Mondays or jump to the last day of the next month:
+
+\begin{cpp}
+std::chrono::year_month_day_last start = ... ; // 2021/2/28
+auto end = start + std::chrono::months{1}; // 2021/3/31
+\end{cpp}
+
+Every type has a default output format, which is a fixed sequence of English characters. For other formats, use the formatted chrono output. Please note that only year\_month\_day uses dashes as a separator in its default output format. All other types separate their tokens with a slash by default.
+
+To deal with the values of the calendrical types, a couple of calendrical constants are defined:
+
+\begin{itemize}
+\item 
+std::chrono::last to specify the last day/weekday of a month. The constant has type std::chrono::last\_spec.
+
+\item 
+std::chrono::Sunday, std::chrono::Monday, ... std::chrono::Saturday to specify a weekday (Sunday has value 0, Saturday has value 6).
+These constants have type std::chrono::weekday.
+
+\item 
+std::chrono::January, std::chrono::February, ... std::chrono::December to specify a month (January has value 1, December has value 12).
+These constants have type std::chrono::month.
+\end{itemize}
+
+\mySamllsection{Restricted Operations for Calendrical Types}
+
+The calendrical types were designed to detect at compile-time that operations are not useful or do not have the best performance. As a result, some “obvious” operations do not compile as listed in table Standard operations for calendrical types:
+
+\begin{itemize}
+\item 
+Day and month arithmetic depends on the year. You cannot add days/months or compute the difference of all month types that do not have a year.
+
+\item 
+Day arithmetic for fully specified dates takes a bit of time to deal with the different lengths of months and leap years. You can add/subtract days or compute the difference between these types.
+
+\item 
+Because chrono makes no assumption about the first day of a week, you cannot get an order between weekdays. When comparing types with weekdays, only operator== and operator!= are supported.
+\end{itemize}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|l|l|l|}
+\hline
+\textbf{Type} & \textbf{++/--} & \textbf{add/subtract} & \textbf{-(diff.)} & \textbf{==} & \textbf{\textless{}/\textless{}=\textgreater{}} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{day}                        & yes & days         & yes & yes & yes \\ \hline
+\textbf{month}                      & yes & months,years & yes & yes & yes \\ \hline
+\textbf{year}                       & yes & years        & yes & yes & yes \\ \hline
+\textbf{weekday}                    & yes & days         & yes & yes & -   \\ \hline
+\textbf{weekday\_indexed}           & -   & -            & -   & yes & -   \\ \hline
+\textbf{weekday\_last}              & -   & -            & -   & yes & -   \\ \hline
+\textbf{month\_day}                 & -   & -            & -   & yes & yes \\ \hline
+\textbf{month\_day\_last}           & -   & -            & -   & yes & yes \\ \hline
+\textbf{month\_weekday}             & -   & -            & -   & yes & -   \\ \hline
+\textbf{month\_weekday\_last}       & -   & -            & -   & yes & -   \\ \hline
+\textbf{year\_month}                & -   & months,years & yes & yes & yes \\ \hline
+\textbf{year\_month\_day}           & -   & months,years & -   & yes & yes \\ \hline
+\textbf{year\_month\_day\_last}     & -   & months,years & -   & yes & yes \\ \hline
+\textbf{year\_month\_weekday}       & -   & months,years & -   & yes & -   \\ \hline
+\textbf{year\_month\_weekday\_last} & -   & months,years & -   & yes & -   \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.5. Standard operations for calendrical types
+\end{center}
+
+Weekday arithmetic is modulo 7, which means that it does not really matter which day is the first day of a week. You can compute the difference between any two weekdays and the result is always a value between 0 and 6. Adding the difference to the first weekday will always be the second weekday. For example:
+
+\begin{cpp}
+std::cout << chr::Friday - chr::Tuesday << '\n'; // 3d (Tuesday thru Friday)
+std::cout << chr::Tuesday - chr::Friday << '\n'; // 4d (Friday thru Tuesday)
+
+auto d1 = chr::February / 25 / 2021;
+auto d2 = chr::March / 3 / 2021;
+std::cout << chr::sys_days{d1} - chr::sys_days{d2} << '\n'; // -6d (date diff)
+std::cout << chr::weekday(d1) - chr::weekday(d2) << '\n'; // 3d (weekday diff)
+\end{cpp}
+
+That way, you can always easily compute something like the difference to “the next Monday” as “Monday minus the current weekday:”
+
+\begin{cpp}
+d1 = chr::sys_days{d1} + (chr::Monday - chr::weekday(d1)); // set d1 to next Monday
+\end{cpp}
+
+Note that if d1 is a calendrical date type, you first have to convert it to type std::chrono::sys\_days so that day arithmetic is supported (it might be better to declare d1 with this type).
+
+In the same way, month arithmetic is modulo 12, which means that the next month after December is January. If a year is part of the type, it is adjusted accordingly:
+
+\begin{cpp}
+auto m = chr::December;
+std::cout << m + chr::months{10} << '\n'; // Oct
+std::cout << 2021y/m + chr::months{10} << '\n'; // 2022/Oct
+\end{cpp}
+
+Note also that the constructors of chrono calendrical types that take an integral value are explicit, meaning that explicit initialization with an integral value fails:
+
+\begin{cpp}
+std::chrono::day d1{3}; // OK
+std::chrono::day d2 = 3; // ERROR
+
+d1 = 3; // ERROR
+d1 = std::chrono::day{3}; // OK
+
+passDay(3); // ERROR
+passDay(std::chrono::day{3}); // OK
+\end{cpp}
 
 \mySubsubsection{11.3.5}{Time Type hh\_mm\_ss}
 
+In accordance with the calendrical types, C++20 introduces a new time type std::chrono::hh\_mm\_ss that converts a duration to a data structure with corresponding time fields. Table std::chrono::hh\_mm\_ss members describes the names and meanings of the hh\_mm\_ss members.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Member}               & \textbf{Meaning}                                       \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{hours()}              & Hours value                                            \\ \hline
+\textbf{minutes()}            & Minutes value                                          \\ \hline
+\textbf{seconds()}            & Seconds value                                          \\ \hline
+\textbf{subseconds()}         & Value for partial seconds with appropriate granularity \\ \hline
+\textbf{is\_negative()}       & True if the value is negative                          \\ \hline
+\textbf{to\_duration()}       & Conversion (back)  to duration                         \\ \hline
+\textbf{precision()}          & Duration type of the subseconds                        \\ \hline
+\textbf{operator precision()} & Conversion to value with corresponding precision       \\ \hline
+\textbf{fractional\_width}    & Precision of the subseconds (static member)            \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.6. std::chrono::hh\_mm\_ss members
+\end{center}
+
+This type is very useful for dealing with the different attributes of durations and timepoints. It allows us to split durations into its attributes and serves as a formatting aid. For example, you can check for a specific hour or pass the hour and minute to another function as integral values:
+
+\begin{cpp}
+auto dur = measure(); // process and yield some duration
+std::chrono::hh_mm_ss hms{dur}; // convert to data structure for attributes
+process(hms.hours(), hms.minutes()); // pass hours and minutes
+\end{cpp}
+
+If you have a timepoint, you have to convert it to a duration first. To do this, you usually just compute the difference between the timepoint and midnight of the day (computed by rounding it down to the granularity of days). For example:
+
+\begin{cpp}
+auto tp = getStartTime(); // process and yield some timepoint
+// convert time to data structure for attributes:
+std::chrono::hh_mm_ss hms{tp - std::chrono::floor<std::chrono:days>(tp)};
+process(hms.hours(), hms.minutes()); // pass hours and minutes
+\end{cpp}
+
+As another example, we can use hh\_mm\_ss to print the attributes of a duration in a different form:
+
+\begin{cpp}
+auto t0 = std::chrono::system_clock::now();
+...
+auto t1 = std::chrono::system_clock::now();
+std::chrono::hh_mm_ss hms{t1 - t0};
+std::cout << "minutes: " << hms.hours() + hms.minutes() << '\n';
+std::cout << "seconds: " << hms.seconds() << '\n';
+std::cout << "subsecs: " << hms.subseconds() << '\n';
+\end{cpp}
+
+might print:
+
+\begin{shell}
+minutes: 63min
+seconds: 19s
+subsecs: 502998000ns
+\end{shell}
+
+There is no way to directly initialize the different attributes of hh\_mm\_ss objects with specific values. In general, you should use duration types to deal with times:
+
+\begin{cpp}
+using namespace std::literals;
+...
+auto t1 = 18h + 30min; // 18 hours and 30 minutes
+\end{cpp}
+
+The most powerful functionality of hh\_mm\_ss is that it takes any precision duration and transforms it into the usual attributes and duration types hours, minutes, and seconds. In addition, subseconds() yields the rest of the value with an appropriate duration type, such as milliseconds or nanoseconds. Even if the unit is not a power of 10 (e.g., thirds of a second), hh\_mm\_ss transforms that into subseconds with a power of 10 with up to 18 digits. If that does not represent the exact value, a precision of six digits is used. You can use the standard output operator to print the result as a whole. For example:
+
+\begin{cpp}
+std::chrono::duration<int, std::ratio<1,3>> third{1};
+auto manysecs = 10000s;
+auto dblsecs = 10000.0s;
+
+std::cout << "third: " << third << '\n';
+std::cout << " " << std::chrono::hh_mm_ss{third} << '\n';
+std::cout << "manysecs: " << manysecs << '\n';
+std::cout << " " << std::chrono::hh_mm_ss{manysecs} << '\n';
+std::cout << "dblsecs: " << dblsecs << '\n';
+std::cout << " " << std::chrono::hh_mm_ss{dblsecs} << '\n';
+\end{cpp}
+
+This code has the following output:
+
+\begin{shell}
+third:    1[1/3]s
+          00:00:00.333333
+manysecs: 10000s
+          02:46:40
+dblsecs:  10000.000000s
+          02:46:40.000000
+\end{shell}
+
+To output specific attributes, you can also use formatted output with specific conversion specifiers:
+
+\begin{cpp}
+auto manysecs = 10000s;
+std::cout << "manysecs: " << std::format("{:%T}", manysecs) << '\n';
+\end{cpp}
+
+This also writes:
+
+\begin{shell}
+manysecs: 02:46:40
+\end{shell}
+
 \mySubsubsection{11.3.6}{Hours Utilities}
+
+The chrono library now also provides a few helper functions to deal with the 12-hour and 24-hour formats. Table Hours Utilities lists these functions.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+std::chrono::is\_am(h)       & Yields whether h is an hours value between 0 and 11  \\ \hline
+\endfirsthead
+%
+\endhead
+%
+std::chrono::is\_pm(h)       & Yields whether h is an hours value between 12 and 23 \\ \hline
+std::chrono::make12(h)       & Yields the 12-hour equivalent of the hours value h   \\ \hline
+std::chrono::make24(h, toPM) & Yields the 24-hour equivalent of the hours value h   \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 11.7. Hours utilities
+\end{center}
+
+Both std::chrono::make12() and std::chrono::make24() require an hours value between 0 and 23. The second parameter of std::chrono::make24() specifies whether to interpret the passed hours value as PM value. If true, the function adds 12 hours to the passed value, if it is between 0 and 11.
+
+For example:
+
+\begin{cpp}
+for (int hourValue : {9, 17}) {
+	std::chrono::hours h{hourValue};
+	if (std::chrono::is_am(h)) {
+		h = std::chrono::make24(h, true); // assume a PM hour is meant
+	}
+	std::cout << "Tea at " << std::chrono::make12(h).count() << "pm" << '\n';
+}
+\end{cpp}
+
+The code has the following output:
+
+\begin{shell}
+Tea at 9pm
+Tea at 5pm
+\end{shell}
+
+
+
+
+
+
+
+
+
+
