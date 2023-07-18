@@ -3,10 +3,364 @@ C++20 now supports a couple of clocks. This section discusses the differences be
 
 \mySubsubsection{11.7.1}{Clocks with a Specified Epoch}
 
+C++20 now provides the following clocks associated with an epoch (so that they define a unique point in time):
+
+\begin{itemize}
+\item 
+The system clock is the clock of your operating system. Since C++20 it is specified to be Unix Time[ For details about Unix time see, for example, \url{http://en.wikipedia.org/wiki/Unix_time}.], which counts time since the epoch January 1, 1970 00:00:00 UTC.
+
+Leap seconds are handled such that some seconds might take a little bit longer. Therefore, you never have hours with 61 seconds and all years with 365 days have the same number of 31,536,000 seconds.
+
+\item
+The UTC clock is the clock that represents the Coordinated Universal Time, popularly known as GMT (Greenwich Mean Time), or Zulu time. Local time differs from UTC by the UTC offset of your timezone.
+
+It uses the same epoch as the system clock (January 1, 1970 00:00:00 UTC).
+Leap seconds are handled such that some minutes might have 61 seconds. For example, there is a timepoint 1972-06-30 23:59:60 because a leap second was added to the last minute of June 1972.
+
+Therefore, years with 365 days might sometimes have 31,536,001 or even 31,536,002 seconds.
+
+\item
+The GPS clock uses the time of the Global Positioning System, which is the atomic time scale implemented by the atomic clocks in the GPS ground control stations and satellites. GPS time starts with the epoch of January 6, 1980 00:00:00 UTC.
+
+Each minute has 60 seconds, but GPS takes leap seconds into account by switching to the next hour earlier. As a result, GPS is more and more seconds ahead of UTC (or more and more seconds behind before 1980). For example, the timepoint 2021-01-01 00:00:00 UTC is represented as a GPS timepoint as 2021-01-01 00:00:18 GPS. In 2021, while writing this book, GPS timepoints are 18 seconds ahead.
+
+All GPS years with 365 days (the difference between midnight of a GPS date and midnight of the GPS date one year later) have the same number of 31,536,000 seconds but might be one or two seconds shorter than the “real” year.
+
+\item
+The TAI clock uses International Atomic Time, which is the international atomic time scale based on a continuous counting of the SI second. TAI time starts with the epoch of January 1, 1958 00:00:00 UTC.
+
+As is the case for GPS time, each minute has 60 seconds, and leap seconds are taken into account by switching to the next hour earlier. As a result, TAI is more and more seconds ahead of UTC, but always has a constant offset of 19 seconds to GPS. For example, the timepoint 2021-01-01 00:00:00 UTC is represented as a TAI timepoint as 2021-01-01 00:00:37 TAI. In 2021, while writing this book, TAI timepoints are 37 seconds ahead.
+\end{itemize}
+
 \mySubsubsection{11.7.2}{The Pseudo Clock local\_t}
+
+As already introduced, there is a special clock of type std::chrono::local\_t. This clock allows us to specify local timepoints, which have no timezone (not even UTC) yet. Its epoch is interpreted as “local time,” which means you have to combine it with a timezone to know which point in time it represents.
+
+local\_t is a “pseudo clock” because it does not fulfill all requirements of clocks. In fact, it does not provide a member function now():
+
+\begin{cpp}
+auto now1 = std::chrono::local_t::now(); // ERROR: now() not provided
+\end{cpp}
+
+Instead, you need a system clock timepoint and a timezone. You can then convert the timepoint to a local timepoint using a timezone such as the current timezone or UTC:
+
+\begin{cpp}
+auto sysNow = chr::system_clock::now(); // NOW as UTC timepoint
+...
+chr::local_time now2
+	= chr::current_zone()->to_local(sysNow); // NOW as local timepoint
+chr::local_time now3
+	= chr::locate_zone("Asia/Tokyo")->to_local(sysNow); // NOW as Tokyo timepoint
+\end{cpp}
+
+Another way to get the same result is to call get\_local\_time() for a zoned time (a timepoint with associated timezone):
+
+\begin{cpp}
+chr::local_time now4 = chr::zoned_time{chr::current_zone(),
+										sysNow}.get_local_time();
+\end{cpp}
+
+A different approach is to parse a string into a local timepoint:
+
+\begin{cpp}
+chr::local_seconds tp; // time_point<local_t, seconds>
+std::istringstream{"2021-1-1 18:30"} >> chr::parse(std::string{"%F %R"}, tp);
+\end{cpp}
+
+Remember the subtle differences between local timepoints compared to other timepoints:
+
+\begin{itemize}
+\item 
+A system/UTC/GPS/TAI timepoint represents a specific point in time. Applying it to a timezone will convert the time value it represents.
+
+\item 
+A local timepoint represents a local time. Its global point in time becomes clear once it is combined with a timezone.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+auto now = chr::current_zone()->to_local(chr::system_clock::now());
+std::cout << now << '\n';
+std::cout << "Berlin: " << chr::zoned_time("Europe/Berlin", now) << '\n';
+std::cout << "Sydney: " << chr::zoned_time("Australia/Sydney", now) << '\n';
+std::cout << "Cairo: " << chr::zoned_time("Africa/Cairo", now) << '\n';
+\end{cpp}
+
+This applies the local time of now to three different timezones:
+
+\begin{shell}
+2021-04-14 08:59:31.640004000
+Berlin: 2021-04-14 08:59:31.640004000 CEST
+Sydney: 2021-04-14 08:59:31.640004000 AEST
+Cairo:  2021-04-14 08:59:31.640004000 EET
+\end{shell}
+
+Note that you cannot use conversion specifiers for the timezone when using a local timepoint:
+
+\begin{cpp}
+chr::local_seconds tp; // time_point<local_t, seconds>
+...
+std::cout << std::format("{:%F %T %Z}\n", tp); // ERROR: invalid format
+std::cout << std::format("{:%F %T}\n", tp); // OK
+\end{cpp}
+
 
 \mySubsubsection{11.7.3}{Dealing with Leap Seconds}
 
+The previous discussion of clocks with a specified epoch already introduced basic aspects of dealing with leap seconds.
+
+To make the handling of leap seconds more clear, let us iterate over timepoints of a leap second using different clocks:
+
+\filename{lib/chronoclocks.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <chrono>
+
+int main()
+{
+	using namespace std::literals;
+	namespace chr = std::chrono;
+	
+	auto tpUtc = chr::clock_cast<chr::utc_clock>(chr::sys_days{2017y/1/1} - 1000ms);
+	for (auto end = tpUtc + 2500ms; tpUtc <= end; tpUtc += 200ms) {
+		auto tpSys = chr::clock_cast<chr::system_clock>(tpUtc);
+		auto tpGps = chr::clock_cast<chr::gps_clock>(tpUtc);
+		auto tpTai = chr::clock_cast<chr::tai_clock>(tpUtc);
+		std::cout << std::format("{:%F %T} SYS ", tpSys);
+		std::cout << std::format("{:%F %T %Z} ", tpUtc);
+		std::cout << std::format("{:%F %T %Z} ", tpGps);
+		std::cout << std::format("{:%F %T %Z}\n", tpTai);
+	}
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+2016-12-31 23:59:59.000 SYS 2016-12-31 23:59:59.000 UTC 2017-01-01 00:00:16.000 GPS 2017-01-01 00:00:35.000 TAI
+2016-12-31 23:59:59.200 SYS 2016-12-31 23:59:59.200 UTC 2017-01-01 00:00:16.200 GPS 2017-01-01 00:00:35.200 TAI
+2016-12-31 23:59:59.400 SYS 2016-12-31 23:59:59.400 UTC 2017-01-01 00:00:16.400 GPS 2017-01-01 00:00:35.400 TAI
+2016-12-31 23:59:59.600 SYS 2016-12-31 23:59:59.600 UTC 2017-01-01 00:00:16.600 GPS 2017-01-01 00:00:35.600 TAI
+2016-12-31 23:59:59.800 SYS 2016-12-31 23:59:59.800 UTC 2017-01-01 00:00:16.800 GPS 2017-01-01 00:00:35.800 TAI
+2016-12-31 23:59:59.999 SYS 2016-12-31 23:59:60.000 UTC 2017-01-01 00:00:17.000 GPS 2017-01-01 00:00:36.000 TAI
+2016-12-31 23:59:59.999 SYS 2016-12-31 23:59:60.200 UTC 2017-01-01 00:00:17.200 GPS 2017-01-01 00:00:36.200 TAI
+2016-12-31 23:59:59.999 SYS 2016-12-31 23:59:60.400 UTC 2017-01-01 00:00:17.400 GPS 2017-01-01 00:00:36.400 TAI
+2016-12-31 23:59:59.999 SYS 2016-12-31 23:59:60.600 UTC 2017-01-01 00:00:17.600 GPS 2017-01-01 00:00:36.600 TAI
+2016-12-31 23:59:59.999 SYS 2016-12-31 23:59:60.800 UTC 2017-01-01 00:00:17.800 GPS 2017-01-01 00:00:36.800 TAI
+2017-01-01 00:00:00.000 SYS 2017-01-01 00:00:00.000 UTC 2017-01-01 00:00:18.000 GPS 2017-01-01 00:00:37.000 TAI
+2017-01-01 00:00:00.200 SYS 2017-01-01 00:00:00.200 UTC 2017-01-01 00:00:18.200 GPS 2017-01-01 00:00:37.200 TAI
+2017-01-01 00:00:00.400 SYS 2017-01-01 00:00:00.400 UTC 2017-01-01 00:00:18.400 GPS 2017-01-01 00:00:37.400 TAI
+\end{shell}
+
+The leap second we look at here is the last leap second we had when this book was written (we do not know in advance when leap seconds will happen in the future). We print the timepoint with the corresponding timezone (for system timepoints, we print SYS instead of its default timezone UTC). You can observe the following:
+
+\begin{itemize}
+\item 
+During the leap second:
+
+\begin{itemize}
+\item 
+The UTC time uses the value 60 as seconds.
+
+\item 
+The system clock uses the last representable value of sys\_time prior to the insertion of the leap second. That behavior is guaranteed by the C++ standard.
+\end{itemize}
+
+\item 
+Before the leap second:
+
+\begin{itemize}
+\item 
+The GPS time is 17 seconds ahead of the UTC time.
+
+\item 
+The TAI time is 36 seconds ahead of the UTC time (as always, 19 seconds ahead of the GPS time).
+\end{itemize}
+
+\item 
+After the leap second:
+
+\begin{itemize}
+\item 
+The GPS time is 18 seconds ahead of the UTC time.
+
+\item 
+The TAI time is 37 seconds ahead of the UTC time (still 19 seconds ahead of the GPS time).
+\end{itemize}
+\end{itemize}
+
 \mySubsubsection{11.7.4}{Conversions between Clocks}
 
+You can convert timepoint between clocks provided such a conversion makes sense. For this purpose, the chrono library provides a clock\_cast<>. It is defined in a way that you can only convert between the timepoints of clocks that have a specified stable epoch (sys\_time<>, utc\_time<>, gps\_time<>, tai\_time<>) and filesystem timepoints.
+
+The cast needs the destination clock and you can optionally pass a different duration.
+
+The following program creates the output of a UTC leap second to a couple of other clocks:
+
+\filename{lib/chronoconv.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <sstream>
+#include <chrono>
+
+int main()
+{
+	namespace chr = std::chrono;
+	
+	// initialize a utc_time<> with a leap second:
+	chr::utc_time<chr::utc_clock::duration> tp;
+	std::istringstream{"2015-6-30 23:59:60"}
+		>> chr::parse(std::string{"%F %T"}, tp);
+	
+	// convert it to other clocks and print that out:
+	auto tpUtc = chr::clock_cast<chr::utc_clock>(tp);
+	std::cout << "utc_time: " << std::format("{:%F %T %Z}", tpUtc) << '\n';
+	auto tpSys = chr::clock_cast<chr::system_clock>(tp);
+	std::cout << "sys_time: " << std::format("{:%F %T %Z}", tpSys) << '\n';
+	auto tpGps = chr::clock_cast<chr::gps_clock>(tp);
+	std::cout << "gps_time: " << std::format("{:%F %T %Z}", tpGps) << '\n';
+	auto tpTai = chr::clock_cast<chr::tai_clock>(tp);
+	std::cout << "tai_time: " << std::format("{:%F %T %Z}", tpTai) << '\n';
+	auto tpFile = chr::clock_cast<chr::file_clock>(tp);
+	std::cout << "file_time: " << std::format("{:%F %T %Z}", tpFile) << '\n';
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+utc_time: 2015-06-30 23:59:60.0000000 UTC
+sys_time: 2015-06-30 23:59:59.9999999 UTC
+gps_time: 2015-07-01 00:00:16.0000000 GPS
+tai_time: 2015-07-01 00:00:35.0000000 TAI
+file_time: 2015-06-30 23:59:59.9999999 UTC
+\end{shell}
+
+Note that for all of these clocks, we have pseudo timezones for formatted output.
+
+The rules of conversions are as follows:
+
+\begin{itemize}
+\item 
+Any conversion from a local timepoint adds just the epoch. The time value remains the same.
+
+\item 
+Conversions between UTC, GPS, and TAI timepoints add or subtract the necessary offsets.
+
+\item 
+Conversions between UTC and system time do not change the time value except that for the timepoint of a UTC leap second, the last timepoint ahead is used as the system time.
+\end{itemize}
+
+Conversions from local timepoints to other clocks are also supported. However, for conversions to local timepoints, you have to use to\_local() (after converting to a system timepoint).
+
+Conversions to or from timepoints of the steady\_clock are not supported.
+
+\mySamllsection{Clock Conversions Internally}
+
+Under the hood, clock\_cast<> is a “two-hub spoke and wheel system.”10 The two hubs are system\_clock and utc\_clock. Every convertible clock has to convert to and from one of these hubs (but not both). The conversions to the hubs are done with the to\_sys() or to\_utc() static member functions of the clocks. For conversions from the hubs, from\_sys() or from\_utc() are provided. clock\_cast<> strings these member functions together to convert from any clock to any other clock.
+
+Clocks that cannot deal with leap seconds should convert to/from system\_clock. For example, utc\_clock and local\_t provide to\_sys().
+
+Clocks that can deal with leap seconds in some way (which does not necessarily mean that they have a leap second value) should convert to/from utc\_clock. This applies to gps\_clock and tai\_clock, because even though GPS and TAI do not have leap seconds, they have unique, bidirectional mappings to UTC leap seconds.
+
+For the file\_clock, it is implementation-specific whether conversions to/from system\_clock or utc\_clock are provided.
+
+
 \mySubsubsection{11.7.5}{Dealing with the File Clock}
+
+The clock std::chrono::file\_clock is the clock the filesystem library uses for timepoints of filesystem entries (files, directories, etc.). It is an implementation-specific clock type that reflects the resolution and range of time values of the filesystem.
+
+For example, you can use the file clock to update the time of last access to a file as follows:
+
+\begin{cpp}
+// touch file with path p (update last write access to file):
+std::filesystem::last_write_time(p,
+								 std::chrono::file_clock::now());
+\end{cpp}
+
+You were also able to use the clock of filesystem entries in C++17 by using the type
+
+\begin{cpp}
+std::filesystem::file_time_type:
+	std::filesystem::last_write_time(p,
+									std::filesystem::file_time_type::clock::now());
+\end{cpp}
+
+Since C++20, the filesystem type name file\_time\_type is defined as follows:
+
+\begin{cpp}
+namespace std::filesystem {
+	using file_time_type = chrono::time_point<chrono::file_clock>;
+}
+\end{cpp}
+
+In C++17, you could only use an unspecified trivial-clock.
+
+For timepoints of the filesystem, the type file\_time is also defined now:
+
+\begin{cpp}
+namespace std::chrono {
+	template<typename Duration>
+	using file_time = time_point<file_clock, Duration>;
+}
+\end{cpp}
+
+A type like file\_seconds (as the other clocks have) is not defined.
+
+The new definition of the file\_time type now allows programmers to portably convert filesystem timepoints to system timepoints. For example, you can print the time when a passed file was accessed last as follows:
+
+\begin{cpp}
+void printFileAccess(const std::filesystem::path& p)
+{
+	std::cout << "\"" << p.string() << "\":\n";
+	
+	auto tpFile = std::filesystem::last_write_time(p);
+	std::cout << std::format(" Last write access: {0:%F} {0:%X}\n", tpFile);
+	
+	auto diff = std::chrono::file_clock::now() - tpFile;
+	auto diffSecs = std::chrono::round<std::chrono::seconds>(diff);
+	std::cout << std::format(" It is {} old\n", diffSecs);
+}
+\end{cpp}
+
+This code might output:
+
+\begin{shell}
+"chronoclocks.cpp":
+ Last write access: 2021-07-12 16:50:08
+ It is 18s old
+\end{shell}
+
+If you were to use the default output operator of timepoints, which prints subseconds according to the granularity of the file clock:
+
+\begin{cpp}
+std::cout << " Last write access: " << diffSecs << '\n';
+\end{cpp}
+
+the output might be as follows:
+
+\begin{shell}
+Last write access: 2021-07-12 16:50:08.3680536
+\end{shell}
+
+To deal with the file access time as system or local time, you have to use a clock\_cast<>() (which, internally, might call the static file\_clock member functions to\_sys() or to\_utc()). For example:
+
+\begin{cpp}
+auto tpFile = std::filesystem::last_write_time(p);
+auto tpSys = std::chrono::file_clock::to_sys(tpFile);
+auto tpSys = std::chrono::clock_cast<std::chrono::system_clock>(tpFile);
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+

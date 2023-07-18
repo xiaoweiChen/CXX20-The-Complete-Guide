@@ -1,0 +1,17 @@
+In addition to what I have described so far, the new chrono library adds the following features:
+
+
+\begin{itemize}
+\item 
+To check whether a type is a clock, a new type trait std::chrono::is\_clock<> is provided together with its corresponding variable template std::chrono::is\_clock\_v<>. For example:
+
+\begin{cpp}
+std::chrono::is_clock_v<std::chrono::system_clock> // true
+std::chrono::is_clock_v<std::chrono::local_t> // false
+\end{cpp}
+
+The pseudo clock local\_t yields false here because it does not provide the member function now().
+
+\item 
+For durations and timepoints, operator<=> is defined.
+\end{itemize}

@@ -1,4 +1,150 @@
 
+Table Operations of objects of class jthread lists the API of std::thread. The column Diff notes member functions that Modified the behavior or are New compared to std::thread.
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|}
+\hline
+\textbf{Operation}      & \textbf{Effect}                                                                                        & \textbf{Diff} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+jthread t               & Default constructor; creates a nonjoinable thread object                                               &               \\ \hline
+jthread t\{f,...\} &
+Creates an object representing a new thread that call f (with additional args) or throws std::system\_error &
+\\ \hline
+jthread t\{rv\}         & Move constrctor; creates a new thread object, which gets the state of rv, and makes rv nonjoinable     &               \\ \hline
+t.$\sim$jthread()       & Destructor; calls request\_stop() and join() if the object is joinable                                 & Mod           \\ \hline
+t = rv                  & Move assignment; move assigns the state of rv to t (calls request\_stop() and join() if t is joinable) & Mode          \\ \hline
+t.joinable()            & Yields true if t has an associated thread (is joinable)                                                &               \\ \hline
+t.join() &
+Waits for the associated thread to finish and makes the object non-joinable (throw std::system\_error if the thread is not joinable) &
+\\ \hline
+t.detach() &
+Releases the association of t to its thread while the thread continues and makes the object nonjoinable(throws std::system\_error if the thread is not joinable) &
+\\ \hline
+t.request\_stop()       & Requests a stop on the associated stop token                                                           & New           \\ \hline
+t.get\_stop\_source()   & Yields an object to request a stop from                                                                & New           \\ \hline
+t.get\_stop\_token()    & Yields an object to check for a requested stop                                                         & New           \\ \hline
+t.get\_id()             & Returns a unique thread ID of the member type id if joinable or a default constructed ID if not        &               \\ \hline
+t.native\_handle() &
+Returns a platform-specific member type native\_handle\_type for a non-portable handling of the thread &
+\\ \hline
+t1.swap(t2)             & Swaps the states of t1 and t2                                                                          &               \\ \hline
+swap(t1, t2)            & Swaps the states of t1 and t2                                                                          &               \\ \hline
+hardware\_concurrency() & Static function with a hint about possible hardware threads                                            &               \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 12.4. Operations of objects of class jthread
+\end{center}
+
+Note that the member types id and native\_handle\_type are the same for both std::thread and std::jthread so it does not matter if you use decltype(mythread)::id or std::thread::id. That way, you can just replace std::thread in existing code with std::jthread without having to replace anything else.
 
 \mySubsubsection{12.3.1}{Using Stop Tokens with std::jthread}
+
+Besides the fact that the destructor joins, the major benefit of std::jthread is that it automatically establishes the mechanism to signal a stop. For that, the constructor starting a thread creates a stop source, stores it as a member of the thread object, and passes the corresponding stop token to the called function in case that function takes an additional stop\_token as first parameter.
+
+You can also get the stop source and stop token via member functions from the thread:
+
+\begin{cpp}
+std::jthread t1{[] (std::stop_token st) {
+						...
+				}};
+...
+foo(t1.get_token()); // pass stop token to foo()
+...
+std::stop_source ssrc{t1.get_stop_source()};
+ssrc.request_stop(); // request stop on stop token of t1
+\end{cpp}
+
+Because get\_token() and get\_stop\_source() return by value, both the stop source and the stop token can even be used after a thread has been detached and runs in the background.
+
+\mySamllsection{Using Stop Tokens with a Collection of std::jthreads}
+
+If you start multiple jthreads, each thread has its own stop token. Note that this might result in a situation that stopping all threads might take longer than expected. Consider the following code:
+
+\begin{cpp}
+{
+	std::vector<std::jthread> threads;
+	for (int i = 0; i < numThreads; ++i) {
+		pool.push_back(std::jthread{[&] (std::stop_token st) {
+				while (!st.stop_requested()) {
+					...
+				}
+		}});
+	}
+	...
+} // destructor stops all threads
+\end{cpp}
+
+At the end of the loop, the destructor stops all running threads similarly to the following code:
+
+\begin{cpp}
+for (auto& t : threads) {
+	t.request_stop();
+	t.join();
+}
+\end{cpp}
+
+This means that we always wait for one thread to end before we signal stop to the next thread.
+
+Code like this can be improved by requesting a stop for all threads before calling join() for all of them (via the destructor)
+
+\begin{cpp}
+{
+	std::vector<std::jthread> threads;
+	for (int i = 0; i < numThreads; ++i) {
+		pool.push_back(std::jthread{[&] (std::stop_token st) {
+				while (!st.stop_requested()) {
+					...
+				}
+		}});
+	}
+	...
+	// BETTER: request stops for all threads before we start to join them:
+	for (auto& t : threads) {
+		t.request_stop();
+	}
+} // destructor stops all threads
+\end{cpp}
+
+Now we first request a stop for all threads and threads might end before the destructor calls join() for the threads to finish. An example of this technique is demonstrated by the destructor of a coroutine thread pool.
+
+\mySamllsection{Using the Same Stop Token for Multiple std::jthreads}
+
+It might also be necessary to request a stop for multiple threads using the same stop token. This can be done easily. Just create the stop token yourself or take the stop token from the first thread that has been started and start the (other) threads with this stop token as first argument. For example:
+
+\begin{cpp}
+// initialize a common stop token for all threads:
+std::stop_source allStopSource;
+std::stop_token allStopToken{allStopSource.get_token()};
+for (int i = 0; i < 9; ++i) {
+	threads.push_back(std::jthread{[] (std::stop_token st) {
+			...
+			while (!st.stop_requested()) {
+				...
+			}
+		},
+		allStopToken // pass token to this thread
+	});
+}
+\end{cpp}
+
+Remember that the callable usually just takes all arguments passed. The internal stop token of the thread started is used only if Only if there is an additional stop token parameter for which no argument is passed.
+
+See lib/atomicref.cpp for a complete example.
+
+
+
+
+
+
+
+
+
+
+
+

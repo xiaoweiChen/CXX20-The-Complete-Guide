@@ -1,9 +1,354 @@
 
+C++11 introduced the type std::thread that maps one-to-one with threads as provided by the operating system. However, the type has a severe design flaw: it is not an RAII type.
+
+Let us look at why this is a problem and how the new thread type solves this problem.
 
 \mySubsubsection{12.1.1}{The Problem of std::thread}
 
+C++11 introduced the type std::thread that maps one-to-one with threads as provided by the operating system. However, the type has a severe design flaw: it is not an RAII type. Let us look at why this is a problem and how the new thread type solves this problem.
+
+\begin{cpp}
+void foo()
+{
+	...
+	// start thread calling task() with name and val as arguments:
+	std::thread t{task, name, val};
+	... // neither t.join() nor t.detach() called
+} // std::terminate() called
+\end{cpp}
+
+When the destructor of t representing the running thread is called without having called join() or detach(), the program calls std::terminate(), which calls std::abort().
+
+Even when calling join() to wait for the running thread to end, you still have a significant problem:
+
+\begin{cpp}
+void foo()
+{
+	...
+	// start thread calling task() with name and val as arguments:
+	std::thread t{task, name, val};
+	... // calls std::terminate() on exception
+	// wait for tasks to finish:
+	t.join();
+	...
+}
+\end{cpp}
+
+This code may also cause an abnormal program termination because t.join() is not called when an exception occurs in foo() between the start of the thread and the call of join() (or if the control flow never reaches the call to join() for any other reason).
+
+The way you have to program this is as follows:
+
+\begin{cpp}
+void foo()
+{
+	...
+	// start thread calling task() with name and val as arguments:
+	std::thread t{task, name, val};
+	try {
+		... // might throw an exception
+	}
+	catch (...) { // if we have an exception
+		// clean up the thread started:
+		t.join(); // - wait for thread (blocks until done)
+		throw; // - and rethrow the caught exception
+	}
+	// wait for thread to finish:
+	t.join();
+	...
+}
+\end{cpp}
+
+Here, we react to an exception without resolving it by making sure that join() is called when we leave the scope. Unfortunately, this might block (forever). However, calling detach() is also a problem because the thread continues in the background of the program, using CPU time and resources that might now be destroyed.
+
+If you use multiple threads in more complex contexts, the problem gets even worse and creates really nasty code. For example, when starting just two threads, you have to program something like this:
+
+\begin{cpp}
+void foo()
+{
+	...
+	// start thread calling task1() with name and val as arguments:
+	std::thread t1{task1, name, val};
+	std::thread t2;
+	try {
+		// start thread calling task2() with name and val as arguments:
+		t2 = std::thread{task2, name, val};
+		...
+	}
+	catch (...) { // if we have an exception
+		// clean up the threads started:
+		t1.join(); // wait for first thread to end
+		if (t2.joinable()) { // if the second thread was started
+			t2.join(); // - wait for second thread to end
+		}
+		throw; // and rethrow the caught exception
+	}
+	// wait for threads to finish:
+	t1.join();
+	t2.join();
+	...
+}
+\end{cpp}
+
+On one hand, after starting the first thread, starting the second thread might throw, so starting the second thread has to happen in the try clause. On the other hand, we want to use and join() both threads in the same scope. To fulfill both requirements, we have to forward declare the second thread and move assign it in the try clause of the first thread. In addition, on an exception, we have to check whether the second thread was started or not because calling join() for a thread object that has no associated thread causes another exception.
+
+An additional problem is that calling join() for both threads might take a significant amount of time (or even take forever). Note that you cannot “kill” threads that have been started. Threads are not processes. A thread can only end by ending itself or ending the program as a whole.
+
+Therefore, before calling join(), you should make sure that the thread you wait for will cancel its execution. However, with std::thread, there is no mechanism for that. You have to implement the request for cancellation and the reaction to it yourself.
+
 \mySubsubsection{12.1.2}{Using std::jthread}
+
+std::jthread solves these problems. First, it is an RAII type. The destructor calls join() if the thread is joinable (the “j” stands for “joining”). Thus, the complex code above simply becomes:
+
+\begin{cpp}
+void foo()
+{
+	...
+	// start thread calling task1() with name and val as arguments:
+	std::jthread t1{task1, name, val};
+	// start thread calling task2() with name and val as arguments:
+	std::jthread t2{task2, name, val};
+	...
+	// wait for threads to finish:
+	t1.join();
+	t2.join();
+	...
+}
+\end{cpp}
+
+By simply using std::jthread instead of std::thread, the danger of causing an abnormal program termination is no longer present and no exception handling is necessary. To support switching to the class std::jthread as easily as possible, the class provides the same API as std::thread, including:
+
+\begin{itemize}
+\item 
+Using the same header file <thread>
+
+\item 
+Returning a std::thread::id when calling get\_id() (the type std::jthread::id is just an alias type)
+
+\item 
+Providing the static member hardware\_concurrency()
+\end{itemize}
+
+That means: simply replace std::thread by std::jthread and recompile and your code becomes safer (if you did not already implemented the exception handling yourself).[ You might wonder why we did not just fix std::thread instead of introducing a new type std::jthread. The reason is backward compatibility. There might be a few applications that want to terminate the program when leaving the scope of a running thread. And for some new functionality discussed next, we would also break binary compatibility.]
 
 \mySubsubsection{12.1.3}{Stop Tokens and Stop Callbacks}
 
+The class std::jthread does even more: it provides a mechanism for signaling cancellation using stop tokens, which are used by the destructors of jthreads before they call join(). However, the callable (function, function object, or lambda) started by the thread must support this request:
+
+\begin{itemize}
+\item 
+If the callable only provides parameters for all passed arguments, the request to stop would be ignored:
+
+\begin{cpp}
+void task (std::string s, double value)
+{
+	... // join() waits until this code ends
+}
+\end{cpp}
+
+\item 
+To react to the stop request, the callable can add a new optional first parameter of type std::stop\_token and check from time to time whether a stop was requested:
+
+\begin{cpp}
+void task (std::stop_token st,
+std::string s, double value)
+{
+	while (!st.stop_requested()) { // stop requested (e.g., by the destructor)?
+		... // ensure we check from time to time
+	}
+}
+\end{cpp}
+\end{itemize}
+
+This means that std::jthread provides a cooperative mechanism to signal that a thread should no longer run. It is “cooperative” because the mechanism does not kill the running thread (killing threads might easily leave a program in a corrupt state and is therefore not supported by C++ threads at all). To honor a request to stop, the started thread has to declare the stop token as an additional first parameter and use it to check from time to time whether it should continue to run.
+
+You can also manually request a stop for a jthread that has started. For example:
+
+\begin{cpp}
+void foo()
+{
+	...
+	// start thread calling task() with name and val as arguments:
+	std::jthread t{task, name, val};
+	...
+	if ( ... ) {
+		t.request_stop(); // explicitly request task() to stop its execution
+	}
+	...
+	// wait for thread to finish:
+	t.join();
+	...
+}
+\end{cpp}
+
+In addition, there is another way to react to a stop request: you can register callbacks for a stop token, which are automatically called when a stop is requested. For example:
+
+\begin{cpp}
+void task (std::stop_token st,
+std::string s, double value)
+{
+	std::stop_callback cb{st, [] {
+							   ... // called on a stop request
+							  }};
+	...
+}
+\end{cpp}
+
+In this case, a request to stop the thread performing task() (whether it is an explicit call of request\_stop() or caused by the destructor) calls the lambda you have registered as the stop callback. Note that the callback is usually called by the thread requesting the stop.
+
+At the end of the lifetime of the stop callback cb, the destructor unregisters the callback automatically so that it will no longer be called if a stop is signaled afterwards. You can register an arbitrary number of callables (functions, function objects, or lambdas) that way.
+
+Note that the stop mechanism is more flexible than it looks at first:
+
+\begin{itemize}
+\item 
+You can pass around handles to request a stop and tokens to check for a requested stop.
+
+\item 
+There is support for condition variables so that a signaled stop can interrupt a wait there.
+
+\item 
+You can use the mechanism to request and check for stops independently of std::jthread.
+\end{itemize}
+
+There are also no lifetime constraints between the thread, its stop source, stop tokens, and stop callbacks. The place where the stop state is stored is allocated on the heap. The memory for the stop state is released when the thread and the last stop source, stop token, or stop callback using this state is destroyed.
+
+In the following sections, we discuss the mechanism for requesting stops and its application in threads. Afterwards, we discuss the underlying stop token mechanism.
+
 \mySubsubsection{12.1.4}{Stop Tokens and Condition Variables}
+
+When a stop is requested, a thread might be blocked by waiting for the notification for a condition variable (an important scenario to avoid active polling). The callback interface of stop tokens also supports this case. You can call wait() for a condition variable with a passed stop token so that the wait is suspended when a stop is requested. Note that for technical reasons, you have to use the type std::condition\_variable\_any for the condition variable.
+
+Here is an example that demonstrates using stop tokens with condition variables:
+
+\filename{lib/stopcv.cpp}
+
+\begin{cpp}
+include <iostream>
+#include <queue>
+#include <thread>
+#include <stop_token>
+#include <mutex>
+#include <condition_variable>
+using namespace std::literals; // for duration literals
+
+int main()
+{
+	std::queue<std::string> messages;
+	std::mutex messagesMx;
+	std::condition_variable_any messagesCV;
+	
+	// start thread that prints messages that occur in the queue:
+	std::jthread t1{[&] (std::stop_token st) {
+			while (!st.stop_requested()) {
+				std::string msg;
+				{
+					// wait for the next message:
+					std::unique_lock lock(messagesMx);
+					if (!messagesCV.wait(lock, st,
+										[&] {
+											return !messages.empty();
+										})) {
+						return; // stop requested
+					}
+					// retrieve the next message out of the queue:
+					msg = messages.front();
+					messages.pop();
+				}
+				
+				// print the next message:
+				std::cout << "msg: " << msg << std::endl;
+			}
+	}};
+
+	// store 3 messages and notify one waiting thread each time:
+	for (std::string s : {"Tic", "Tac", "Toe"}) {
+		std::scoped_lock lg{messagesMx};
+		messages.push(s);
+		messagesCV.notify_one();
+	}
+	
+	// after some time
+	// - store 1 message and notify all waiting threads:
+	std::this_thread::sleep_for(1s);
+	{
+		std::scoped_lock lg{messagesMx};
+		messages.push("done");
+		messagesCV.notify_all();
+	}
+	
+	// after some time
+	// - end program (requests stop, which interrupts wait())
+	std::this_thread::sleep_for(1s);
+}
+\end{cpp}
+
+We start one thread that loops over waiting for a queue of messages not to be empty and prints messages if there are any:
+
+\begin{cpp}
+while (!st.stop_requested()) {
+	std::string msg;
+	{
+		// wait for the next message:
+		std::unique_lock lock(messagesMx);
+		if (!messagesCV.wait(lock, st,
+							[&] {
+								return !messages.empty();
+							})) {
+			return; // stop requested
+		}
+		// retrieve the next message out of the queue:
+		msg = messages.front();
+		messages.pop();
+	}
+	
+	// print the next message:
+	std::cout << "msg: " << msg << std::endl;
+}
+\end{cpp}
+
+The condition variable messagesCV is of type std::condition\_variable\_any:
+
+\begin{cpp}
+std::condition_variable_any messagesCV;
+\end{cpp}
+
+That allows us to call wait() with a stop token, where we usually pass the stop token signaling to stop the thread. As a result, the waiting might end now for one of two reasons:
+
+\begin{itemize}
+\item 
+There was a notification (that the queue is no longer empty)
+
+\item 
+A stop was requested
+\end{itemize}
+
+The return value of wait() yields whether the condition is met. If it yields false, the reason to end wait() was a requested stop, meaning that we can react accordingly (here, we stop the loop).
+
+Table condition\_variable\_any member functions for stop tokens lists the new member functions of type std::condition\_variable\_any for stop tokens using a lock guard lg.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+cv.wait(lg, st, pred)            & Waits for notification with pred being true or a stop requested for st                      \\ \hline
+cv.wait\_for(lg, dur, st, pred)  & Waits at most duration dur for notification with pred being true or a stop requested for st \\ \hline
+cv.wait\_until(lg, tp, st, pred) & Waits until timepoint tp for notification with pred being true or a stop requested for st   \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 12.1. condition\_variable\_any member functions for stop tokens
+\end{center}
+
+Stop token support for other blocking functions is not supported yet.
+
+
+
+
+
+

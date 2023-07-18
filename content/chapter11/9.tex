@@ -1,0 +1,15 @@
+The chrono library was developed by Howard Hinnant. When the basic part for durations and timepoints was standardized with C++11, the plan was already to extend this with support for dates, calendars, and timezones.
+
+The chrono extension for C++20 was first proposed by Howard Hinnant in \url{http://wg21.link/p0355r0}. The finally accepted wording for this extension was formulated by Howard Hinnant and Tomasz Kaminski in \url{http://wg21.link/p0355r7}.
+
+A few minor fixes were added by Howard Hinnant in \url{http://wg21.link/p1466r3} and by Tomasz Kaminski in \url{http://wg21.link/p1650r0}. The finally accepted wording for the integration of the chrono library with the formatting library was formulated by Victor Zverovich, Daniela Engert, and Howard Hinnant in \url{http://wg21.link/p1361r2}.
+
+After finishing C++20, a few fixes were applied to fix the chrono extensions of the C++20 standard:
+
+\begin{itemize}
+\item 
+\url{http://wg21.link/p2372} clarified the behavior of locale-dependent formatted output.
+
+\item 
+\url{http://wg21.link/lwg3554} ensures that you can pass string literals as format to parse().
+\end{itemize}
