@@ -1,6 +1,449 @@
 
+Two new types provide new mechanisms for synchronizing asynchronous computation/processing of multiple threads:
 
+\begin{itemize}
+\item 
+Latches allow you to have a one-time synchronization where threads can wait for multiple tasks to finish.
+
+\item 
+Barriers allow you to have a repeated synchronization of multiple threads where you have to react when they all have done their current/next processing.
+\end{itemize}
 
 \mySubsubsection{13.1.1}{Latches}
 
+A latch is a new synchronization mechanism for concurrent execution that supports a single-use asynchronous countdown. Starting with an initial integral value, various threads can atomically count this value down to zero. The moment the counter reaches zero, all threads waiting for this countdown continue.
+
+Consider the following example:
+
+\filename{lib/latch.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <array>
+#include <thread>
+#include <latch>
+using namespace std::literals; // for duration literals
+
+void loopOver(char c) {
+	// loop over printing the char c:
+	for (int j = 0; j < c/2; ++j) {
+		std::cout.put(c).flush();
+		std::this_thread::sleep_for(100ms);
+	}
+}
+
+int main()
+{
+	std::array tags{'.', '?', '8', '+', '-'}; // tags we have to perform a task for
+	
+	// initialize latch to react when all tasks are done:
+	std::latch allDone{tags.size()}; // initialize countdown with number of tasks
+	
+	// start two threads dealing with every second tag:
+	std::jthread t1{[tags, &allDone] {
+			for (unsigned i = 0; i < tags.size(); i += 2) { // even indexes
+				loopOver(tags[i]);
+				// signal that the task is done:
+				allDone.count_down(); // atomically decrement counter of latch
+			}
+			...
+	}};
+	std::jthread t2{[tags, &allDone] {
+			for (unsigned i = 1; i < tags.size(); i += 2) { // odd indexes
+				loopOver(tags[i]);
+				// signal that the task is done:
+				allDone.count_down(); // atomically decrement counter of latch
+			}
+			...
+	}};
+	...
+	// wait until all tasks are done:
+	std::cout << "\nwaiting until all tasks are done\n";
+	allDone.wait(); // wait until counter of latch is zero
+	std::cout << "\nall tasks done\n"; // note: threads might still run
+	...
+}
+\end{cpp}
+
+In this example, we start two threads (using std::jthread) to perform a couple of tasks that each process a character of the array tags. Thus, the size of tags defines the number of tasks. The main thread blocks until all tasks are done. For this:
+
+\begin{itemize}
+\item 
+We initialize a latch with the number of tags/tasks:
+
+\begin{cpp}
+std::latch allDone{tags.size()};
+\end{cpp}
+
+\item 
+We let each task decrement the counter when it is done:
+
+\begin{cpp}
+allDone.count_down();
+\end{cpp}
+
+\item 
+We let the main thread wait until all tasks are done (the counter is zero):
+
+\begin{cpp}
+allDone.wait();
+\end{cpp}
+\end{itemize}
+
+The output of the program might look as follows:
+
+\begin{shell}
+?
+waiting until all tasks are done
+.??..??.?..?.??.?..??.?..?.??..?.??.?.?.?.?.8??88??88??8?8?8+8+88++8+8+8+88++
+8+8+8+8+88++8+8+88++8+8-+---------------------
+all tasks done
+\end{shell}
+
+Note that the main thread should not assume that when the tasks are done, all threads are done. The threads might still do other things and the system might still clean them up. To wait until all threads are done, you have to call join() for both threads.
+
+You can also use latches to synchronize multiple threads at a specific point and then continue. However, note that you can do this only once with each latch. One application of this is to ensure (as well as possible) that multiple threads start their actual work together even when starting and initializing the threads might take some time.
+
+Consider the following example:
+
+
+\filename{lib/latch.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <array>
+#include <vector>
+#include <thread>
+#include <latch>
+using namespace std::literals; // for duration literals
+
+int main()
+{
+	std::size_t numThreads = 10;
+	// initialize latch to start the threads when all of them have been initialized:
+	
+	std::latch allReady = 10; // initialize countdown with number of threads
+	
+	// start numThreads threads:
+	std::vector<std::jthread> threads;
+	for (int i = 0; i < numThreads; ++i) {
+		std::jthread t{[i, &allReady] {
+				// initialize each thread (simulate to take some time):
+				std::this_thread::sleep_for(100ms * i);
+				...
+				// synchronize threads so that all start together here:
+				allReady.arrive_and_wait();
+				// perform whatever the thread does
+				// (loop printing its index):
+				for (int j = 0; j < i + 5; ++j) {
+					std::cout.put(static_cast<char>('0' + i)).flush();
+					std::this_thread::sleep_for(50ms);
+				}
+		}};
+		threads.push_back(std::move(t));
+	}
+	...
+}
+\end{cpp}
+
+We start numThreads threads (using std::jthread), which take their time getting initialized and started. To allow them start their functionality together, we use a latch to block until all threads started have been initialized and started. For this:
+
+\begin{itemize}
+\item 
+We initialize the latch with the number of threads:
+
+\begin{cpp}
+std::latch allReady{numThreads};
+\end{cpp}
+
+\item
+We let each thread decrement the counter to wait until the initialization of all threads is done:
+
+\begin{cpp}
+allReady.arrive_and_wait(); // count_down() and wait()
+\end{cpp}
+
+\end{itemize}
+
+The output of the program might look as follows:
+
+\begin{shell}
+86753421098675342019901425376886735241907863524910768352491942538679453876945876957869786789899
+\end{shell}
+
+You can see that all 10 threads (each printing its index) start more or less together.
+
+Without the latch, the output might look as follows:
+
+\begin{shell}
+00101021021321324132435243524365463547635746854768547968579685796587968769876987987987989898999
+\end{shell}
+
+Here, the threads started early are already running while the latter have not been started yet.
+
+\mySamllsection{Latches in Detail}
+
+The class std::latch is declared in the header file <latch>. Table Operations of objects of class latch lists the API of std::latch.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}      & \textbf{Effect}                              \\ \hline
+\endfirsthead
+%
+\endhead
+%
+latch l\{counter\} & Creates a latch with counter as the starting value for the countdown \\ \hline
+l.count\_down()    & Atomically decrements the counter (if not 0 yet)                     \\ \hline
+l.count\_down(val)      & Atomically decrements the counter by val     \\ \hline
+l.wait()                & Blocks unitl the counter of the latch is 0   \\ \hline
+l.try\_wait()           & Yields whether the counter of the latch is 0 \\ \hline
+l.arrive\_and\_wait()   & Calls count\_down() and wait()               \\ \hline
+l.arrive\_and wait(val) & Calls count\_down(val) and wait()            \\ \hline
+max()              & Static function that yields the maximum possible value for counter   \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 13.1. Operations of objects of class latch
+\end{center}
+
+Note that you cannot copy or move (assign) a latch.
+
+Note also that passing the size of a container (except std::array) as the initial value of the counter is an error. The constructor takes a std::ptrdiff\_t, which is signed, so that you get the following behavior:
+
+\begin{cpp}
+std::latch l1{10}; // OK
+std::latch l2{10u}; // warnings may occur
+std::vector<int> coll{ ... };
+...
+std::latch l3{coll.size()}; // ERROR
+std::latch l4 = coll.size(); // ERROR
+std::latch l5(coll.size()); // OK (no narrowing checked)
+std::latch l6{int(coll.size())}; // OK
+std::latch l7{ssize(coll)}; // OK (see std::ssize())
+\end{cpp}
+
 \mySubsubsection{13.1.2}{Barriers}
+
+A barrier is a new synchronization mechanism for concurrent execution that allows you to synchronize multiple asynchronous tasks multiple times. After setting an initial count, multiple threads can count it down and wait until the counter reaches zero. However, in contrast to latches, when zero is reached, an (optional) callback is called and the counter reinitializes to the initial count again.
+
+A barrier is useful when multiple threads repeatedly compute/perform something together. Whenever all threads have done their task, the optional callback can process the result or new state and after that, the asynchronous computation/processing can continue with the next round.
+
+As an example, consider that we repeatedly use multiple threads to compute the square root of multiple values:
+
+\filename{lib/barrier.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <format>
+#include <vector>
+#include <thread>
+#include <cmath>
+#include <barrier>
+int main()
+{
+	// initialize and print a collection of floating-point values:
+	std::vector values{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+	
+	// define a lambda function that prints all values
+	// - NOTE: has to be noexcept to be used as barrier callback
+	auto printValues = [&values] () noexcept{
+						for (auto val : values) {
+							std::cout << std::format(" {:<7.5}", val);
+						}
+						std::cout << '\n';
+					};
+	// print initial values:
+	printValues();
+	
+	// initialize a barrier that prints the values when all threads have done their computations:
+	std::barrier allDone{int(values.size()), // initial value of the counter
+						 printValues}; // callback to call whenever the counter is 0
+		
+	// initialize a thread for each value to compute its square root in a loop:
+	std::vector<std::jthread> threads;
+	for (std::size_t idx = 0; idx < values.size(); ++idx) {
+		threads.push_back(std::jthread{[idx, &values, &allDone] {
+				// repeatedly:
+				for (int i = 0; i < 5; ++i) {
+					// compute square root:
+					values[idx] = std::sqrt(values[idx]);
+					// and synchronize with other threads to print values:
+					allDone.arrive_and_wait();
+				}
+		}});
+	}
+	...
+}
+\end{cpp}
+
+After declaring an array of floating-point values, we define a function to print them out (using std::format() for formatted output):
+
+\begin{cpp}
+// initialize and print a collection of floating-point values:
+std::vector values{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+
+// define a lambda function that prints all values
+// - NOTE: has to be noexcept to be used as barrier callback
+auto printValues = [&values] () noexcept{
+	for (auto val : values) {
+		std::cout << std::format(" {:<7.5}", val);
+	}
+	std::cout << '\n';
+};
+\end{cpp}
+
+Note that the callback has to be declared with noexcept.
+
+Our goal is to use multiple threads so that each thread deals with one value. In this case, we repeatedly compute the square roots of the values. For this:
+
+\begin{itemize}
+\item 
+We initialize barrier allDone to print all values whenever all threads have done their next computation: the number of tags/tasks:
+
+\begin{cpp}
+std::barrier allDone{int(values.size()), // initial value of the counter
+					 printValues}; // callback to call whenever the counter is 0
+\end{cpp}
+
+Please note that the constructor should take a signed integral value. Otherwise, the code might not compile.
+
+\item 
+In the loop, each thread decrements the counter after its computation and waits until the counter reaches zero (i.e., all other threads also have signaled that they are done):
+
+\begin{cpp}
+..
+allDone.arrive_and_wait();
+\end{cpp}
+
+\item 
+When the counter reaches zero, the callback is called to print the result.
+
+Note that the callback is called by the thread that finally decremented the counter to zero. This means that in the loop, the callback is called by different threads.
+\end{itemize}
+
+The output of the program might look as follows:
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{llllllll}
+1 & 2      & 3      & 4      & 5      & 6      & 7      & 8      \\
+\endfirsthead
+%
+\endhead
+%
+1 & 1.4142 & 1.7321 & 2      & 2.2361 & 2.4495 & 2.6458 & 2.8284 \\
+1 & 1.1892 & 1.3161 & 1.4142 & 1.4953 & 1.5651 & 1.6266 & 1.6818 \\
+1 & 1.0905 & 1.1472 & 1.1892 & 1.2228 & 1.251  & 1.2754 & 1.2968 \\
+1 & 1.0443 & 1.0711 & 1.0905 & 1.1058 & 1.1185 & 1.1293 & 1.1388 \\
+1 & 1.0219 & 1.0349 & 1.0443 & 1.0516 & 1.0576 & 1.0627 & 1.0671
+\end{longtable}
+
+The API of barriers also provide a function to drop threads from this mechanism. This is something you need, for example, to avoid deadlocks when the loop runs until a stop has been signaled.
+
+The code for the threads started might then look as follows:
+
+\begin{cpp}
+// initialize a thread for each value to compute its square root in a loop:
+std::vector<std::jthread> threads;
+for (std::size_t idx = 0; idx < values.size(); ++idx) {
+	threads.push_back(std::jthread{[idx, &values, &allDone] (std::stop_token st) {
+									// repeatedly:
+									while (!st.stop_requested()) {
+										// compute square root:
+										values[idx] = std::sqrt(values[idx]);
+										// and synchronize with other threads to print values:
+										allDone.arrive_and_wait();
+									}
+									// drop thread from barrier so that other threads not wait:
+									allDone.arrive_and_drop();
+							}});
+}
+\end{cpp}
+
+The lambda called by each thread now takes a stop token to react when a stop has been requested (explicitly or by calling the destructor for the thread). If the main thread signals the threads to stop the computing (e.g., by calling threads.clear()), it is important that each thread drops itself from the barrier:
+
+\begin{cpp}
+allDone.arrive_and_drop();
+\end{cpp}
+
+This call counts down the counter and ensures that the next initial value for the value is decremented. In the next round (the other threads might still be running) the barrier will no longer wait for the dropped thread.
+
+See lib/barrierstop.cpp for a complete example.
+
+\mySamllsection{Barriers in Detail}
+
+The class std::barrier is declared in the header file <barrier>. Table Operations of objects of class barrier lists the API of std::barrier.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                 \\ \hline
+\endfirsthead
+%
+\endhead
+%
+barrier b\{num\}   & Creates a barrier for num asynchronous tasks                    \\ \hline
+barrier b\{num, cb\}  & Creates a barrier for num asynchronous tasks and cb as callback                                                \\ \hline
+b.arrive()         & Marks one task as done and yields an arrival token              \\ \hline
+b.arrive(val)      & Marks val tasks as done and yields an arrival token             \\ \hline
+b.wait(arrivalToken)  & Blocks unitl all tasks have been done and the callback has been called(if there is one)                        \\ \hline
+b.arrive\_and\_wait() & Marks one task as done and blocks until all tasks have been done and the callback have called(if there is one) \\ \hline
+b.arrive\_and\_drop() & Marks one task as done and decrements the number of tasks to repeatedly perform                                \\ \hline
+max()              & Static function that yiields the maximun possible value for num \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 13.2. Operations of objects of class barrier
+\end{center}
+
+std::barrier<> is a class template with the type of the callback as a template parameter. Usually, the type is deduced by class template argument deduction:
+
+\begin{cpp}
+void callback() noexcept; // forward declaration
+...
+std::barrier b{6, callback}; // deduces std::barrier<decltype(callback)>
+\end{cpp}
+
+Note that the C++ standard requires that callbacks for barriers guarantee not to throw. Therefore, to be portable, you have to declare the function or lambda with noexcept. If no callback is passed, an implementation-specific type is used, representing an operation that has no effects.
+
+The call
+
+\begin{cpp}
+l.arrive_and_wait();
+\end{cpp}
+
+is equivalent to
+
+\begin{cpp}
+l.wait(l.arrive());
+\end{cpp}
+
+This means that the arrive() function returns an arrival token of type std::barrier::arrival\_token, which ensures that the barrier knows which of the threads to wait for. Otherwise, it cannot handle arrive\_and\_drop() correctly.
+
+Note that you cannot copy or move (assign) a barrier.
+
+Note also that passing the size of a container (except std::array) as an initial value of the counter is an error. The constructor takes a std::ptrdiff\_t, which is signed, so that you get the following behavior:
+
+\begin{cpp}
+std::barrier b1{10, cb}; // OK
+std::barrier b2{10u, cb}; // warnings may occur
+
+std::vector<int> coll{ ... };
+...
+std::barrier b3{coll.size(), cb}; // ERROR
+std::barrier b4(coll.size(), cb); // OK (no narrowing checked)
+std::barrier b5{int(coll.size()), cb}; // OK
+std::barrier b6{std::ssize(coll), cb}; // OK (see std::ssize())
+\end{cpp}
+
+The function std::ssize() was introduced in C++20.
+
+
+
+

@@ -1,8 +1,386 @@
 
+C++20 introduced new types for dealing with semaphores. Semaphores are lightweight synchronization primitives that allow you to synchronize or restrict access to one or a group of resources.
 
+You can use them like mutexes, with the benefit that the threads granting access to a resource do not necessarily have to be the same threads that acquired the access to the resource. You can also use them to limit the availability of resources, such as enabling and disabling the use of threads in a thread pool.
 
+There are two semaphore types provided by the C++ standard library:
+
+\begin{itemize}
+\item 
+std::counting\_semaphore<> to limit the use of multiple resources up to a maximum value
+
+\item
+std::binary\_semaphore<> to limit the use of a single resource
+\end{itemize}
 
 \mySubsubsection{13.2.1}{Example of Using Counting Semaphores}
 
+The following program demonstrates how semaphores operate in general:
+
+\filename{lib/semaphore.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <queue>
+#include <chrono>
+#include <thread>
+#include <mutex>
+#include <semaphore>
+using namespace std::literals; // for duration literals
+
+int main()
+{
+	std::queue<char> values; // queue of values
+	std::mutex valuesMx; // mutex to protect access to the queue
+	
+	// initialize a queue with multiple sequences from ’a’ to ’z’:
+	// - no mutex because no other thread is running yet
+	for (int i = 0; i < 1000; ++i) {
+		values.push(static_cast<char>('a' + (i % ('z'-'a'))));
+	}
+	
+	// create a pool of numThreads threads:
+	// - limit their availability with a semaphore (initially none available):
+	constexpr int numThreads = 10;
+	std::counting_semaphore<numThreads> enabled{0};
+	
+	// create and start all threads of the pool:
+	std::vector<std::jthread> pool;
+	for (int idx = 0; idx < numThreads; ++idx) {
+		std::jthread t{[idx, &enabled, &values, &valuesMx] (std::stop_token st) {
+				while (!st.stop_requested()) {
+					// request thread to become one of the enabled threads:
+					enabled.acquire();
+					// get next value from the queue:
+					char val;
+					{
+						std::lock_guard lg{valuesMx};
+						val = values.front();
+						values.pop();
+					}
+					// print the value 10 times:
+					for (int i = 0; i < 10; ++i) {
+						std::cout.put(val).flush();
+						auto dur = 130ms * ((idx % 3) + 1);
+						std::this_thread::sleep_for(dur);
+					}
+					// remove thread from the set of enabled threads:
+					enabled.release();
+					}
+				}};
+		pool.push_back(std::move(t));
+	}
+	
+	std::cout << "== wait 2 seconds (no thread enabled)\n" << std::flush;
+	std::this_thread::sleep_for(2s);
+	
+	// enable 3 concurrent threads:
+	std::cout << "== enable 3 parallel threads\n" << std::flush;
+	enabled.release(3);
+	std::this_thread::sleep_for(2s);
+	
+	// enable 2 more concurrent threads:
+	std::cout << "\n== enable 2 more parallel threads\n" << std::flush;
+	enabled.release(2);
+	std::this_thread::sleep_for(2s);
+	
+	// Normally we would run forever, but let’s end the program here:
+	std::cout << "\n== stop processing\n" << std::flush;
+	for (auto& t : pool) {
+	t.request_stop();
+	}
+}
+\end{cpp}
+
+In this program, we start 10 threads but limit how many of them are allowed to actively run and process data. To do this, we initialize a semaphore with the maximum possible number we might allow (10) and the initial number of resources allowed (zero):
+
+\begin{cpp}
+constexpr int numThreads = 10;
+std::counting_semaphore<numThreads> enabled{0};
+\end{cpp}
+
+You might wonder why we have to specify a maximum as a template parameter. The reason is that with this compile-time value, the library can decide to switch to the most efficient implementation possible (native support might be possible only up to a certain value or if the maximum is 1, we may be able to use simplifications).
+
+In each thread, we use the semaphore to ask for permission to run. We try to “acquire” one of the available resources to start the task and “release” the resource for other use when we are done:
+
+\begin{cpp}
+std::jthread{[&, idx] (std::stop_token st) {
+				while (!st.stop_requested()) {
+					// request thread to become one of the enabled threads:
+					enabled.acquire();
+					...
+					// remove thread from the set of enabled threads:
+					enabled.release();
+				}
+		}}
+\end{cpp}
+
+Initially, we are blocked, because the semaphore was initialized with zero so that no resources are available.
+
+Later, however, we use the semaphore to allow three threads to act concurrently:
+
+\begin{cpp}
+// enable 3 concurrent threads:
+enabled.release(3);
+\end{cpp}
+
+And even later, we allow two more threads to run concurrently:
+
+\begin{cpp}
+// enable 2 more concurrent threads:
+enabled.release(2);
+\end{cpp}
+
+If you want to sleep or do something else if you cannot get a resource, you can use try\_acquire():
+
+\begin{cpp}
+std::jthread{[&, idx] (std::stop_token st) {
+				while (!st.stop_requested()) {
+					// request thread to become one of the enabled threads:
+					if (enabled.try_acquire()) {
+						...
+						// remove thread from the set of enabled threads:
+						enabled.release();
+					}
+					else {
+						...
+					}
+				}
+		}}
+\end{cpp}
+
+You can also try to acquire a resource for a limited time using try\_acquire\_for() or try\_acquire\_until():
+
+\begin{cpp}
+std::jthread{[&, idx] (std::stop_token st) {
+		while (!st.stop_requested()) {
+			// request thread to become one of the enabled threads:
+			if (enabled.try_acquire_for(100ms)) {
+				...
+				// remove thread from the set of enabled threads:
+				enabled.release();
+				}
+			}
+		}}
+\end{cpp}
+
+This would allow us to double check the status of the stop token from time to time.
+
+\mySamllsection{Thread Scheduling Is Not Fair}
+
+Note that threads are not necessarily scheduled fairly. Therefore, the main thread might need some time (or even forever) to become scheduled when it wants to end the program. It is also a good approach to request all threads to stop before we call the destructors of the threads. Otherwise, we request the stops significantly later when the previous threads have finished.
+
+Another consequence of the fact that threads are not scheduled fairly is that there is no guarantee that threads that wait the longest time are preferred. Usually, the contrary is true: if a thread scheduler already has a thread running calling release() and it immediately calls acquire(), the scheduler keeps the thread running (“great, I do not need a context switch”). Therefore, we have no guarantee which one of multiple threads that wait due to calling acquire() are woken up. It might be the case that the same thread(s) is/are always used.
+
+As a consequence, you should not take the next value out of the queue before you ask for permission to run.
+
+\begin{cpp}
+// BAD if order of processing matters:
+{
+	std::lock_guard lg{valuesMx};
+	val = values.front();
+	values.pop();
+}
+enabled.acquire();
+...
+\end{cpp}
+
+It might be the case that the value val is processed after several other values read later or even never processed. Ask for permission before you read the next value:
+
+\begin{cpp}
+enabled.acquire();
+{
+	std::lock_guard lg{valuesMx};
+	val = values.front();
+	values.pop();
+}
+...
+\end{cpp}
+
+For the same reason, you cannot easily reduce the number of enabled threads. Yes, you can try to call:
+
+\begin{cpp}
+// reduce the number of enabled concurrent threads by one:
+enabled.acquire();
+\end{cpp}
+
+However, we do not know when this statement is processed. As threads are not treated fairly, the reaction to reduce the number of enabled threads may take very long or even take forever.
+
+For a fair way to deal with queues and an immediate reaction to resource limitations, you might want to use the new wait() and notify mechanism of atomics.
+
 \mySubsubsection{13.2.2}{Example of Using Binary Semaphores}
+
+For semaphores, a special type std::binary\_semaphore has been defined, which is just a shortcut for std::counting\_semaphore<1> so that it can only enable or disable the use of a single resource.
+
+You could also use it as a mutex, with the benefit that the thread releasing the resource does not have to be the same thread that formerly acquired the resource. However, a more typical application is a mechanism to signal/notify a thread from another thread. In contrast to condition variables, you can do that multiple times.
+
+Consider the following example:
+
+\filename{lib/semaphorenotify.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <semaphore>
+using namespace std::literals; // for duration literals
+
+int main()
+{
+	int sharedData;
+	std::binary_semaphore dataReady{0}; // signal there is data to process
+	std::binary_semaphore dataDone{0}; // signal processing is done
+	
+	// start threads to read and process values by value:
+	std::jthread process{[&] (std::stop_token st) {
+						while(!st.stop_requested()) {
+							// wait until the next value is ready:
+							// - timeout after 1s to check stop_token
+							if (dataReady.try_acquire_for(1s)) {
+								int data = sharedData;
+								
+								// process it:
+								std::cout << "[process] read " << data << std::endl;
+								std::this_thread::sleep_for(data * 0.5s);
+								std::cout << "[process] done" << std::endl;
+								
+								// signal processing done:
+								dataDone.release();
+							}
+							else {
+								std::cout << "[process] timeout" << std::endl;
+							}
+							}
+						}};
+		
+	// generate a couple of values:
+	for (int i = 0; i < 10; ++i) {
+		// store next value:
+		std::cout << "[main] store " << i << std::endl;
+		sharedData = i;
+		
+		// signal to start processing:
+		dataReady.release();
+		
+		// wait until processing is done:
+		dataDone.acquire();
+		std::cout << "[main] processing done\n" << std::endl;
+	}
+	// end of loop signals stop
+}
+\end{cpp}
+
+We use two binary semaphores to let one thread notify another thread:
+
+\begin{itemize}
+\item 
+With dataReady, the main thread notifies the thread process that there is new data to process in sharedData.
+
+\item 
+With dataDone, the processing thread notifies the main thread that the data was processed.
+\end{itemize}
+
+Both semaphores are initialized by zero so that by default, the acquiring thread blocks. The moment the notifying thread calls release(), the acquiring thread unblocks so that it can react.
+
+The output of the program is something like the following:
+
+\begin{shell}
+[main] store 0
+[process] read 0
+[process]      done
+[main] processing done
+
+[main] store 1
+[process] read 1
+[process]      done
+[main] processing done
+
+[main] store 2
+[process] read 2
+[process]      done
+[main] processing done
+
+[main] store 3
+[process] read 3
+[process]      done
+[main] processing done
+...
+
+[main] store 9
+[process] read 9
+[process]      done
+[main] processing done
+
+[process] timeout
+\end{shell}
+
+Note that the processing thread only acquires for a limited time using try\_acquire\_for(). The return value yields whether it was notified (access to the resource). This allows the thread to check from time to time whether a stop was signaled (as is done after the main thread ends).
+
+Another application of binary semaphores is to wait for the end of a coroutine running in a different thread.
+
+\mySamllsection{Semaphores in Detail}
+
+The class template std::counting\_semaphore<> is declared in the header file <semaphore> together with the shortcut std::binary\_semaphore for std::counting\_semaphore<1>:
+
+\begin{cpp}
+namespace std {
+	template<ptrdiff_t least_max_value = implementation-defined >
+	class counting_semaphore;
+	using binary_semaphore = counting_semaphore<1>;
+}
+\end{cpp}
+
+Table Operations of objects of class counting\_semaphore<> and binary\_semaphore lists the API of semaphores.
+
+Note that you cannot copy or move (assign) a semaphore.
+
+Note also that passing the size of a container (except std::array) as an initial value of the counter is an error. The constructor takes a std::ptrdiff\_t, which is signed, so that you get the following behavior:
+
+\begin{cpp}
+std::counting_semaphore s1{10}; // OK
+std::counting_semaphore s2{10u}; // warnings may occur
+
+std::vector<int> coll{ ... };
+...
+std::counting_semaphore s3{coll.size()}; // ERROR
+std::counting_semaphore s4 = coll.size(); // ERROR
+std::counting_semaphore s4(coll.size()); // OK (no narrowing checked)
+std::counting_semaphore s6{int(coll.size())}; // OK
+std::counting_semaphore s7{std::ssize(coll)}; // OK (see std::ssize())
+\end{cpp}
+
+The function std::ssize() was introduced in C++20.
+
+% Please add the following required packages to your document preamble:
+% \usepackage[normalem]{ulem}
+% \useunder{\uline}{\ul}{}
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Effect}                                                                     \\ \hline
+\endfirsthead
+%
+\endhead
+%
+semaphore s\{num\} & Creates a semaphore with the counter initialized with num                           \\ \hline
+s.acquire()        & Blocks unitl it can atomically decrement the counter (requesting one more resource) \\ \hline
+s.try\_acquire()          & Tries to immediately atomically decrement the counter (requesting onre more resource) and yields true if this was successful      \\ \hline
+s.try\_acquire\_for(dur)  & Tries for duration dur to atomically decrement the counter(requesting one more resource) and yields true if this was successful   \\ \hline
+s.tre\_acquire\_until(tp) & Tries unitl timepoint tp to atomically decrement the counter(requesting one more resource) and yields true if this was successful \\ \hline
+s.release()        & Atomically increments the counter (enabling one more resource)                      \\ \hline
+s.release(num)     & Atomically adds num to the counter (enabling num more resource)                     \\ \hline
+max()              & Static function that yields the maximum possible value of the counter               \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 13.3. Operations of objects of class counting\_semaphore<> and binary\_semaphore
+\end{center}
+
+
+
+
+
+
+
 

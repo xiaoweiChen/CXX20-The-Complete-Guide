@@ -1,14 +1,667 @@
 
 
-
+C++20 introduces a couple of new atomic types (dealing with references and shared pointers) and new features for atomic types. In addition, we now have a type std::atomic<char8\_t>.
 
 \mySubsubsection{13.3.1}{Atomic References with std::atomic\_ref<>}
 
+Since C++11, the C++ standard library provides the class template std::atomic<> to provide an atomic API for trivially copyable types.
+
+C++20 now introduces the class template std::atomic\_ref<> to provide an atomic API for trivially copyable reference types. This allows you to provide a temporary atomic API to an existing object that is usually not atomic. One application would be to initialize an object without caring about concurrency and later use it with different threads.
+
+The reason for giving the type a unique name atomic\_ref and not just providing std::atomic<> for reference types is that users should see that the object might provide non-atomic access and that there are weaker guarantees than for std::atomic<>.
+
+\mySamllsection{An Example Using Atomic References}
+
+The following program demonstrates how to use atomic references:
+
+\filename{lib/atomicref.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <array>
+#include <algorithm> // for std::fill_n()
+#include <vector>
+#include <format>
+#include <random>
+#include <thread>
+#include <atomic> // for std::atomic_ref<>
+using namespace std::literals; // for duration literals
+
+int main()
+{
+	// create and initialize an array of integers with the value 100:
+	std::array<int, 1000> values;
+	std::fill_n(values.begin(), values.size(), 100);
+	
+	// initialize a common stop token for all threads:
+	std::stop_source allStopSource;
+	std::stop_token allStopToken{allStopSource.get_token()};
+	
+	// start multiple threads concurrently decrementing the value:
+	std::vector<std::jthread> threads;
+	for (int i = 0; i < 9; ++i) {
+		threads.push_back(std::jthread{
+			[&values] (std::stop_token st) {
+				// initialize random engine to generate an index:
+				std::mt19937 eng{std::random_device{}()};
+				std::uniform_int_distribution distr{0, int(values.size()-1)};
+				
+				while (!st.stop_requested()) {
+					// compute the next index:
+					int idx = distr(eng);
+					
+					// enable atomic access to the value with the index:
+					std::atomic_ref val{values[idx]};
+					
+					// and use it:
+					--val;
+					if (val <= 0) {
+						std::cout << std::format("index {} is zero\n", idx);
+					}
+				}
+			},
+			allStopToken // pass the common stop token
+		});
+	}
+	
+	// after a while/event request to stop all threads:
+	std::this_thread::sleep_for(0.5s);
+	std::cout << "\nSTOP\n";
+	allStopSource.request_stop();
+	...
+}
+\end{cpp}
+
+We first create and initialize an array of 1000 integral values without using atomics:
+
+\begin{cpp}
+std::array<int, 1000> values;
+std::fill_n(values.begin(), values.size(), 100);
+\end{cpp}
+
+Later, however, we start multiple threads that concurrently decrement these values. The point is that only in that context do we use the values as atomic integers. For this, we initialize a std::atomic\_ref<>:
+
+\begin{cpp}
+std::atomic_ref val{values[idx]};
+\end{cpp}
+
+Note that due to class template argument deduction, we do not have to specify the type of the object we refer to.
+
+The effect of this initialization is that the access to the value happens atomically, when using the atomic reference:
+
+\begin{itemize}
+\item 
+--val decrements the value atomically
+
+\item 
+val <= 0 loads the value atomically to compare it with 0 (the expression uses an implicit type conversion to the underlying type after reading the value)
+\end{itemize}
+
+You might consider implementing the latter as val.load() <= 0 to document that an atomic interface is used.
+
+Note that the different threads of this program do not use the same atomic\_ref<> objects. This is fine. std::atomic\_ref<> guarantees that all concurrent access to a specific object through any atomic\_ref<> created for it is synchronized.[It is up to the implementations of the standard library how to ensure this. If a mutex or lock is necessary, a global hash table might be used, where for each address of the wrapped objects an associated lock is stored. This is no different to the way implementations may implement std::atomic<> for user-defined types.]
+
+\mySamllsection{Features of Atomic References}
+
+The header file for atomic references is also <atomic>. As for std::atomic<> specializations for raw pointers, integral types, and (since C++20) floating-point types exist:
+
+\begin{cpp}
+namespace std {
+	template<typename T> struct atomic_ref; // primary template
+	
+	template<typename T> struct atomic_ref<T*>; // partial specialization for pointers
+	
+	template<> struct atomic_ref<integralType>; // full specializations for integral types
+	
+	template<> struct atomic_ref<floatType>; // full specializations for floating-point types
+}
+\end{cpp}
+
+Atomic reference have the following restrictions compared to std::atomic<>:
+
+\begin{itemize}
+\item 
+There is no volatile support
+
+\item
+The objects to be referred to might need an alignment that is greater than the usual alignment for the underlying type. The static member std::atomic\_ref<type>::required\_alignment provides this minimum alignment.
+\end{itemize}
+
+Atomic references have the following extensions compared to std::atomic<>:
+
+\begin{itemize}
+\item 
+A copy constructor to create another reference to the same underlying object (but an assignment operator is provided only to assign the underlying values).
+
+\item 
+Constness is not propagated to the wrapped object. This means that you can assign a new value to a const std::atomic\_ref<>:
+
+\begin{cpp}
+MyType x, y;
+const std::atomic_ref cr{x};
+cr = y; // OK (would not be OK for const std::atomic<>)
+\end{cpp}
+
+\item 
+Thread synchronization support with wait(), notify\_one(), and notify\_all(), as is now provided for all atomic types.
+\end{itemize}
+
+Regarding all other aspects, the same features as for std::atomic<> are provided:
+
+\begin{itemize}
+\item 
+The type provides both a high-level API with memory barriers and a low-level API to disable them.
+
+\item 
+The static member is\_always\_lock\_free and the non-static member function is\_lock\_free() yield whether atomic support is lock-free. This might still depend on the alignment used.
+\end{itemize}
+
+\mySamllsection{Atomics References in Detail}
+
+Atomic references provide the same API as the corresponding atomic types. For a trivially copyable type, pointer type, integral type, or floating-point type T, the C++ standard library provides std::atomic\_ref<T> with the same atomic API as std::atomic<T>. The atomic reference types are also provided in the header file <atomic>.
+
+This also means that with the static member is\_always\_lock\_free() or the non-static member function is\_lock\_free(), you can check whether an atomic type uses locks internally to be atomic. If not, you have native hardware support for the atomic operations (which is a prerequisite for using atomics in signal handlers). The check for a type looks as follows:
+
+\begin{cpp}
+if constexpr(std::atomic<int>::is_always_lock_free) {
+	...
+}
+else {
+	... // special handling if locks are used
+}
+\end{cpp}
+
+The check for a specific object (whether it is lock-free might depend on the alignment) looks as follows:
+
+\begin{cpp}
+std::atomic_ref val{values[idx]};
+if (val.is_lock_free()) {
+	...
+}
+else {
+	... // special handling if locks are used
+}
+\end{cpp}
+
+Note that for a type T, std::atomic\_ref<T> might not be lock-free although type std::atomic<T> is lock-free.
+
+An object referenced by an atomic reference might also have to satisfy possibly architecture-specific constraints. For example, the object might need to be properly aligned in memory or might not be allowed to reside in GPU register memory. For the required alignment there is a static member:
+
+\begin{cpp}
+namespace std {
+	template<typename T> struct atomic_ref {
+		static constexpr size_t required_alignment;
+		...
+	};
+}
+\end{cpp}
+
+The value is at least alignof(T). However, the value might be, for example, 2*alignof(double) to support lock-free operations for std::complex<double>.
+
 \mySubsubsection{13.3.2}{Atomic Shared Pointers}
+
+C++11 introduced shared pointers with an optional atomic interface. With functions like atomic\_load(), atomic\_store(), and atomic\_exchange(), you could access the values that shared pointers refer to concurrently. However, the problem was that you could still use these shared pointers with the non-atomic interface, which would then undermine all atomic use of the shared pointers.
+
+C++20 now provides partial specializations for shared pointers and weak pointers:
+
+\begin{itemize}
+\item 
+std::atomic<std::shared\_ptr<T>{}>
+
+\item 
+std::atomic<std::weak\_ptr<T>{}>
+\end{itemize}
+
+The former atomic API for shared pointers is now deprecated.
+
+Note that atomic shared/weak pointers do not provide the additional operations that atomic raw pointers provide. They provide the same API as std::atomic<> provides in general for a trivially copyable type T.
+
+Thread synchronization support with wait(), notify()\_one(), and notify\_all() is provided. The low-level atomic interface with the option to use the parameters for memory order is also supported.
+
+\mySamllsection{Example of Using Atomic Shared Pointers}
+
+The following example demonstrates the use of an atomic shared pointer that is used as head of a linked list of shared values.
+
+\filename{lib/atomicshared.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <thread>
+#include <memory> // includes <atomic> now
+using namespace std::literals; // for duration literals
+
+template<typename T>
+class AtomicList {
+	private:
+	struct Node {
+		T val;
+		std::shared_ptr<Node> next;
+	};
+	std::atomic<std::shared_ptr<Node>> head;
+public:
+	AtomicList() = default;
+	
+	void insert(T v) {
+		auto p = std::make_shared<Node>();
+		p->val = v;
+		p->next = head;
+		while (!head.compare_exchange_weak(p->next, p)) { // atomic update
+		}
+	}
+	
+	void print() const {
+		std::cout << "HEAD";
+		for (auto p = head.load(); p; p = p->next) { // atomic read
+			std::cout << "->" << p->val;
+		}
+		std::cout << std::endl;
+	}
+};
+
+int main()
+{
+	AtomicList<std::string> alist;
+	
+	// populate list with elements from 10 threads:
+	{
+		std::vector<std::jthread> threads;
+		for (int i = 0; i < 100; ++i) {
+			threads.push_back(std::jthread{[&, i]{
+					for (auto s : {"hi", "hey", "ho", "last"}) {
+						alist.insert(std::to_string(i) + s);
+						std::this_thread::sleep_for(5ns);
+					}
+			}});
+		}
+	} // wait for all threads to finish
+	
+	alist.print(); // print resulting list
+	}
+\end{cpp}
+
+The program may have the following output:
+
+\begin{shell}
+HEAD->94last->94ho->76last->68last->57last->57ho->60last->72last-> ... ->1hey->1hi
+\end{shell}
+
+As usual with atomic operations, you could also write:
+
+\begin{cpp}
+for (auto p = head.load(); p; p = p->next)
+\end{cpp}
+
+nstead of:
+
+\begin{cpp}
+for (auto p = head.load(); p.load(); p = p->next)
+\end{cpp}
+
+\mySamllsection{Example of Using Atomic Weak Pointers}
+
+The following example demonstrates the use of an atomic weak pointer:
+
+\filename{lib/atomicweak.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <thread>
+#include <memory> // includes <atomic> now
+using namespace std::literals; // for duration literals
+
+int main()
+{
+	std::atomic<std::weak_ptr<int>> pShared; // pointer to current shared value (if one exists)
+	
+	// loop to set shared value for some time:
+	std::atomic<bool> done{false};
+	std::jthread updates{[&] {
+							for (int i = 0; i < 10; ++i) {
+								{
+									auto sp = std::make_shared<int>(i);
+									pShared.store(sp); // atomic update
+									std::this_thread::sleep_for(0.1s);
+								}
+								std::this_thread::sleep_for(0.1s);
+							}
+							done.store(true);
+					}};
+				
+	// loop to print shared value (if any):
+	while (!done.load()) {
+		if (auto sp = pShared.load().lock()) { // atomic read
+			std::cout << "shared: " << *sp << '\n';
+		}
+		else {
+			std::cout << "shared: <no data>\n";
+		}
+		std::this_thread::sleep_for(0.07s);
+	}
+}
+\end{cpp}
+
+Note that in this program, we do not have to make the shared pointer atomic because it is used by only one thread. The only issue is that two threads concurrently update or use the weak pointer.
+
+The program may have the following output:
+
+\begin{shell}
+shared: <no data>
+shared: 0
+shared: <no data>
+shared: 1
+shared: <no data>
+shared: <no data>
+shared: 2
+shared: <no data>
+shared: <no data>
+shared: 3
+shared: <no data>
+shared: 4
+shared: 4
+shared: <no data>
+shared: 5
+shared: 5
+shared: <no data>
+shared: 6
+shared: <no data>
+shared: <no data>
+shared: 7
+shared: <no data>
+shared: 8
+shared: 8
+shared: <no data>
+shared: 9
+shared: 9
+shared: <no data>
+\end{shell}
+
+As usual with atomic operations, you could also write:
+
+\begin{cpp}
+pShared = sp;
+\end{cpp}
+
+instead of:
+
+\begin{cpp}
+pShared.store(sp);
+\end{cpp}
 
 \mySubsubsection{13.3.3}{Atomic Floating-Point Types}
 
+Both std::atomic<> and std::atomic\_ref<> now provide full specializations for types float, double, and long double.
+
+In contrast to the primary template for arbitrary trivially copyable types, they provide the additional atomic operations to add and subtract a value[In contrast to specializations to integral types, which also provide atomic support to increment/decrement values and perform bit-wise modifications.]:
+
+\begin{itemize}
+\item 
+fetch\_add(), fetch\_sub()
+
+\item 
+operator+=, operator-=
+\end{itemize}
+
+Thus, the following is possible now:
+
+\begin{cpp}
+std::atomic<double> d{0};
+...
+d += 10.3; // OK since C++20
+\end{cpp}
+
 \mySubsubsection{13.3.4}{Thread Synchronization with Atomic Types}
+
+All atomic types (std::atomic<>, std::atomic\_ref<>, and std::atomic\_flag) now provide a simple API to let threads block and wait for changes of their values caused by other threads.
+
+Thus, for an atomic value:
+
+\begin{cpp}
+std::atomic<int> aVal{100};
+\end{cpp}
+
+or an atomic reference:
+
+\begin{cpp}
+int value = 100;
+std::atomic_ref<int> aVal{value};
+\end{cpp}
+
+you can define that you want to wait until the referenced value has changed:
+
+\begin{cpp}
+int lastValue = aVal.load();
+aVal.wait(lastValue); // block unless/until value changed (and notified)
+\end{cpp}
+
+If the value of the referenced object does not match the passed argument, it returns immediately. Otherwise, it blocks until notify\_one() or notify\_all() has been called for the atomic value or reference:
+
+\begin{cpp}
+--aVal; // atomically modify the (referenced) value
+aVal.notify_all(); // notify all threads waiting for a change
+\end{cpp}
+
+However, as for condition variables, wait() might end due to a spurious wake-up (so without a called notification). Therefore, you should always double check the value after the wait().
+
+The code to wait for a specific atomic value might look as follows:
+
+\begin{cpp}
+while ((int val = aVal.load()) != expectedVal) {
+	aVal.wait(val);
+	// here, aVal may or may not have changed
+}
+\end{cpp}
+
+Note that there is no guarantee that you will get all updates. Consider the following program:
+
+\filename{lib/atomicwait.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <thread>
+#include <atomic>
+using namespace std::literals;
+int main()
+{
+	std::atomic<int> aVal{0};
+	// reader:
+	std::jthread tRead{[&] {
+						int lastX = aVal.load();
+						while (lastX >= 0) {
+							aVal.wait(lastX);
+							std::cout << "=> x changed to " << lastX << std::endl;
+							lastX = aVal.load();
+						}
+						std::cout << "READER DONE" << std::endl;
+				}};
+
+	// writer:
+	std::jthread tWrite{[&] {
+						for (int newVal : { 17, 34, 3, 42, -1}) {
+							std::this_thread::sleep_for(5ns);
+							aVal = newVal;
+							aVal.notify_all();
+						}
+				}};
+	...
+}
+\end{cpp}
+
+The output might be:
+
+\begin{shell}
+=> x changed to 17
+=> x changed to 34
+=> x changed to 3
+=> x changed to 42
+=> x changed to -1
+READER DONE
+\end{shell}
+
+or:
+
+\begin{shell}
+=> x changed to 17
+=> x changed to 3
+=> x changed to -1
+READER DONE
+\end{shell}
+
+or just:
+
+\begin{shell}
+READER DONE
+\end{shell}
+
+Note that the notification functions are const member functions.
+
+\mySamllsection{Fair Ticketing with Atomic Notifications}
+
+One application of using using atomic wait() and notifications is to use them like mutexes. This often pays off because using mutexes might be significantly more expensive.
+
+Here is a example where we use atomics to implement a fair processing of values in a queue (compare with the unfair version using semaphores). Although multiple threads might wait, only a limited number of them might run. And by using a ticketing system, we ensure that the elements in the queue are processed in order:[The idea for this example is based on an example by Bryce Adelstein Lelbach in his talk The C++20 Synchronization Library at the CppCon 2029 (see \url{http://youtu.be/Zcqwb3CWqs4?t=1810}).]
+
+\filename{lib/atomicticket.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <queue>
+#include <chrono>
+#include <thread>
+#include <atomic>
+#include <semaphore>
+using namespace std::literals; // for duration literals
+int main()
+{
+	char actChar = 'a'; // character value iterating endless from ’a’ to ’z’
+	std::mutex actCharMx; // mutex to access actChar
+	// limit the availability of threads with a ticket system:
+	std::atomic<int> maxTicket{0}; // maximum requested ticket no
+	std::atomic<int> actTicket{0}; // current allowed ticket no
+	// create and start a pool of numThreads threads:
+	constexpr int numThreads = 10;
+	std::vector<std::jthread> threads;
+	for (int idx = 0; idx < numThreads; ++idx) {
+		threads.push_back(std::jthread{[&, idx] (std::stop_token st) {
+										while (!st.stop_requested()) {
+											// get next character value:
+											char val;
+											{
+												std::lock_guard lg{actCharMx};
+												val = actChar++;
+												if (actChar > 'z') actChar = 'a';
+												}
+												
+												// request a ticket to process it and wait until enabled:
+												int myTicket{++maxTicket};
+												int act = actTicket.load();
+												while (act < myTicket) {
+												actTicket.wait(act);
+												act = actTicket.load();
+												}
+												
+												// print the character value 10 times:
+												for (int i = 0; i < 10; ++i) {
+												std::cout.put(val).flush();
+												auto dur = 20ms * ((idx % 3) + 1);
+												std::this_thread::sleep_for(dur);
+												}
+												
+												// done, so enable next ticket:
+												++actTicket;
+												actTicket.notify_all();
+											}
+										}});
+	}
+	
+	// enable and disable threads in the thread pool:
+	auto adjust = [&, oldNum = 0] (int newNum) mutable {
+					actTicket += newNum - oldNum; // enable/disable tickets
+					if (newNum > 0) actTicket.notify_all(); // wake up waiting threads
+					oldNum = newNum;
+					};
+					
+	for (int num : {0, 3, 5, 2, 0, 1}) {
+		std::cout << "\n====== enable " << num << " threads" << std::endl;
+		adjust(num);
+		std::this_thread::sleep_for(2s);
+	}
+	
+	for (auto& t : threads) { // request all threads to stop (join done when leaving scope)
+		t.request_stop();
+	}
+}
+\end{cpp}
+
+Each thread asks for the next character value and then requests a ticket to process this value:
+
+\begin{cpp}
+int myTicket{++maxTicket};
+\end{cpp}
+
+The thread then waits until the ticket is enabled:
+
+\begin{cpp}
+int act = actTicket.load();
+while (act < myTicket) {
+	actTicket.wait(act);
+	act = actTicket.load();
+}
+\end{cpp}
+
+Each time the thread wakes up, it double checks whether its ticket was enabled (actTicket is at least myTicket). New tickets are enabled by increasing the value of actTicket and notifying all waiting threads.
+
+This happens either when a thread is done with a processing:
+
+\begin{cpp}
+++actTicket;
+actTicket.notify_all();
+\end{cpp}
+
+or when a new number of tickets is enabled:
+
+\begin{cpp}
+actTicket += newNum - oldNum; // enable/disable tickets
+if (newNum > 0) actTicket.notify_all(); // wake up waiting threads
+\end{cpp}
+
+The example might have the following output:
+
+\begin{shell}
+====== enable 0 threads
+
+====== enable 3 threads
+acbabacabacbaacbabacbacdbdbdcdbdcdecdeddcedegfgegfegegfgegfgegfegfhhfhfhhfhfhijhjjhijhji
+jkjkijkjkijkkliklkilkkilmmlimlmilmmlnmlmnml
+====== enable o5 threads
+pmpnoqrpropnqpronpqorppnorqppornqsrosnqrsosnrqosrsntqstustvqstuvstqtvwuwtvxwtxuvwtxwtxvu
+wyxwvyxuwvxwyxuvwyxzxvuyzabyuzbabyzubyabzybczabyzbcabdzbdcazdeedczadedecfafdefcedaefdedf
+caefgfecghfigfichfgijhcjgijhgkijjkgihjkgjihjkgij
+====== enable khg2 threads
+ijkihkhkhkkllmllmlmlllmllmnnmnnmnnmnnmnmnoopoopoopoopoopqpqqpqpqpqpqqrrqrqrrsrsrrsrsrsts
+tsts
+====== enable 0 threads
+ststttttt
+====== enable 1 threads
+uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaaaaaaabbbbbbbbbbcccccccc
+ccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhh
+\end{shell}
+
+Use synchronized output streams to ensure that the output has no interleaved characters.
 
 \mySubsubsection{13.3.5}{Extensions for std::atomic\_flag}
 
+Before C++20, there was no way to check the value of a std::atomic\_flag without setting it, so C++20 added global and member functions to check for the current value:
+
+\begin{itemize}
+\item 
+atomic\_flag\_test(const atomic\_flag*) noexcept;
+
+\item 
+atomic\_flag\_test\_explicit(const atomic\_flag*, memory\_order) noexcept;
+
+\item 
+atomic\_flag::test() const noexcept;
+
+\item 
+atomic\_flag::test(memory\_order) const noexcept;
+\end{itemize}
