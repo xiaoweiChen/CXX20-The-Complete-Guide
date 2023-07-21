@@ -1,3 +1,78 @@
 
+Coroutines have the following attributes and constraints:
+
+\begin{itemize}
+\item 
+Coroutines are not allowed to have return statements.
+
+\item 
+Coroutines cannot be constexpr or consteval.
+
+\item 
+Coroutines cannot have return type auto or other placeholder types.
+
+\item 
+main() cannot be a coroutine.
+
+\item 
+A constructor or destructor cannot be a coroutine.
+\end{itemize}
+
+A coroutine may be static. A coroutine may be a member function if it is not a constructor or destructor.
+
+A coroutine may even be a lambda. However, in that case, care must be taken.
 
 \mySubsubsection{15.1.1}{Coroutine Lambdas}
+
+A coroutine may be a lambda. We could also implement our first coroutine as follows:
+
+\begin{cpp}
+auto coro = [] (int max) -> CoroTask {
+				std::cout << "          CORO " << max << " start\n";
+				for (int val = 1; val <= max; ++val) {
+					// print next value:
+					std::cout << " CORO " << val << '/' << max << '\n';
+					co_await std::suspend_always{}; // SUSPEND
+				}
+				std::cout << "         CORO " << max << " end\n";
+};
+\end{cpp}
+
+However, note that a coroutine lambda should never capture anything. This is because a lambda is a shortcut for defining a function object that is created in the scope in which the lambda is defined. When you leave that scope, the coroutine lambda might still be resumed even though the lambda object has been destroyed.
+
+Here is an example of broken code that results in a fatal runtime error:
+
+\begin{cpp}
+auto getCoro()
+{
+	string str = "      CORO ";
+	auto coro = [str] (int max) -> CoroTask {
+				std::cout << str << max << " start\n";
+				for (int val = 1; val <= max; ++val) {
+					std::cout << str << val << '/' << max << '\n';
+					co_await std::suspend_always{}; // SUSPEND
+				}
+				std::cout << str << max << " end\n";
+			};
+	return coro;
+}
+
+auto coroTask = getCoro()(3); // initialize coroutine
+// OOPS: lambda destroyed here
+coroTask.resume(); // FATAL RUNTIME ERROR
+\end{cpp}
+
+Normally, returning a lambda that captures something by value has no lifetime issues.
+
+We could use the coroutine lambda as follows:
+
+\begin{cpp}
+auto coro = getCoro(); // initialize coroutine lambda
+auto coroTask = coro(3); // initialize coroutine
+coroTask.resume(); // OK
+\end{cpp}
+
+We could also pass str to getCoro() by reference and ensure that str lives as long as we use the coroutine.
+
+However, the fact that you cannot combine both initializations into one statement may be very surprising and more subtle lifetime issues can occur easily. Therefore, not using captures in coroutine lambdas at all is highly recommended.
+

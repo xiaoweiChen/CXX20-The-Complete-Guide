@@ -1,11 +1,709 @@
 
 
+So far, we have seen how coroutines are controlled from the outside using coroutine interfaces (wrapping coroutine handles and their promises). However, there is another configuration point that coroutines can (and have to) provide themselves: awaitables (with awaiters as special way to implement them).
 
+The terms are correlated as follows:
+
+\begin{itemize}
+\item 
+Awaitables is the term for what the operator co\_await needs as its operand. Thus, awaitables are all objects that co\_await can deal with.
+
+\item 
+Awaiter is the term for one specific (and typical) way to implement an awaitable. It has to provide three specific member functions to deal with the suspension and the resumption of a coroutine.
+\end{itemize}
+
+Awaitables are used whenever co\_await (or co\_yield) is called. They allow the provision of code that rejects the request to suspend (temporarily or on certain conditions) or execute some logic for suspensions and resumptions.
+
+You have used two awaiter types already: std::suspend\_always and std::suspend\_never.
 
 \mySubsubsection{14.4.1}{Awaiters}
 
+Awaiters can be called when a coroutine is suspended or resumed. Table Special member functions of awaiters lists the required operations that awaiters have to provide.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}       & \textbf{Effect}                                   \\ \hline
+\endfirsthead
+%
+\endhead
+%
+await\_ready()           & Yields whether suspension is (currently) disabled \\ \hline
+await\_suspend(awaitHdl) & Handle suspension                                 \\ \hline
+await\_resume()          & Handle resumption                                 \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 14.1. Special member functions of awaiters
+\end{center}
+
+The key functions are await\_suspend() and await\_resume():
+
+\begin{itemize}
+\item 
+await\_ready()
+
+This function is called for a coroutine immediately before the coroutine is suspended. It is provided to (temporarily) turn off suspension completely. If it returns true, the coroutine is not suspended at all.
+
+This function usually just returns false (“no, do not block/ignore any suspension”). To save the cost of suspension, it might conditionally yield true when a suspension makes no sense (e.g., if the suspension depends on some data being available).
+
+Note that in this function, the coroutine is not suspended yet. It should not be used to directly or indirectly call resume() or destroy() for the coroutine it is called for.
+
+\item 
+auto await\_suspend(awaitHdl)
+
+This function is called for a coroutine immediately after the coroutine is suspended.
+The parameter awaitHdl is the handle of the coroutine that was suspended. It has the type std::coroutine\_handle<PromiseType>.
+
+In this function, you can specify what to do next, including resuming the suspended or the awaiting coroutine immediately. Different return types allow you to specify this in different ways. You can also effectively skip the suspension by directly transferring control to another coroutine.
+
+You could even destroy the coroutine here. In this case, however, make sure that you do not use the coroutine anywhere else anymore (such as calling done() or destroy() in the coroutine interface).
+
+\item 
+auto await\_resume()
+
+This function is called for a coroutine when the coroutine is resumed after a successful suspension.
+
+It can return a value, which would be the value the co\_await expression yields.
+\end{itemize}
+
+Consider the following trivial awaiter:
+
+\filename{coro/awaiter.hpp}
+
+\begin{cpp}
+#include <iostream>
+
+class Awaiter {
+	public:
+	bool await_ready() const noexcept {
+		std::cout << " await_ready()\n";
+		return false; // do suspend
+	}
+	
+	void await_suspend(auto hdl) const noexcept {
+		std::cout << " await_suspend()\n";
+	}
+	
+	void await_resume() const noexcept {
+		std::cout << " await_resume()\n";
+	}
+};
+\end{cpp}
+
+In this awaiter, we trace when which function of the awaiter is called. Because await\_ready() returns false and await\_suspend() returns nothing, the awaiter accepts the suspension (without resuming something else). This is the behavior of the standard awaiter std::suspend\_always{} combined with some print statements. Other return types/values can provide different behavior.
+
+A coroutine might use this awaiter as follows (see coro/awaiter.cpp for the complete code):
+
+\begin{cpp}
+CoroTask coro(int max)
+{
+	std::cout << "   CORO start\n";
+	for (int val = 1; val <= max; ++val) {
+		std::cout << "   CORO " << val << '\n';
+		co_await Awaiter{}; // SUSPEND with our own awaiter
+	}
+	std::cout << "   CORO end\n";
+}
+\end{cpp}
+
+Assume we use the coroutine as follows:
+
+\begin{cpp}
+auto coTask = coro(2);
+std::cout << "started\n";
+
+std::cout << "loop\n";
+while (coTask.resume()) { // RESUME
+	std::cout << " suspended\n";
+}
+std::cout << "done\n";
+\end{cpp}
+
+As a result, we get the following output:
+
+\begin{shell}
+started
+loop
+  CORO start
+  CORO 1
+    await_ready()
+    await_suspend()
+  suspended
+    await_resume()
+  CORO 2
+    await_ready()
+    await_suspend()
+  suspended
+    await_resume()
+  CORO end
+done
+\end{shell}
+
+We will discuss more details of awaiters later.
+
 \mySubsubsection{14.4.2}{Standard Awaiters}
+
+The C++ standard library provides two trivial awaiters we have already used:
+
+\begin{itemize}
+\item 
+std::suspend\_always
+
+\item 
+std::suspend\_never
+\end{itemize}
+
+Their definitions are pretty straightforward:
+
+\begin{cpp}
+namespace std {
+	struct suspend_always {
+		constexpr bool await_ready() const noexcept { return false; }
+		constexpr void await_suspend(coroutine_handle<>) const noexcept { }
+		constexpr void await_resume() const noexcept { }
+	};
+	
+	struct suspend_never {
+		constexpr bool await_ready() const noexcept { return true; }
+		constexpr void await_suspend(coroutine_handle<>) const noexcept { }
+		constexpr void await_resume() const noexcept { }
+	};
+}
+\end{cpp}
+
+Both do nothing on suspension or resumption. However, their return values of await\_ready() differ:
+
+\begin{itemize}
+\item 
+If we return false in await\_ready() (and nothing in await\_suspend()), suspend\_always accepts every suspension, which means that the coroutine returns back to its caller.
+
+\item 
+If we return true in await\_ready(), suspend\_never never accepts any suspension, which means that the coroutine continues (await\_suspend() is never called).
+\end{itemize}
+
+As seen, the awaiters are typically used as basic awaiters for co\_await:
+
+\begin{cpp}
+co_await std::suspend_always{};
+\end{cpp}
+
+They are also used by returning them in initial\_suspend() and finally\_suspend() of coroutine promises.
 
 \mySubsubsection{14.4.3}{Resuming Sub-Coroutines}
 
+By making a coroutine interface an awaitable (providing the awaiter API), we allow it to handle subcoroutines in a way that their suspend points become suspend points of the main coroutine.
+
+This allows programmers to avoid having nested loops for resumption, as introduced by the example corocoro.cpp.
+
+Taking the first implementation of CoroTask, we only have to provide the following modifications:
+
+\begin{itemize}
+\item 
+The coroutine interface has to know its sub-coroutine (if there is one):
+
+\begin{cpp}
+class CoroTaskSub {
+public:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+private:
+	CoroHdl hdl; // native coroutine handle
+public:
+	struct promise_type {
+		CoroHdl subHdl = nullptr; // sub-coroutine (if there is one)
+		...
+	}
+	...
+};
+\end{cpp}
+
+\item
+The coroutine interface has to provide the API of an awaiter so that the interface can be used as an awaitable for co\_await:
+
+\begin{cpp}
+class CoroTaskSub {
+	public:
+	...
+	bool await_ready() { return false; } // do not skip suspension
+	void await_suspend(auto awaitHdl) {
+		awaitHdl.promise().subHdl = hdl; // store sub-coroutine and suspend
+	}
+	void await_resume() { }
+};
+\end{cpp}
+
+\item
+The coroutine interface has to resume the deepest sub-coroutine not done yet (if there is one):
+
+\begin{cpp}
+class CoroTaskSub {
+	public:
+	...
+	bool resume() const {
+		if (!hdl || hdl.done()) {
+			return false; // nothing (more) to process
+		}
+		// find deepest sub-coroutine not done yet:
+		CoroHdl innerHdl = hdl;
+		while (innerHdl.promise().subHdl && !innerHdl.promise().subHdl.done()) {
+			innerHdl = innerHdl.promise().subHdl;
+		}
+		innerHdl.resume(); // RESUME
+		return !hdl.done();
+	}
+	...
+};
+\end{cpp}
+\end{itemize}
+
+coro/corotasksub.hpp provides the complete code.
+
+With this, you can do the following:
+
+\filename{coro/corocorosub.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include "corotasksub.hpp" // for CoroTaskSub
+
+CoroTaskSub coro()
+{
+	std::cout << " coro(): PART1\n";
+	co_await std::suspend_always{}; // SUSPEND
+	std::cout << " coro(): PART2\n";
+}
+
+CoroTaskSub callCoro()
+{
+	std::cout << " callCoro(): CALL coro()\n";
+	co_await coro(); // call sub-coroutine
+	std::cout << " callCoro(): coro() done\n";
+	co_await std::suspend_always{}; // SUSPEND
+	std::cout << " callCoro(): END\n";
+}
+
+int main()
+{
+	auto coroTask = callCoro(); // initialize coroutine
+	std::cout << "MAIN: callCoro() initialized\n";
+	
+	while (coroTask.resume()) { // RESUME
+		std::cout << "MAIN: callCoro() suspended\n";
+	}
+	
+	std::cout << "MAIN: callCoro() done\n";
+}
+\end{cpp}
+
+Inside callCoro(), we can now call coro() by passing it to co\_await():
+
+\begin{cpp}
+CoroTaskSub callCoro()
+{
+	...
+	co_await coro(); // call sub-coroutine
+	...
+}
+\end{cpp}
+
+What happens here is the following:
+
+\begin{itemize}
+\item 
+The call of coro() initializes the coroutine and yields its coroutine interface of the type CoroTaskSub.
+
+\item 
+Because this type has an awaiter interface, the coroutine interface can be used as an awaitable for co\_await.
+
+The operator co\_await is then called with two operands:
+
+\begin{itemize}
+\item 
+The awaiting coroutine where it is called
+
+\item 
+The coroutine that is called
+\end{itemize}
+
+\item 
+The usual behavior of an awaiter is applied:
+
+\begin{itemize}
+\item 
+await\_ready() is asked whether to reject the request to await in general. The answer is “no” (false).
+
+\item 
+await\_suspend() is called with the awaiting coroutine handle as parameter.
+\end{itemize}
+
+\item 
+By storing the handle of the sub-coroutine (the object that await\_suspend() was called for) as the sub-coroutine of the passed awaiting handle, callCoro() now knows its sub-coroutine.
+
+\item 
+By returning nothing in await\_suspend(), the suspension is finally accepted, meaning that
+ 
+\begin{cpp}
+co_await coro();
+\end{cpp}
+
+suspends callCoro() and transfers control flow back to the caller main().
+ 
+\item 
+When main() then resumes callCoro(), the implementation of CoroTaskSub::resume() finds coro() as its deepest sub-coroutine and resumes it.
+ 
+\item 
+Whenever the sub-coroutine suspends, CoroTaskSub::resume() returns back to the caller.
+
+\item 
+This happens until the sub-coroutine is done. The next resumptions will then resume callCoro().
+\end{itemize}
+
+As a result, the program has the following output:
+
+\begin{shell}
+MAIN: callCoro() initialized
+  callCoro(): CALL coro()
+MAIN: callCoro() suspended
+    coro(): PART1
+MAIN: callCoro() suspended
+    coro(): PART2
+MAIN: callCoro() suspended
+  callCoro(): coro() done
+MAIN: callCoro() suspended
+  callCoro(): END
+MAIN: callCoro() done
+\end{shell}
+
+\mySamllsection{Resuming Called Sub-Coroutines Directly}
+
+Note that the previous implementation of CoroTaskSub makes the call of
+
+\begin{cpp}
+co_await coro(); // call sub-coroutine
+\end{cpp}
+
+a suspend point. We initialize coro() but before we start it, we transfer the control flow back to the caller of callCoro().
+
+You could also start coro() here directly. To do this, you need only the following modification of await\_suspend():
+
+\begin{cpp}
+auto await_suspend(auto awaitHdl) {
+	awaitHdl.promise().subHdl = hdl; // store sub-coroutine
+	return hdl; // and resume it directly
+}
+\end{cpp}
+
+If await\_suspend() returns a coroutine handle, that coroutine is resumed immediately. This changes the behavior of our program to the following output:
+
+\begin{shell}
+MAIN: callCoro() initialized
+  callCoro(): CALL coro()
+    coro(): PART1
+MAIN: callCoro() suspended
+  callCoro(): coro() done
+MAIN: callCoro() suspended
+  callCoro(): END
+MAIN: callCoro() done
+\end{shell}
+
+Returning another coroutine to resume can be used to resume any other coroutine on co\_await, which we will use later for a symmetric transfer.
+
+As you can see, the return type of await\_suspend() can vary.
+
+In any case, if await\_suspend() signals that there should be no suspension, await\_resume() will never be called.
+
 \mySubsubsection{14.4.4}{Passing Values From Suspension Back to the Coroutine}
+
+Another application of awaitables and awaiters is to allow values to be passed back to the coroutine after suspension. Consider the following coroutine:
+
+\filename{coro/coyieldback.hpp}
+
+\begin{cpp}
+#include <iostream>
+#include "corogenback.hpp" // for CoroGenBack
+
+CoroGenBack coro(int max)
+{
+	std::cout << "              CORO " << max << " start\n";
+	
+	for (int val = 1; val <= max; ++val) {
+		// print next value:
+		std::cout << " CORO " << val << '/' << max << '\n';
+		
+		// yield next value:
+		auto back = co_yield val; // SUSPEND with value with response
+		std::cout << "           CORO => " << back << "\n";
+	}
+	
+	std::cout << "             CORO " << max << " end\n";
+}
+\end{cpp}
+
+Again, the coroutine iterates up to a maximum value and on suspension, it yields the current value to the caller. However, this time, co\_yield yields a value back from the caller to the coroutine:
+
+\begin{cpp}
+auto back = co_yield val; // SUSPEND with value with response
+\end{cpp}
+
+To support that, the coroutine interface provides the usual API with some modifications:
+
+\filename{coro/corogenback.hpp}
+
+\begin{cpp}
+#include "backawaiter.hpp"
+#include <coroutine>
+#include <exception> // for terminate()
+#include <string>
+
+class [[nodiscard]] CoroGenBack {
+public:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+private:
+	CoroHdl hdl; // native coroutine handle
+	
+public:
+	struct promise_type {
+		int coroValue = 0; // value TO caller on suspension
+		std::string backValue; // value back FROM caller after suspension
+		auto yield_value(int val) { // reaction to co_yield
+			coroValue = val; // - store value locally
+			backValue.clear(); // - reinit back value
+			return BackAwaiter<CoroHdl>{}; // - use special awaiter for response
+		}
+		
+		// the usual members:
+		auto get_return_object() { return CoroHdl::from_promise(*this); }
+		auto initial_suspend() { return std::suspend_always{}; }
+		void return_void() { }
+		void unhandled_exception() { std::terminate(); }
+		auto final_suspend() noexcept { return std::suspend_always{}; }
+	};
+	
+	// constructors and destructor:
+	CoroGenBack(auto h) : hdl{h} { }
+	~CoroGenBack() { if (hdl) hdl.destroy(); }
+	
+	// no copying or moving:
+	CoroGenBack(const CoroGenBack&) = delete;
+	CoroGenBack& operator=(const CoroGenBack&) = delete;
+	
+	// API:
+	// - resume the coroutine:
+	bool resume() const {
+	if (!hdl || hdl.done()) {
+		return false; // nothing (more) to process
+	}
+	hdl.resume(); // RESUME
+	return !hdl.done();
+	}
+	
+	// - yield value from co_yield:
+	int getValue() const {
+		return hdl.promise().coroValue;
+	}
+	
+	// - set value back to the coroutine after suspension:
+	void setBackValue(const auto& val) {
+		hdl.promise().backValue = val;
+	}
+};
+\end{cpp}
+
+The modifications are:
+
+\begin{itemize}
+\item 
+promise\_type has a new member backValue.
+
+\item 
+yield\_value() returns a special awaiter of the type BackAwaiter.
+
+\item 
+The coroutine interface has a new member setBackValue(), to send a value back to the coroutine.
+\end{itemize}
+
+Let us go through the changes in detail.
+
+\mySamllsection{Promise Data Members}
+
+As usual, the promise type of the coroutine interface is the best place for data that the coroutine shares and exchanges with the caller:
+
+\begin{cpp}
+class CoroGenBack {
+	...
+	public:
+	struct promise_type {
+		int coroValue = 0; // value TO caller on suspension
+		std::string backValue; // value back FROM caller after suspension
+		...
+	};
+	...
+};
+\end{cpp}
+
+We now have two data members there:
+
+\begin{itemize}
+\item 
+coroValue for the value passed from the coroutine to the caller
+
+\item 
+backValue for the value passed back from the caller to the coroutine
+\end{itemize}
+
+\mySamllsection{A New Awaiter for co\_yield}
+
+To pass the value via the promise to the caller, we still have to implement yield\_value(). However, this time, yield\_value() does not return std::suspend\_always{}. Instead, it returns a special awaiter of the type BackAwaiter, which will be able to yield the value returned from the caller:
+
+\begin{cpp}
+class CoroGenBack {
+	...
+	public:
+	struct promise_type {
+		int coroValue = 0; // value TO caller on suspension
+		std::string backValue; // value back FROM caller after suspension
+		
+		auto yield_value(int val) { // reaction to co_yield
+			coroValue = val; // - store value locally
+			backValue.clear(); // - reinit back value
+			return BackAwaiter<CoroHdl>{}; // - use special awaiter for response
+		}
+		...
+	};
+	...
+};
+\end{cpp}
+
+The awaiter is defined as follows:
+
+\filename{coro/backawaiter.hpp}
+
+\begin{cpp}
+template<typename Hdl>
+class BackAwaiter {
+	Hdl hdl = nullptr; // coroutine handle saved from await_suspend() for await_resume()
+	public:
+	BackAwaiter() = default;
+	
+	bool await_ready() const noexcept {
+		return false; // do suspend
+	}
+	
+	void await_suspend(Hdl h) noexcept {
+		hdl = h; // save handle to get access to its promise
+	}
+	
+	auto await_resume() const noexcept {
+		return hdl.promise().backValue; // return back value stored in the promise
+	}
+};
+\end{cpp}
+
+All the awaiter does is to store the coroutine handle passed to await\_suspend() locally so that we have it when await\_resume() is called. In await\_resume(), we use this handle to yield the backValue from its promise (stored by the caller with setBackValue()).
+
+The return value of yield\_value() is used as the value of the co\_yield expression:
+
+\begin{cpp}
+auto back = co_yield val; // co_yield yields return value of yield_value()
+\end{cpp}
+
+The BackAwaiter is generic in that it could be used for all coroutine handles that have a member backValue of any arbitrary type.
+
+\mySamllsection{The Coroutine Interface for the Value Sent Back after Suspension}
+
+As usual, we have to decide about the API that the coroutine interface provides to let the caller return a response. One simple approach is to provide the member function setBackValue() for that:
+
+
+\begin{cpp}
+class CoroGenBack {
+	...
+	public:
+	struct promise_type {
+		int coroValue = 0; // value TO caller on suspension
+		std::string backValue; // value back FROM caller after suspension
+		...
+	};
+	...
+	// - set value back to the coroutine after suspension:
+	void setBackValue(const auto& val) {
+		hdl.promise().backValue = val;
+	}
+};
+\end{cpp}
+
+You could also provide an interface that yields a reference to backValue to support direct assignments to it.
+
+\mySamllsection{Using the Coroutine}
+
+The coroutine can be used as follows:
+
+\filename{coro/coyieldback.cpp}
+
+\begin{cpp}
+#include "coyieldback.hpp"
+#include <iostream>
+#include <vector>
+
+int main()
+{
+	// start coroutine:
+	auto coroGen = coro(3); // initialize coroutine
+	std::cout << "**** coro() started\n";
+	
+	// loop to resume the coroutine until it is done:
+	std::cout << "\n**** resume coro()\n";
+	while (coroGen.resume()) { // RESUME
+		// process value from co_yield:
+		auto val = coroGen.getValue();
+		std::cout << "**** coro() suspended with " << val << '\n';
+		
+		// set response (the value co_yield yields):
+		std::string back = (val % 2 != 0 ? "OK" : "ERR");
+		std::cout << "\n**** resume coro() with back value: " << back << '\n';
+		coroGen.setBackValue(back); // set value back to the coroutine
+	}
+	
+	std::cout << "**** coro() done\n";
+}
+\end{cpp}
+
+This program has the following output:
+
+\begin{shell}
+**** coro() started
+
+**** resume coro()
+         CORO 3 start
+         CORO 1/3
+**** coro() suspended with 1
+
+**** resume coro() with back value: OK
+         CORO => OK
+         CORO 2/3
+**** coro() suspended with 2
+
+**** resume coro() with back value: ERR
+         CORO => ERR
+         CORO 3/3
+**** coro() suspended with 3
+
+**** resume coro() with back value: OK
+         CORO => OK
+         CORO 3 end
+**** coro() done
+\end{shell}
+
+The coroutine interface has all the flexibility to handle things differently. For example, we could pass a response as a parameter of resume() or share the yielded value and its response in one member.
+
+
+
+
+
+
+
+
+

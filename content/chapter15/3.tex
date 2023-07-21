@@ -1,7 +1,191 @@
 
+Table Special member functions of coroutine promises lists all operations that are provided for coroutine handles in their promise type.
 
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}       & \textbf{Effect}                                          \\ \hline
+\endfirsthead
+%
+\endhead
+%
+Constructor              & Initializes the promise                                  \\ \hline
+get\_return\_object() &
+Defines the object that the coroutine returns(usually of the coroutine interface type) \\ \hline
+initial\_suspend()       & Initial supend point (to let the coroutine start lazily) \\ \hline
+yield\_value(val)        & Deals with a value from co\_yield                        \\ \hline
+unhandled\_exception()   & Reaction to an unhandled exception inside the coroutine  \\ \hline
+return\_void()           & Deals with the end or a co\_return that returns nothing  \\ \hline
+return\_value(val)       & Deals with a return value from co\_return                \\ \hline
+final\_suspend()         & Final suspend point(to let the coroutine end lazily)     \\ \hline
+await\_transform(...)    & Maps values from co\_await to awaiters                   \\ \hline
+operator new(sz)         & Defines the way the coroutine allocates memory           \\ \hline
+operator delete(ptr, sz) & Defines the way the coroutine frees memory               \\ \hline
+\begin{tabular}[c]{@{}l@{}}get\_return\_object\_on\_...\\ ...allocation\_failure()\end{tabular} &
+Defines the reaction if memory allocation failed \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 15.1. Special member functions of coroutine promises
+\end{center}
+
+Some of these functions are mandatory, some of them depend on whether the coroutine yields intermediate or final results, and some of the are optional.
 
 \mySubsubsection{15.3.1}{Mandatory Promise Operations}
+
+For coroutine promises, the following member functions are required. Without them, the code does not compile or runs into undefined behavior.
+
+\mySamllsection{Constructor}
+
+The constructor of coroutine promises is called by the coroutine framework when a coroutine is initialized.
+
+The constructor can be used by the compiler to initialize the coroutine state with some arguments. For this, the signature of the constructor has to match the arguments passed to the coroutine when it is called. This technique is especially used by coroutine traits.
+
+\mySamllsection{get\_return\_object()}
+
+get\_return\_object() is used by the coroutine frame to create the return value of the coroutine.
+
+The function usually has to return the coroutine interface, which is initialized with the coroutine handle, which is usually initialized with the static coroutine handle member function from\_promise(), which itself is initialized with the promise.
+
+For example:
+
+\begin{cpp}
+class CoroTask {
+	public:
+	// native coroutine handle and its promise type:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+	CoroHdl hdl;
+	
+	struct promise_type {
+		auto get_return_object() { // init and return the coroutine interface
+			return CoroTask{CoroHdl::from_promise(*this)};
+		}
+		...
+	}
+	...
+};
+\end{cpp}
+
+In principle, get\_return\_object() may have different return types:
+
+\begin{itemize}
+\item 
+The typical approach is that get\_return\_object() returns the coroutine interface by explicitly initializing it with the coroutine handle (as above).
+
+\item
+Instead, get\_return\_object() can also return the coroutine handle. In that case, the coroutine interface is implicitly created. This requires that the interface constructor is not explicit.
+
+It is currently not clear when exactly the coroutine interface is created in this case (see \url{http://wg21.link/cwg2563}). Therefore, the coroutine interface object might or might not exist when initial\_suspend() is called, which can create trouble if something goes wrong.
+
+Therefore, you should better avoid to use this approach.
+
+\item
+In rare cases, it might even be useful to not return anything, and specify the return type to be void. Using coroutine traits can be one example.
+\end{itemize}
+
+\mySamllsection{initial\_suspend()}
+
+initial\_suspend() defines the initial suspend point of the coroutine, which is used primarily to specify whether the coroutine should automatically suspend after its initialization (start lazily) or start immediately (start eagerly).
+
+The function is called for the promise prm of the coroutine as follows:
+
+\begin{cpp}
+co_await prm.initial_suspend();
+\end{cpp}
+
+Therefore, initial\_suspend() should return an awaiter.
+
+Usually, initial\_suspend() returns
+
+\begin{itemize}
+\item 
+std::suspend\_always\{\}, if the coroutine body is started later/lazily, or
+
+\item
+std::suspend\_never\{\}, if the coroutine body is started immediately/eagerly
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+class CoroTask {
+	public:
+	...
+	struct promise_type {
+		...
+		auto initial_suspend() { // suspend immediately
+			return std::suspend_always{}; // - yes, always
+		}
+		...
+	}
+	...
+};
+\end{cpp}
+
+However, you can also let the decision of an eager or lazy start depend on some business logic or use this function to perform some initialization for the scope of the coroutine body.
+
+\mySamllsection{final\_suspend() noexcept}
+
+final\_suspend() defines the final suspend point of the coroutine and is called like initial\_suspend() for the promise prm of the coroutine as follows:
+
+\begin{cpp}
+co_await prm.final_suspend();
+\end{cpp}
+
+This function is called by the coroutine frame outside the try block that encloses the coroutine body after return\_void(), return\_value(), or unhandled\_exception() is called. Because final\_suspend() is outside the try block, it has to be noexcept.
+
+The name of this member function is a little misleading because it gives the impression that you could also return std::suspend\_never\{\} here to force one more resumption after reaching the end of the coroutine. However, it is undefined behavior to resume a coroutine that is really suspended at the final suspend point. The only thing you can do with a coroutine suspended here is destroy it.
+
+Therefore, the real purpose of this member function is to execute some logic, such as publishing a result, signaling completion, or resuming a continuation somewhere else.
+
+Instead, the recommendation is to structure your coroutines so that they do suspend here where possible. One reason is that it makes it much easier for the compiler to determine when the lifetime of the coroutine frame is nested inside the caller of the coroutine, which makes it more likely that the compiler can elide heap memory allocation of the coroutine frame.
+
+Therefore, unless you have a good reason not to do so, final\_suspend() should always return std::suspend\_always\{\}. For example:
+
+\begin{cpp}
+class CoroTask {
+	public:
+	...
+	struct promise_type {
+		...
+		auto final_suspend() noexcept { // suspend at the end
+			...
+			return std::suspend_always{}; // - yes, always
+		}
+		...
+	}
+	...
+};
+\end{cpp}
+
+\mySamllsection{unhandled\_exception()}
+
+unhandled\_exception() defines the reaction when the coroutine body throws an exception. The function is called inside the catch clause of the coroutine frame.
+
+Possible reactions to an exception here are:
+
+\begin{itemize}
+\item 
+Ignoring the exception
+
+\item 
+Processing the exception locally
+
+\item 
+Ending or aborting the program (e.g., by calling std::terminate())
+
+\item 
+Storing the exception for later use with std::current\_exception()
+\end{itemize}
+
+The way to implement these reactions is discussed later in a separate subsection.
+
+In any case, after this function is called without ending the program, final\_suspend() is called directly and the coroutine is suspended.
+
+The coroutine is also suspended if you throw or rethrow an exception in unhandled\_exception(). Any exception thrown from unhandled\_exception() is ignored.
 
 \mySubsubsection{15.3.2}{Promise Operations to Return or Yield Values}
 

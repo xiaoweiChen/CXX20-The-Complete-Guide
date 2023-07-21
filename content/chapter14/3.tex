@@ -1,8 +1,475 @@
 
+After introducing a first example using co\_await, we should also introduce the other two keywords for coroutines:
 
+\begin{itemize}
+\item 
+co\_yield allows coroutines to yield a value each time they are suspended.
 
-
+\item 
+co\_return allows coroutines to return a value at their end.
+\end{itemize}
 
 \mySubsubsection{14.3.1}{Using co\_yield}
 
+By using co\_yield, a coroutine can yield intermediate results when it is suspended.
+
+An obvious example is a coroutine that “generates” values. As a variation of our example, we could loop over some values up to max and yield them to the caller of the coroutine instead of only printing them. For this purpose, the coroutine looks as follows:
+
+\filename{coro/coyield.hpp}
+
+\begin{cpp}
+#include <iostream>
+#include "corogen.hpp" // for CoroGen
+
+CoroGen coro(int max)
+{
+	std::cout << "            CORO " << max << " start\n";
+	
+	for (int val = 1; val <= max; ++val) {
+		// print next value:
+		std::cout << "              CORO " << val << '/' << max << '\n';
+		
+		// yield next value:
+		co_yield val; // SUSPEND with value
+	}
+	std::cout << "            CORO " << max << " end\n";
+}
+\end{cpp}
+
+By using co\_yield, the coroutine yields intermediate results. When the coroutine reaches co\_yield, it suspends the coroutine, providing the value of the expression behind co\_yield:
+
+\begin{cpp}
+co_yield val; // calls yield_value(val) on promise
+\end{cpp}
+
+The coroutine frame maps this to a call of yield\_value() for the promise of the coroutine, which can define how to handle this intermediate result. In our case, we store the value in a member of the promise, which makes it available in the coroutine interface:
+
+\begin{cpp}
+struct promise_type {
+	int coroValue = 0; // last value from co_yield
+	
+	auto yield_value(int val) { // reaction to co_yield
+	coroValue = val; // - store value locally
+	return std::suspend_always{}; // - suspend coroutine
+	}
+	...
+};
+\end{cpp}
+
+After storing the value in the promise, we return std::suspend\_always\{\}, which really suspends the coroutine. We could program different behavior here, so that the coroutine (conditionally) continues.
+
+The coroutine can be used as follows:
+
+\filename{coro/coyield.hpp}
+
+\begin{cpp}
+#include "coyield.hpp"
+#include <iostream>
+
+int main()
+{
+	// start coroutine:
+	auto coroGen = coro(3); // initialize coroutine
+	std::cout << "coro() started\n";
+	
+	// loop to resume the coroutine until it is done:
+	while (coroGen.resume()) { // RESUME
+		auto val = coroGen.getValue();
+		std::cout << "coro() suspended with " << val << '\n';
+	}
+	
+	std::cout << "coro() done\n";
+}
+\end{cpp}
+
+Again, by calling coro(3) we initialize the coroutine to count until 3. Whenever we call resume() for the returned coroutine interface, the coroutine “computes” and yields the next value.
+
+However, resume() does not return the yielded value (it still returns whether it makes sense to resume the coroutine again). To access the next value, getValue() is provided and used. Therefore, the program has the following output:
+
+\begin{shell}
+coro() started
+         CORO 3 start
+         CORO 1/3
+coro() suspended with 1
+         CORO 2/3
+coro() suspended with 2
+         CORO 3/3
+coro() suspended with 3
+         CORO 3 end
+coro() done
+\end{shell}
+
+The coroutine interface has to deal with the yielded values and provides a slightly different API for the caller. Therefore, we use a different type name: CoroGen. The name demonstrates that instead of performing a task, which we suspend from time to time, we have a coroutine that generates values with each suspension. The type CoroGen might be defined as follows:
+
+\filename{coro/corogen.hpp}
+
+\begin{cpp}
+#include <coroutine>
+#include <exception> // for terminate()
+
+class [[nodiscard]] CoroGen {
+public:
+	// initialize members for state and customization:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+private:
+	CoroHdl hdl; // native coroutine handle
+public:
+	struct promise_type {
+		int coroValue = 0; // recent value from co_yield
+		
+		auto yield_value(int val) { // reaction to co_yield
+			coroValue = val; // - store value locally
+			return std::suspend_always{}; // - suspend coroutine
+		}
+		
+		// the usual members:
+		auto get_return_object() { return CoroHdl::from_promise(*this); }
+		auto initial_suspend() { return std::suspend_always{}; }
+		void return_void() { }
+		void unhandled_exception() { std::terminate(); }
+		auto final_suspend() noexcept { return std::suspend_always{}; }
+	};
+	
+	// constructors and destructor:
+	CoroGen(auto h) : hdl{h} { }
+	~CoroGen() { if (hdl) hdl.destroy(); }
+	
+	// no copying or moving:
+	CoroGen(const CoroGen&) = delete;
+	CoroGen& operator=(const CoroGen&) = delete;
+	
+	// API:
+	// - resume the coroutine:
+	bool resume() const {
+		if (!hdl || hdl.done()) {
+			return false; // nothing (more) to process
+			}
+			hdl.resume(); // RESUME
+			return !hdl.done();
+		}
+		
+	// - yield value from co_yield:
+	int getValue() const {
+		return hdl.promise().coroValue;
+	}
+};
+\end{cpp}
+
+In general, the definition of the coroutine interface used here follows the general principles of coroutine interfaces. Two things differ:
+
+\begin{itemize}
+\item 
+The promise provides the member yield\_value(), which is called whenever co\_yield is reached.
+
+\item
+For the external API of the coroutine interface, CoroGen provides getValue(). It returns the last yielded value stored in the promise:
+
+\begin{cpp}
+class CoroGen {
+	public:
+	...
+	int getValue() const {
+		return hdl.promise().coroValue;
+	}
+};
+\end{cpp}
+\end{itemize}
+
+\mySamllsection{Iterating Over Values That a Coroutine Yields}
+
+We could also use a coroutine interface that can be used like a range (providing an API to iterate over the values that suspensions yield):
+
+\filename{coro/cororange.cpp}
+
+\begin{cpp}
+#include "cororange.hpp"
+#include <iostream>
+#include <vector>
+
+int main()
+{
+	auto gen = coro(3); // initialize coroutine
+	std::cout << "--- coro() started\n";
+	
+	// loop to resume the coroutine for the next value:
+	for (const auto& val : gen) {
+		std::cout << " val: " << val << '\n';
+	}
+	
+	std::cout << "--- coro() done\n";
+}
+\end{cpp}
+
+We only need a slightly different generator returned by the coroutine (see coro/cororange.hpp):
+
+\begin{cpp}
+Generator<int> coro(int max)
+{
+	std::cout << "CORO " << max << " start\n";
+	...
+}
+\end{cpp}
+
+As you can see, we use a generic coroutine interface for generator values of a passed type (int in this case). A very simple implementation (which shows the point but has some flaws) might look as follows:
+
+\filename{coro/generator.hpp}
+
+\begin{cpp}
+#include <coroutine>
+#include <exception> // for terminate()
+#include <cassert> // for assert()
+
+template<typename T>
+class [[nodiscard]] Generator {
+	public:
+	// customization points:
+	struct promise_type {
+		T coroValue{}; // last value from co_yield
+		
+		auto yield_value(T val) { // reaction to co_yield
+			coroValue = val; // - store value locally
+			return std::suspend_always{}; // - suspend coroutine
+		}
+		
+		auto get_return_object() {
+			return std::coroutine_handle<promise_type>::from_promise(*this);
+		}
+		auto initial_suspend() { return std::suspend_always{}; }
+		void return_void() { }
+		void unhandled_exception() { std::terminate(); }
+		auto final_suspend() noexcept { return std::suspend_always{}; }
+	};
+private:
+	std::coroutine_handle<promise_type> hdl; // native coroutine handle
+	
+public:
+	
+	// constructors and destructor:
+	Generator(auto h) : hdl{h} { }
+	~Generator() { if (hdl) hdl.destroy(); }
+	
+	// no copy or move supported:
+	Generator(const Generator&) = delete;
+	Generator& operator=(const Generator&) = delete;
+	
+	// API to resume the coroutine and access its values:
+	// - iterator interface with begin() and end()
+	struct iterator {
+		std::coroutine_handle<promise_type> hdl; // nullptr on end
+		iterator(auto p) : hdl{p} {
+		}
+		void getNext() {
+			if (hdl) {
+				hdl.resume(); // RESUME
+				if (hdl.done()) {
+					hdl = nullptr;
+				}
+			}
+		}
+		int operator*() const {
+			assert(hdl != nullptr);
+			return hdl.promise().coroValue;
+		}
+		iterator operator++() {
+			getNext(); // resume for next value
+			return *this;
+		}
+		bool operator== (const iterator& i) const = default;
+	};
+	
+	iterator begin() const {
+		if (!hdl || hdl.done()) {
+			return iterator{nullptr};
+		}
+		iterator itor{hdl}; // initialize iterator
+		itor.getNext(); // resume for first value
+		return itor;
+	}
+	
+	iterator end() const {
+		return iterator{nullptr};
+	}
+};
+\end{cpp}
+
+The key approach is that the coroutine interface provides the members begin() and end() and an iterator type iterator to iterate over the values:
+
+\begin{itemize}
+\item 
+begin() yields the iterator after resuming for the first value. The iterator stores the coroutine handle internally so that it knows its state.
+
+\item 
+operator++() of the iterator then yields the next value.
+
+\item 
+end() yields a state that represents the end of the range. Its hdl is nullptr. This is also the state an iterator gets when there is no more value.
+
+\item 
+operator==() of the iterator is default generated just comparing the state by comparing the handles of two iterators.
+\end{itemize}
+
+C++23 will probably provide such a coroutine interface in its standard library as std::generator<> with a far more sophisticated and robust API (see \url{http://wg21.link/p2502}).
+
 \mySubsubsection{14.3.2}{Using co\_return}
+
+By using co\_return, a coroutine can return a result to the caller at its end.
+
+Consider the following example:
+
+\filename{coro/coreturn.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <ranges>
+#include <coroutine> // for std::suspend_always{}
+#include "resulttask.hpp" // for ResultTask
+
+ResultTask<double> average(auto coll)
+{
+	double sum = 0;
+	for (const auto& elem : coll) {
+		std::cout << " process " << elem << '\n';
+		sum = sum + elem;
+		co_await std::suspend_always{}; // SUSPEND
+	}
+	co_return sum / std::ranges::ssize(coll); // return resulting average
+}
+
+int main()
+{
+	std::vector values{0, 8, 15, 47, 11, 42};
+	// start coroutine:
+	auto task = average(std::views::all(values));
+	
+	// loop to resume the coroutine until all values have been processed:
+	std::cout << "resume()\n";
+	while (task.resume()) { // RESUME
+		std::cout << "resume() again\n";
+	}
+	
+	// print return value of coroutine:
+	std::cout << "result: " << task.getResult() << '\n';
+}
+\end{cpp}
+
+In this program, main() starts a coroutine average(), which iterates over the elements of the passed collection and adds their values to an initial sum. After processing each element, the coroutine is suspended.
+
+At the end, the coroutine returns the average by dividing the sum by the number of elements.
+
+Note that you need co\_return to return the result of the coroutine. Using return is not allowed.
+
+The coroutine interface is defined in the class ResultTask, which is parameterized for the type of the return value. This interface provides resume() to resume the coroutine whenever it is suspended. In addition, it provides getResult() to ask for the return value of the coroutine after it is done.
+
+The coroutine interface ResultTask<> looks as follows:
+
+\filename{coro/resulttask.hpp}
+
+\begin{cpp}
+#include <coroutine>
+#include <exception> // for terminate()
+template<typename T>
+class [[nodiscard]] ResultTask {
+public:
+	// customization points:
+	struct promise_type {
+		T result{}; // value from co_return
+		
+		void return_value(const auto& value) { // reaction to co_return
+			result = value; // - store value locally
+		}
+		
+		auto get_return_object() {
+			return std::coroutine_handle<promise_type>::from_promise(*this);
+		}
+		
+		auto initial_suspend() { return std::suspend_always{}; }
+		void unhandled_exception() { std::terminate(); }
+		auto final_suspend() noexcept { return std::suspend_always{}; }
+	};
+	
+private:
+	std::coroutine_handle<promise_type> hdl; // native coroutine handle
+	
+public:
+	// constructors and destructor:
+	// - no copying or moving is supported
+	ResultTask(auto h) : hdl{h} { }
+	~ResultTask() { if (hdl) hdl.destroy(); }
+	ResultTask(const ResultTask&) = delete;
+	ResultTask& operator=(const ResultTask&) = delete;
+	
+	// API:
+	// - resume() to resume the coroutine
+	bool resume() const {
+		if (!hdl || hdl.done()) {
+			return false; // nothing (more) to process
+		}
+		hdl.resume(); // RESUME
+		return !hdl.done();
+	}
+	
+	// - getResult() to get the last value from co_yield
+	T getResult() const {
+		return hdl.promise().result;
+	}
+};
+\end{cpp}
+
+Again, the definition follows the general principles of coroutine interfaces.
+
+However, this time we have support for a return value. Therefore, in the promise type, the customization point return\_void() is no longer provided. Instead, return\_value() is provided, which is called when the coroutine reaches the co\_return expression:
+
+\begin{cpp}
+template<typename T>
+class ResultTask {
+	public:
+	struct promise_type {
+		T result{}; // value from co_return
+		void return_value(const auto& value) { // reaction to co_return
+			result = value; // - store value locally
+		}
+		...
+	};
+	...
+};
+\end{cpp}
+
+The coroutine interface then just returns this value whenever getResult() is called:
+
+\begin{cpp}
+template<typename T>
+class ResultTask {
+	public:
+	...
+	T getResult() const {
+		return hdl.promise().result;
+	}
+};
+\end{cpp}
+
+\mySamllsection{return\_void() and return\_value()}
+
+Note that it is undefined behavior if coroutines are implemented in a way that they sometimes may and sometimes may not return a value. This coroutine is not valid:
+
+\begin{cpp}
+ResultTask<int> coroUB( ... )
+{
+	if ( ... ) {
+		co_return 42;
+	}
+}
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+

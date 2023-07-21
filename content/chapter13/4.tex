@@ -4,10 +4,272 @@ C++20 provides a new mechanism for synchronizing concurrent output to streams.
 
 \mySubsubsection{13.4.1}{Motivation for Synchronized Output Streams}
 
+If multiple threads write concurrently to a stream, the output usually has to be synchronized:
+
+\begin{itemize}
+\item 
+In general, concurrent output to a stream causes undefined behavior (it is a data race, the C++ term for a race condition with undefined behavior).
+
+\item 
+Concurrent output to standard streams such as std::cout is supported, but the result is not very useful because characters from different threads might by mixed in any arbitrary order.
+\end{itemize}
+
+For example, consider the following program:
+
+\filename{lib/atomicticket.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <cmath>
+#include <thread>
+
+void squareRoots(int num)
+{
+	for (int i = 0; i < num ; ++i) {
+		std::cout << "squareroot of " << i << " is "
+		<< std::sqrt(i) << '\n';
+	}
+}
+
+int main()
+{
+	std::jthread t1(squareRoots, 5);
+	std::jthread t2(squareRoots, 5);
+	std::jthread t3(squareRoots, 5);
+}	
+\end{cpp}
+
+Three threads concurrently write to std::cout. This is valid because a standard output stream is used.
+
+However, the output may look like this:
+
+\begin{shell}
+squareroot of squareroot of 0 is 0 is 0
+0squareroot of squareroot of
+01squareroot of is is 101 is
+
+1squareroot of squareroot of
+12squareroot of is is 21 is 1.41421
+
+1.41421squareroot of squareroot of
+23squareroot of is is 31.41421 is 1.73205
+1.73205squareroot of squareroot of
+34squareroot of is is 41.73205 is 2
+
+2squareroot of
+4 is 2
+\end{shell}
+
 \mySubsubsection{13.4.2}{Using Synchronized Output Streams}
+
+By using synchronized output streams, we can now synchronize the concurrent output of multiple threads to the same stream. We only have to use a std::osyncstream initialized with the corresponding output stream. For example:
+
+\filename{lib/atomicticket.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <cmath>
+#include <thread>
+#include <syncstream>
+
+void squareRoots(int num)
+{
+	for (int i = 0; i < num ; ++i) {
+		std::osyncstream coutSync{std::cout};
+		coutSync << "squareroot of " << i << " is "
+		<< std::sqrt(i) << '\n';
+	}
+}
+
+int main()
+{
+	std::jthread t1(squareRoots, 5);
+	std::jthread t2(squareRoots, 5);
+	std::jthread t3(squareRoots, 5);
+}
+\end{cpp}
+
+Here, the synchronized output buffer synchronizes the output with other output to a synchronized output buffer so that it is flushed only, when the destructor of the synchronized output buffer is called.
+
+As a result, the output looks like this:
+
+\begin{shell}
+squareroot of 0 is 0
+squareroot of 0 is 0
+squareroot of 1 is 1
+squareroot of 0 is 0
+squareroot of 1 is 1
+squareroot of 2 is 1.41421
+squareroot of 1 is 1
+squareroot of 2 is 1.41421
+squareroot of 3 is 1.73205
+squareroot of 2 is 1.41421
+squareroot of 3 is 1.73205
+squareroot of 4 is 2
+squareroot of 3 is 1.73205
+squareroot of 4 is 2
+squareroot of 4 is 2
+\end{shell}
+
+The three threads now write line by line to std::cout. However, the exact order of the lines written is still open. You can get the same result by implementing the loop as follows:
+
+\begin{cpp}
+for (int i = 0; i < num ; ++i) {
+	std::osyncstream{std::cout} << "squareroot of " << i << " is "
+								<< std::sqrt(i) << '\n';
+}
+\end{cpp}
+
+Note that neither ’\verb|\|n’ nor std::endl nor std::flush writes the output. You really need the destructor. If we create the synchronized output stream outside the loop, the whole output of any thread is printed together when the destructor is reached.
+
+However, there is a new manipulator for writing the output before the destructor is called: std::flush\_emit. You can thus create and initialize the synchronized output stream and emit your output line by line also as follows:
+
+\begin{cpp}
+std::osyncstream coutSync{std::cout};
+for (int i = 0; i < num ; ++i) {
+	coutSync << "squareroot of " << i << " is "
+			 << std::sqrt(i) << '\n' << std::flush_emit;
+}
+\end{cpp}
 
 \mySubsubsection{13.4.3}{Using Synchronized Output Streams for Files}
 
+You can also use synchronized output stream for files. Consider the following example:
+
+\filename{lib/syncfilestream.cpp}
+
+\begin{cpp}
+#include <fstream>
+#include <cmath>
+#include <thread>
+#include <syncstream>
+
+void squareRoots(std::ostream& strm, int num)
+{
+	std::osyncstream syncStrm{strm};
+	for (int i = 0; i < num ; ++i) {
+		syncStrm << "squareroot of " << i << " is "
+				 << std::sqrt(i) << '\n' << std::flush_emit;
+	}
+}
+
+int main()
+{
+	std::ofstream fs{"tmp.out"};
+	std::jthread t1(squareRoots, std::ref(fs), 5);
+	std::jthread t2(squareRoots, std::ref(fs), 5);
+	std::jthread t3(squareRoots, std::ref(fs), 5);
+}
+\end{cpp}
+
+This program uses three concurrent threads to write line by line to the same file opened at the beginning of the program.
+
+Note that each thread uses its own synchronized output stream. However, they all have to use the same file stream. Thus, the program would not work if each thread opens the file itself.
+
 \mySubsubsection{13.4.4}{Using Synchronized Output Streams as Output Streams}
 
+A synchronized output stream is a stream. The class std::osyncstream is derived from std::ostream (to be precise: as usual for stream classes, the class std::basic\_osyncstream<> is derived from the class std::basic\_ostream<>). Therefore, you can also implement the program above as follows:
+
+\filename{lib/syncfilestream2.cpp}
+
+\begin{cpp}
+#include <fstream>
+#include <cmath>
+#include <thread>
+#include <syncstream>
+
+void squareRoots(std::ostream& strm, int num)
+{
+	for (int i = 0; i < num ; ++i) {
+		strm << "squareroot of " << i << " is "
+			 << std::sqrt(i) << '\n' << std::flush_emit;
+	}
+}
+
+int main()
+{
+	std::ofstream fs{"tmp.out"};
+	std::osyncstream syncStrm1{fs};
+	std::jthread t1(squareRoots, std::ref(syncStrm1), 5);
+	std::osyncstream syncStrm2{fs};
+	std::jthread t2(squareRoots, std::ref(syncStrm2), 5);
+	std::osyncstream syncStrm3{fs};
+	std::jthread t3(squareRoots, std::ref(syncStrm3), 5);
+}
+\end{cpp}
+
+The manipulator std::flush\_emit is defined for output streams in general and can be used here. For output streams that are not synchronized, it has no effect.
+
+Note that creating one synchronized output stream and passing it to all three threads would not work because then multiple threads would write to one stream:
+
+\begin{cpp}
+// undefined behavior (concurrent writes to the same stream):
+std::osyncstream syncStrm{fs};
+std::jthread t1(squareRoots, std::ref(syncStrm), 5);
+std::jthread t2(squareRoots, std::ref(syncStrm), 5);
+std::jthread t3(squareRoots, std::ref(syncStrm), 5);
+\end{cpp}
+
 \mySubsubsection{13.4.5}{Synchronized Output Streams in Practice}
+
+Since C++20, I use synchronized output stream a lot to “debug” multi-threaded programs with print statements. I only have to define the following:
+
+\begin{cpp}
+#include <iostream> // for std::cout
+#include <syncstream> // for std::osyncstream
+
+inline auto syncOut(std::ostream& strm = std::cout) {
+	return std::osyncstream{strm};
+}
+\end{cpp}
+
+With this definition, I simply use syncOut() instead of std::cout to ensure that concurrent output is written line by line. For example:
+
+\begin{cpp}
+void foo(std::string name) {
+	syncOut() << "calling foo(" << name
+			  << ") in thread " << std::this_thread::get:id() << '\n';
+	...
+}
+\end{cpp}
+
+We use this in this book to visualize concurrent coroutine output.
+
+To enable me to turn debugging output like this off, I sometimes do the following:
+
+\begin{cpp}
+#include <iostream>
+#include <syncstream> // for std::osyncstream
+
+constexpr bool debug = true; // switch to false to disable output
+
+inline auto coutDebug() {
+	if constexpr (debug) {
+		return std::osyncstream{std::cout};
+	}
+	else {
+		struct devnullbuf : public std::streambuf {
+			int_type overflow (int_type c) { // basic output primitive
+				return c; // - without any print statement
+			}
+		};
+		static devnullbuf devnull;
+		return std::ostream{&devnull};
+	}
+}
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
