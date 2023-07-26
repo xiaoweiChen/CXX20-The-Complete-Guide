@@ -189,6 +189,132 @@ The coroutine is also suspended if you throw or rethrow an exception in unhandle
 
 \mySubsubsection{15.3.2}{Promise Operations to Return or Yield Values}
 
+Depending on whether and how co\_yield or co\_return is used, you also need some of the following promise operations.
+
+\mySamllsection{return\_void() or return\_value()}
+
+You have to implement exactly one the two member functions provided to deal with return statements and the end of the coroutine.:
+
+\begin{itemize}
+\item 
+\textbf{return\_void()}
+
+is called if the coroutine reaches the end (either by reaching the end of its body or by reaching a co\_return statement without argument).
+
+See the first coroutine example for details.
+
+\item 
+\textbf{return\_value(Type)}
+
+is called if the coroutine reaches a co\_return statement with an argument. The passed argument has to be or must convert to the specified type.
+
+See the coroutine example with co\_return for details.
+\end{itemize}
+
+It is undefined behavior if coroutines are implemented in a way that they sometimes may and sometimes may not return a value. Consider this example:
+
+\begin{cpp}
+ResultTask<int> coroUB( ... )
+{
+	if ( ... ) {
+		co_return 42;
+	}
+}
+\end{cpp}
+
+This coroutine is not valid. Having both return\_void() and return\_value() is not permitted.[There is an ongoing discussion about whether to allow promises to have both return\_void() and return\_value() in a future C++ standard.]
+
+Unfortunately, if you provide a return\_value(int) member function only, this code might even compile and run and compilers might not even warn about it. This will hopefully change soon.
+
+Note that you can overload return\_value() for different types (except void) or make it generic:
+
+\begin{cpp}
+struct promise_type {
+	...
+	void return_value(int val) { // reaction to co_yield for int
+		... // - process returned int
+	}
+	void return_value(std::string val) { // reaction to co_yield for string
+		... // - process returned string
+	}
+};
+\end{cpp}
+
+In that case, a coroutine can co\_return values of different types.
+
+\begin{cpp}
+CoroGen coro()
+{
+	int value = 0;
+	...
+	if ( ... ) {
+		co_return "ERROR: can't compute value";
+	}
+	...
+	co_return value;
+}
+\end{cpp}
+
+\mySamllsection{yield\_value(Type)}
+
+yield\_value(Type) is called if the coroutine reaches a co\_yield statement.
+
+For basic details, see the coroutine example with co\_yield.
+
+You can overload yield\_value() for different types or make it generic:
+
+\begin{cpp}
+struct promise_type {
+	...
+	auto yield_value(int val) { // reaction to co_yield for int
+		... // - process yielded int
+		return std::suspend_always{}; // - suspend coroutine
+	}
+	auto yield_value(std::string val) { // reaction to co_yield for string
+		... // - process yielded string
+		return std::suspend_always{}; // - suspend coroutine
+	}
+};
+\end{cpp}
+
+In that case, a coroutine can co\_yield values of different types:
+
+\begin{cpp}
+CoroGen coro()
+{
+	while ( ... ) {
+		if ( ... ) {
+			co_yield "ERROR: can't compute value";
+		}
+		int value = 0;
+		...
+		co_yield value;
+	}
+}
+\end{cpp}
+
 \mySubsubsection{15.3.3}{Optional Promise Operations}
+
+Promises can also be used to define some optional operations that define special behavior of coroutines, where normally some default behavior is used.
+
+\mySamllsection{await\_transform()}
+
+await\_transform() can be defined to map values from co\_await to awaiters.
+
+\mySamllsection{operator new() and operator delete()}
+
+operator new() and operator delete() allow programmers to define a different way memory is allocated for the coroutine state.
+
+These functions may also be used to ensure that coroutines do not accidentally use heap memory.
+
+\mySamllsection{get\_return\_object\_on\_allocation\_failure()}
+
+get\_return\_object\_on\_allocation\_failure() allows programmers to define how to react to exceptionless failures of memory allocation for coroutines.
+
+
+
+
+
+
 
 

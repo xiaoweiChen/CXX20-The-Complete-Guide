@@ -1,4 +1,120 @@
 
+The type std::coroutine\_handle<> is the generic type for coroutine handles. It can be used to refer to an executing or suspended coroutine. Its template parameter is the promise type of the coroutine, which can be used to place additional data members and behavior.
 
+Table API of std::coroutine\_handle<> lists all operations that are provided for coroutine handles.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}                                                                     & \textbf{Effect}                                                                        \\ \hline
+\endfirsthead
+%
+\endhead
+%
+coroutine\_handle\textless{}PrmT\textgreater{}::from\_promise(prm)                     & Creates a handle with the promise prm                                                  \\ \hline
+CoroHandleType\{\}                                                                     & Creates a handle to no coroutine                                                       \\ \hline
+CoroHandleType\{nullptr\}                                                              & Creates a handle to no coroutine                                                       \\ \hline
+CoroHandleType\{hdl\}                                                                  & Copies the handle hdl(both refer to the same coroutine)                                \\ \hline
+hdl = hdl2                                                                             & Assigns the handle hdl2(both refer to the same coroutine)                              \\ \hline
+if (hdl)                                                                               & Yields whether the handle refers to a couroutine                                       \\ \hline
+==, !=                                                                                 & Checks whether two handles refer to the same coroutine                                 \\ \hline
+\textless{}, \textless{}=, \textgreater{}, \textgreater{}=, \textless{}=\textgreater{} & Creates an order between coroutine handles                                             \\ \hline
+hdl.resume()                                                                           & Resumes the coroutine                                                                  \\ \hline
+hdl()                                                                                  & Resumes the coroutine                                                                  \\ \hline
+hdl.done()                                                                             & Yields whether a suspended coroutine is at its end and resume() is not allowed anymore \\ \hline
+hdl.destroy()                                                                          & Destroys the coroutine                                                                 \\ \hline
+hdl.promise()                                                                          & Yields the promise of the coroutine                                                    \\ \hline
+hdl.address()                                                                          & Yields the internal address to the coroutine data                                      \\ \hline
+coroutine\_handle\textless{}PrmT\textgreater{}::from\_address(addr)                    & Yields the handle for the address addr                                                 \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 15.2. API of std::coroutine\_handle<>
+\end{center}
+
+The static member function from\_promise() provides the way to initialize a coroutine handle with a coroutine. The function simply stores the address of the promise in the handle. If we have a promise prm this looks as follows:
+
+\begin{cpp}
+auto hdl = std::coroutine_handle<decltype(prm)>::from_promise(prm);
+\end{cpp}
+
+from\_promise() is usually called in get\_return\_object() for a promise created by the coroutine framework:
+
+\begin{cpp}
+class CoroIf {
+	public:
+	struct promise_type {
+		auto get_return_object() { // init and return the coroutine interface
+			return CoroIf{std::coroutine_handle<promise_type>::from_promise(*this)};
+		}
+		...
+	};
+...
+};
+\end{cpp}
+
+When the handle is default initialized or nullptr is used as the initial or assigned value, the coroutine handle does not refer to any coroutine. In that case, any conversion to a Boolean value yields false:
+
+\begin{cpp}
+std::coroutine_handle<PrmType> hdl = nullptr;
+
+if (hdl) ... // false
+\end{cpp}
+
+Copying and assigning a coroutine handle is cheap. They just copy and assign the internal pointer. Therefore, coroutine handles are usually passed by value. This also means that multiple coroutine handles can refer to the same coroutine. As a programmer, you have to ensure that a handle never calls resume() or destroy() if another coroutine handle resumed or destroyed the coroutine.
+
+The address() interface yields the internal pointer of the coroutine as void*. This allows programmers to export the coroutine handle to somewhere and later recreates a handle with the static function from\_address():
+
+\begin{cpp}
+om_address():
+auto hdl = std::coroutine_handle<decltype(prm)>::from_promise(prm);
+...
+void* hdlPtr = hdl.address();
+...
+auto hdl2 = std::coroutine_handle<decltype(prm)>::from_address(hdlPtr);
+hdl == hdl2 // true
+\end{cpp}
+
+However, note that you can use the address only as long as the coroutine exists. After a coroutine has been destroyed, the address may be reused by another coroutine handle.
 
 \mySubsubsection{15.4.1}{std::coroutine\_handle<void>}
+
+All coroutine handle types have an implicit type conversion to class std::coroutine<void> (you can skip void in this declaration)
+
+[The original C++ standard specifies that all coroutine handle types derive from std::coroutine<void>. However, that was changed with \url{http://wg21.link/lwg3460}. Thanks to Yung-Hsiang Huang for pointing this out.]
+
+\begin{cpp}
+namespace std {
+	template<typename Promise>
+	struct coroutine_handle {
+		...
+		// implicit conversion to coroutine_handle<void>:
+		constexpr operator coroutine_handle<>() const noexcept;
+		...
+	};
+}
+\end{cpp}
+
+Thus, if you do not need the promise, you can always use the type std::coroutine\_handle<void> or the type std::coroutine\_handle<> without any template argument. Note that std::coroutine\_handle<> does not provide the promise() member function:
+
+\begin{cpp}
+void callResume(std::coroutine_handle<> h)
+{
+	h.resume(); // OK
+	h.promise(); // ERROR: no member promise() provided for h
+}
+
+auto hdl = std::coroutine_handle<decltype(prm)>::from_promise(prm);
+...
+callResume(hdl); // OK: hdl converts to std::coroutine_handle<void>
+\end{cpp}
+
+
+
+
+
+
+
+

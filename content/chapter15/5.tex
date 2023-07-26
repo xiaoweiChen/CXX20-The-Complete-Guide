@@ -1,0 +1,125 @@
+When an exception is thrown inside a coroutine and this exception is not locally handled, unhandled_exception() is called in a catch clause behind the coroutine body (see Figure 15.1). It is also called in the case of exceptions from initial_suspend(), yield_value(), return_void(), return_value(), or any awaitable used within the coroutine.
+
+You have the following options for dealing with these exceptions:
+
+\begin{itemize}
+\item 
+Ignoring the exception
+
+In this case, unhandled\_exception() just has an empty body:
+
+\begin{cpp}
+void unhandled_exception() {
+}
+\end{cpp}
+
+\item 
+Processing the exception locally 
+
+In this case, unhandled\_exception() just deals with the exception. Because you are inside a catch clause, you have to rethrow the exception and deal with it locally:
+
+\begin{cpp}
+void unhandled_exception() {
+	try {
+		throw; // rethrow caught exception
+	}
+	catch (const std::exception& e) {
+		std::cerr << "EXCEPTION: " << e.what() << std::endl;
+	}
+	catch (...) {
+		std::cerr << "UNKNOWN EXCEPTION" << std::endl;
+	}
+}
+\end{cpp}
+
+\item 
+Ending or aborting the program (e.g., by calling std::terminate()):
+
+\begin{cpp}
+void unhandled_exception() {
+	...
+	std::terminate();
+}
+\end{cpp}
+
+\item 
+Storing the exception for later use with std::current\_exception() 
+
+In this case, you need an exception pointer in the promise type, which is then set:
+
+\begin{cpp}
+struct promise_type {
+	std::exception_ptr ePtr;
+	...
+	void unhandled_exception() {
+		ePtr = std::current_exception();
+	}
+};
+\end{cpp}
+
+You also have to provide a way to process the exceptions in the coroutine interface. For example:
+
+\begin{cpp}
+class [[nodiscard]] CoroTask {
+	...
+	bool resume() const {
+		if (!hdl || hdl.done()) {
+			return false;
+		}
+		hdl.promise().ePtr = nullptr; // no exception yet
+		hdl.resume(); // RESUME
+		if (hdl.promise().ePtr) { // RETHROW any exception from the coroutine
+			std::rethrow_exception(hdl.promise().ePtr);
+		}
+		return !hdl.done();
+	}
+};
+\end{cpp}
+\end{itemize}
+
+Of course, combinations of these approaches are possible.
+
+Note that after unhandled\_exception() is called without ending the program, the coroutine is at its end. final\_suspend() is called directly and the coroutine is suspended.
+
+The coroutine is also suspended if you throw or rethrow an exception in unhandled\_exception(). Any exception thrown from unhandled\_exception() is ignored.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
