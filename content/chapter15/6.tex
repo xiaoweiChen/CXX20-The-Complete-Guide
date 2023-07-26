@@ -1,10 +1,312 @@
 
 
-
+Coroutines need memory for their state. Because coroutines might switch contexts, heap memory is usually used. How this is done and how to change it is discussed in this section.
 
 
 \mySubsubsection{15.6.1}{How Coroutines Allocate Memory}
 
+Coroutines need memory to store their state from suspensions to resumptions. However, because the resumptions may take place in very different contexts, in general, the memory can only be allocated on the heap. And in fact, the C++ standard states:
+
+\begin{quote}
+An implementation may need to allocate additional storage for a coroutine. This storage is known as the coroutine state and is obtained by calling a non-array allocation function.
+\end{quote}
+
+The important word is “may” here. Compilers are allowed to optimize away the need for heap memory. Of course, the compilers need enough information and the code has to be pretty simple. In fact, optimization is most likely if
+
+\begin{itemize}
+\item 
+The lifetime of the coroutine remains within the lifetime of the caller.
+
+\item 
+Inline functions are used so that the compiler can at least see everything to compute the size of the frame.
+
+\item 
+final\_suspend() returns std::suspend\_always{} because otherwise, the lifetime management becomes too complicated.
+\end{itemize}
+
+However, at the time of writing this chapter (March 2022), only the Clang compiler was providing a corresponding allocation elision for coroutines.[Visual C++ was providing an optimization with the option \texttt{/await:heapelide}, but for the moment, it seems to be turned off.]
+
+Consider, for example, the following coroutines:
+
+\begin{cpp}
+CoroTask coro(int max)
+{
+	for (int val = 1; val <= max; ++val) {
+		std::cout << "coro(" << max << "): " << val << '\n';
+		co_await std::suspend_always{};
+	}
+}
+
+CoroTask coroStr(int max, std::string s)
+{
+	for (int val = 1; val <= max; ++val) {
+		std::cout << "coroStr(" << max << ", " << s << "): " << '\n';
+		co_await std::suspend_always{};
+	}
+}
+\end{cpp}
+
+They differ in an additional string parameter for the second coroutine. Assume that we just pass some temporary objects to each parameter:
+
+\begin{cpp}
+coro(3); // create and destroy temporary coroutine
+coroStr(3, "hello"); // create and destroy temporary coroutine
+\end{cpp}
+
+If we have no optimization and track allocations, we might get something like the following output:
+
+\begin{shell}
+::new #1 (36 Bytes) => 0x8002ccb8
+::delete (no size) at 0x8002ccb8
+
+::new #2 (60 Bytes) => 0x8004cd28
+::delete (no size) at 0x8004cd28
+\end{shell}
+
+Here, the second coroutine needs 24 more bytes for the additional string parameter.
+
+See coro/coromem.cpp for a complete example using coro/tracknew.hpp to see when heap memory is allocated or freed.
+
 \mySubsubsection{15.6.2}{Avoiding Heap Memory Allocation}
 
+The promise type of a coroutine allow programmers to change the way memory is allocated for a coroutine. You simply have to provide the following members:
+
+\begin{itemize}
+\item 
+\texttt{void* operator new(std::size\_t sz)}
+
+\item 
+\texttt{void operator delete(void* ptr, std::size\_t sz)}
+\end{itemize}
+
+\mySamllsection{Ensure That no Heap Memory is Used}
+
+At first, the operators new() and delete() can be used to find out whether the coroutine allocated memory on the heap. Simply declare operator new without implementing it:
+
+\begin{cpp}
+class CoroTask {
+	...
+	public:
+	struct promise_type {
+		...
+		// find out whether heap memory is allocated:
+		void* operator new(std::size_t sz); // declared, but not implemented
+	};
+	...
+};
+\end{cpp}
+
+
+\mySamllsection{Let Coroutines use no Heap Memory}
+
+Another use of these operators is to change the way the coroutine allocates memory. For example, you can map the calls for heap memory to some memory already allocated on the stack or in the data segment of the program.
+
+Here is a concrete example of what this might look like:
+
+\filename{coro/corotaskpmr.hpp}
+
+\begin{cpp}
+#include <coroutine>
+#include <exception> // for terminate()
+#include <cstddef> // for std::byte
+#include <array>
+#include <memory_resource>
+
+// coroutine interface to deal with a simple task
+// - providing resume() to resume it
+class [[nodiscard]] CoroTaskPmr {
+	// provide 200k bytes as memory for all coroutines:
+	inline static std::array<std::byte, 200'000> buf;
+	inline static std::pmr::monotonic_buffer_resource
+		monobuf{buf.data(), buf.size(), std::pmr::null_memory_resource()};
+	inline static std::pmr::synchronized_pool_resource mempool{&monobuf};
+
+public:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+private:
+	CoroHdl hdl; // native coroutine handle
+	
+public:
+	struct promise_type {
+		auto get_return_object() { // init and return the coroutine interface
+			return CoroTaskPmr{CoroHdl::from_promise(*this)};
+		}
+		auto initial_suspend() { // initial suspend point
+			return std::suspend_always{}; // - suspend immediately
+		}
+		void unhandled_exception() { // deal with exceptions
+			std::terminate(); // - terminate the program
+		}
+		void return_void() { // deal with the end or co_return;
+		}
+		auto final_suspend() noexcept { // final suspend point
+			return std::suspend_always{}; // - suspend immediately
+		}
+		
+		// define the way memory is allocated:
+		void* operator new(std::size_t sz) {
+			return mempool.allocate(sz);
+		}
+		void operator delete(void* ptr, std::size_t sz) {
+			mempool.deallocate(ptr, sz);
+		}
+	};
+	// constructor and destructor:
+	CoroTaskPmr(auto h) : hdl{h} { }
+	~CoroTaskPmr() { if (hdl) hdl.destroy(); }
+	
+	// don’t copy or move:
+	CoroTaskPmr(const CoroTaskPmr&) = delete;
+	CoroTaskPmr& operator=(const CoroTaskPmr&) = delete;
+	
+	// API to resume the coroutine
+	// - returns whether there is still something to process
+	bool resume() const {
+		if (!hdl || hdl.done()) {
+			return false; // nothing (more) to process
+		}
+		hdl.resume(); // RESUME (blocks until suspended again or end)
+		return !hdl.done();
+	}
+};
+\end{cpp}
+
+Here, we use Polymorphic Memory Resources, a feature introduced with C++17 that simplifies memory management by providing standardized memory pools. In this case, we pass a data segment of 200 kilobytes to the memory pool monobuf. Using the null\_memory\_resource() as fallback ensures that a std::bad\_alloc exception is thrown if this memory is not enough. On top, we place the synchronized memory pool mempool, which manages this buffer with little fragmentation: [See my book 《C++17 - The Complete Guide for details》.]
+
+\begin{cpp}
+class [[nodiscard]] CoroTaskPmr {
+	// provide 200k bytes as memory for all coroutines:
+	inline static std::array<std::byte, 200’000> buf;
+	inline static std::pmr::monotonic_buffer_resource
+		monobuf{buf.data(), buf.size(), std::pmr::null_memory_resource()};
+	inline static std::pmr::synchronized_pool_resource mempool{&monobuf};
+	...
+public:
+	struct promise_type {
+		...
+			// define the way memory is allocated:
+		void* operator new(std::size_t sz) {
+			return mempool.allocate(sz);
+		}
+		void operator delete(void* ptr, std::size_t sz) {
+			mempool.deallocate(ptr, sz);
+		}
+	};
+	...
+};
+\end{cpp}
+
+We can use this coroutine interface as usual:
+
+\filename{coro/coromempmr.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include "corotaskpmr.hpp"
+#include "tracknew.hpp"
+
+CoroTaskPmr coro(int max)
+{
+	for (int val = 1; val <= max; ++val) {
+		std::cout << "    coro(" << max << "): " << val << '\n';
+		co_await std::suspend_always{};
+	}
+}
+
+CoroTaskPmr coroStr(int max, std::string s)
+{
+	for (int val = 1; val <= max; ++val) {
+		std::cout << "    coroStr(" << max << ", " << s << "): " << '\n';
+		co_await std::suspend_always{};
+	}
+}
+
+int main()
+{
+	TrackNew::trace();
+	TrackNew::reset();
+	coro(3); // initialize temporary coroutine
+	coroStr(3, "hello"); // initialize temporary coroutine
+	
+	auto coroTask = coro(3); // initialize coroutine
+	std::cout << "coro() started\n";
+	while (coroTask.resume()) { // RESUME
+		std::cout << "coro() suspended\n";
+	}
+	std::cout << "coro() done\n";
+}
+\end{cpp}
+
+No more heap memory is allocated for these coroutines.
+
+Note that you can also provide a specific operator new that takes the coroutine parameters after the size parameter. For example, for the coroutine that takes an int and a string, we could provide:
+
+\begin{cpp}
+class CoroTaskPmr {
+	public:
+	struct promise_type {
+		...
+		void* operator new(std::size_t sz, int, const std::string&) {
+			return mempool.allocate(sz);
+		}
+	};
+	...
+};
+\end{cpp}
+
 \mySubsubsection{15.6.3}{get\_return\_object\_on\_allocation\_failure()}
+
+If the promise has a static member get\_return\_object\_on\_allocation\_failure(), it is assumed that memory allocation never throws. By default, this has the effect that
+
+\begin{cpp}
+::operator new(std::size_t sz, std::nothrow_t)
+\end{cpp}
+
+is called. In that case, the user-defined operator new must be noexcept and return nullptr on failure.
+
+The function can then be used to implement workarounds, such as creating a coroutine handle that does not refer to a coroutine:
+
+\begin{cpp}
+class CoroTask {
+	...
+	public:
+	struct promise_type {
+		...
+		static auto get_return_object_on_allocation_failure() {
+			return CoroTask{nullptr};
+		}
+	};
+	...
+};
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,9 +1,136 @@
 
-
-
+Now that we have introducing awaiters let us discuss them in detail and look up further examples.
 
 \mySubsubsection{15.7.1}{Details of the Awaiter Interface}
 
+Table Special member functions of awaiters once again lists the key operations that awaiters have to provide.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}                & \textbf{Effect}                                           \\ \hline
+\endfirsthead
+%
+\endhead
+%
+Constructor              & Initializes the awaiter                          \\ \hline
+await\_ready()           & Yields whether suspension is(currently) disabled \\ \hline
+await\_suspend(awaitHdl) & Handle suspension                                \\ \hline
+await\_resume()          & Handle resumption                                \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 15.3. Special member functions of awaiters
+\end{center}
+
+Let us look at this awaiter interface in detail:
+
+\begin{itemize}
+\item 
+\textit{Constructor}
+
+The constructor allows coroutines (or wherever the awaiter is created) to pass arguments to the awaiter. These parameters can be used to impact or change the way the awaiter handles suspensions and resumptions. An awaiter for priority requests of a coroutine is one example.
+
+\item 
+\textbf{bool await\_ready()}
+
+is called right before the coroutine that this function is called for is suspended.
+
+It can be used to (temporarily) turn off suspension completely. If it returns true, we are “ready” to immediately return from the request to suspend and continue with the coroutine without suspending it.
+
+Usually, this function just returns false (“no, do not avoid/block any suspension”). However, it might conditionally yield true (e.g., if the suspension depends on some data being available).
+
+With its return type, await\_suspend() can also signal not to accept a suspension of the coroutine (note that true and false have the opposite meaning there: by returning true in await\_suspend(), the suspension is accepted). Not accepting a suspension with await\_ready() has the benefit that the program saves the costs of initiating the suspension of the coroutine at all.
+
+Note that inside this function, the coroutine it is called for is not suspended yet. Do not (indirectly) call resume() or destroy() here. You can even call more complex business logic here as long as you can ensure that logic does not call resume() or destroy() for the coroutine that is suspended here.
+
+\item
+\textbf{auto await\_suspend(awaitHdl)}
+
+is called right after the coroutine this function is called for is suspended. awaitHdl is the coroutine where the suspension is requested (with co\_await). It has the type of the awaiting coroutine handle, std::coroutine\_handle<PromiseType>.
+
+Here, you could specify what to do next, including resuming the suspended coroutine or the awaiting coroutine immediately and scheduling the other for later resumption. To support this, special return types may be used (this is discussed below).
+
+You could even destroy the coroutine here. However, in that case you have to ensure that the coroutine is not used anywhere else (such as calling done() in a coroutine interface).
+
+\item 
+\textbf{auto await\_resume()}
+
+is called when the coroutine this function is called for is resumed after a successful suspension (i.e., if resume() is called for the coroutine handle).
+
+The return type of await\_resume() is the type of the value that the co\_await or co\_yield expression that caused the suspension yields. If it is not void, the context of the coroutine can return a value back to the resumed coroutine.
+\end{itemize}
+
+await\_suspend() is the key function here. Its parameters and return values can vary as follows:
+
+\begin{itemize}
+\item 
+The parameter of await\_suspend() could be:
+
+\begin{itemize}
+\item 
+Using the type of the coroutine handle:
+\begin{cpp}
+std::coroutine_handle<PrmType>
+\end{cpp}
+
+\item 
+Using a basic type usable for all coroutine handles:
+\begin{cpp}
+std::coroutine_handle<void> (or just std::coroutine_handle<>)
+\end{cpp}
+
+In that case, you do not have access to the promise.
+
+\item 
+Using auto to let the compiler find out the type.
+\end{itemize}
+
+\item 
+The return type of await\_suspend() could be:
+\begin{itemize}
+\item 
+void to continue with the suspension after performing the statements in await\_suspend() and return back to the caller of the coroutine.
+
+\item 
+bool to signal whether the suspension should really happen. Here, false means “do not suspend (anymore)” (which is the opposite of the Boolean return values of await\_ready()).
+
+\item 
+std::coroutine\_handle<> to resume another coroutine instead.
+
+This use of await\_suspend() is called symmetric transfer and is described later in detail.
+
+In this case, a noop coroutine can be used to signal not to resume any coroutine at all (in the same way as if the function were to return false).
+\end{itemize}
+\end{itemize}
+
+In addition, note the following:
+
+\begin{itemize}
+\item 
+The member functions are usually const, except when the awaiter has a member that is modified (such as storing the coroutine handle in await\_suspend() to have it available on resumption).
+
+\item 
+The member functions are usually noexcept (this is necessary to allow use in final\_suspend()).
+
+\item 
+The member functions can be constexpr.
+\end{itemize}
+
 \mySubsubsection{15.7.2}{Letting co\_await Update Running Coroutines}
 
+
+
+
+
+
 \mySubsubsection{15.7.3}{Symmetric Transfer with Awaiters for Continuation}
+
+
+
+
+
+
+

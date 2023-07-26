@@ -1,4 +1,4 @@
-When an exception is thrown inside a coroutine and this exception is not locally handled, unhandled_exception() is called in a catch clause behind the coroutine body (see Figure 15.1). It is also called in the case of exceptions from initial_suspend(), yield_value(), return_void(), return_value(), or any awaitable used within the coroutine.
+When an exception is thrown inside a coroutine and this exception is not locally handled, unhandled\_exception() is called in a catch clause behind the coroutine body (see Figure 15.1). It is also called in the case of exceptions from initial\_suspend(), yield\_value(), return\_void(), return\_value(), or any awaitable used within the coroutine.
 
 You have the following options for dealing with these exceptions:
 
