@@ -121,12 +121,270 @@ The member functions can be constexpr.
 
 \mySubsubsection{15.7.2}{Letting co\_await Update Running Coroutines}
 
+Because awaiters can execute code on suspension, you can use them to change the behavior of a system that deals with coroutines. Let us look at an example where we let the coroutine change its priority.
 
+Assume that we manage all coroutines in a scheduler and allow them to change their priorities with co\_await. For that, we would first define a default priority and some arguments for co\_await to change the priority:
 
+\begin{cpp}
+int CoroPrioDefVal = 10;
+enum class CoroPrioRequest {same, less, more, def};
+\end{cpp}
 
+With this, a coroutine might look as follows:
 
+\filename{coro/coroprio.hpp}
+
+\begin{cpp}
+#include "coropriosched.hpp"
+#include <iostream>
+CoroPrioTask coro(int max)
+{
+	std::cout << " coro(" << max << ")\n";
+	for (int val = 1; val <= max; ++val) {
+		std::cout << " coro(" << max << "): " << val << '\n';
+		co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
+	}
+	std::cout << " end coro(" << max << ")\n";
+}
+\end{cpp}
+
+By using the special coroutine interface CoroPrioTask, the coroutine can use a special awaiter of the type CoroPrio, which allows the coroutine to pass a request for a priority change. On suspension, you can use it for the request to change the current priority:
+
+\begin{cpp}
+co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
+\end{cpp}
+
+For that, the main program creates a scheduler and calls start() to pass each coroutine to the scheduler:
+
+\filename{coro/coroprio.cpp}
+
+\begin{cpp}
+#include "coroprio.hpp"
+#include <iostream>
+
+int main()
+{
+	std::cout << "start main()\n";
+	CoroPrioScheduler sched;
+	
+	std::cout << "schedule coroutines\n";
+	sched.start(coro(5));
+	sched.start(coro(1));
+	sched.start(coro(4));
+	
+	std::cout << "loop until all are processed\n";
+	while (sched.resumeNext()) {
+	}
+	std::cout << "end main()\n";
+}
+\end{cpp}
+
+The classes CoroPrioScheduler and CoroPrioTask interact as follows:
+
+\begin{itemize}
+\item 
+The scheduler stores all coroutines in the order of their priority and provides members to store a new coroutine, resume the next coroutine, and change the priority of a coroutine:
+
+\begin{cpp}
+class CoroPrioScheduler
+{
+	std::multimap<int, CoroPrioTask> tasks; // all tasks sorted by priority
+	...
+	public:
+	void start(CoroPrioTask&& task);
+	bool resumeNext();
+	bool changePrio(CoroPrioTask::CoroHdl hdl, CoroPrioRequest pr);
+};
+\end{cpp}
+
+\item 
+The member function start() of the scheduler stores the passed coroutine in the list and also stores the scheduler in the promise of each task:
+
+\begin{cpp}
+class CoroPrioScheduler
+{
+	...
+	public:
+	void start(CoroPrioTask&& task) {
+		// store scheduler in coroutine state:
+		task.hdl.promise().schedPtr = this;
+		// schedule coroutine with a default priority:
+		tasks.emplace(CoroPrioDefVal, std::move(task));
+	}
+	...
+};
+\end{cpp}
+
+\item 
+The class CoroPrioTask gives the class CoroPrioScheduler access to the handles, provides members in the promise type to point to the scheduler, and enables the coroutine to use co\_await with a CoroPrioRequest:
+
+\begin{cpp}
+class CoroPrioTask {
+	...
+	friend class CoroPrioScheduler; // give access to the handle
+	struct promise_type {
+		...
+		CoroPrioScheduler* schedPtr = nullptr; // each task knows its scheduler:
+		auto await_transform(CoroPrioRequest); // deal with co_await a CoroPrioRequest
+	};
+	...
+}
+\end{cpp}
+
+For start(), it also provides move semantics the usual way.
+
+\end{itemize}
+
+The interface between the coroutine and the scheduler is the awaiter of the type CoroPrio. Its constructor takes the priority request and stores it in the promise on suspension (when we get the coroutine handle). For that, the constructor stores the request to have it available in await\_suspend():
+
+\begin{cpp}
+class CoroPrio {
+private:
+	CoroPrioRequest prioRequest;
+public:
+	CoroPrio(CoroPrioRequest pr)
+	: prioRequest{pr} { // deal with co_await a CoroPrioRequest
+	}
+	...
+	void await_suspend(CoroPrioTask::CoroHdl h) noexcept {
+		h.promise().schedPtr->changePrio(h, prioRequest);
+	}
+	...
+};
+\end{cpp}
+
+The rest is just the usual boilerplate code for coroutine interfaces plus the handling of priorities. See coro/coropriosched.hpp for the complete code.
+
+As shown, the main program schedules the three coroutines and loops until all have been processed:
+
+\begin{cpp}
+sched.start(coro(5));
+sched.start(coro(1));
+sched.start(coro(4));
+
+while (sched.resumeNext()) {
+}
+\end{cpp}
+
+The output is as follows:
+
+\begin{shell}
+start main()
+schedule coroutines
+loop until all are processed
+	coro(5)
+	coro(5): 1
+	coro(1)
+	coro(1): 1
+	coro(4)
+	coro(4): 1
+	coro(5): 2
+	end coro(1)
+	coro(4): 2
+	coro(5): 3
+	coro(4): 3
+	coro(5): 4
+	coro(4): 4
+	coro(5): 5
+	end coro(4)
+	end coro(5)
+end main()
+\end{shell}
+
+Initially, the three coroutines started have the same priority. Because the priority of a coroutine is reduced each time it is suspended, the other coroutines then run in succession until the first coroutine has the highest priority again.
 
 \mySubsubsection{15.7.3}{Symmetric Transfer with Awaiters for Continuation}
+
+The return type of await\_suspend() can be a coroutine handle. In that case, a coroutine is suspended by immediately resuming the returned coroutine. This technique is called symmetric transfer.
+
+Symmetric transfer was introduced to improve performance and avoid stack overflows when coroutines call other coroutines. In general, when resuming a coroutine with resume(), the program needs a new stack frame for the new coroutine. If we were to resume a coroutine inside await\_suspend() or after it was called, we would always pay that price. By returning the coroutine to be called, the stack frame for the current coroutine just replaces its coroutine so that no new stack frame is required.
+
+\mySamllsection{Implementing Symmetric Transfer with Continuations}
+
+The typical application of this technique is implemented by using final awaiters that deal with continuations.[This technique is documented with tremendous help from articles and emails by Lewis Baker and Michael Eiler. \url{http://lewissbaker.github.io/2020/05/11/understanding_symmetric_transfer} in particular provides a detailed motivation and explanation.]
+
+Assuming that you have a coroutine that ends and should then continue with another subsequent coroutine without giving control back to the caller, you run into the following problem: inside final\_suspend(), your coroutine is not in a suspended state yet. You have to wait until await\_suspend() is called for the returned awaitable to deal with any resumption. That might look as follows:
+
+\begin{cpp}
+class CoroTask
+{
+public:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+private:
+	CoroHdl hdl; // native coroutine handle
+public:
+	struct promise_type {
+		std::coroutine_handle<> contHdl = nullptr; // continuation (if there is one)
+		...
+		auto final_suspend() noexcept {
+			// the coroutine is not suspended yet, use awaiter for continuation
+			return FinalAwaiter{};
+		}
+	};
+	...
+};
+\end{cpp}
+
+Thus, we return an awaiter that can be used to deal with the coroutine after it has been suspended. Here, the returned awaiter has the type FinalAwaiter, which might look as follows:
+
+\begin{cpp}
+struct FinalAwaiter {
+	bool await_ready() noexcept {
+		return false;
+	}
+	std::coroutine_handle<> await_suspend(CoroTask::CoroHdl h) noexcept {
+		// the coroutine is now suspended at the final suspend point
+		// - resume its continuation if there is one
+		if (h.promise().contHdl) {
+			return h.promise().contHdl; // return the next coro to resume
+		}
+		else {
+			return std::noop_coroutine(); // no next coro => return to caller
+		}
+	}
+	void await_resume() noexcept {
+	}
+};
+\end{cpp}
+
+Because await\_suspend() returns a coroutine handle, the coroutine returned is automatically resumed on suspension. In that case, the utility function std::noop\_coroutine() signals not to resume any other coroutine, meaning that the suspended coroutine returns to the caller.
+
+std::noop\_coroutine() returns a std::noop\_coroutine\_handle, which is an alias type of std::coroutine\_handle<std::noop\_coroutine\_promise>. Coroutines of that type have no effect when calling resume() or destroy(), return nullptr when calling address(), and always return false when calling done().
+
+std::noop\_coroutine() and its return type are provided for situations in which await\_suspend() may optionally return a coroutine to continue with. Having return type std::coroutine\_handle<>, await\_suspend() can return a noop coroutine to signal not to automatically resume another coroutine.
+
+Note that two different return values of std::noop\_coroutine() do not necessarily compare as equal.
+
+Therefore, the following code does not work portably:
+
+\begin{cpp}
+std::coroutine_handle<> coro = std::noop_coroutine();
+...
+if (coro == std::noop_coroutine()) { // OOPS: does not check whether coro has initial value
+	...
+	return coro;
+}
+\end{cpp}
+
+You should use nullptr instead:
+
+\begin{cpp}
+std::coroutine_handle<> coro = nullptr;
+...
+if (coro) { // OK (checks whether coro has initial value)
+	...
+	return std::noop_coroutine();
+}
+\end{cpp}
+
+Dealing with coroutines in a thread pool demonstrates an application of this technique.
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,113 @@
 
+So far, we have passed only awaiters to co\_await. For example, by using a standard awaiter:
 
+\begin{cpp}
+co_await std::suspend_always{};
+\end{cpp}
+
+Or, as another example, co\_await took a user-defined awaiter:
+
+\begin{cpp}
+co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
+\end{cpp}
+
+However, co\_await expr is an operator that can be part of a bigger expression and take values that do not have an awaiter type. For example:
+
+\begin{cpp}
+co_await 42;
+co_await (x + y);
+\end{cpp}
+
+The co\_await operator has the same priority as sizeof or new. For this reason, you cannot skip the parentheses in the example above without changing the meaning. The statement
+
+\begin{cpp}
+co_await x + y;
+\end{cpp}
+
+would be evaluated as follows:
+
+\begin{cpp}
+(co_await x) + y;
+\end{cpp}
+
+Note that x + y or just x does not have to be an awaiter here. co\_await needs an awaitable and awaiters are only one (typical) implementation of them. In fact, co\_await accepts any value of any type provided there is a mapping to the API of an awaiter. For the mapping, the C++ standard provides two approaches:
+
+\begin{itemize}
+\item 
+The promise member function await\_transform()
+
+\item 
+operator co\_await()
+\end{itemize}
+
+Both approaches allow coroutines to pass any value of any type to co\_await specifying an awaiter implicitly or indirectly.
 
 
 \mySubsubsection{15.8.1}{await\_transform()}
 
+If a co\_await expression occurs in a coroutine, the compiler first looks up whether there is a member function await\_transform() that is provided by the promise of the coroutine. If that is the case, await\_transform() is called and has to yield an awaiter, which is then used to suspend the coroutine.
+
+For example, this means that:
+
+\begin{cpp}
+class CoroTask {
+	struct promise_type {
+		...
+		auto await_transform(int val) {
+			return MyAwaiter{val};
+		}
+	};
+	...
+};
+
+CoroTask coro()
+{
+	co_await 42;
+}
+\end{cpp}
+
+has the same effect as:
+
+\begin{cpp}
+class CoroTask {
+	...
+};
+
+CoroTask coro()
+{
+	co_await MyAwaiter{42};
+}
+\end{cpp}
+
+You can also use it to enable a coroutine to pass a value to the promise before using a (standard) awaiter:
+
+\begin{cpp}
+class CoroTask {
+	struct promise_type {
+		...
+		auto await_transform(int val) {
+			... // process val
+			return std::suspend_always{};
+		}
+	};
+	...
+};
+
+CoroTask coro()
+{
+	co_await 42; // let 42 be processed by the promise and suspend
+}
+\end{cpp}
+
+\mySamllsection{Using Values to Let co\_await Update Running Coroutines}
+
 \mySubsubsection{15.8.2}{operator co\_await()}
+
+
+
+
+
+
+
+
+
