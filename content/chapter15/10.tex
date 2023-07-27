@@ -1,0 +1,83 @@
+So far, in all examples, the coroutine interface was returned by the coroutine. However, you can also implement coroutines so that they use an interface created somewhere else. Consider the following example (a modified version of the first coroutine example):
+
+\begin{cpp}
+void coro(int max, CoroTask&)
+{
+	std::cout << "CORO " << max << " start\n";
+	
+	for (int val = 1; val <= max; ++val) {
+		// print next value:
+		std::cout << "CORO " << val << '/' << max << '\n';
+		
+		co_await std::suspend_always{}; // SUSPEND
+	}
+	
+	std::cout << "CORO " << max << " end\n";
+}
+\end{cpp}
+
+Here, the coroutine takes the coroutine interface of the type CoroTask as a parameter. However, we have to specify that the parameter is used as the coroutine interface. This is done by a specialization of the template std::coroutine\_traits<>. Its template parameters have to specify the signature (return type and parameter types) and inside, we have to map the type member promise\_type to the type member of the coroutine interface parameter:
+
+\begin{cpp}
+template<>
+struct std::coroutine_traits<void, int, CoroTask&>
+{
+	using promise_type = CoroTask::promise_type;
+};
+\end{cpp}
+
+The only thing we now have to ensure is that the coroutine interface can be created without a coroutine and refer to a coroutine later. For this, we need a promise with a constructor that takes the same parameters as the coroutine
+
+\begin{cpp}
+class CoroTask {
+	public:
+	// required type for customization:
+	struct promise_type {
+		promise_type(int, CoroTask& ct) { // init passed coroutine interface	
+			ct.hdl = CoroHdl::from_promise(*this);
+		}
+		void get_return_object() { // nothing to do anymore
+		}
+		...
+	};
+		
+private:
+	// handle to allocate state (can be private):
+	using CoroHdl = std::coroutine_handle<promise_type>;
+	CoroHdl hdl;
+	
+public:
+	// constructor and destructor:
+	CoroTask() : hdl{} { // enable coroutine interface without handle
+	}
+	...
+};
+\end{cpp}
+
+Now the code using the coroutine might look as follows:
+
+\begin{cpp}
+CoroTask coroTask; // create coroutine interface without coroutine
+
+// start coroutine:
+coro(3, coroTask); // init and store coroutine in the interface created
+
+// loop to resume the coroutine until it is done:
+while (coroTask.resume()) { // resume
+	std::this_thread::sleep_for(500ms);
+}
+\end{cpp}
+
+You can find the complete example in coro/corotraits.cpp.
+
+The promise constructor gets all parameters passed to the coroutine. However, because the promise usually only needs the coroutine interface, you might pass the interface as the first parameter and then use auto\&\&... as the last parameter.
+
+
+
+
+
+
+
+
+
+

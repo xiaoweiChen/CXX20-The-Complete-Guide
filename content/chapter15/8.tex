@@ -101,7 +101,140 @@ CoroTask coro()
 
 \mySamllsection{Using Values to Let co\_await Update Running Coroutines}
 
+Remember the example in which an awaiter was used to change the priority of the coroutine. There, we used an awaiter of the type CoroPrio to enable the coroutine to request the new priority as follows:
+
+\begin{cpp}
+co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
+\end{cpp}
+
+We could also allow only the new priority to be passed:
+
+\begin{cpp}
+co_await CoroPrioRequest::less; // SUSPEND with lower prio
+\end{cpp}
+
+All we would need is for the coroutine interface promise to provide a member function await\_transform() for values of this type:
+
+\begin{cpp}
+class CoroPrioTask {
+public:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+private:
+	CoroHdl hdl; // native coroutine handle
+	friend class CoroPrioScheduler; // give access to the handle
+public:
+	struct promise_type {
+		CoroPrioScheduler* schedPtr = nullptr; // each task knows its scheduler:
+		...
+		auto await_transform(CoroPrioRequest); // deal with co_await CoroPrioRequest
+	};
+	...
+};
+\end{cpp}
+
+The implementation of await\_transform() may look as follows:
+
+\begin{cpp}
+inline auto CoroPrioTask::promise_type::await_transform(CoroPrioRequest pr) {
+	auto hdl = CoroPrioTask::CoroHdl::from_promise(*this);
+	schedPtr->changePrio(hdl, pr);
+	return std::suspend_always{};
+}
+\end{cpp}
+
+Here, we again use the static member function from\_promise() for coroutine handles to get the handle, because changePrio() needs the handle as its first argument.
+
+That way, we can skip the awaiter CoroPrio as a whole. See coro/coropriosched2.hpp for the whole code (and coro/coroprio2.cpp and coro/coroprio2.hpp for its use).
+
+\mySamllsection{Letting co\_await Act Like co\_yield}
+
+Remember the example with co\_yield. To handle the value to be yielded we do the following:
+
+\begin{cpp}
+struct promise_type {
+	int coroValue = 0; // last value from co_yield
+	auto yield_value(int val) { // reaction to co_yield
+		coroValue = val; // - store value locally
+		return std::suspend_always{}; // - suspend coroutine
+	}
+	...
+};
+
+co_yield val; // calls yield_value(val) on promise
+\end{cpp}
+
+We can get the same effect with the following:
+
+\begin{cpp}
+ can get the same effect with the following:
+struct promise_type {
+	int coroValue = 0; // last value from co_yield
+	auto await_transform(int val) {
+		coroValue = val; // - store value locally
+		return std::suspend_always{};
+	}
+	...
+};
+
+co_await val; // calls await_transform(val) on promise
+\end{cpp}
+
+In fact,
+
+\begin{cpp}
+co_yield val;
+\end{cpp}
+
+is equivalent to
+
+\begin{cpp}
+co_await prm.yield_value(val);
+\end{cpp}
+
+where prm is the promise of the enclosing coroutine.
+
 \mySubsubsection{15.8.2}{operator co\_await()}
+
+The other option for letting co\_await deal with any value of (almost) any type is to implement operator co\_await() for that type. This means that you have to pass a value of a class.
+
+Assume we have implemented operator co\_await() for some type MyType:
+
+\begin{cpp}
+class MyType {
+	auto operator co_await() {
+		return std::suspend_always{};
+	}
+};
+\end{cpp}
+
+Then, calling co\_await for an object of that type:
+
+\begin{cpp}
+CoroTask coro()
+{
+	...
+	co_await MyType{};
+}
+\end{cpp}
+
+calls the operator and uses the returned awaiter to handle the suspension. Here, operator co\_await() yields std::suspend\_always{}, which means that we effectively get:
+
+\begin{cpp}
+CoroTask coro()
+{
+	...
+	co_await std::suspend_always{};
+}
+\end{cpp}
+
+However, you could pass arguments to MyType{} and pass them to an awaiter so that you can pass values to the suspended coroutine for immediate or later resumption.
+
+Another example is to pass a coroutine to co\_await, which can then be called, including implementing preparations such as changing threads or scheduling the coroutine a thread pool.
+
+
+
+
 
 
 

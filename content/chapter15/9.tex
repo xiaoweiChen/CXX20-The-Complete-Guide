@@ -1,9 +1,735 @@
 
 
+In principle, passing operands to co\_await can execute any code. We can jump to a very different context or perform some operation and continue with the result of that operation as soon as we have it. Even when the other operation runs in a different thread, no synchronization mechanism is necessary.
 
+This section provides a basic example to demonstrate this technique. Part of it is a simple thread pool to deal with coroutines, which uses std::jthread and a couple of new concurrency features of C++20.
 
 \mySubsubsection{15.9.1}{co\_await Coroutines}
 
+Assume we have the following coroutines calling each other:
+
+\filename{coro/coroasync.hpp}
+
+\begin{cpp}
+#include "coropool.hpp"
+#include <iostream>
+#include <syncstream> // for std::osyncstream
+
+inline auto syncOut(std::ostream& strm = std::cout) {
+	return std::osyncstream{strm};
+}
+
+CoroPoolTask print(std::string id, std::string msg)
+{
+	syncOut() << "       > " << id << " print: " << msg
+			  << "       on thread: " << std::this_thread::get_id() << std::endl;
+	co_return; // make it a coroutine
+}
+
+CoroPoolTask runAsync(std::string id)
+{
+	syncOut() << "===== " << id << " start "
+			  << "   on thread: " << std::this_thread::get_id() << std::endl;
+
+	co_await print(id + "a", "start");
+	syncOut() << "===== " << id << " resume "
+			  << "   on thread " << std::this_thread::get_id() << std::endl;
+
+	co_await print(id + "b", "end ");
+	syncOut() << "===== " << id << " resume "
+			  << "   on thread " << std::this_thread::get_id() << std::endl;
+	
+	syncOut() << "===== " << id << " done" << std::endl;
+}
+\end{cpp}
+
+Both coroutines use CoroPoolTask, a coroutine interface for tasks running in a thread pool. The implementation of the interface and the pool will be discussed later.
+
+The important part is that the coroutine runAsync() uses co\_await to call another coroutine print():
+
+\begin{cpp}
+CoroPoolTask runAsync(std::string id)
+{
+	...
+	co_await print( ... );
+	...
+}
+\end{cpp}
+
+As we will see, this has the effect that the coroutine print() will be scheduled in a thread pool to run in different threads. In addition, co\_await blocks until print() is done.
+
+Note that print() needs a co\_return to ensure that it is treated as a coroutine by the compiler. Without this, we would not have any co\_ keyword at all and the compiler (assuming this is an ordinary function) would complain that we have a return type but no return statement.
+
+Note also that we use the helper syncOut(), which yields a std::osyncstream, to ensure that the concurrent output from different threads is synchronized line by line.
+
+Assume we call the coroutine runAsync() as follows:
+
+\filename{coro/coroasync1.cpp}
+
+\begin{cpp}
+#include "coroasync.hpp"
+#include <iostream>
+
+int main()
+{
+	// init pool of coroutine threads:
+	syncOut() << "**** main() on thread " << std::this_thread::get_id()
+			  << std::endl;
+	CoroPool pool{4};
+	
+	// start main coroutine and run it in coroutine pool:
+	syncOut() << "runTask(runAsync(1))" << std::endl;
+	CoroPoolTask t1 = runAsync("1");
+	pool.runTask(std::move(t1));
+	
+	// wait until all coroutines are done:
+	syncOut() << "\n**** waitUntilNoCoros()" << std::endl;
+	pool.waitUntilNoCoros();
+	
+	syncOut() << "\n**** main() done" << std::endl;
+}
+\end{cpp}
+
+Here, we first create a thread pool of the type CoroPool for all coroutines using the interface CoroPoolTask:
+
+\begin{cpp}
+CoroPool pool{4};
+\end{cpp}
+
+Then, we call the coroutine, which starts the coroutine lazily and returns the interface, and hand the interface over to the pool to take control of the coroutine:
+
+\begin{cpp}
+CoroPoolTask t1 = runAsync("1");
+pool.runTask(std::move(t1));
+\end{cpp}
+
+We use (and have to use) move semantics for the coroutine interface, because runTask() requires to pass an rvalue to be able to take over the ownership of the coroutine (after the call t1 no longer has it).
+
+We could also do that in one statement:
+
+\begin{cpp}
+pool.runTask(runAsync("1"));
+\end{cpp}
+
+Before we end the program. the pool blocks until all scheduled coroutines have been processed:
+
+\begin{cpp}
+pool.waitUntilNoCoros();
+\end{cpp}
+
+When we run this program, we get something like the following output (the thread IDs vary):
+
+\begin{shell}
+**** main() on thread 0x80000008
+runTask(runAsync(1))
+
+**** waitUntilNoCoros()
+===== 1 start on thread: 0x8002cd90
+    > 1a print: start on thread: 0x8002ce68
+===== 1 resume on thread 0x8002ce68
+    > 1b print: end on thread: 0x8004d090
+===== 1 resume on thread 0x8004d090
+===== 1 done
+
+**** main() done
+\end{shell}
+
+As you can see, different threads are used:
+
+\begin{itemize}
+\item 
+The coroutine runAsync() is started on a different thread to main()
+
+\item 
+The coroutine print() called from there is started on a third thread
+
+\item 
+The second call of coroutine print() called from there is started on a fourth thread
+\end{itemize}
+
+However, runAsync() changes threads with each call of print(). By using co\_await, these calls suspend runAsync() and call print() on a different thread (as we will see, the suspension schedules the called coroutine in the pool). At the end of print(), the calling coroutine runAsync() resumes on the same thread in which print() was running.
+
+As a variation, we could also start and schedule coroutine runAsync() four times:
+
+\filename{coro/coroasync2.cpp}
+
+\begin{cpp}
+#include "coroasync.hpp"
+#include <iostream>
+
+int main()
+{
+	// init pool of coroutine threads:
+	syncOut() << "**** main() on thread " << std::this_thread::get_id()
+			  << std::endl;
+	CoroPool pool{4};
+	
+	// start multiple coroutines and run them in coroutine pool:
+	for (int i = 1; i <= 4; ++i) {
+		syncOut() << "runTask(runAsync(" << i << "))" << std::endl;
+		pool.runTask(runAsync(std::to_string(i)));
+	}
+	
+	// wait until all coroutines are done:
+	syncOut() << "\n**** waitUntilNoCoros()" << std::endl;
+	pool.waitUntilNoCoros();
+	
+	syncOut() << "\n**** main() done" << std::endl;
+}
+\end{cpp}
+
+This program might have the following output (using different thread IDs due to a different platform):
+
+\begin{shell}
+**** main() on thread 17308
+runTask(runAsync(1))
+runTask(runAsync(2))
+runTask(runAsync(3))
+runTask(runAsync(4))
+
+**** waitUntilNoCoros()
+===== 1 start on thread: 18016
+===== 2 start on thread: 9004
+===== 3 start on thread: 17008
+===== 4 start on thread: 2816
+    > 2a print: start on thread: 2816
+    > 1a print: start on thread: 17008
+===== 1 resume on thread 17008
+    > 4a print: start on thread: 18016
+===== 4 resume on thread 18016
+    > 3a print: start on thread: 9004
+===== 3 resume on thread 9004
+===== 2 resume on thread 2816
+    > 4b print: end on thread: 9004
+    > 1b print: end on thread: 2816
+===== 1 resume on thread 2816
+===== 1 done
+===== 4 resume on thread 9004
+===== 4 done
+    > 2b print: end on thread: 17008
+===== 2 resume on thread 17008
+===== 2 done
+    > 3b print: end on thread: 18016
+===== 3 resume on thread 18016
+===== 3 done
+
+**** main() done
+\end{shell}
+
+The output now varies more because we have concurrent coroutines using the next available thread. However, in general, we have the same behavior:
+
+\begin{itemize}
+\item 
+Whenever the coroutine calls print(), it is scheduled and probably started on a different thread (it might be the same thread if no other thread is available).
+
+\item 
+Whenever print() is done, the calling coroutine runAsync() directly resumes on the same thread that print() was running on, meaning that runAsync() effectively changes threads with each call of print().
+\end{itemize}
+
 \mySubsubsection{15.9.2}{A Thread Pool for Coroutine Tasks}
 
+Here is the implementation of the coroutine interface CoroPoolTask and the corresponding thread pool class CoroPool:
+
+\filename{coro/coropool.hpp}
+
+\begin{cpp}
+#include <iostream>
+#include <list>
+#include <utility> // for std::exchange()
+#include <functional> // for std::function
+#include <coroutine>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
+
+class CoroPool;
+
+class [[nodiscard]] CoroPoolTask
+{
+	friend class CoroPool;
+public:
+	struct promise_type;
+	using CoroHdl = std::coroutine_handle<promise_type>;
+private:
+	CoroHdl hdl;
+public:
+	struct promise_type {
+		CoroPool* poolPtr = nullptr; // if not null, lifetime is controlled by pool
+		CoroHdl contHdl = nullptr; // coro that awaits this coro
+		
+		CoroPoolTask get_return_object() noexcept {
+			return CoroPoolTask{CoroHdl::from_promise(*this)};
+		}
+		auto initial_suspend() const noexcept { return std::suspend_always{}; }
+		void unhandled_exception() noexcept { std::exit(1); }
+		void return_void() noexcept { }
+		
+		auto final_suspend() const noexcept {
+			struct FinalAwaiter {
+				bool await_ready() const noexcept { return false; }
+				std::coroutine_handle<> await_suspend(CoroHdl h) noexcept {
+					if (h.promise().contHdl) {
+						return h.promise().contHdl; // resume continuation
+					}
+					else {
+						return std::noop_coroutine(); // no continuation
+					}
+				}
+				void await_resume() noexcept { }
+			};
+			return FinalAwaiter{}; // AFTER suspended, resume continuation if there is one
+		}
+	};
+	
+	explicit CoroPoolTask(CoroHdl handle)
+	: hdl{handle} {
+	}
+	~CoroPoolTask() {
+		if (hdl && !hdl.promise().poolPtr) {
+			// task was not passed to pool:
+			hdl.destroy();
+		}
+	}
+	CoroPoolTask(const CoroPoolTask&) = delete;
+	CoroPoolTask& operator= (const CoroPoolTask&) = delete;
+	CoroPoolTask(CoroPoolTask&& t)
+		: hdl{t.hdl} {
+			t.hdl = nullptr;
+	}
+	CoroPoolTask& operator= (CoroPoolTask&&) = delete;
+	
+	// Awaiter for: co_await task()
+	// - queues the new coro in the pool
+	// - sets the calling coro as continuation
+	struct CoAwaitAwaiter {
+		CoroHdl newHdl;
+		bool await_ready() const noexcept { return false; }
+		void await_suspend(CoroHdl awaitingHdl) noexcept; // see below
+		void await_resume() noexcept {}
+	};
+	auto operator co_await() noexcept {
+		return CoAwaitAwaiter{std::exchange(hdl, nullptr)}; // pool takes ownership of hdl
+	}
+};
+
+class CoroPool
+{
+private:
+	std::list<std::jthread> threads; // list of threads
+	std::list<CoroPoolTask::CoroHdl> coros; // queue of scheduled coros
+	std::mutex corosMx;
+	std::condition_variable_any corosCV;
+	std::atomic<int> numCoros = 0; // counter for all coros owned by the pool
+
+public:
+	explicit CoroPool(int num) {
+		// start pool with num threads:
+		for (int i = 0; i < num; ++i) {
+			std::jthread worker_thread{[this](std::stop_token st) {
+					threadLoop(st);
+			}};
+			threads.push_back(std::move(worker_thread));
+		}
+	}
+	
+	~CoroPool() {
+		for (auto& t : threads) { // request stop for all threads
+			t.request_stop();
+		}
+		for (auto& t : threads) { // wait for end of all threads
+			t.join();
+		}
+		for (auto& c : coros) { // destroy remaining coros
+			c.destroy();
+		}
+	}
+
+	CoroPool(CoroPool&) = delete;
+	CoroPool& operator=(CoroPool&) = delete;
+	
+	void runTask(CoroPoolTask&& coroTask) noexcept {
+		auto hdl = std::exchange(coroTask.hdl, nullptr); // pool takes ownership of hdl
+		if (coroTask.hdl.done()) {
+			coroTask.hdl.destroy(); // OOPS, a done() coroutine was passed
+		}
+		else {
+			schedule coroutine in the pool
+		}
+	}
+	
+	// runCoro(): let pool run (and control lifetime of) coroutine
+	// called from:
+	// - pool.runTask(CoroPoolTask)
+	// - co_await task()
+	void runCoro(CoroPoolTask::CoroHdl coro) noexcept {
+		++numCoros;
+		coro.promise().poolPtr = this; // disables destroy in CoroPoolTask
+		{
+			std::scoped_lock lock(corosMx);
+			coros.push_front(coro); // queue coro
+			corosCV.notify_one(); // and let one thread resume it
+		}
+	}
+	
+	void threadLoop(std::stop_token st) {
+		while (!st.stop_requested()) {
+			// get next coro task from the queue:
+			CoroPoolTask::CoroHdl coro;
+			{
+				std::unique_lock lock(corosMx);
+				if (!corosCV.wait(lock, st, [&] {
+												return !coros.empty();
+											})) {
+					return; // stop requested
+				}
+				coro = coros.back();
+				coros.pop_back();
+			}
+			
+			// resume it:
+			coro.resume(); // RESUME
+			
+			// NOTE: The coro initially resumed on this thread might NOT be the coro finally called.
+			// If a main coro awaits a sub coro, then the thread that finally resumed the sub coro
+			// resumes the main coro as its continuation.
+			// => After this resumption, this coro and SOME continuations MIGHT be done
+			std::function<void(CoroPoolTask::CoroHdl)> destroyDone;
+			destroyDone = [&destroyDone, this](auto hdl) {
+							if (hdl && hdl.done()) {
+								auto nextHdl = hdl.promise().contHdl;
+								hdl.destroy(); // destroy handle done
+								--numCoros; // adjust total number of coros
+								destroyDone(nextHdl); // do it for all continuations done
+							}
+						};
+		destroyDone(coro); // recursively destroy coroutines done
+		numCoros.notify_all(); // wake up any waiting waitUntilNoCoros()
+		// sleep a little to force another thread to be used next:
+		std::this_thread::sleep_for(std::chrono::milliseconds{100});
+		}
+	}
+	
+	void waitUntilNoCoros() {
+		int num = numCoros.load();
+		while (num > 0) {
+		numCoros.wait(num); // wait for notification that numCoros changed the value
+		num = numCoros.load();
+		}
+	}
+};
+
+// CoroPoolTask awaiter for: co_await task()
+// - queues the new coro in the pool
+// - sets the calling coro as continuation
+void CoroPoolTask::CoAwaitAwaiter::await_suspend(CoroHdl awaitingHdl) noexcept
+{
+	newHdl.promise().contHdl = awaitingHdl;
+	awaitingHdl.promise().poolPtr->runCoro(newHdl);
+}
+\end{cpp}
+
+Both classes CoroPoolTask and CoroPool carefully play together:
+
+\begin{itemize}
+\item 
+CoroPoolTask is used to initialize a coroutine as task to call. The task should be schedule in the pool, which then takes control over it until it gets destroyed.
+
+\item 
+CoroPool implements a minimal thread pool that can run scheduled coroutines. In addition, it provides a very minimal API to
+\begin{itemize}
+\item 
+block until all scheduled coroutines are done
+
+\item
+shutdown the pool (which is automatically done by its destructor)
+\end{itemize}
+\end{itemize}
+
+Let us look at the code in detail.
+
+\mySamllsection{Class CoroPoolTask}
+
+Class CoroPoolTask provides a coroutine interface to run a task with the following specialties:
+
+\begin{itemize}
+\item 
+Each coroutine knows has a pointer to the thread pool, which is initialized when the thread pool takes control over the coroutine:
+
+\begin{cpp}
+class [[nodiscard]] CoroPoolTask
+{
+	...
+	struct promise_type {
+		CoroPool* poolPtr = nullptr; // if not null, lifetime is controlled by pool
+		...
+	};
+	...
+};
+\end{cpp}
+
+\item 
+Each coroutine has a member for an optional continuation as described before:
+
+\begin{cpp}
+class [[nodiscard]] CoroPoolTask
+{
+	...
+	struct promise_type {
+		...
+		CoroHdl contHdl = nullptr; // coro that awaits this coro
+		...
+		auto final_suspend() const noexcept {
+			struct FinalAwaiter {
+				bool await_ready() const noexcept { return false; }
+				std::coroutine_handle<> await_suspend(CoroHdl h) noexcept {
+					if (h.promise().contHdl) {
+						return h.promise().contHdl; // resume continuation
+					}
+					else {
+						return std::noop_coroutine(); // no continuation
+					}
+				}
+				void await_resume() noexcept {}
+			};
+			return FinalAwaiter{}; // AFTER suspended, resume continuation if there is one
+		}
+	};
+	...
+};
+\end{cpp}
+
+\item 
+Each coroutine has an operator co\_await(), which means that a co\_await task() uses a special awaiter so that the co\_await suspends the current coroutine after scheduling the passed coroutine to the pool with the current coroutine as continuation.
+\end{itemize}
+
+Here is how the implemented operator co\_await() works. This is the relevant code:
+
+\begin{cpp}
+class [[nodiscard]] CoroPoolTask
+{
+	...
+	struct CoAwaitAwaiter {
+		CoroHdl newHdl;
+		bool await_ready() const noexcept { return false; }
+		void await_suspend(CoroHdl awaitingHdl) noexcept; // see below
+		void await_resume() noexcept {}
+	};
+	auto operator co_await() noexcept {
+		return CoAwaitAwaiter{std::exchange(hdl, nullptr)}; // pool takes ownership of hdl
+	}
+};
+
+void CoroPoolTask::CoAwaitAwaiter::await_suspend(CoroHdl awaitingHdl) noexcept
+{
+	newHdl.promise().contHdl = awaitingHdl;
+	awaitingHdl.promise().poolPtr->runCoro(newHdl);
+}
+\end{cpp}
+
+When we call print() with co\_await:
+
+\begin{cpp}
+CoroPoolTask runAsync(std::string id)
+{
+	...
+	co_await print( ... );
+	...
+}
+\end{cpp}
+
+the following happens:
+
+\begin{itemize}
+\item
+print() is called as a coroutine and initialized. 
+
+\item 
+For the returned coroutine interface of the type CoroPoolTask, operator co\_await() is called.
+
+\item 
+operator co\_await() takes the handle to initialize an awaiter of the type CoAwaitAwaiter. This means that the new coroutine print() becomes the member newHdl of the awaiter.
+
+\item 
+std::exchange() ensures that in the initialized coroutine interface, the handle hdl becomes nullptr so that a destructor does not call destroy().
+
+\item 
+runAsync() is suspended with the awaiter initialized by operator co\_await(), which calls await\_suspend() with the handle of the coroutine runAsync() as parameter.
+
+\item 
+Inside await\_suspend() we store the passed suspended runAsync() as a continuation and schedule the newHdl (print()) in the pool to be resumed by one of the threads.
+\end{itemize}
+
+\mySamllsection{Class CoroPool}
+
+CoroPool implements its minimal thread pool by a combination of some features introduced here and in other parts of this book.
+
+First let us look at the members:
+
+\begin{itemize}
+\item 
+Like any typical thread pool, this class has a member for the threads using the new thread class std::jthread so that we do not have to deal with exceptions and can signal a stop:
+
+\begin{cpp}
+std::list<std::jthread> threads; // list of threads
+\end{cpp}
+
+We do not need any synchronization because the only other moment we use threads after initialization is during a shutdown(), which first joins all threads (after signaling stop). Copying and moving the pool is not supported (this is for simplicity; we could easily provide move support).
+
+Note that for better performance, the destructor first requests all threads to stop before starting to join() them.
+
+\item 
+Then, we have a queue of coroutines to process with corresponding synchronization members:
+
+\begin{cpp}
+std::list<CoroPoolTask::CoroHdl> coros; // queue of scheduled coros
+std::mutex corosMx;
+std::condition_variable_any corosCV;
+\end{cpp}
+
+\item 
+To avoid stopping the pool too early, the pool also tracks the total number of coroutines owned by the pool:
+
+\begin{cpp}
+std::atomic<int> numCoros = 0; // counter for all coros owned by the pool
+\end{cpp}
+
+and provides the member function waitUntilNoCoros().
+\end{itemize}
+
+The member function runCoro() is the key function for scheduling a coroutine for resumption. It takes a coroutine handle of the interface CoroPoolTask as an argument. There are two approaches for scheduling the coroutine interface itself:
+
+\begin{itemize}
+\item 
+Calling runTask()
+
+\item 
+Using co\_await task()
+\end{itemize}
+
+Both approaches move the coroutine handle into the pool, so that the pool is then has the responsibility to destroy() the handle when it is no longer in use.
+
+However, implementing the right moment to call destroy() (and adjust the total number of coroutines) is not easy to do correctly and safely. The coroutine should be finally suspended for that, which rules out doing this in final\_suspend() of the task or await\_suspend() of the final awaiter. So, tracking and destruction works as follows:
+
+\begin{itemize}
+\item 
+Each time a coroutine handle is passed to the pool, we increment the number of coroutines:
+
+\begin{cpp}
+void runCoro(CoroPoolTask::CoroHdl coro) noexcept {
+	++numCoros;
+	...
+}
+\end{cpp}
+
+\item 
+After any resumption by a thread is done, we check whether the coroutine and possible continuations have been done. Note that the continuations are called automatically by the coroutine frame according to await\_suspend() of the final awaiter of the task.
+
+Therefore, after each resumption has finished, we recursively iterate over all continuations to destroy all of the coroutines done:
+
+\begin{cpp}
+std::function<void(CoroPoolTask::CoroHdl)> destroyDone;
+destroyDone = [&destroyDone, this](auto hdl) {
+					if (hdl && hdl.done()) {
+						auto nextHdl = hdl.promise().contHdl;
+						hdl.destroy(); // destroy handle done
+						--numCoros; // adjust total number of coros
+						destroyDone(nextHdl); // do it for all continuations done
+					}
+				};
+destroyDone(coro); // recursively destroy coroutines done
+\end{cpp}
+
+Because the lambda is used recursively, we have to forward declare it as a std::function<>.
+
+\item 
+Finally, we wake up any waiting waitUntilNoCoros() with the new thread synchronization feature of atomic types:
+
+\begin{cpp}
+numCoros.notify_all(); // wake up any waiting waitUntilNoCoros()
+...
+void waitUntilNoCoros() {
+	int num = numCoros.load();
+	while (num > 0) {
+		numCoros.wait(num); // wait for notification that numCoros changed the value
+		num = numCoros.load();
+	}
+}
+\end{cpp}
+
+\item 
+If the pool is destroyed, we also destroy all remaining coroutine handles after all threads have finished.
+\end{itemize}
+
+\mySamllsection{Synchronous Waiting for Asynchronous Coroutines}
+
+In real-world coroutine pools, a lot of aspects might look different, more sophisticated, and use additional tricks to make the code more robust and safe.
+
+For example, pools might provide a way to schedule a task and wait for its end, which for CoroPool, would look as follows:
+
+\begin{cpp}
+class CoroPool
+{
+	...
+	void syncWait(CoroPoolTask&& task) {
+		std::binary_semaphore taskDone{0};
+		auto makeWaitingTask = [&]() -> CoroPoolTask {
+			co_await task;
+			struct SignalDone {
+				std::binary_semaphore& taskDoneRef;
+				bool await_ready() { return false; }
+				bool await_suspend(std::coroutine_handle<>) {
+					taskDoneRef.release(); // signal task is done
+					return false; // do not suspend at all
+				}
+				void await_resume() { }
+			};
+			co_await SignalDone{taskDone};
+		};
+		runTask(makeWaitingTask());
+		taskDone.acquire();
+	}
+};
+\end{cpp}
+
+Here we use a binary semaphore so that we can signal the end of the passed task and wait for it in a different thread.
+
+Note that you have to be careful about what exactly is signaled. Here, the signal says we are behind the task that called with co\_await was performed. In this case, you could even signal this in await\_ready():
+
+\begin{cpp}
+bool await_ready() {
+	taskDoneRef.release(); // signal task is done
+	return true; // do not suspend at all
+}
+\end{cpp}
+
+In general, you have to consider that in await\_ready(), the coroutine is not suspended yet. Therefore, any signal that causes it to check whether it is done() or even destroy() it results in a fatal runtime error. Because we use concurrent code here, you have to ensure that the signal does not even cause corresponding calls indirectly.
+
 \mySubsubsection{15.9.3}{What C++ Libraries Will Provide After C++20}
+
+All you have seen here in this section of the coroutine chapter is just a pretty simple code example that is not robust, thread-safe, complete, or flexible enough to provide general solutions for various typical use cases of coroutines.
+
+The C++ standards committee is working on better solutions to provide them in future libraries.
+
+For a program that can run coroutines concurrently in a safe and flexible way, you need at least the following components:
+
+\begin{itemize}
+\item 
+A kind of task type that allows you to chain coroutines together
+
+\item 
+Something that allows you to start multiple coroutines that run independently and join them later
+
+\item 
+Something like syncWait() that allows a synchronous function to block waiting for an asynchronous function
+
+\item 
+Something that allows multiple coroutines to be multiplexed on a smaller number of threads
+\end{itemize}
+
+The Class CoroPool combines the last three aspects together more or less. However, the more flexible approach is to come with individual building blocks that can be combined in various ways. In addition, good thread-safety needs much better design and implementation techniques.
+
+We are still learning and discussing how to do that best. Therefore, even in C++23, there will probably only be minimal support (if any).
+
+
+
