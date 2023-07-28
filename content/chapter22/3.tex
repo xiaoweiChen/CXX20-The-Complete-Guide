@@ -1,3 +1,146 @@
 
+To disable implicit type conversions, constructors can be declared as explicit. However, for generic code, you might want to make the constructors explicit if and only if a type parameter has explicit constructors.
+
+That way, you can perfectly delegate type conversion support to a wrapper type.
+The way to specify a conditional explicit is like specifying a conditional noexcept. Directly after explicit, you can specify a Boolean compile-time expression in parentheses. Here is an example:
+
+\filename{lang/wrapper.hpp}
+
+\begin{cpp}
+#include <type_traits> // for std::is_convertible_v<>
+
+template<typename T>
+class Wrapper {
+	T value;
+public:
+	template<typename U>
+	explicit(!std::is_convertible_v<U, T>)
+	Wrapper(const U& val)
+	:value{val} {
+	}
+	...
+};
+\end{cpp}
+
+The class template Wrapper<> that holds values of type T has a generic constructor, meaning that you could initialize the value with any type that is implicitly convertible to T. If there is no implicit conversion from U to T, the constructor is explicit.
+
+As a consequence, you can initialize a Wrapper of a type only if there is an implicit type conversion enabled. For example:
+
+\filename{lang/explicitwrapper.cpp}
+
+\begin{cpp}
+#include "wrapper.hpp"
+#include <string>
+#include <vector>
+
+void printStringWrapper(Wrapper<std::string>) {
+}
+void printVectorWrapper(Wrapper<std::vector<std::string>>) {
+}
+
+int main()
+{
+	// implicit conversion from string literal to string:
+	std::string s1{"hello"};
+	std::string s2 = "hello"; // OK
+	Wrapper<std::string> ws1{"hello"};
+	Wrapper<std::string> ws2 = "hello"; // OK
+	printStringWrapper("hello"); // OK
+	
+	// NO implicit conversion from size to vector<string>:
+	std::vector<std::string> v1{42u};
+	std::vector<std::string> v2 = 42u; // ERROR: explicit
+	Wrapper<std::vector<std::string>> wv1{42u};
+	Wrapper<std::vector<std::string>> wv2 = 4u2; // ERROR: explicit
+	printVectorWrapper(42u); // ERROR: explicit
+}
+\end{cpp}
+
+To demonstrate the effect of a conditional explicit, we use a Wrapper<> for strings and for vectors of strings:
+
+\begin{itemize}
+\item 
+For type std::string, the constructor enables implicit conversions from string literals. Therefore, the constructor of type Wrapper<> is not explicit, which has the effect that we pass string literals to copy initialize a string wrapper or pass a string literal to a function that takes a string wrapper.[Remember that implicit conversions are required for copy initialization (initialization with =) and parameter passing.]
+
+\item
+For type std::vector<std::string>, the constructor that takes an unsigned size is declared as explicit in the C++ standard library. For that reason, std::is\_convertible<> from a size to the vector is false and the Wrapper<> constructor becomes explicit. Therefore, we also cannot pass a size to initialize a wrapper of a vector of strings or pass a size to a function that takes that wrapper type.
+\end{itemize}
+
+The conditional explicit can be used for any place where explicit can be used. Therefore, you could also use it to make conversion operators conditional explicit:
+
+\begin{cpp}
+template<typename T>
+class MyType {
+	public:
+	...
+	explicit(!std::is_convertible_v<T, bool>) operator bool();
+};
+\end{cpp}
+
+However, I have no useful example of that. Conversions to bool, which is by far the most useful application of conversion operators, should always be explicit so that you do not accidentally pass a MyType object to a function that expects a Boolean value.
 
 \mySubsubsection{22.3.1}{Conditional explicit in the Standard Library}
+
+The C++ standard library uses a conditional explicit in a couple of places. For example, std::pair<> and std::tuple<> use it to support assignments of pairs and tuples of slightly different types only if there are implicit conversions available.
+
+For example:
+
+\begin{cpp}
+std::pair<int, int> p1{11, 11};
+
+std::pair<long, long> p2{};
+p2 = p1; // OK: implicit conversion from int to long
+
+std::pair<std::chrono::day, std::chrono::month> p3{};
+p3 = p1; // ERROR
+p3 = std::pair<std::chrono::day, std::chrono::month>{p1}; // OK
+\end{cpp}
+
+Because the constructors of chrono date types that take an integral value are explicit, assignments from a pair of int to a pair of day and month fails. You have to use an explicit conversion.
+
+This also applies when inserting element into maps (because the elements are key/value pairs):
+
+\begin{cpp}
+std::map<std::string, std::string> coll1;
+coll1.insert({"hi", "ho"}); // OK: uses implicit conversions to strings
+
+std::map<std::string, std::chrono::month> coll2;
+coll2.insert({"XI", 11}); // ERROR: no implicit conversion that fits
+coll2.insert({"XI", std::chrono::month{11}}); // OK (inserts elem with string and month)
+\end{cpp}
+
+This behavior of std::pair<> is not new. However, before C++20, implementations of the standard library had to use SFINAE to implement the conditional behavior of explicit (declaring two constructors and disabling one of them if the condition is not met).
+
+As another example, the constructors of std::span<> are conditional explicit:
+
+\begin{cpp}
+namespace std {
+	template<typename ElementType, size_t Extent = dynamic_extent>
+	class span {
+	public:
+		static constexpr size_type extent = Extent;
+		...
+		constexpr span() noexcept;
+		template<typename It>
+			constexpr explicit(extent != dynamic_extent)
+			span(It first, size_type count);
+		template<typename It, typename End>
+			constexpr explicit(extent != dynamic_extent)
+			span(It first, End last);
+		...
+	};
+}
+\end{cpp}
+
+As a consequence, implicit type conversions of spans are allowed only if the spans have a dynamic extent.
+
+
+
+
+
+
+
+
+
+
+

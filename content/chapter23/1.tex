@@ -1,5 +1,89 @@
 
+In C++20, some aspects of string types changed. These changes affect strings (type std::basic\_string<> with its instantiations, such as std::string), string views (std::basic\_string\_view<> with its instantiations, such as std::string\_view), or both.
+
+In fact, C++20 introduces the following improvements for string types:
+
+\begin{itemize}
+\item 
+All string types now support the spaceship operator <=>. For this, they now declare only operator== and operator<=> and no longer declare operator!=, operator<, operator<=, operator>, and operator>=.
+
+\item 
+All string types now provide the new member functions starts\_with() and ends\_with().
+
+\item 
+For strings, the member function reserve() can no longer be used to request to shrink the capacity (memory allocated for the value) of strings. For this reason, you can no longer pass no argument to reserve().
+
+\item 
+For UTF-8 characters, C++ now provides the string types std::u8string and std::u8string\_view. They are defined as std::basic\_string<> and std::basic\_string\_view<> for the new UTF-8 character type char8\_t. For this reason, library functions that return a UTF-8 string now have the return type std::u8string. Note that this change might break existing code when switching to C++20.
+
+\item 
+Strings (std::string and other instantiations of std::basic\_string<>) are constexpr now, meaning that you can use strings at compile time.
+
+Note that you cannot use a std::string at both compile time and runtime. However, there are ways to export a compile-time string to the runtime.
+
+\item 
+String views are now marked as views and borrowed ranges.
+
+\item 
+Standard hash functions were added for types std::u8string and std::u8string\_view, as well as for std::pmr::string, std::pmr::u8string, std::pmr::u16string, std::pmr::u32string, and std::pmr::wstring.
+\end{itemize}
+
+The following sections explain the non-trivial improvements that are not introduced and explained in other chapters.
 
 \mySubsubsection{23.1.1}{String Members starts\_with() and ends\_with()}
 
+Both strings and string views now have new member functions starts\_with() and ends\_with(). They provide an easy way to check the leading and trailing character of a string against a certain sequence of characters. You can compare against a single character, an array of characters, or a string or string view.
+
+For example:
+
+\begin{cpp}
+void foo(const std::string& s, std::string_view suffix)
+{
+	if (s.starts_with('.')) {
+		...
+	}
+	if (s.ends_with(".tmp")) {
+		...
+	}
+	if (s.ends_with(suffix)) {
+		...
+	}
+}
+\end{cpp}
+
 \mySubsubsection{23.1.2}{Restricted String Member reserve()}
+
+For strings, the member function reserve() can no longer be used to request to shrink the capacity (memory allocated for the value) of strings:
+
+\begin{cpp}
+void modifyString(std::string& s)
+{
+	if ( ... ) {
+		s.clear();
+		s.reserve(0); // may no longer shrink memory (as before on some platforms)
+		return;
+	}
+	...
+}
+\end{cpp}
+
+The reason for this is that releasing memory might take some time, meaning that the performance of this call could vary significantly when porting code.
+
+For this reason, passing no argument to reserve() is no longer supported:
+
+\begin{cpp}
+s.reserve(); // ERROR since C++20
+\end{cpp}
+
+Use shrink\_to\_fit() instead:
+
+\begin{cpp}
+s.shrink_to_fit(); // still OK
+\end{cpp}
+
+
+
+
+
+
+

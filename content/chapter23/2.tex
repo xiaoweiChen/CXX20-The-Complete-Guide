@@ -1,0 +1,137 @@
+Sometimes, it is important to let the program deal with the location of the source code that is currently being processed. This is especially used for logging, testing, and checking invariants. So far, programmers have had to use the C preprocessor macros \_\_FILE\_\_, \_\_LINE\_\_, and \_\_func\_\_. C++20 introduces a type-safe feature for that so that an object can be initialized with the current source location and this information can be passed around just like any other object.
+
+The use is simple:
+
+\begin{cpp}
+#include <source_location>
+
+void foo()
+{
+	auto sl = std::source_location::current();
+	...
+	std::cout << "file: " << sl.file_name() << '\n';
+	std::cout << "function: " << sl.function_name() << '\n';
+	std::cout << "line/col: " << sl.line() << '/' << sl.column() << '\n';
+}
+\end{cpp}
+
+The static consteval function std::source\_location::current() yields an object for the current source location of type std::source\_location with the following interface:
+
+\begin{itemize}
+\item 
+file\_name() yields the name of the file.
+
+\item 
+function\_name() yields the name of the function (empty if called outside any function).
+
+\item 
+line() yields the line number (may be 0 when the line number is not known).
+
+\item 
+column() yields the column in the line (may be 0 when the column number is not known).
+\end{itemize}
+
+Details such as the exact format of the function name and the exact position of the column might differ. For example, with the GCCs library, the output might look as follows:
+
+\begin{shell}
+file:     sourceloc.cpp
+function: void foo()
+line/col: 8/42
+\end{shell}
+
+while the output of Visual C++ might look as follows:
+
+\begin{shell}
+file:     sourceloc.cpp
+function: foo
+line/col: 8/35
+\end{shell}
+
+Note that by using std::source\_location::current() as a default argument in a parameter declaration, you get the location of the function call. For example:
+
+\begin{cpp}
+void bar(std::source_location sl = std::source_location::current())
+{
+	...
+	std::cout << "file: " << sl.file_name() << '\n';
+	std::cout << "function: " << sl.function_name() << '\n';
+	std::cout << "line/col: " << sl.line() << '/' << sl.column() << '\n';
+}
+
+int main()
+{
+	...
+	bar();
+	...
+}
+\end{cpp}
+
+The output might be something like:
+
+\begin{shell}
+file:     sourceloc.cpp
+function: int main()
+line/col: 34/6
+\end{shell}
+
+or:
+
+\begin{shell}
+file:     sourceloc.cpp
+function: main
+line/col: 34/3
+\end{shell}
+
+Because a std::source\_location is an object, you can store it in a container and pass it around:
+
+\begin{cpp}
+std::source_location myfunc()
+{
+	auto sl = std::source_location::current();
+	...
+	return sl;
+}
+
+int main()
+{
+	std::vector<std::source_location> locs;
+	...
+	locs.push_back(myfunc());
+	...
+	for (const auto& loc : locs) {
+		std::cout << "called: " << loc.function_name() << '\n';
+	}
+}
+\end{cpp}
+
+The output might be:
+
+\begin{shell}
+called: ’std::source_location myfunc()’
+\end{shell}
+
+or:
+
+\begin{shell}
+called: ’myfunc’
+\end{shell}
+
+See lib/sourceloc.cpp for the complete example.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

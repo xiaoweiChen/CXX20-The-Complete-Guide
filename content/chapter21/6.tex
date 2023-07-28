@@ -3,6 +3,199 @@ Since C++11, it has been possible to specify attributes (formal annotations that
 
 \mySubsubsection{21.6.1}{Attributes [[likely]] and [[unlikely]]}
 
+The new attributes [[likely]] and [[unlikely]] were introduced by C++20 to help the compiler when performing branch optimizations.
+
+When there are multiple paths in the code, you can use these attributes to give the compiler a hint about which path is most likely or not likely.
+
+For example:
+
+\begin{cpp}
+int f(int n)
+{
+	if (n <= 0) [[unlikely]] { // n <= 0 is considered to be arbitrarily unlikely
+		return n;
+	}
+	else {
+		return n * n;
+	}
+}
+\end{cpp}
+
+This might, for example, force the compiler to generate assembler code that directly handles the else branch while jumping to later assembler commands for the then case.
+
+It probably has but is not guaranteed to have the same effect as:
+
+\begin{cpp}
+int f(int n)
+{
+	if (n <= 0) {
+		return n;
+	}
+	else [[likely]] { // n > 0 is considered to be arbitrarily likely
+		return n * n;
+	}
+}
+\end{cpp}
+
+Here is another example:
+
+\begin{cpp}
+int g(int n)
+{
+	switch (n) {
+		case 1:
+		...
+		break;
+		[[likely]] case 2: // n == 2 is considered to be arbitrarily most likely
+		...
+		break;
+	}
+	...
+}
+\end{cpp}
+
+The effect of these attributes is compiler-specific and there is no guarantee that the attributes have any impact at all.
+
+You should be careful when using these attributes and double-check their effect. Often, compilers know better how to optimize code, meaning that excessive usage of these attributes might be counter-productive.
+
 \mySubsubsection{21.6.2}{Attribute [[no\_unique\_address]]}
 
+Classes often have members that impact the behavior but do not provide a state. Examples are the hash function of an unordered container, the deleter of a std::unique\_ptr, or the standard allocator of containers or strings. All they provide are member functions (and static members) but no non-static data members.
+
+However, members usually need memory even though they do not store anything. For example, consider the following code:
+
+\begin{cpp}
+struct Empty {}; // empty class: size is usually 1
+
+struct I { // size is same as sizeof(int)
+	int i;
+};
+
+struct EandI { // size is sum of size of members with alignment
+	Empty e;
+	int i;
+};
+
+std::cout << "sizeof(Empty): " << sizeof(Empty) << '\n';
+std::cout << "sizeof(I): " << sizeof(I) << '\n'
+std::cout << "sizeof(EandI): " << sizeof(EandI) << '\n';
+\end{cpp}
+
+Depending on the size of int, the output might look something like this:
+
+\begin{shell}
+sizeof(E):     1
+sizeof(I):     4
+sizeof(EandI): 8
+\end{shell}
+
+This is an unnecessary waste of space. Before C++20, you could use the empty base class optimization (EBCO) to avoid the unnecessary overhead. By deriving from a class with no data members, compilers are allowed to save the corresponding space:
+
+\begin{cpp}
+struct EbasedI : Empty { // using EBCO
+	int i;
+};
+
+std::cout << "sizeof(EbasedI): " << sizeof(EbasedI) << '\n';
+\end{cpp}
+
+On a platform with the sizes above, this outputs:
+
+\begin{shell}
+sizeof(EbasedI): 4
+\end{shell}
+
+However, this workaround is a bit clumsy and might not always work. For example, you cannot use EBCO if the empty base class is final.
+
+Since C++20, there is a different way to get the same effect. You only have to declare the members that provide no state with the attribute [[no\_unique\_address]]:
+
+\begin{cpp}
+struct EattrI { // same effect as EBCO
+	[[no_unique_address]] Empty e;
+	int i;
+};
+
+struct IattrE { // same effect as EBCO
+	int i;
+	[[no_unique_address]] Empty e;
+};
+
+std::cout << "sizeof(EattrI): " << sizeof(EattrI) << '\n';
+std::cout << "sizeof(IattrE): " << sizeof(IattrE) << '\n';
+\end{cpp}
+
+On the platform above where this attribute is supported, the output becomes:
+
+\begin{shell}
+sizeof(EattrI): 4
+sizeof(IattrE): 4
+\end{shell}
+
+Note that compilers are not required to honor this attribute.
+
+The member marked with [[no\_unique\_address]] still counts as a member for initialization:
+
+\begin{cpp}
+EattrI ei = {42}; // ERROR: can’t initialize member e with 42
+EattrI ei = {{},42}; // OK
+\end{cpp}
+
+This optimization also means that the address of the member e gets the same address as the member i of the same object. This still means that the members e of two different objects have different addresses.
+
+If a data type only has data members with this attribute, it is implementation-defined whether the type trait std::is\_empty\_v<> yields true:
+
+\begin{cpp}
+struct OnlyEmpty {
+	[[no_unique_address]] Empty e;
+};
+
+std::is_empty_v<OnlyEmpty> // might yield true or false
+\end{cpp}
+
+Finally, note that Visual C++ currently ignores this attribute. The reason is that Visual C++ initially allowed this attribute without honoring it and now honoring it becomes an ABI break. Visual C++ might support it in a future ABI-breaking version, though. Until then, you can use [[msvc::no\_unique\_address]] instead:
+
+\begin{cpp}
+struct EattrI { // also works for Visual C++
+	[[no_unique_address]] [[msvc::no_unique_address]] Empty e;
+	Type i;
+};
+\end{cpp}
+
 \mySubsubsection{21.6.3}{Attribute [[nodiscard]] with Parameter}
+
+C++17 introduced the attribute [[nodiscard]], which can be used to encourage warnings by the compiler if a return value of a function is not used.
+
+[[nodiscard]] should usually be used to signal misbehavior when return values are not used. The misbehavior might be:
+
+\begin{itemize}
+\item 
+Memory leaks, such as not using returned allocated memory.
+
+\item 
+Unexpected or non-intuitive behavior, such as getting different/unexpected behavior when not using the return value
+
+\item 
+Unnecessary overhead, such as calling something that is a no-op if the return value is not used
+\end{itemize}
+
+However, there was no way to specify a message for a reason to explain why a programmer should use the return values. C++20 introduced an optional parameter for that.
+
+For example:
+
+\begin{cpp}
+class MyType {
+	public:
+	...
+	[[nodiscard("Possible memory leak")]] // OK, since C++20
+	char* release();
+	
+	void clear();
+	
+	[[nodiscard("Did you mean clear()?")]] // OK, since C++20
+	bool empty() const;
+};
+\end{cpp}
+
+The second declaration requests that the compiler prints the warning message “Did you mean clear()?” when the return value of empty() is not used. In fact, C++20 introduced this attribute for the member function empty() of all standard containers and according to feedback, we know that compilers did indeed find errors where programmers thought they had requested making the collection empty.
+
+

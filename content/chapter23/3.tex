@@ -1,5 +1,38 @@
 
+Comparing integral values of different types is more complex than expected. This section describes two new features of C++20 for dealing with this problem:
+
+\begin{itemize}
+\item 
+Utilities for integral comparisons
+
+\item 
+std::ssize()
+\end{itemize}
 
 \mySubsubsection{23.3.1}{Safe Comparisons of Integral Values}
 
+Comparing and converting numbers, even of different numeric types, should be a trivial task. Unfortunately, it is not. Almost all programmers have seen warnings about code doing this. These warnings have a good reason: because of implicit conversions, we may write unsafe code without noticing it.
+
+For example, most of the time we expect that a simple x < y just works. Consider the following example:
+
+\begin{cpp}
+int x = -7;
+unsigned y = 42;
+
+if (x < y) ... // OOPS: false
+\end{cpp}
+
+
+
+
+
 \mySubsubsection{23.3.2}{ssize()}
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,64 @@
+Each and every C++ version introduces various language and library features that are supported by compilers step by step. For that reason, knowing which C++ version a compiler supports in general is often not enough; for portable code, it might be important to know whether a specific feature is available.
+
+For that purpose, C++20 officially introduces feature test macros. For each new language and library feature, a macro can be used to signal whether the feature is available. The macro can even provide information about which version of a feature is supported.
+
+For example, the following source code will use different code depending on whether (and in which form) generic lambdas are available:
+
+\begin{cpp}
+#ifdef __cpp_generic_lambdas
+#if __cpp_generic_lambdas >= 201707
+... // generic lambdas with template parameters can be used
+#else
+... // generic lambdas can be used
+#else
+... // no generic lambdas can be used
+#endif
+\end{cpp}
+
+All feature test macros for language features start with \_\_cpp.
+
+As another example, the following code provides and uses a workaround if std::as\_const() is not available yet:
+
+\begin{cpp}
+#ifndef __cpp_lib_as_const
+template<typename T>
+const T& asConst(T& t) {
+	return t;
+} 
+#endif
+
+#ifdef __cpp_lib_as_const
+	auto printColl = [&coll = std::as_const(coll)] {
+#else
+	auto printColl = [&coll = asConst(coll)] {
+#endif
+	...
+	};
+\end{cpp}
+
+All feature test macros for library features start with \_\_cpp\_lib.
+
+Feature test macros for language features are defined by the compilers. Feature test macros for library features are provided by the new header <version>.
+
+See the use of \_\_cpp\_char8\_t as another example of making code that uses UTF-8 characters portable before and after C++20.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

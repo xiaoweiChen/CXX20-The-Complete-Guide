@@ -1,4 +1,162 @@
 
+When using type members of template parameters, you usually have to qualify this use with the keyword typename:
 
+\begin{cpp}
+template<typename T>
+typename T::value_type getElem(const T& cont, typename T::iterator pos)
+{
+	using Itor = typename T::iterator;
+	typename T::value_type elem;
+	...
+	return elem;
+}
+\end{cpp}
+
+Before C++20, all qualifications of the type members value\_type and iterator of T were necessary.
+Since C++20, you can skip typename in contexts where it is clear that a type is passed. In this case, this applies to the specification of the return type and the type used in the alias declaration (where using introduces a new name for a type):
+
+\begin{cpp}
+template<typename T>
+T::value_type getElem(const T& cont, typename T::iterator pos)
+{
+	using Itor = T::iterator;
+	typename T::value_type elem;
+	...
+	return elem;
+}
+\end{cpp}
+
+Note that the parameter pos and the variable elem still need typename. The most important places where you can skip typename now are:
+
+\begin{itemize}
+\item 
+When declaring return types (except for a local forward declaration)
+
+\item 
+When declaring members in class templates
+
+\item 
+When declaring parameters of member or friend functions in class templates
+
+\item 
+When declaring parameters of requires expressions
+
+\item 
+For the types in alias declarations
+\end{itemize}
+
+In particular, when declaring a class template, you can now skip typename in most cases:
+
+\begin{cpp}
+template<typename T>
+class MyClass {
+	T::value_type val; // no need for typename since C++20
+public:
+	...
+	T::iterator begin() const; // no need for typename since C++20
+	T::iterator end() const; // no need for typename since C++20
+	void print(T::iterator) const; // no need for typename since C++20
+};
+\end{cpp}
+
+However, because the rules for implicit typename are pretty subtle to some extent, you might simply still always use typename when using the type member of a template parameter (at least outside class templates).
 
 \mySubsubsection{22.1.1}{Rules for Implicit typename in Detail}
+
+Since C++20, you can skip typename when using a type member for a template parameter in the following situations:
+
+\begin{itemize}
+\item 
+In an alias declaration (i.e., when declaring a type name with using); note that a type declaration with typedef still needs typename
+
+\item 
+When defining or declaring the return type of a function (unless the declaration happens inside a function or block scope)
+
+\item 
+When declaring a trailing return type
+
+\item 
+When specifying the target type for static\_cast, const\_cast, reinterpret\_cast, or dynamic\_cast
+
+\item 
+When specifying the type for new
+
+\item 
+Inside a class when
+
+\begin{itemize}
+\item 
+Declaring a data member
+
+\item 
+Declaring the return type of a member function
+
+\item 
+Declaring a parameter of a member or friend function or lambda (a default argument might still need it)
+\end{itemize}
+
+\item 
+When declaring parameter types in a requires expression
+
+\item 
+When declaring a default value for a type parameter of a template
+
+\item 
+When declaring the type of a non-type template parameter
+\end{itemize}
+
+Note that before C++20, typename was not necessary in a few other situations:
+
+\begin{itemize}
+\item 
+When specifying the base type of an inherited class
+
+\item 
+When passing initial values to the base class in a constructor
+
+\item 
+When using a type member inside the class declaration
+\end{itemize}
+
+The following example demonstrates most of the cases above (here, TYPENAME is used where typename is optional since C++20):
+
+\begin{cpp}
+template<typename T,
+auto ValT = typename T::value_type{}> // typename required
+class MyClass {
+	TYPENAME T::value_type val; // typename optional
+	public:
+	using iterator = TYPENAME T::iterator; // typename optional
+	TYPENAME T::iterator begin() const; // typename optional
+	TYPENAME T::iterator end() const; // typename optional
+	void print(TYPENAME T::iterator) const; // typename optional
+	template<typename T2 = TYPENAME T::value_type> // second typename optional
+	void assign(T2);
+};
+
+template<typename T>
+TYPENAME T::value_type // typename optional
+foo(const T& cont, typename T::value_type arg) // typename required
+{
+	typedef typename T::value_type ValT2; // typename required
+	using ValT1 = TYPENAME T::value_type; // typename optional
+	typename T::value_type val; // typename required
+	typename T::value_type other1(void); // typename required
+	auto other2(void) -> TYPENAME T::value_type; // typename optional
+	auto l1 = [] (TYPENAME T::value_type) { // typename optional
+	};
+	auto p = new TYPENAME T::value_type; // typename optional
+	val = static_cast<TYPENAME T::value_type>(0); // typename optional
+	...
+}
+\end{cpp}
+
+
+
+
+
+
+
+
+
+

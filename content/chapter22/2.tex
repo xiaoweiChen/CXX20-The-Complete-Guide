@@ -1,3 +1,155 @@
 
+C++20 provides a couple of improvements for aggregates. For generic code we now have:
+
+\begin{itemize}
+\item 
+Using class template argument deduction (CTAD) for aggregates
+
+\item 
+Aggregates can be used as non-type template parameters (NTTP)
+\end{itemize}
+
+The former is described in this section.
+
+Note that there are other new features for aggregates:
+
+\begin{itemize}
+\item 
+Designated initializers (initial values for specific members) are (partially) supported
+
+\item 
+You can initialize aggregates with parentheses
+
+\item 
+The fixed definition of aggregates and the consequence for std::is\_default\_constructible<>
+\end{itemize}
+
 
 \mySubsubsection{22.2.1}{Class Template Argument Deduction (CTAD) for Aggregates}
+
+Since C++17, constructors can be used to deduce template parameters of class templates. For example:
+
+\begin{cpp}
+template<typename T>
+class Type {
+	T value;
+public:
+	Type(T val)
+	: value{val} {
+	}
+	...
+};
+
+Type<int> t1{42};
+Type t2{42}; // deduces Type<int> since C++17
+\end{cpp}
+
+However, even for simple aggregates, a similar deduction according to the way objects are initialized was not supported:
+
+\begin{cpp}
+template<typename T>
+struct Aggr {
+	T value;
+};
+
+Aggr<int> a1{42}; // OK
+Aggr a2{42}; // ERROR before C++20
+\end{cpp}
+
+You had to provide a deduction guide:
+
+\begin{cpp}
+template<typename T>
+struct Aggr {
+	T value;
+};
+
+template<typename T>
+Aggr(T) -> Aggr<T>;
+
+Aggr<int> a1{42}; // OK
+Aggr a2{42}; // OK since C++17
+\end{cpp}
+
+Since C++20, there is no longer any need for a deduction guide, meaning that the following is enough:
+
+\begin{cpp}
+template<typename T>
+struct Aggr {
+	T value;
+};
+
+Aggr<int> a1{42}; // OK
+Aggr a2{42}; // OK since C++20 even without deduction guide
+\end{cpp}
+
+Note that this feature also works when using parentheses to initialize aggregates:
+
+\begin{cpp}
+Aggr a3(42); // OK since C++20 even without deduction guide
+\end{cpp}
+
+The deduction rules can be subtle, as the following example demonstrates:
+
+\begin{cpp}
+template<typename T>
+struct S {
+	T x;
+	T y;
+};
+
+template<typename T>
+struct C {
+	S<T> s;
+	T x;
+	T y;
+};
+
+C c1 = {{1, 2}, 3, 4}; // OK, C<int> deduced
+C c2 = {{1, 2}, 3}; // OK, C<int> deduced (y is 0)
+C c3 = {{1, 2}, 3.3, 4.4}; // OK, C<double> deduced
+
+C c4 = {{1, 2}, 3, 4.4}; // ERROR: int and double deduced for T
+C c5 = {{1, 2}}; // ERROR: T only indirectly deduced
+C c6 = {1, 2, 3}; // ERROR: don’t know how many values S<T> needs
+C<int> c7 = {1, 2, 3}; // OK
+\end{cpp}
+
+Note that class template argument deduction even works for aggregates with a variadic number of elements:
+
+\begin{cpp}
+// aggregate with variadic number of base types:
+template<typename... T>
+struct C : T... {
+};
+
+struct Base1 {
+};
+struct Base2 {
+};
+
+// aggregate initialized with two elements of types Base1 and Base2:
+C c1{Base1{}, Base2{}};
+
+// aggregate initialized with three lambda elements:
+C c2{[] { f1(); },
+	[] { f2(); },
+	[] { f3(); }
+};
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
