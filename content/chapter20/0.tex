@@ -1,0 +1,60 @@
+This chapter presents several type traits (and two low-level functions for types) that C++20 introduces in its standard library.
+
+Table New type traits lists these new type traits of C++20 (all are defined in the namespace std).
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Trait}                                                                                                                 & \textbf{Effect}                                                                                                           \\ \hline
+\endfirsthead
+%
+\endhead
+%
+is\_bounded\_array\_v\textless{}T\textgreater{}                                                                                & Yields true if type T is an array type with known extent                                                                  \\ \hline
+is\_unbounded\_array\_v\textless{}T\textgreater{}                                                                              & Yields true if type T is an array type with unknown extent                                                                \\ \hline
+is\_nothrow\_convertible\_v\textless{}T, T2\textgreater{}                                                                      & Yields true if type T is convertible to type T2 without throwing                                                          \\ \hline
+is\_layout\_compatible\_v\textless{}T1, T2\textgreater{}                                                                       & Yields true if T1 is layout-compatible with type T2                                                                       \\ \hline
+\begin{tabular}[c]{@{}l@{}}is\_pointer\_interconvertible...\\   \_base\_of\_v\textless{}BaseT, DerT\textgreater{}\end{tabular} & Yields true if a pointer to DerT can safely be converted to a pointer to its base type BaseT                              \\ \hline
+remove\_cvref\_t\textless{}T\textgreater{}                                                                                     & Yields type T without reference, top-level const, volatile                                                                \\ \hline
+unwrap\_reference\_t\textless{}T\textgreater{}                                                                                 & Yields the wrapped type of type T if it is a std::reference\_wrapper\textless{}\textgreater or otherwise T                \\ \hline
+unwrap\_ref\_decay\_t\textless{}T\textgreater{}                                                                                & Yields the wrapped type of type T if it is a std::reference\_wrapper\textless{}\textgreater or otherwise its decayed type \\ \hline
+common\_reference\_t\textless{}T...\textgreater{}                                                                              & Yields the common type pf all types T... to which you can assign a value                                                  \\ \hline
+type\_identity\_t\textless{}T\textgreater{}                                                                                    & Yields type T as it is                                                                                                    \\ \hline
+iter\_difference\_t\textless{}T\textgreater{}                                                                                  & Yields the difference type of the incrementable/iterator type T                                                           \\ \hline
+iter\_value\_t\textless{}T\textgreater{}                                                                                       & Yields the value/element type of the pointer/iterator type T                                                              \\ \hline
+iter\_reference\_t\textless{}T\textgreater{}                                                                                   & Yields the reference type of the pointer/iterator type T                                                                  \\ \hline
+iter\_rvalue\_reference\_t\textless{}T\textgreater{}                                                                           & Yields the rvalue reference type of the pointer/iterator type T                                                           \\ \hline
+is\_clock\_v\textless{}T\textgreater{}                                                                                         & Yields true if T is a clock type                                                                                          \\ \hline
+compare\_three\_way\_result\_t\textless{}T\textgreater{}                                                                       & Yields the type of comparing two values with operator \textless{}=\textgreater{}                                          \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 20.1. New type traits
+\end{center}
+
+The following sections discuss these traits in detail, except for the following traits:
+
+\begin{itemize}
+\item 
+std::is\_clock\_v<> is discussed in the section about new chrono features.
+
+\item 
+std::compare\_three\_way\_result\_t<> is discussed in the section about the new three-way comparisons.
+\end{itemize}
+
+Note that in addition, the type trait std::is\_pod<> was deprecated with C++20.
+
+
+
+
+
+
+
+
+
+
+
+

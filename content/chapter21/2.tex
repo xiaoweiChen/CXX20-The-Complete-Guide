@@ -1,0 +1,78 @@
+
+
+Assume we have a scoped enumeration type (declared with enum class):
+
+\begin{cpp}
+enum class Status{open, progress, done = 9};
+\end{cpp}
+
+In contrast to unscoped enumeration types (enum without class), the values of this type need a qualification with their type name:
+
+\begin{cpp}
+auto x = Status::open; // OK
+auto x = open; // ERROR
+\end{cpp}
+
+However, qualifying each value all the time can become a bit tedious in some contexts where it is clear that we have no conflicts. To make the use of scoped enumeration types more convenient, you can now use a using enum declaration.
+
+A typical example is a switch over all possible enumeration values. You can now implement it as follows:
+
+\begin{cpp}
+void print(Status s)
+{
+	switch (s) {
+	using enum Status; // make enum values available in current scope
+	case open:
+		std::cout << "open";
+		break;
+	case progress:
+		std::cout << "in progress";
+		break;
+	case done:
+		std::cout << "done";
+		break;
+	}
+}
+\end{cpp}
+
+As long as no other symbol with the name open, progress, or done is declared in the scope of print(), this code works fine.
+
+You can also use multiple using declarations for specific enumeration values now:
+
+\begin{cpp}
+void print(Status s)
+{
+	switch (s) {
+	using Status::open, Status::progress, Status::done;
+	case open:
+		std::cout << "open";
+		break;
+	case progress:
+		std::cout << "in progress";
+		break;
+	case done:
+		std::cout << "done";
+		break;
+	}
+}
+\end{cpp}
+
+That way, you know exactly which names you make available in the current scope.
+
+Note that you can also use the using declaration for unscoped enumeration types. It is not necessary, but that way, you do not have to know how an enumeration type is defined:
+
+\begin{cpp}
+enum Status{open, progress, done = 9}; // unscoped enum
+
+auto s1 = open; // OK
+auto s2 = Status::open; // OK
+
+using enum Status; // OK, but no effect
+auto s3 = open; // OK
+auto s4 = Status::open; // OK
+\end{cpp}
+
+
+
+
+

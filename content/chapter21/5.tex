@@ -1,9 +1,475 @@
 
+C++20 provides a couple of improvements for aggregates, which are described in this section:
 
+\begin{itemize}
+\item 
+Designated initializers (initial values for specific members) are (partially) supported
 
+\item 
+You can initialize aggregates with parentheses
+
+\item 
+The fixed definition of aggregates and the consequence for std::is\_default\_constructible<>
+\end{itemize}
+
+In addition, other sections of this book describe additional new aspects of aggregates when they are used in generic code:
+
+\begin{itemize}
+\item 
+Using class template argument deduction (CTAD) for aggregates
+
+\item 
+Aggregates can be used as non-type template parameters (NTTP)
+\end{itemize}
 
 \mySubsubsection{21.5.1}{Designated Initializers}
 
+For aggregates, C++20 provides a way to specify which member should be initialized with a passed initial value. However, you can use this only to skip parameters.
+
+For example, assume we have the following aggregate type:
+
+\begin{cpp}
+struct Value {
+	double amount = 0;
+	int precision = 2;
+	std::string unit = "Dollar";
+};
+\end{cpp}
+
+Then, the following way to initialize values of this type is supported now:
+
+\begin{cpp}
+Value v1{100}; // OK (not designated initializers)
+Value v2{.amount = 100, .unit = "Euro"}; // OK (second member has default value)
+Value v3{.precision = 8, .unit = "$"}; // OK (first member has default value)
+\end{cpp}
+
+See lang/designated.cpp for a complete example.
+
+Note the following constraints:
+
+\begin{itemize}
+\item 
+You have to pass the initial value with = or \{\}.
+
+\item 
+You can skip members, but you have to follow their order. The order of members that are initialized by name must match their order in the declaration.
+
+\item 
+You must use designated initializers for either all or none of the arguments. Mixed initialization is not allowed.
+
+\item 
+Using designated initialization for arrays is not supported.
+
+\item 
+Nested initialization with designated initializers is possible, but not directly using .mem.mem.
+
+\item 
+You cannot use designated initializers when initializing aggregates with parentheses.
+
+\item 
+Designated initializers can also be used in unions.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+Value v4{100, .unit = "Euro"}; // ERROR: all or none designated
+Value v5{.unit = "$", .amount = 20}; // ERROR: invalid order
+Value v6(.amount = 29.9, .unit = "Euro"); // ERROR: only supported for curly braces
+\end{cpp}
+
+The restrictions that designated initializers follow the order of members, can be used either for all or for none of the arguments, do not support direct nesting, and do not support arrays are restrictions compared to the programming language C. The reason for respecting the order of the members is to ensure that the initialization reflects the order in which constructors are called (which is the opposite order destructors are called).
+
+And as an example of nested initialization with = and \{\} and unions:
+
+\begin{cpp}
+union Sub {
+	double x = 0;
+	int y = 0;
+};
+
+struct Data {
+	std::string name;
+	Sub val;
+};
+
+Data d1{.val{.y=42}}; // OK
+Data d2{.val = {.y{42}}}; // OK
+\end{cpp}
+
+You cannot directly nest designated initializers:
+
+\begin{cpp}
+Data d2{.val.y = 42}; // ERROR
+\end{cpp}
+
+
 \mySubsubsection{21.5.2}{Aggregate Initialization with Parentheses}
 
+Assume you have declared the following aggregate:
+
+\begin{cpp}
+struct Aggr {
+	std::string msg;
+	int val;
+};
+\end{cpp}
+
+Before C++20, you could only use curly braces to initialize aggregates with values:
+
+\begin{cpp}
+Aggr a0; // OK, but no initialization
+Aggr a1{}; // OK, value initialized with "" and 0
+Aggr a2{"hi"}; // OK, initialized with "hi" and 0
+Aggr a3{"hi", 42}; // OK, initialized with "hi" and 42
+Aggr a4 = {}; // OK, initialized with "" and 0
+Aggr a5 = {"hi"}; // OK, initialized with "hi" and 0
+Aggr a6 = {"hi", 42}; // OK, initialized with "hi" and 42
+\end{cpp}
+
+Since C++20, you can also use parentheses as outer characters for a direct initialization without =:
+
+\begin{cpp}
+Aggr a7("hi"); // OK since C++20: initialized with "hi" and 0
+Aggr a8("hi", 42); // OK since C++20: initialized with "hi" and 42
+Aggr a9({"hi", 42}); // OK since C++20: initialized with "hi" and 42
+\end{cpp}
+
+Using = or inner parentheses still does not work:
+
+\begin{cpp}
+Aggr a10 = "hi"; // ERROR
+Aggr a11 = ("hi", 42); // ERROR
+Aggr a12(("hi", 42)); // ERROR
+\end{cpp}
+
+Using inner parentheses might even compile. In that case, they are used as any parentheses around an expression that uses the comma operator.
+
+Note that you can use parentheses even to initialize an array of unknown bounds:
+
+\begin{cpp}
+int a1[]{1, 2, 3}; // OK since C++11
+int a2[](1, 2, 3); // OK since C++20
+int a3[] = {1, 2, 3}; // OK
+int a4[] = (1, 2, 3); // still ERROR
+\end{cpp}
+
+However, “brace elision” is not supported (there are no nested braces to elide):
+
+\begin{cpp}
+struct Arr {
+	int elem[10];
+};
+
+Arr arr1{1, 2, 3}; // OK
+Arr arr2(1, 2, 3); // ERROR
+Arr arr3{{1, 2, 3}}; // OK
+Arr arr4({1, 2, 3}); // OK (even before C++20)
+\end{cpp}
+
+Therefore, to initialize std::arrays, you still have to use braces:
+
+\begin{cpp}
+std::array<int,3> a1{1, 2, 3}; // OK: shortcut for std::array{{1, 2, 3}}
+std::array<int,3> a2(1, 2, 3); // still ERROR
+\end{cpp}
+
+\mySamllsection{Reason for Aggregate Initialization with Parentheses}
+
+The reason for supporting aggregate initialization with parentheses is that this allows you to call the operator new with parentheses:
+
+\begin{cpp}
+struct Aggr {
+	std::string msg;
+	int val;
+};
+
+auto p1 = new Aggr{"Rome", 200}; // OK since C++11
+auto p2 = new Aggr("Rome", 200); // OK since C++20 (ERROR before C++20)
+\end{cpp}
+
+This helps to support the use of aggregates in types that call new internally with parentheses to store values in existing memory as is the case for containers and smart pointers. In fact, the following is possible since C++20:
+
+\begin{itemize}
+\item 
+You can now use std::make\_unique<>() and std::make\_shared<>() for aggregates:
+
+\begin{cpp}
+auto up = std::make_unique<Aggr>("Rome", 200); // OK since C++20
+auto sp = std::make_shared<Aggr>("Rome", 200); // OK since C++20
+\end{cpp}
+
+There was no way to use these helper functions for aggregates before C++20.
+
+\item 
+You can now emplace new values into containers of aggregates:
+
+\begin{cpp}
+std::vector<Aggr> cont;
+cont.emplace_back("Rome", 200); // OK since C++20
+\end{cpp}
+\end{itemize}
+
+Note that there are still types that cannot be initialized with parentheses but that can be initialized with curly braces: scoped enumerations (enum class types). Type std::byte (introduced with C++17) is one example:
+
+\begin{cpp}
+std::byte b1{0}; // OK
+std::byte b2(0); // still ERROR
+auto upb2 = std::make_unique<std::byte>(0); // still ERROR
+auto upb3 = std::make_unique<std::byte>(std::byte{0}); // OK
+\end{cpp}
+
+For std::array, you still need braces (as stated above):
+
+\begin{cpp}
+std::vector<std::array<int, 3>> ca;
+ca.emplace_back(1, 2, 3); // ERROR
+ca.emplace_back({1, 2, 3}); // ERROR
+ca.push_back({1, 2, 3}); // still OK
+\end{cpp}
+
+\mySamllsection{Aggregate Initialization with Parentheses in Detail}
+
+The proposal to introduce initialization with parentheses lists the following design guidelines:
+
+\begin{itemize}
+\item 
+Any existing meaning of Type(val) should not change.
+
+\item 
+Parenthesized initialization and braced initialization should be as similar as possible but also as distinct as necessary to conform with the existing mental models of braced lists and parenthesized lists.
+\end{itemize}
+
+And in fact, there are the following differences between aggregate initialization with curly braces and aggregate initialization with parentheses:
+
+\begin{itemize}
+\item 
+Initialization with parentheses does not detect narrowing conversions.
+
+\item 
+Initialization with parentheses allows all implicit conversions (not only from derived to base class).
+
+\item
+When using parentheses, reference members do not extend the lifetime of passed temporary objects.
+
+\item
+Using parentheses does not support brace elisions (using them is like passing arguments to parameters).
+
+\item
+An initialization with empty parentheses works even for explicit members.
+
+\item
+Using parentheses does not support designated initializers.
+\end{itemize}
+
+An example of the lack of detecting narrowing is the following:
+
+\begin{cpp}
+struct Aggr {
+	std::string msg;
+	int val;
+};
+
+Aggr a1{"hi", 1.9}; // ERROR: narrowing
+Aggr a2("hi", 1.9); // OK, but initializes with 1
+
+std::vector<Aggr> cont;
+cont.emplace_back("Rome", 1.9); // initializes with 1
+\end{cpp}
+
+Note that emplace functions never detect narrowing.
+
+An example of the difference when dealing with implicit conversions is this:
+
+\begin{cpp}
+example of the difference when dealing with implicit conversions is this:
+struct Other {
+	...
+	operator Aggr(); // defines implicit conversion to Aggr
+};
+
+Other o;
+Aggr a7{o}; // ERROR: no implicit conversion supported
+Aggr a8(o); // OK, implicit conversion possible
+\end{cpp}
+
+Note that the conversions cannot be defined by the aggregate itself because aggregates cannot have a userdefined constructor.
+
+The missing brace elision and the complex rules of brace initialization lead to the following behavior:
+
+\begin{cpp}
+Aggr a01{"x", 65}; // init string with "x" and int with 65
+Aggr a02("x", 65); // OK since C++20 (same effect)
+
+Aggr a11{{"x", 65}}; // runtime ERROR: "x" doesn’t have 65 characters
+Aggr a12({"x", 65}); // OK even before C++20: init string with "x" and int with 65
+
+Aggr a21{{{"x", 65}}}; // ERROR: cannot initialize string with initializer list of "x" and 65
+Aggr a22({{"x", 65}}); // runtime ERROR: "x" doesn’t have 65 characters
+
+Aggr a31{'x', 65}; // ERROR: cannot initialize string with ’x’
+Aggr a32('x', 65); // ERROR: cannot initialize string with ’x’
+
+Aggr a41{{'x', 65}}; // init string with ’x’ and char(65)
+Aggr a42({'x', 65}); // OK since C++20 (same effect)
+
+Aggr a51{{{'x', 65}}}; // init string with ’x’ and char(65)
+Aggr a52({{'x', 65}}); // OK even before C++20: init string with ’x’ and 65
+
+Aggr a61{{{{'x', 65}}}}; // ERROR
+Aggr a62({{{'x', 65}}}); // OK even before C++20: init string with ’x’ and 65
+\end{cpp}
+
+When performing copy initialization (initializing with =), explicit matters and might have a different effect with empty parentheses as follows:
+
+\begin{cpp}
+struct C {
+	explicit C() = default;
+};
+
+struct A { // aggregate
+	int i;
+	C c;
+};
+
+auto a1 = A{42, C{}}; // OK: explicit initialization
+auto a2 = A(42, C()); // OK since C++20: explicit initialization
+
+auto a3 = A{42}; // ERROR: cannot call explicit constructor
+auto a4 = A(42); // ERROR: cannot call explicit constructor
+
+auto a5 = A{}; // ERROR: cannot call explicit constructor
+auto a6 = A(); // OK: can call explicit constructor
+\end{cpp}
+
+However, this is nothing new in C++20 because the initialization of a6 was already supported before C++20.
+
+Finally, if you use parentheses for the initialization of an aggregate that has rvalue reference members, the lifetime of initial values is not extended. Thus, you should not pass temporary objects (prvalues):
+
+\begin{cpp}
+struct A {
+	int a;
+	int&& r;
+};
+
+int f();
+int n = 10;
+
+A a1{1, f()}; // OK, lifetime is extended
+std::cout << a1.r << '\n'; // OK
+A a2(1, f()); // OOPS: dangling reference
+std::cout << a2.r << '\n'; // runtime ERROR
+A a3(1, std::move(n)); // OK as long as a3 is used only while n exists
+std::cout << a3.r << '\n'; // OK
+\end{cpp}
+
+Due to these complicated rules and traps, you should use aggregate initialization with parentheses only when you have to, such as when using std::make\_unique<>(), std::make\_shared<>() or emplace functions.
+
 \mySubsubsection{21.5.3}{Definition of Aggregates}
+
+Once again, the definition of aggregate changed with C++20. This time, the modification reversed an extension that came in with C++11 and turned out to be an error. From C++11 until C++17, user-provided constructors were not allowed. For this reason, the following was a legal definition of an aggregate:
+
+\begin{cpp}
+struct A { // aggregate from C++11 until C++17
+	...
+	A() = delete; // user-declared, but not user-provided constructor
+};
+\end{cpp}
+
+With this definition, the aggregate initialization was valid even though the type had a deleted default constructor:
+
+\begin{cpp}
+A a1; // ERROR
+A a2{}; // OK from C++11 until C++17
+\end{cpp}
+
+This did not apply only to default constructors. For example:
+
+\begin{cpp}
+struct D { // aggregate from C++11 until C++17
+	int i = 0;
+	D(int) = delete; // user-declared, but not user-provided constructor
+};
+
+D d1(3); // ERROR
+D d2{3}; // OK from C++11 until C++17
+\end{cpp}
+
+This special behavior was introduced for a very special case but was totally counter-intuitive.[The feature was introduced as a “hack” to support C compatibility when initializing atomic types. However, even several committee members were not aware of that behavior and were very surprised and it even turned out that this support was never needed.] C++20 fixed this by going back to requiring for aggregates that there is no user-declared constructor (as was the case before C++11):
+
+\begin{cpp}
+struct A { // NO aggregate since C++20
+	...
+	A() = delete; // user-declared, but not user-provided constructor
+};
+
+A a1; // ERROR
+A a2{}; // ERROR since C++20
+\end{cpp}
+
+For this reason, the type trait std::is\_default\_constructible\_v<> will no longer be true for type A and D as declared above.
+
+However, note that some programmers did use this feature to force (possibly empty) curly braces when creating an object of an aggregate type (which does ensure that members are always initialized). For them, the workaround to get the same behavior is to derive from a base type as follows:
+
+\begin{cpp}
+struct MustInit {
+	MustInit(MustInit&&) = default;
+};
+
+struct A : MustInit {
+	...
+};
+
+A a1; // ERROR
+A a2{}; // OK
+\end{cpp}
+
+To summarize, since C++20, an aggregate is defined as follows:
+
+\begin{itemize}
+\item 
+Either an array
+
+\item
+Or a class type (class, struct, or union) with:
+
+\begin{itemize}
+\item 
+No user-declared constructor
+
+\item
+No constructor inherited by a using declaration
+
+\item
+No private or protected non-static data members
+
+\item
+No virtual functions
+
+\item
+No virtual, private, or protected base class
+\end{itemize}
+
+\end{itemize}
+
+To allow you to initialize aggregates, the following additional constraints apply:
+
+\begin{itemize}
+\item 
+No private or protected base class members
+
+\item 
+No private or protected constructors
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+

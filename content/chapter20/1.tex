@@ -2,3 +2,46 @@
 
 
 \mySubsubsection{20.1.1}{is\_bounded\_array\_v<> and is\_unbounded\_array\_v}
+
+\mySamllsection{std::is\_bounded\_array\_v<T> std::is\_unbounded\_array\_v<T>}
+
+yield whether type T is a bounded/unbounded array (extent known/unknown).
+
+For example:
+
+\begin{cpp}
+int a[5];
+std::is_bounded_array_v<decltype(a)> // true
+std::is_unbounded_array_v<decltype(a)> // false
+
+extern int b[];
+std::is_bounded_array_v<decltype(b)> // false
+std::is_unbounded_array_v<decltype(b)> // true
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

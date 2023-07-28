@@ -1,0 +1,90 @@
+
+C++17 introduced optional initialization for the if and switch control structures. C++20 now introduces such an optional initialization for the range-based for loop.
+
+For example, the following code iterates over elements of a collection while incrementing a counter:
+
+\begin{cpp}
+for (int i = 1; const auto& elem : coll) {
+	std::cout << std::format("{:3}: {}\n", i, elem);
+	++i;
+}
+\end{cpp}
+
+As another example, consider this code that iterates over the entries of the directory dirname:
+
+\begin{cpp}
+for (std::filesystem::path p{dirname};
+const auto& e : std::filesystem::directory_iterator{p}) {
+	std::cout << " " << e.path().lexically_normal().string() << '\n';
+}
+\end{cpp}
+
+As a third example, the following code locks a mutex while iterating over a collection:
+
+\begin{cpp}
+for (std::lock_guard lg{collMx}; const auto& elem : coll) {
+	std::cout << elem: << elem << '\n';
+}
+\end{cpp}
+
+Note that the usual caveats for initializers in control structures apply: the initializer needs to declare a variable with a name. Otherwise, the initialization itself is an expression that creates and immediately destroys a temporary object. As a consequence, initializing a lock guard without a name is a logical error because the guard would no longer lock when the iteration happens:
+
+\begin{cpp}
+for (std::lock_guard{collMx}; const auto& elem : coll) { // runtime ERROR
+	std::cout << elem: << elem << '\n'; // - no longer locked
+}
+\end{cpp}
+
+The range-based for loop with initialization can also be used as a workaround for a bug in the range-based for loop. According to its specification, using the range-based for loop might result in a (fatal) runtime error when iterating over a reference to a temporary object. [The problem has been known since 2009 (see \url{http://wg21.link/cwg900}). However, the C++ standards committee has so far not been willing to fix this bug as proposed, for example, in \url{http://wg21.link/p2012}.]
+
+For example:
+
+\begin{cpp}
+std::optional<std::vector<int>> getValues(); // forward declaration
+
+for (int i : getValues().value()) { // fatal runtime ERROR
+	...
+}
+\end{cpp}
+
+Using the range-based for loop with initialization avoids this problem:
+
+\begin{cpp}
+std::optional<std::vector<int>> getValues(); // forward declaration
+
+for (auto&& optColl = getValues(); int i : optColl) { // OK
+	...
+}
+\end{cpp}
+
+In the same way, you can fix a broken iteration using a span:
+
+\begin{cpp}
+for (auto elem : std::span{getCollOfConst()}) ... // fatal runtime error
+
+for (auto&& coll = getCollOfConst(); auto elem : std::span{coll}) ... // OK
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,3 +1,27 @@
 
 
 \mySubsubsection{20.2.1}{is\_nothrow\_convertible\_v<>}
+
+
+\mySamllsection{std::is\_nothrow\_convertible\_v<From, To>}
+
+yields whether type From is convertible to type To with the guarantee not to throw any exception.
+
+For example:
+
+\begin{cpp}
+// char* to std::string:
+std::is_convertible_v<char*, std::string> // true
+std::is_nothrow_convertible_v<char*, std::string> // false
+
+// std::string to std::string_view:
+std::is_convertible_v<std::string, std::string_view> // true
+std::is_nothrow_convertible_v<std::string, std::string_view> // true
+\end{cpp}
+
+
+
+
+
+
+

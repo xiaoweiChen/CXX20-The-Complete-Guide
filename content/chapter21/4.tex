@@ -1,5 +1,323 @@
 
+For better UTF-8 support, C++20 introduces the new character type char8\_t and a new corresponding string type std::u8string.
+
+Type char8\_t is a new keyword. It serves as the type for holding UTF-8 characters and character sequences. For example:
+
+\begin{cpp}
+char8_t c = u8'@'; // character with UTF-8 encoding for character @
+const char8_t* s = u8"K\u00F6ln"; // character sequence with UTF-8 encoding for Köln
+\end{cpp}
+
+The introduction of this type is a breaking change:
+
+\begin{itemize}
+\item 
+u8 character literals now use char8\_t instead of char
+
+\item 
+For UTF-8 strings, the new types std::u8string and std::u8string\_view are used now
+\end{itemize}
+
+Consider the following example:
+
+\begin{cpp}
+auto c = u8'@'; // character with UTF-8 encoding for @
+auto s1 = u8"K\u00F6ln"; // character sequence with UTF-8 encoding for K¨oln
+using namespace std::literals;
+auto s2 = u8"K\u00F6ln"s; // string with UTF-8 encoding for Köln
+auto sv = u8"K\u00F6ln"sv; // string view with UTF-8 encoding for Köln
+\end{cpp}
+
+The types of c and s have changed here:
+
+\begin{itemize}
+\item 
+Before C++20, this was equivalent to:
+
+\begin{cpp}
+char c = u8'@'; // UTF-8 character type before C++20
+const char* s1 = u8"K\u00F6ln"; // UTF-8 character sequence type before C++20
+using namespace std::literals;
+std::string s2 = u8"K\u00F6ln"s; // UTF-8 string type before C++20
+std::string_view sv = u8"K\u00F6ln"s; // UTF-8 string view type before C++20
+\end{cpp}
+
+\item 
+Since C++20, this is equivalent to:
+
+\begin{cpp}
+char8_t c = u8'@'; // UTF-8 character type since C++20
+const char8_t* s1 = u8"K\u00F6ln"; // UTF-8 character sequence type since C++20
+using namespace std::literals;
+std::u8string s2 = u8"K\u00F6ln"s; // UTF-8 string type since C++20
+std::u8string_view sv = u8"K\u00F6ln"sv; // UTF-8 string view type since C++20
+\end{cpp}
+
+\end{itemize}
+
+The reason for this change is simple: we can now implement special behavior for UTF-8 characters and strings:
+
+\begin{itemize}
+\item 
+We can overload for UTF-8 character sequences:
+
+\begin{cpp}
+void store(const char* s)
+{
+	storeInFile(convertToUTF8(s)); // store after converting to UTF-8 encoding
+}
+
+void store(const char8_t* s)
+{
+	storeInFile(s); // store as is because it already has UTF-8 encoding
+}
+\end{cpp}
+
+\item 
+We can implement special behavior in generic code:
+
+\begin{cpp}
+void store(const CharT* s)
+{
+	if constexpr(std::same_as<CharT, char8_t>) {
+		storeInFile(s); // store as is because it already has UTF-8 encoding
+	}
+	else {
+		storeInFile(convertToUTF8(s)); // store after converting to UTF-8 encoding
+	}
+}
+\end{cpp}
+
+\end{itemize}
+
+You can still only store UTF-8 characters of one byte in an object of type char8\_t (remember that UTF-8 characters have a variable width):
+
+\begin{itemize}
+\item 
+The character for the at sign, @, has the decimal value 64 (hexadecimal 0x40). Therefore, you can store its value in a char8\_t and for this reason, the u8 character literal is well-defined:
+
+\begin{cpp}
+char8_t c = u8'@'; // OK (c has value 64)
+\end{cpp}
+
+\item 
+The character for the European currency Euro, €, consists of three code units: 226 130 172 (hexadecimal: 0xE2 0x82 0xAC). Therefore, you cannot store its value in a char8\_t:
+
+\begin{cpp}
+char8_t cEuro = u8'€'; // ERROR: invalid character literal
+\end{cpp}
+
+Instead, you have to initialize a character sequence or UTF-8 string:
+
+\begin{cpp}
+const char8_t* cEuro = u8"\u20AC"; // OK
+std::u8string sEuro = u8"\u20AC"; // OK
+\end{cpp}
+
+Here, we use the Unicode notation to specify the value of the UTF-8 character, which creates an array of four const char8\_t (including the trailing null character), which is then used to initialize cEuro and sEuro.
+
+If your compiler accepts the character e in your source code (which means it has to support a source file encoding with a character set such as UTF-8 or ISO-8859-15), you could even use this symbol in literals directly:
+
+\begin{cpp}
+const char8_t* cEuro = u8"€"; // OK if valid character for the compiler
+std::u8string sEuro = u8"€"; // OK if valid character for the compiler
+\end{cpp}
+
+However, because this source code is not portable, you should use Unicode characters (such as \u20AC for the € symbol).
+
+\end{itemize}
+
+Note that a few things in the C++ standard library have changed accordingly:
+
+\begin{itemize}
+\item 
+Overloads for the new character type char8\_t were added
+
+\item 
+Functions that use or return UTF-8 strings use the new UTF-8 string types
+\end{itemize}
+
+In addition, note that char8\_t is not guaranteed to have 8 bits. It is defined as using an unsigned char internally, which typically has 8 bits, but may have more. As usual, you can use std::numeric\_limits<> to check for the number of bits:
+
+\begin{cpp}
+std::cout << "char8_t has "
+		  << std::numeric_limits<char8_t>::digits << " bits\n";
+\end{cpp}
+
 
 \mySubsubsection{21.4.1}{Changes in the C++ Standard Library for char8\_t}
 
+The C++ standard library changed the following to support char8\_t:
+
+\begin{itemize}
+\item 
+u8string is now provided (defined as std::basic\_string<char8\_t>)
+
+\item 
+u8string\_view is now provided (defined as std::basic\_string\_view<char8\_t>)
+
+\item 
+std::numeric\_limits<char8\_t> is now defined
+
+\item 
+std::char\_traits<char8\_t> is now defined
+
+\item 
+Hash functions for char8\_t strings and string views are now provided
+
+\item 
+std::mbrtoc8() and c8rtomb() are now provided
+
+\item 
+codecvt facets for conversions between char8\_t and char16\_t or char32\_t are now provided
+
+\item 
+For filesystem paths, u8string() now returns std::u8string instead of std::string
+
+\item 
+std::atomic<char8\_t> is now provided
+
+\end{itemize}
+
+Note that these changes might break existing code when it is being compiled with C++20, which is discussed next.
+
 \mySubsubsection{21.4.2}{Broken Backward Compatibility}
+
+Because C++20 changes the type of UTF-8 literals and signatures that return UTF-8 strings, code that uses UTF-8 characters might no longer compile.
+
+\mySamllsection{Broken Code Using the Character Type}
+
+For example:
+
+\begin{cpp}
+std::string s0 = u8"text"; // OK in C++17, ERROR since C++20
+auto s = u8"K\u00F6ln"; // s is const char* until C++17, but const char8_t* since C++20
+const char* s2 = s; // OK in C++17, ERROR since C++20
+std::cout << s << '\n'; // OK in C++17, ERROR since C++20
+auto c = u8'c'; // c1 is char in C++17, but char8_t since C++20
+char c2 = c; // OK (even if char8_t)
+char* cp = &c; // OK in C++17, ERROR since C++20
+std::cout << c; // OK in C++17, ERROR since C++20
+\end{cpp}
+
+
+\mySamllsection{Broken Code Using the New String Types}
+
+In particular, code that returns UTF-8 strings might now lead to problems.
+
+For example, the following code no longer compiles because u8string() now returns a std::u8string instead of a std::string:
+
+\begin{cpp}
+// iterate over directory entries:
+for (const auto& entry : fs::directory_iterator(path)) {
+	std::string name = entry.path().u8string(); // OK in C++17, ERROR since C++20
+	...
+}
+\end{cpp}
+
+You have to adjust the code by using a different type, auto, or support both types:
+
+\begin{cpp}
+// iterate over directory entries (C++17 and C++20):
+for (const auto& entry : fs::directory_iterator(path)) {
+#ifdef __cpp_char8_t
+	std::u8string name = entry.path().u8string(); // OK since C++20
+#else
+	std::string name = entry.path().u8string(); // OK in C++17
+#endif
+	...
+}
+\end{cpp}
+
+\mySamllsection{Broken Code I/O for UTF-8 Strings}
+
+You can also no longer print UTF-8 characters or strings to std::cout (or any other standard output stream):
+
+\begin{cpp}
+std::cout << u8"text"; // OK in C++17, ERROR since C++20
+std::cout << u8'X'; // OK in C++17, ERROR since C++20
+\end{cpp}
+
+In fact, C++20 deleted the output operator for all extended character types (wchar\_t, char8\_t, char16\_t, char32\_t) unless the output stream supports the same character type:
+
+\begin{cpp}
+std::cout << "text"; // OK
+std::cout << L"text"; // wchar_t string: OOPS in C++17, ERROR since C++20
+std::cout << u8"text"; // UTF-8 string: OK in C++17, ERROR since C++20
+std::cout << u"text"; // UTF-16 string: OOPS in C++17, ERROR since C++20
+std::cout << U"text"; // UTF-32 string: OOPS in C++17, ERROR since C++20
+
+std::wcout << "text"; // OK
+std::wcout << L"text"; // OK
+std::wcout << u8"text"; // UTF-8 string: OK in C++17, ERROR since C++20
+std::wcout << u"text"; // UTF-16 string: OOPS in C++17, ERROR since C++20
+std::wcout << U"text"; // UTF-32 string: OOPS in C++17, ERROR since C++20
+\end{cpp}
+
+Note the statements marked with OOPS: they all compiled in C++17, but they printed the addresses of the strings instead of their values. Therefore, C++20 disables not only the output of UTF-8 characters, but also output that did not work at all.
+
+\mySamllsection{Dealing with Broken Code}
+
+You now be wondering how to deal with code that formerly worked with UTF-8 characters. The easiest way to deal with it is to use reinterpret\_cast<>:
+
+\begin{cpp}
+auto s = u8"text"; // s is const char8_t* since C++20
+std::cout << s; // ERROR since C++20
+std::cout << reinterpret_cast<const char*>(s); // OK
+\end{cpp}
+
+For a single character, using a static\_cast is enough:
+
+\begin{cpp}
+auto c = u8'x'; // c is char8_t since C++20
+std::cout << c; // ERROR since C++20
+std::cout << static_cast<char>(c); // OK
+\end{cpp}
+
+You can bind its use or the use of other workarounds on the feature test macro for the char8\_t characters feature: [For the final behavior specified with C++20, \_\_cpp\_char8\_t should have (at least) the value 201907.]
+
+\begin{cpp}
+auto s = u8"text"; // s is const char8_t* since C++20
+#ifdef __cpp_char8_t
+std::cout << reinterpret_cast<const char *>(s); // OK
+#else
+std::cout << s; // OK in C++17, ERROR since C++20
+#endif
+\end{cpp}
+
+If you are wondering why C++20 does not provide a working output operator for UTF-8 characters, please note that this is a pretty complex issue that we ha simply not enough time to solve yet. You can read more about this here: \url{http://stackoverflow.com/a/58895428}.
+
+Because using reinterpret\_cast<> might not scale when UTF-8 characters are used heavily, Tom Honermann wrote a guideline on how to deal with code for UTF-8 characters before and since C++20: “P1423R3 char8\_t Backward Compatibility Remediation.” If you deal with UTF-8 characters and strings, you should definitely read it. You can download it from \url{http://wg21.link/p1423}.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

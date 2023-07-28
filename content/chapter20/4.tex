@@ -1,9 +1,125 @@
 
 
-
+This section lists the traits for iterators as listed in the section about basic type functions for iterators.
 
 \mySubsubsection{20.4.1}{iter\_difference\_t<>}
 
+\mySamllsection{std::iter\_difference\_t<T>}
+
+yields the difference type that corresponds to the incrementable/iterator type T.
+
+The trait is especially provided to deal with the value type of two objects of an indirectly readable type. In contrast to the traditional iterator traits (std::iterator\_traits<>), this trait can deal correctly with the new iterator categories. 
+
+Note that there is no corresponding data structure std::iter\_difference with a member named type. Instead, the type trait is defined by trying to use the member difference\_type of the new auxiliary type std::incrementable\_traits<>, which is already defined as follows:
+
+\begin{itemize}
+\item 
+If specialized, std::incrementable\_traits<T>::difference\_type is used.
+
+\item
+For raw pointers, std::ptrdiff\_t is used.
+
+\item
+Otherwise, if defined, T::difference\_type is used.
+
+\item
+Otherwise, the signed integral difference type of the difference between two Ts is used.
+
+\item
+For a const T, the difference type of T is used.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+using T1 = std::iter_difference_t<int*>; // std::ptrdiff_t
+using T2 = std::iter_difference_t<std::string>; // std::ptrdiff_t
+using T3 = std::iter_difference_t<std::vector<long>>; // std::ptrdiff_t
+using T4 = std::iter_difference_t<int>; // int
+using T5 = std::iter_difference_t<std::chrono::sys_seconds>; // ERROR
+\end{cpp}
+
 \mySubsubsection{20.4.2}{iter\_value\_t<>}
 
+\mySamllsection{std::iter\_value\_t<T>}
+
+yields the non-const value/element type that corresponds to the pointer/iterator type T.
+
+The trait is especially provided to deal with the value type of an indirectly readable type. In contrast to the traditional iterator traits (std::iterator\_traits<>), this trait can deal correctly with the new iterator categories.
+
+Note that there is no corresponding data structure std::iter\_value with a member named type. Instead, the type trait is defined by trying to use the member value\_type of the new auxiliary type std::indirectly\_readable\_traits<>, which is already defined as follows:
+
+\begin{itemize}
+\item 
+If specialized, std::indirectly\_readable\_traits<T>::value\_type is used.
+
+\item 
+For raw pointers, the non-const/volatile type it refers to is used.
+
+\item 
+Otherwise, if defined, remove\_cv\_t<T::value\_type> is used.
+
+\item 
+Otherwise, if defined, remove\_cv\_t<T::element\_type> is used.
+
+\item 
+For a const T, the value type of T is used.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+using T1 = std::iter_value_t<int*>; // int
+using T2 = std::iter_value_t<const int* const>; // int
+using T3 = std::iter_value_t<std::string>; // char
+using T4 = std::iter_value_t<std::vector<long>>; // long
+using T5 = std::iter_value_t<int>; // ERROR
+\end{cpp}
+
 \mySubsubsection{20.4.3}{iter\_reference\_t<> and iter\_rvalue\_reference\_t<>}
+
+\mySamllsection{std::iter\_reference\_t<T>}
+
+yields the lvalue reference type that corresponds to the dereferenceable pointer/iterator type T. It is equivalent to
+
+\begin{cpp}
+decltype(*declval<T&>())
+\end{cpp}
+
+\mySamllsection{std::iter\_rvalue\_reference\_t<T>}
+
+yields the rvalue value type that corresponds to the dereferenceable pointer/iterator type T. It is equivalent to
+
+\begin{cpp}
+decltype(std::ranges::iter_move(declval<T&>()))
+\end{cpp}
+
+The traits are especially provided to deal with the value type of an indirectly writable type. In contrast to the traditional iterator traits (std::iterator\_traits<>), these traits can deal correctly with the new iterator categories.
+
+Note that there is no corresponding data structure std::iter\_value with a type member. Instead, the traits are defined directly as described above.
+
+For example:
+
+\begin{cpp}
+using T1 = std::iter_reference_t<int*>; // int&
+using T2 = std::iter_reference_t<const int* const>; // const int&
+using T3 = std::iter_reference_t<std::string>; // ERROR
+using T4 = std::iter_reference_t<std::vector<long>>; // ERROR
+using T5 = std::iter_reference_t<int>; // ERROR
+
+using T6 = std::iter_rvalue_reference_t<int*>; // int&&
+using T7 = std::iter_rvalue_reference_t<const int* const>; // const int&&
+using T8 = std::iter_rvalue_reference_t<std::string>; // ERROR
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+

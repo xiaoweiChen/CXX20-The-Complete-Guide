@@ -1,10 +1,159 @@
 
+In a couple of situations it is important to know whether two types or pointers to types can safely be converted to each other. The C++ standard uses the term layout-compatible for that.
 
+To check the layout-compatible relationships between class members, C++20 also introduces two new ordinary functions. They have the benefit that they can be used in runtime contexts.
 
 \mySubsubsection{20.5.1}{is\_layout\_compatible\_v<>}
 
+\mySamllsection{std::is\_layout\_compatible\_v<T1, T2>}
+
+yields whether types T1 and T2 are layout-compatible so that you can safely convert pointers to them with reinterpret\_cast.
+
+For example:
+
+\begin{cpp}
+struct Data {
+	int i;
+	const std::string s;
+};
+
+class Type {
+	private:
+	const int id = nextId();
+	std::string name;
+	public:
+	...
+};
+
+std::is_layout_compatible_v<Data, Type> // true
+\end{cpp}
+
+Note that for layout-compatibility it is not enough that the type and the bits fit roughly. According to the language rules:
+
+\begin{itemize}
+\item 
+Signed types are never layout-compatible to unsigned types.
+
+\item 
+char is even never layout-compatible to both signed char and unsigned char.
+
+\item 
+References are never layout-compatible to non-references.
+
+\item 
+Arrays of different (even layout-compatible) types are never layout-compatible.
+
+\item 
+Enumeration types are never layout-compatible to their underlying type.
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+enum class E {};
+enum class F : int {};
+
+std::is_layout_compatible_v<E, F> // true
+std::is_layout_compatible_v<E[2], F[2]> // false
+std::is_layout_compatible_v<E, int> // false
+
+std::is_layout_compatible_v<char, char> // true
+std::is_layout_compatible_v<char, signed char> // false
+std::is_layout_compatible_v<char, unsigned char> // false
+std::is_layout_compatible_v<char, char&> // false
+\end{cpp}
+
 \mySubsubsection{20.5.2}{is\_pointer\_interconvertible\_base\_of\_v<>}
+
+\mySamllsection{std::is\_pointer\_interconvertible\_base\_of<Base, Der>}
+
+yields true if a pointer to type Der can safely be converted to a pointer to its base type Base with reinterpret\_cast.
+
+If both have the same type, the trait always yields true.
+
+For example:
+
+\begin{cpp}
+struct B1 { };
+struct D1 : B1 { int x; };
+
+struct B2 { int x; };
+struct D2 : B2 { int y; }; // no standard-layout type
+
+std::is_pointer_interconvertible_base_of_v<B1, D1> // true
+std::is_pointer_interconvertible_base_of_v<B2, D2> // false
+\end{cpp}
+
+The reason that a pointer to D2 cannot be safely converted into a pointer to B2 is that it is not a standard-layout type because not all members are defined in the same class with the same access.
 
 \mySubsubsection{20.5.3}{is\_corresponding\_member()}
 
+\begin{cpp}
+template<typename S1, typename S2, typename M1, typename M2>
+constexpr bool is_corresponding_member(M1 S1::*m1, M2 S2::*m2) noexcept;
+\end{cpp}
+
+returns whether m1 and m2 point to layout-compatible members of S1 and S2. This means that these members and all members in front of these members have to be layout-compatible. The function yields true if and only if S1 and S2 are standard-layout types, M1 and M2 are object types, and m1 and m2 are not null.
+
+For example:
+
+\begin{cpp}
+struct Point2D { int a; int b; };
+struct Point3D { int x; int y; int z; };
+struct Type1 { const int id; int val; std::string name; };
+struct Type2 { unsigned int id; int val; };
+
+std::is_corresponding_member(&Point2D::b, &Point3D::y) // true
+std::is_corresponding_member(&Point2D::b, &Point3D::z) // false (2nd versus 3rd int)
+std::is_corresponding_member(&Point2D::b, &Type1::val) // true
+std::is_corresponding_member(&Point2D::b, &Type2::val) // false (signed vs. unsigned)
+\end{cpp}
+
 \mySubsubsection{20.5.4}{is\_pointer\_interconvertible\_with\_class()}
+
+\begin{cpp}
+template<typename S, typename M>
+constexpr bool is_pointer_interconvertible_with_class(M S::*m) noexcept;
+\end{cpp}
+
+returns whether each object s of type S is pointer-interconvertible with its subobject s.*m. The function yields true if and only if S is a standard-layout type, M is an object type, and m is not null.
+
+For example:
+
+\begin{cpp}
+struct B1 { int x; };
+struct B2 { int y; };
+
+struct DB1 : B1 {};
+struct DB1B2 : B1, B2 {}; // not a standard-layout type
+
+std::is_pointer_interconvertible_with_class<B1, int>(&DB1::x) // true
+std::is_pointer_interconvertible_with_class<DB1, int>(&B1::x) // true
+std::is_pointer_interconvertible_with_class<DB1, int>(&DB1::x) // true
+
+std::is_pointer_interconvertible_with_class<B1, int>(&DB1B2::x) // true
+std::is_pointer_interconvertible_with_class<DB1B2, int>(&B1::x) // false
+std::is_pointer_interconvertible_with_class<DB1B2, int>(&DB1B2::x) // false
+\end{cpp}
+
+The C++20 standard explains the reason for the last two statements being false in a note: 
+
+The type of a pointer-to-member expression \&C::b is not always a pointer to a member of C. This leads to potentially surprising results when using these functions in conjunction with inheritance:
+
+\begin{cpp}
+struct A { int a; }; // a standard-layout class
+struct B { int b; }; // a standard-layout class
+struct C: public A, public B { }; // not a standard-layout class
+
+std::is_pointer_interconvertible_with_class(&C::b) // true
+// true because, despite its appearance, &C::b has type
+// “pointer to member of B of type int”
+
+std::is_pointer_interconvertible_with_class<C>(&C::b) // false
+// false because it forces the use of class C and fails
+\end{cpp}
+
+
+
+
+

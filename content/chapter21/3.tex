@@ -1,0 +1,69 @@
+Using enum declarations can also be used to delegate enumeration values to different scopes. For example:
+
+\begin{cpp}
+namespace MyProject {
+	class Task {
+		public:
+		enum class Status{open, progress, done = 9};
+		Task();
+		...
+	};
+	using enum Task::Status; // expose the values of Status to MyProject
+}
+
+auto x = MyProject::open; // OK: x has value MyProject::Task::open
+auto y = MyProject::done; // OK: y has value MyProject::Task::done
+\end{cpp}
+
+Please note that the using enum declaration exposes only the values, not the type:
+
+\begin{cpp}
+MyProject::Status s; // ERROR
+\end{cpp}
+
+To expose both the type and its values, you also need an ordinary using declaration (type alias):
+
+\begin{cpp}
+namespace MyProject {
+	using Status = Task::Status; // expose the type Task::Status
+	using enum Task::Status; // expose the values of Task::Status
+}
+
+MyProject::Status s = MyProject::done; // OK
+\end{cpp}
+
+For exposed enum values, even argument-dependent lookup (ADL) works fine. For example, we can extend the example above as follows:
+
+\begin{cpp}
+namespace MyProject {
+	void foo(MyProject::Task::Status) {
+	}
+}
+
+namespace MyScope {
+	using enum MyProject::Task::Status; // OK
+}
+
+foo(MyProject::done); // OK: calls MyProject::foo() with MyProject::Task::Status::done
+
+foo(MyScope::done); // OK: calls MyProject::foo() with MyProject::Task::Status::done
+\end{cpp}
+
+Note that a type alias is not generally used by ADL:
+
+\begin{cpp}
+namespace MyScope {
+	void bar(MyProject::Task::Status) {
+	}
+	using MyProject::Task::Status; // expose enum type to MyScope
+	using enum MyProject::Task::Status; // expose the enum values to MyScope
+}
+
+MyScope::Status s = MyScope::open; // OK
+bar(MyScope::done); // ERROR
+MyScope::bar(MyScope::done); // OK
+\end{cpp}
+
+
+
+

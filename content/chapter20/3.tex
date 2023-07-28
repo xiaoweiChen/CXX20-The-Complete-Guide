@@ -2,8 +2,115 @@
 
 \mySubsubsection{20.3.1}{remove\_cvref\_t<>}
 
+\mySamllsection{std::remove\_cvref\_t<T>}
+
+yields type T without being a reference, top-level const, or volatile.
+
+The expression
+
+\begin{cpp}
+std::remove_cvref_t<T>
+\end{cpp}
+
+is equivalent to:
+
+\begin{cpp}
+std::remove_cv_t<remove_reference_t<T>>
+\end{cpp}
+
+For example:
+
+\begin{cpp}
+std::remove_cvref_t<const std::string&> // std::string
+std::remove_cvref_t<const char* const> // const char*
+\end{cpp}
+
 \mySubsubsection{20.3.2}{unwrap\_reference<> and unwrap\_ref\_decay\_t}
+
+\mySamllsection{std::unwrap\_reference\_t<T>}
+
+yields the wrapped type of T if it is a std::reference\_wrapper<> (created with std::ref() or std::cref()) or otherwise T.
+
+\mySamllsection{std::unwrap\_ref\_decay\_t<T>}
+
+yields the wrapped type of T if it is a std::reference\_wrapper<> (created with std::ref() or std::cref()) or otherwise the decayed type of T.
+
+For example:
+
+\begin{cpp}
+std::unwrap_reference_t<decltype(std::ref(s))> // std::string&
+std::unwrap_reference_t<decltype(std::cref(s))> // const std::string&
+std::unwrap_reference_t<decltype(s)> // std::string
+std::unwrap_reference_t<decltype(s)&> // std::string&
+std::unwrap_reference_t<int[4]> // int[4]
+
+std::unwrap_ref_decay_t<decltype(std::ref(s))> // std::string&
+std::unwrap_ref_decay_t<decltype(std::cref(s))> // const std::string&
+std::unwrap_ref_decay_t<decltype(s)> // std::string
+std::unwrap_ref_decay_t<decltype(s)&> // std::string
+std::unwrap_ref_decay_t<int[4]> // int*
+\end{cpp}
+
 
 \mySubsubsection{20.3.3}{common\_reference<>\_t}
 
+\mySamllsection{std::common\_reference\_t<T...>}
+
+yields the common type (if there is one) of all types T... to which you can assign a value. Therefore, given types T1, T2, and T3, the trait yields the type where you can assign values of all three types. Ideally, it is a reference type. However, if a type conversion is involved and that creates a temporary object, it is a value type.
+
+For example:
+
+\begin{cpp}
+std::common_reference_t<int&, int> // int
+std::common_reference_t<int&, int&> // int&
+std::common_reference_t<int&, int&&> // const int&
+std::common_reference_t<int&&, int&&> // int&&
+std::common_reference_t<int&, double> // double
+std::common_reference_t<int&, double&&> // double
+std::common_reference_t<char*, std::string, std::string_view> // std::string_view
+std::common_reference_t<char, std::string> // ERROR
+\end{cpp}
+
 \mySubsubsection{20.3.4}{type\_identity\_t<>}
+
+\mySamllsection{std::type\_identity\_t<T>}
+
+yields just type T.
+
+This type trait has a surprising number of use cases:
+
+\begin{itemize}
+\item 
+You can disable the fact that a parameter is used to deduce a template parameter. For example:
+
+\begin{cpp}
+template<typename T>
+void insert(std::vector<T>& coll, const std::type_identity_t<T>& value)
+{
+	coll.push_back(value);
+}
+
+std::vector<double> coll;
+...
+insert(coll, 42); // OK: type of 42 not used to deduce type T
+\end{cpp}
+
+If the parameter value were to be declared with just const T\&, the compiler would raise an error because it would deduce two different types for type T.
+
+\item 
+You can use it as a building block to define type traits that yield types. For example, you could define a type trait that removes constness simply as follows: [See the talk Modern Template Metaprogramming: A Compendium by Walter E. Brown at CppCon 2014 (\url{http: //www.youtube.com/watch?v=Am2is2QCvxY}) for a source of this example.]
+
+\begin{cpp}
+template<typename T>
+struct remove_const : std::type_identity<T> {
+};
+
+template<typename T>
+struct remove_const<const T> : std::type_identity<T> {
+};
+\end{cpp}
+\end{itemize}
+
+
+
+
