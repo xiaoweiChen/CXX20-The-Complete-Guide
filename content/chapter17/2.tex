@@ -1,0 +1,126 @@
+Lambdas provide a simple way to define function objects. If you define
+
+\begin{cpp}
+auto cmp = [] (const auto& x, const auto& y) {
+				return x > y;
+			};
+\end{cpp}
+
+this is equivalent to defining a class (the closure type) and creating an object of this class:
+
+\begin{cpp}
+class NameChosenByCompiler {
+	public:
+	template<typename T1, T2>
+	auto operator() (const T1& x, const T2& y) const {
+		return x > y;
+	}
+};
+
+auto cmp = NameChosenByCompiler{};
+\end{cpp}
+
+The generated closure type has operator() defined, which means that you can use the lambda object cmp as a function:
+
+\begin{cpp}
+cmp(val1, val); // yields the result of 42 > obj2
+\end{cpp}
+
+However, before C++20, the generated closure type had no callable default constructor and assignment operator. Objects of the generated class could only be initially created by the compiler. Only copying was possible:
+
+\begin{cpp}
+auto cmp1 = [] (const auto& x, const auto& y) {
+				return x > y;
+			};
+			
+auto cmp2 = cmp1; // OK, copy constructor supported since C++11
+decltype(cmp1) cmp3; // ERROR until C++20: no default constructor provided
+cmp1 = cmp2; // ERROR until C++20: no assignment operator provided
+\end{cpp}
+
+As a consequence, you could not easily pass a lambda as a sorting criterion or hash function to a container, where the type of the helper function was required. Consider a class Customer with the following interface:
+
+\begin{cpp}
+class Customer
+{
+	public:
+	...
+	std::string getName() const;
+};
+\end{cpp}
+
+To use the name returned by getName() as the ordering criterion or value for the hash function, you had to pass both the type and the lambda as a template and call parameter:
+
+\begin{cpp}
+// create balanced binary tree with user-defined ordering criterion:
+auto lessName = [] (const Customer& c1, const Customer& c2) {
+	return c1.getName() < c2.getName();
+};
+std::set<Customer, decltype(lessName)> coll1{lessName};
+
+// create hash table with user-defined hash function:
+auto hashName = [] (const Customer& c) {
+	return std::hash<std::string>{}(c.getName());
+};
+std::unordered_set<Customer, decltype(hashName)> coll2{0, hashName};
+\end{cpp}
+
+The containers get the lambda when they are initialized so that they can use an internal copy of the lambda (for the unordered containers, you have to pass a minimum bucket size before). To compile, the type of the containers needs the type of the lambda.
+
+Since C++20, lambdas with no captures have a default constructor and an assignment operator:
+
+\begin{cpp}
+auto cmp1 = [] (const auto& x, const auto& y) {
+				return x > y;
+			};
+			
+auto cmp2 = cmp1; // OK, copy constructor supported
+decltype(cmp1) cmp3; // OK since C++20
+cmp1 = cmp2; // OK since C++20
+\end{cpp}
+
+For this reason, it is now enough to pass the type of the lambda for the ordering criterion or hash function respectively:
+
+\begin{cpp}
+// create balanced binary tree with user-defined ordering criterion:
+auto lessName = [] (const Customer& c1, const Customer& c2) {
+					return c1.getName() < c2.getName();
+				};
+std::set<Customer, decltype(lessName)> coll1; // OK since C++20
+
+// create hash table with user-defined hash function:
+auto hashName = [] (const Customer& c) {
+					return std::hash<std::string>{}(c.getName());
+				};
+
+std::unordered_set<Customer, decltype(hashName)> coll2; // OK since C++20
+\end{cpp}
+
+This works because the argument for the ordering criterion or hash function has a default value, which is a default-constructed object of the type of the ordering criterion or hash function. And because lambdas without captures have a default constructor since C++20, the initialization of the ordering criterion with a default-constructed object of the type of the lambda now compiles.
+
+You can even define the lambda inside the declaration of the container and use decltype to pass its type. For example, you can declare an associative container with an ordering criterion defined in the declaration as follows:
+
+\begin{cpp}
+// create balanced binary tree with user-defined ordering criterion:
+std::set<Customer,
+		decltype([] (const Customer& c1, const Customer& c2) {
+			return c1.getName() < c2.getName();
+		})> coll3; // OK since C++20
+\end{cpp}
+
+In the same way, you can declare an unordered container with a hash function defined in the declaration as follows:
+
+\begin{cpp}
+// create hash table with user-defined hash function:
+std::unordered_set<Customer,
+					decltype([] (const Customer& c) {
+						return std::hash<std::string>{}(c.getName());
+					})> coll; // OK since C++20
+\end{cpp}
+
+See lang/lambdahash.cpp for a complete example.
+
+
+
+
+

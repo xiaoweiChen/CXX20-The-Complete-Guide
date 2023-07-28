@@ -1,17 +1,384 @@
 
-
-
-
-
-
+This section describes a few additional details for using modules.
 
 \mySubsubsection{16.4.1}{Private Module Fragments}
 
+If you declare a module in a primary interface, you might sometimes need a private module fragment. This allows programmers to have declarations and definitions within the primary interface that are neither visible nor reachable by any other module or translation unit. One way to use a private module fragment is to disable exporting the definition of a class or function although its declaration is exported.
+
+Consider, for example, the following primary interface:
+
+\begin{cpp}
+export module MyMod;
+
+export class C; // class C is exported
+export void print(const C& c); // print() is exported
+
+class C { // provides details of the exported class
+private:
+	int value;
+public:
+	void print() const;
+};
+
+void print(const C& c) { // provides details of the exported function
+	c.print();
+}
+\end{cpp}
+
+Here, we first forward declare the class C and function print() with export:
+
+\begin{cpp}
+export module MyMod;
+
+export class C; // class C is exported
+export void print(const C& c); // print() is exported
+\end{cpp}
+
+export may be specified only once at the point where a name is introduced in its namespace. The details are also exported later. Therefore, any translation unit can import this module and use objects of type C:
+
+\begin{cpp}
+import MyMod;
+...
+
+C c; // OK, definition of class C was exported
+print(c); // OK (compiler can replace the function call with its body)
+\end{cpp}
+
+However, if you want to encapsulate the definition within the module, so that importing code sees only the declaration and you still want to have the definition in the primary interface, you have to place the definitions in the private module fragment:
+
+\begin{cpp}
+export module MyMod;
+
+export class C; // declaration is exported
+export void print(const C& c); // declaration is exported
+
+module :private; // following symbols are not even implicitly exported
+
+class C { // complete class not exported
+	private:
+	int value;
+	public:
+	void print() const;
+};
+
+void print(const C& c) { // definition not exported
+	c.print();
+}
+\end{cpp}
+
+The private module fragment is declared with
+
+\begin{cpp}
+module :private;
+\end{cpp}
+
+It can only occur in primary interfaces and can occur only once. With its declaration, the rest of the file is no longer implicitly exported (not even implicitly). Using export afterwards to export anything is an error.
+
+By moving the definition into the private module fragment, importing code can no longer use any definition from there. It can only use the forward declaration of the class C (class C is an incomplete type) and print().
+
+For example, you cannot create objects of type C:
+
+\begin{cpp}
+import MyMod;
+...
+
+C c; // ERROR (C only declared, not defined)
+print(c); // OK (compiler can replace the function call with its body)
+\end{cpp}
+
+However, the declarations are good enough to use references and pointers of type C:
+
+\begin{cpp}
+import MyMod;
+...
+
+void foo(const C& c) { // OK
+	print(c); // OK
+}
+\end{cpp}
+
 \mySubsubsection{16.4.2}{Module Declaration and Export in Detail}
 
+Module units have to start with one of the following (after initial comments and whitespace):
+
+\begin{itemize}
+\item 
+module;
+
+\item 
+export module name;
+
+\item 
+module name;
+
+\item 
+module name:partname;
+
+\item 
+export module name:partname;
+\end{itemize}
+
+If a module unit starts with module; to introduce a global module fragment, exactly one of the other module declarations must follow the preprocessor commands in the global module fragment.
+
+Within the module, you can export all kinds of symbols that have a name:
+
+\begin{itemize}
+\item 
+You can export namespaces that have a name, which exports all symbols defined within the namespace declaration. For example:
+
+\begin{cpp}
+export namespace MyMod {
+	... // exported symbols of namespace MyMod
+}
+
+namespace MyMod {
+	... // symbols of namespace MyMod not exported
+}
+
+export namespace MyMod {
+	... // more exported symbols of namespace MyMod
+}
+\end{cpp}
+
+
+\item 
+You can export types, which exports them with all members (if there are any). For example:
+
+\begin{cpp}
+export class MyClass;
+export struct MyStruct;
+export union MyUnion;
+export enum class MyEnum;
+export using MyString = std::string;
+\end{cpp}
+
+You do not have to export class members or enumeration values. Class members and values of enumeration types are automatically exported if the type is exported.
+
+\item 
+You can export objects. For example:
+
+\begin{cpp}
+export std::string progname;
+
+namespace MyStream {
+	export using std::cout; // export std::cout as MyStream::cout
+}
+
+export auto myLambda = [] {};
+\end{cpp}
+
+\item 
+You can export functions. For example:
+
+\begin{cpp}
+export friend std::ostream& operator<< (std::ostream&, const MyType&);
+\end{cpp}
+\end{itemize}
+
+To declare an entity that shall be exported, use export for its first declaration. You can later specify again that it is exported, but declaring an entity without export and declaring/defining it later with export is not allowed.[However, I have seen compilers accepting that.]
+
+export is not allowed in unnamed namespaces, for static objects, and within a private module fragment.
+
+No inline is necessary for any export. Formally, a definition within a module always exists only once.
+
+This applies even if the object is also re-exported by another module.
+
 \mySubsubsection{16.4.3}{Umbrella Modules}
+
+Modules can export everything they import. For imported interface partitions, export is even required.
+
+To export imported symbols, you can usually use using:
+
+\begin{cpp}
+export module MyMod; // declare module MyMod
+
+// export all symbols from OtherModule as a whole:
+export import OtherModule;
+
+// import LogModule to export parts of it:
+import LogModule
+
+// export Logger in the namespace LogModule as ::Logger:
+export using LogModule::Logger;
+
+// export Logger in the namespace LogModule as LogModule::Logger:
+export namespace LogModule {
+	using LogModule::Logger;
+}
+
+// export global symbol globalLogger:
+export using ::globalLogger;
+
+// export global symbol log (e.g., function log()):
+export using ::log;
+\end{cpp}
 
 
 \mySubsubsection{16.4.4}{Module Import in Detail}
 
+With import, any C++ source code file can import a module to use the functions, types, and objects exported there.
+
+import is not an ordinary keyword; it is a contextual keyword. This means that you can still name other components with the identifier import, although this is not recommended. It was not introduced as a keyword because that might have broken too much existing code.
+Translation or module units that use import have to be compiled after the module has been precompiled.
+
+Otherwise, you might get an error that the module is not defined or, even worse, you might compile against an old version of a module. As a consequence, circular imports are not possible.
+
+
+
+
 \mySubsubsection{16.4.5}{Reachable versus Visible Symbols in Detail}
+
+Let us look at a few more details and an example of the visibility and reachability of exported and imported symbols.
+
+When importing a module, you also indirectly import all types that are used by the exported API. If these types are not exported explicitly, you can use the types including all of their member functions, but no free-standing functions.
+
+The following module exports getPerson() as a visible symbol and Person as a reachable class:
+
+\filename{modules/person1.cppm}
+
+\begin{cpp}
+module;
+#include <iostream>
+#include <string>
+
+export module ModPerson; // THE module interface
+
+class Person { // note: not exported
+	std::string name;
+public:
+	Person(std::string n)
+	: name{std::move(n)} {
+	}
+	std::string getName() const {
+		return name;
+	}
+};
+
+std::ostream& operator<< (std::ostream& strm, const Person& p)
+{
+	return strm << p.getName();
+}
+
+export Person getPerson(std::string s) {
+	return Person{s};
+}
+\end{cpp}
+
+Importing this module has the following consequences:
+
+\begin{cpp}
+#include <iostream>
+import ModPerson; // import module ModPerson
+...
+Person p1{"Cal"}; // ERROR: Person not visible
+Person p2 = getPerson("Kim"); // ERROR: Person not visible
+auto p3 = getPerson("Tana"); // OK
+std::string s1 = p3.getName(); // ERROR (unless <iostream> includes <string>)
+auto s2 = p3.getName(); // OK
+std::cout << p3 << '\n'; // ERROR: free-standing operator<< not exported
+std::cout << s2 << '\n'; // OK
+\end{cpp}
+
+If this code also includes the header file for strings, the declaration of s1 compiles:
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+import ModPerson; // import module ModPerson
+...
+Person p1{"Cal"}; // ERROR: Person not visible
+Person p2 = getPerson("Kim"); // ERROR: Person not visible
+auto p3 = getPerson("Tana"); // OK
+std::string s1 = p3.getName(); // OK
+auto s2 = p3.getName(); // OK
+std::cout << p3 << '\n'; // ERROR: free-standing operator<< not exported
+std::cout << s2 << '\n'; // OK
+\end{cpp}
+
+If you declare operator<< within the class Person as a hidden friend (something you should always do):
+
+\begin{cpp}
+export module ModPerson;
+
+class Person {
+	...
+	friend std::ostream& operator<< (std::ostream& strm, const Person& p) {
+		return strm << p.getName();
+	}
+};
+\end{cpp}
+
+the member operator becomes reachable:
+
+\begin{cpp}
+member operator becomes reachable:
+auto p3 = getPerson("Tana"); // OK
+std::cout << p3 << '\n'; // OK (operator<< is reachable now)
+\end{cpp}
+
+Note again that by using private module fragments, you can restrict the reachability of indirectly exported symbols.
+
+\mySamllsection{Non-Exported Symbols Cannot Conflict}
+
+The behavior that indirectly exported symbols are not visible but reachable allows programmers to use different modules that use the same symbol names in their exported interface. Consider, for example, you have a module defining a class Person as follows:
+
+\begin{cpp}
+export module ModPerson1;
+
+class Person {
+	...
+	public:
+	std::string getName() const {
+		return name;
+	}
+};
+
+export Person getPerson1(std::string s) {
+	return Person{s};
+}
+\end{cpp}
+
+and another module also defining a different class Person:
+
+\begin{cpp}
+export module ModPerson2;
+
+class Person {
+	...
+	public:
+	std::string getName() const {
+		return name;
+	}
+};
+
+export Person getPerson2(std::string s) {
+	return Person{s};
+}
+\end{cpp}
+
+In that case, a program can import both modules without any conflict because the only visible symbols are getPerson1() from the first module and getPerson2() from the second module. The following code works fine:
+
+\begin{cpp}
+auto p1 = getPerson1("Tana");
+auto s1 = p1.getName();
+
+auto p2 = getPerson2("Tana");
+auto s2 = p2.getName();
+\end{cpp}
+
+The types of p1 and p2 have the same name but are different:
+
+\begin{cpp}
+std::same_as<decltype(p1), decltype(p2)> // yields false
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+

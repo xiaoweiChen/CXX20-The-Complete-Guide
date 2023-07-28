@@ -1,0 +1,22 @@
+Every C++ version from C++11 until C++20 relaxed the constraints for constexpr functions. This now also means that the consteval functions have these constraints.
+
+Basically, the constraints for constexpr and consteval functions are now as follows:
+
+\begin{itemize}
+\item 
+Parameters and the return type (if there is one) must be literal types.
+
+\item
+The body may define only variables of literal types. These variables may neither be static nor thread\_local.
+
+\item
+Using goto and labels is not allowed.
+
+\item
+Constructors and destructors may be compile-time functions only if the class has no virtual base class.
+
+\item
+The functions cannot be used as coroutines.
+\end{itemize}
+
+The functions are implicitly inline.

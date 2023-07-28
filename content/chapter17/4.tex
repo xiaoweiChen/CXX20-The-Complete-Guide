@@ -1,0 +1,52 @@
+By using the new consteval keyword with lambdas, you can now require that lambdas become immediate functions so that “function calls” of them have to be evaluated at compile time. For example:
+
+\begin{cpp}
+auto hashed = [] (const char* str) consteval {
+					...
+				};
+auto hashWine = hashed("wine"); // hash() called at compile time
+\end{cpp}
+
+Due to the use of consteval in the definition of the lambda, any call has to happen at compile time with values known at compile time. Passing a runtime value is an error:
+
+\begin{cpp}
+const char* s = "beer";
+auto hashBeer = hashed(s); // ERROR
+
+constexpr const char* cs = "water";
+auto hashWater = hashed(cs); // OK
+\end{cpp}
+
+Note that hashed itself does not have to be constexpr. It is a runtime object of the lambda for which the “function call” is performed at compile time.
+
+The discussion of consteval for lambdas in the section about the new consteval keyword provides more details of this example.
+
+You can also use the new template syntax for generic lambdas with consteval. This enables programmers to define the initialization of a compile-time function inside another function. For example:
+
+\begin{cpp}
+// local compile-time computation of Num prime numbers:
+auto primeNumbers = [] <int Num> () consteval {
+					std::array<int, Num> primes;
+					int idx = 0;
+					for (int val = 1; idx < Num; ++val) {
+						if (isPrime(val)) {
+							primes[idx++] = val;
+						}
+					}
+					return primes;
+				};
+\end{cpp}
+
+See lang/lambdaconsteval.cpp for a complete program using this lambda.
+
+Note that in this case, the template parameter is not deduced. Therefore, the syntax to explicitly specify the template parameter becomes a bit ugly:
+
+\begin{cpp}
+auto primes = primeNumbers.operator()<100>();
+\end{cpp}
+
+Note also that you always have to provide the parameter list before consteval (the same applies when specifying constexpr there). You cannot skip the parentheses even if there is no parameter declared.
+
+
+
+

@@ -1,8 +1,389 @@
 
-
+Since C++20, compile-time functions can allocate memory provided the memory is also released at compile time. For this reason, you can now use strings or vectors at compile time. However, there is an important constraint: the strings or vectors created at compile time cannot be used at runtime. The reason is that memory allocated at compile time also has to be released at compile time.
 
 \mySubsubsection{18.5.1}{Using Vectors at Compile Time}
 
+Here is a first example, using a std::vector<> at compile time:
+
+\filename{comptime/vector.hpp}
+
+\begin{cpp}
+#include <vector>
+#include <ranges>
+#include <algorithm>
+#include <numeric>
+
+template<std::ranges::input_range T>
+constexpr auto modifiedAvg(const T& rg)
+{
+	using elemType = std::ranges::range_value_t<T>;
+	
+	// initialize compile-time vector with passed elements:
+	std::vector<elemType> v{std::ranges::begin(rg),
+							std::ranges::end(rg)};
+		
+	// perform several modifications:
+	v.push_back(elemType{});
+	std::ranges::sort(v);
+	auto newEnd = std::unique(v.begin(), v.end());
+	...
+	
+	// return average of modified vector:
+	auto sum = std::accumulate(v.begin(), newEnd,
+								elemType{});
+	return sum / static_cast<double>(v.size());
+}
+\end{cpp}
+
+Here, we define modifiedAvg() with constexpr so that it could be called at compile time. Inside, we use the std::vector<> v, initialized with the elements of the passed range. This allows us to use the full API of a vector (especially inserting and removing elements). As an example, we insert an element, sort the elements, and remove consecutive duplicates with unique(). All these algorithms are constexpr now so that we can use them at compile time.
+
+However, at the end, we do not return the vector. We only return a value computed with the help of a compile-time vector.
+
+We can call this function at compile time:
+
+\filename{comptime/vector.cpp}
+
+\begin{cpp}
+#include "vector.hpp"
+#include <iostream>
+#include <array>
+
+int main()
+{
+	constexpr std::array orig{0, 8, 15, 132, 4, 77};
+	
+	constexpr auto avg = modifiedAvg(orig);
+	std::cout << "average: " << avg << '\n';
+}
+\end{cpp}
+
+Due to the fact that avg is declared with constexpr, modifiedAvg() is evaluated at compile time.
+
+We could also declare modifiedAvg() with consteval, in which case we could pass the argument by value because we do not copy elements at runtime:
+
+\begin{cpp}
+template<std::ranges::input_range T>
+consteval auto modifiedAvg(T rg)
+{
+	using elemType = std::ranges::range_value_t<T>;
+	
+	// initialize compile-time vector with passed elements:
+	std::vector<elemType> v{std::ranges::begin(rg),
+							std::ranges::end(rg)};
+	...
+}
+\end{cpp}
+
+However, we still cannot declare and initialize a vector at compile time if it can be used at runtime:
+
+\begin{cpp}
+int main()
+{
+	constexpr std::vector orig{0, 8, 15, 132, 4, 77}; // ERROR
+	...
+}
+\end{cpp}
+
+For the same reason, a compile-time function can only return a vector to the caller when the return value is used at compile time:
+
+\filename{comptime/returnvector.cpp}
+
+\begin{cpp}
+#include <vector>
+
+constexpr auto returnVector()
+{
+	std::vector<int> v{0, 8, 15};
+	v.push_back(42);
+	...
+	
+	return v;
+}
+
+constexpr auto returnVectorSize()
+{
+	auto coll = returnVector();
+	return coll.size();
+}
+	
+int main()
+{
+	// constexpr auto coll = returnVector(); // ERROR
+	constexpr auto tmp = returnVectorSize(); // OK
+	...
+}
+\end{cpp}
+
 \mySubsubsection{18.5.2}{Returning a Collection at Compile Time}
 
+Although you cannot return a compile-time vector so that it can be used at runtime, there is a way to return a collection of elements computed at compile time: you can return a std::array<>. The only problem is that you need to know the size of the array because the size cannot be initialized by the size of the vector:
+
+\begin{cpp}
+std::vector v;
+...
+std::array<int, v.size()> arr; // ERROR
+\end{cpp}
+
+Code like this never compiles because size() is a runtime value and the declaration of arr needs a compiletime value. It does not matter whether this code is evaluated at compile time. For this reason, you have to return a fixed-sized array. For example:
+
+\filename{comptime/mergevalues.hpp}
+
+\begin{cpp}
+#include <vector>
+#include <ranges>
+#include <algorithm>
+#include <array>
+
+template<std::ranges::input_range T>
+consteval auto mergeValues(T rg, auto... vals)
+{
+	// create compile-time vector from passed range:
+	std::vector<std::ranges::range_value_t<T>> v{std::ranges::begin(rg),
+												 std::ranges::end(rg)};
+	(... , v.push_back(vals)); // merge all passed parameters
+	std::ranges::sort(v); // sort all elements
+
+	// return extended collection as array:
+	constexpr auto sz = std::ranges::size(rg) + sizeof...(vals);
+	std::array<std::ranges::range_value_t<T>, sz> arr{};
+	std::ranges::copy(v, arr.begin());
+	return arr;
+}
+\end{cpp}
+
+We use a vector in a consteval function to merge a variadic number of passed arguments with the elements of the passed range and sort them all. However, we return the resulting collection as std::array so that it can be passed to a runtime context. For example, the following program works fine with this function:
+
+\filename{comptime/mergevalues.cpp}
+
+\begin{cpp}
+#include "mergevalues.hpp"
+#include <iostream>
+#include <array>
+
+int main()
+{
+	// compile-time initialization of array:
+	constexpr std::array orig{0, 8, 15, 132, 4, 77, 3};
+	
+	// initialization of sorted extended array:
+	auto merged = mergeValues(orig, 42, 4);
+	
+	// print elements:
+	for(const auto& i : merged) {
+		std::cout << i << ' ';
+	}
+}
+\end{cpp}
+
+It has the following output:
+
+\begin{shell}
+0 3 4 4 8 15 42 77 132
+\end{shell}
+
+If we do not know the resulting size of the array at compile time, we have to declare the returned array with a maximum size and return the resulting size in addition. The function that merges the values might now look as follows:
+
+\filename{comptime/mergevaluessz.hpp}
+
+\begin{cpp}
+#include <vector>
+#include <ranges>
+#include <algorithm>
+#include <array>
+
+template<std::ranges::input_range T>
+consteval auto mergeValuesSz(T rg, auto... vals)
+{
+	// create compile-time vector from passed range:
+	std::vector<std::ranges::range_value_t<T>> v{std::ranges::begin(rg),
+												 std::ranges::end(rg)};
+												 
+	(... , v.push_back(vals)); // merge all passed parameters
+	
+	std::ranges::sort(v); // sort all elements
+	
+	// return extended collection as array and its size:
+	constexpr auto maxSz = std::ranges::size(rg) + sizeof...(vals);
+	std::array<std::ranges::range_value_t<T>, maxSz> arr{};
+	auto res = std::ranges::unique_copy(v, arr.begin());
+	return std::pair{arr, res.out - arr.begin()};
+}
+\end{cpp}
+
+In addition, we use std::ranges::unique\_copy() to remove consecutive duplicates after sorting and return both the array and the resulting number of elements.
+
+Note that you should declare arr with \{\} to ensure that all values in the array are initialized. Compiletime functions are not allowed to yield uninitialized memory.
+
+We can now use the returned value as follows:
+
+\filename{comptime/mergevaluessz.cpp}
+
+\begin{cpp}
+#include "mergevaluessz.hpp"
+#include <iostream>
+#include <array>
+#include <ranges>
+
+int main()
+{
+	// compile-time initialization of array:
+	constexpr std::array orig{0, 8, 15, 132, 4, 77, 3};
+	
+	// initialization of sorted extended array:
+	auto tmp = mergeValuesSz(orig, 42, 4);
+	auto merged = std::views::counted(tmp.first.begin(), tmp.second);
+	
+	// print elements:
+	for(const auto& i : merged) {
+		std::cout << i << ' ';
+	}
+}
+\end{cpp}
+
+By using the view adaptor std::views::counted(), we can easily combine both the returned array and the returned size of elements to use in the array as a single range.
+
+The output of the program is now:
+
+\begin{shell}
+0 3 4 8 15 42 77 132
+\end{shell}
+
 \mySubsubsection{18.5.3}{Using Strings at Compile Time}
+
+For compile-time strings, all operations are constexpr now. Therefore, you can use std::string but also any other string types such as std::u8string at compile time now.
+
+However, there is again the restriction that you cannot use a compile-time string at runtime. For example:
+
+\begin{cpp}
+consteval std::string returnString()
+{
+	std::string s = "Some string from compile time";
+	...
+	return s;
+}
+
+void useString()
+{
+	constexpr auto s = returnString(); // ERROR
+	...
+}
+
+constexpr void useStringInConstexpr()
+{
+	std::string s = returnString(); // ERROR
+	...
+}
+
+consteval void useStringInConsteval()
+{
+	std::string s = returnString(); // OK
+	...
+}
+\end{cpp}
+
+You also cannot solve the problem by returning just the compile-time string with data() or c\_str() or as a std::string\_view. You would return the address of memory allocated at compile time. Compilers raise a compile-time error if that happens.
+
+However, we can use the same trick as described for vectors above. We can convert the string into an array of fixed size and return both the array and the size of the vector.
+
+Here is a complete example:
+
+\filename{comptime/comptimestring.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+#include <array>
+#include <cassert>
+#include "asstring.hpp"
+
+// function template to export a compile-time string to runtime:
+template<int MaxSize>
+consteval auto toRuntimeString(std::string s)
+{
+	// ensure the size of the exported array is large enough:
+	assert(s.size() <= MaxSize);
+	
+	// create a compile-time array and copy all characters into it:
+	std::array<char, MaxSize+1> arr{}; // ensure all elems are initialized
+	for (int i = 0; i < s.size(); ++i) {
+		arr[i] = s[i];
+	}
+	
+	// return the compile-time array and the string size:
+	return std::pair{arr, s.size()};
+}
+
+// function to import an exported compile-time string at runtime:
+std::string fromComptimeString(const auto& dataAndSize)
+{
+	// init string with exported array of chars and size:
+	return std::string{dataAndSize.first.data(),
+					   dataAndSize.second};
+}
+
+// test the functions:
+consteval auto comptimeMaxStr()
+{
+	std::string s = "max int is " + asString(std::numeric_limits<int>::max())
+					+ " (" + asString(std::numeric_limits<int>::digits + 1)
+					+ " bits)";
+	return toRuntimeString<100>(s);
+}
+
+int main()
+{
+	std::string s = fromComptimeString(comptimeMaxStr());
+	std::cout << s << '\n';
+}
+\end{cpp}
+
+Again, we define two helper functions to export a compile-time string to a runtime string:
+
+\begin{itemize}
+\item 
+The compile-time function toRuntimeString() converts a string into a std::array<> and returns the array and the size of the string:
+
+\begin{cpp}
+template<int MaxSize>
+consteval auto toRuntimeString(std::string s)
+{
+	assert(s.size() <= MaxSize); // ensure array size fits
+	
+	// create a compile-time array and copy all characters into it:
+	std::array<char, MaxSize+1> arr{}; // ensure all elems are initialized
+	for (int i = 0; i < s.size(); ++i) {
+		arr[i] = s[i];
+	}
+	
+	return std::pair{arr, s.size()}; // return array and size
+}
+\end{cpp}
+
+By using assert(), we double check that the size of the array is large enough. In the same way, we could double check at compile time that we do not waste too much memory.
+
+\item 
+The runtime function fromComptimeString() then takes the returned array and size to initialize a runtime string and returns it:
+
+\begin{cpp}
+std::string fromComptimeString(const auto& dataAndSize)
+{
+	return std::string{dataAndSize.first.data(),
+					   dataAndSize.second};
+}
+\end{cpp}
+
+The test case of the function uses the helper function asString(), which can be used at compile time and runtime to convert an integral value into a string.
+
+The program has, for example, the following output:
+
+\begin{shell}
+max int is 2147483647 (32 bits)
+\end{shell}
+
+\end{itemize}
+
+
+
+
+
+

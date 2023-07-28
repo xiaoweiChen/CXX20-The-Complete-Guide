@@ -1,4 +1,279 @@
 
+C++20 provides a new helper function that allows programmers to implement different code for compiletime and runtime computing: std::is\_constant\_evaluated(). It is defined in the header file <type\_traits> (although it is not really a type function).
+
+It allows code to switch from calling a helper function that can be called only at runtime to code that can be used at compile time. For example:
+
+\filename{comptime/isconsteval.hpp}
+
+\begin{cpp}
+#include <type_traits>
+#include <cstring>
+
+constexpr int len(const char* s)
+{
+	if (std::is_constant_evaluated()) {
+		int idx = 0;
+		while (s[idx] != '\0') { // compile-time friendly code
+			++idx;
+		}
+		return idx;
+	}
+	else {
+		return std::strlen(s); // function called at runtime
+	}
+}
+\end{cpp}
+
+In the function len(), we compute the length of a raw string or string literal. If called at runtime, we use the standard C function strlen(). However, to enable the function be used at compile time, we provide a different implementation if we are in a compile-time context.
+
+Here is how the two branches can be called:
+
+\begin{cpp}
+constexpr int l1 = len("hello"); // uses then branch
+int l2 = len("hello"); // uses else branch (no required compile-time context)
+\end{cpp}
+
+The first call of len() happens in a compile-time context. In that case, is\_constant\_evaluated() yields true so that we use the then branch. The second call of len() happens in a runtime context, so that is\_constant\_evaluated() yields false and strlen() is called. The latter happens even if the compiler decides to evaluate the call at compile time. The important point is whether the calls is required to happen at compile time or not.
+
+Here is a function that does the opposite: it converts an integral value to a string both at compile time and at runtime:
+
+\filename{comptime/asstring.hpp}
+
+\begin{cpp}
+#include <string>
+#include <format>
+
+// convert an integral value to a std::string
+// - can be called at compile time or runtime
+constexpr std::string asString(long long value)
+{
+	if (std::is_constant_evaluated()) {
+		// compile-time version:
+		if (value == 0) {
+			return "0";
+		}
+		if (value < 0) {
+			return "-" + asString(-value);
+		}
+		std::string s = asString(value / 10) + std::string(1, value % 10 + '0');
+		if (s.size() > 1 && s[0] == '0') { // skip leading 0 if there is one
+			s.erase(0, 1);
+		}
+		return s;
+	}
+	else {
+		// runtime version:
+		return std::format("{}", value);
+	}
+}
+\end{cpp}
+
+At runtime, we simply use std::format(). At compile time, we manually create a string of the optional negative sign and all digits (we use a recursive approach to bring them into the right order). An example of its use you can be found in the section about exporting compile-time strings to runtime strings.
 
 
 \mySubsubsection{18.4.1}{std::is\_constant\_evaluated() in Detail}
+
+According to the C++20 standard, std::is\_constant\_evaluated() yields true when it is called in a manifestly constant-evaluated expression or conversion. That is roughly the case if we call it:
+
+\begin{itemize}
+\item 
+In a constant expression
+
+\item 
+In a constant context (in if constexpr, a consteval function, or an constant initialization)
+
+\item 
+For an initializer of a variable that can be used at compile time
+\end{itemize}
+
+For example:
+
+\begin{cpp}
+constexpr bool isConstEval() {
+	return std::is_constant_evaluated();
+}
+
+bool g1 = isConstEval(); // true
+const bool g2 = isConstEval(); // true
+static bool g3 = isConstEval(); // true
+static int g4 = g1 + isConstEval(); // false
+
+int main()
+{
+	bool l1 = isConstEval(); // false
+	const bool l2 = isConstEval(); // true
+	static bool l3 = isConstEval(); // true
+	int l4 = g1 + isConstEval(); // false
+	const int l5 = g1 + isConstEval(); // false
+	static int l6 = g1 + isConstEval(); // false
+	int l7 = isConstEval() + isConstEval(); // false
+	const auto l8 = isConstEval() + 42 + isConstEval(); // true
+}
+\end{cpp}
+
+We would get the same effect if isConstEval() is called indirectly via a constexpr function.
+
+\mySamllsection{std::is\_constant\_evaluated() with constexpr and consteval}
+
+For example, assume we have the following functions defined:
+
+\begin{cpp}
+bool runtimeFunc() {
+	return std::is_constant_evaluated(); // always false
+}
+
+constexpr bool constexprFunc() {
+	return std::is_constant_evaluated(); // may be false or true
+}
+
+consteval bool constevalFunc() {
+	return std::is_constant_evaluated(); // always true
+}
+\end{cpp}
+
+Then we have the following behavior:
+
+\begin{cpp}
+void foo()
+{
+	bool b1 = runtimeFunc(); // false
+	bool b2 = constexprFunc(); // false
+	bool b3 = constevalFunc(); // true
+	
+	static bool sb1 = runtimeFunc(); // false
+	static bool sb2 = constexprFunc(); // true
+	static bool ab3 = constevalFunc(); // true
+	const bool cb1 = runtimeFunc(); // ERROR
+	const bool cb2 = constexprFunc(); // true
+	const bool cb3 = constevalFunc(); // true
+	
+	int y = 42;
+	static bool sb4 = y + runtimeFunc(); // function yields false
+	static bool sb5 = y + constexprFunc(); // function yields false
+	static bool ab6 = y + constevalFunc(); // function yields true
+	const bool cb4 = y + runtimeFunc(); // function yields false
+	const bool cb5 = y + constexprFunc(); // function yields false
+	const bool cb6 = y + constevalFunc(); // function yields true
+}
+\end{cpp}
+
+By using constexpr or static constinit instead of const, an initialization without y would have the same effect as shown for cb1, cb2, and cb3. However, with y involved, using constexpr or static constinit always results in an error because a runtime value is involved.
+
+In general, it makes no sense to use std::is\_constant\_evaluated() in the following situations:
+
+\begin{itemize}
+\item 
+As a condition in a compile-time if because that always yields true:
+
+\begin{cpp}
+if constexpr (std::is_constant_evaluated()) { // always true
+	...
+}
+\end{cpp}
+
+Inside if constexpr we have a compile-time context, meaning that the answer to the question of whether we are in a compile-time context is always true (regardless of the context the whole function was called from).
+
+\item 
+Inside a pure runtime function, because that usually yields false.
+
+The only exception is if is\_constant\_evaluated() is used in a local constant evaluation:
+
+\begin{cpp}
+void foo() {
+	if (std::is_constant_evaluated()) { // always false
+		...
+	}
+	const bool b = std::is_constant_evaluated(); // true
+}
+\end{cpp}
+
+\item 
+Inside a consteval function, because that always yields true:
+
+\begin{cpp}
+consteval void foo() {
+	if (std::is_constant_evaluated()) { // always true
+		...
+	}
+}
+\end{cpp}
+
+\end{itemize}
+
+Therefore, using std::is\_constant\_evaluated() usually only makes sense in constexpr functions. It also makes no sense to use std::is\_constant\_evaluated() inside a constexpr function to call a consteval function, because calling a consteval function from a constexpr function is not allowed in general: [C++23 will probably enable code like this with if consteval.]
+
+\begin{cpp}
+consteval int funcConstEval(int i) {
+	return i;
+}
+
+constexpr int foo(int i) {
+	if (std::is_constant_evaluated()) {
+		return funcConstEval(i); // ERROR
+	}
+	else {
+		return funcRuntime(i);
+	}
+}
+\end{cpp}
+
+\mySamllsection{std::is\_constant\_evaluated() and Operator ?:}
+
+In the C++20 standard, there is an interesting example to clarify the way std::is\_constant\_evaluated() can be used. Slightly modified, it looks as follows:
+
+\begin{cpp}
+int sz = 10;
+constexpr bool sz1 = std::is_constant_evaluated() ? 20 : sz; // true, so 20
+constexpr bool sz2 = std::is_constant_evaluated() ? sz : 20; // false, so ERROR
+\end{cpp}
+
+The reason for this behavior is as follows:
+
+\begin{itemize}
+\item 
+The initialization of sz1 and sz2 is either static initialization or dynamic initialization.
+
+\item 
+For static initialization, the initializer must be constant. Therefore, the compiler attempts to evaluate the initializer with std::is\_constant\_evaluated() treated as a constant of value true.
+
+\begin{itemize}
+\item 
+With sz1, that succeeds. The result is 1, and that is a constant. Therefore, sz1 is a constant initialized with 20.
+
+\item
+With sz2, the result is sz, which is not a constant. Therefore, sz2 is (notionally) dynamically initialized. The previous result is therefore discarded and the initializer is evaluated with std::is\_constant\_evaluated() producing false instead. Therefore, the expression to initialize sz2 is also 20.
+
+However, sz2 is not necessarily a constant because std::is\_constant\_evaluated() is not necessarily a constant expression during this evaluation. Therefore, the initialization of sz2 with this 20 does not compile.
+\end{itemize}
+\end{itemize}
+
+Using const instead of constexpr makes the situation even more tricky:
+
+\begin{cpp}
+int sz = 10;
+const bool sz1 = std::is_constant_evaluated() ? 20 : sz; // true, so 20
+const bool sz2 = std::is_constant_evaluated() ? sz : 20; // false, so also 20
+
+double arr1[sz1]; // OK
+double arr2[sz2]; // may or may not compile
+\end{cpp}
+
+Only sz1 is a compile-time constant and can always be used to initialize an array. For the reason described above, sz2 is also initialized to 20. However, because the initial values is not necessarily a constant, the initialization of arr2 may or may not compile (depending on the compiler and optimizations used).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

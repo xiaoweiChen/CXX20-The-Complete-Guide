@@ -1,6 +1,81 @@
 
-
+Besides the ability to use heap memory at compile time, compile-time functions (whether declared with constexpr or consteval) can use a couple of additional language features since C++20. As a consequence and in addition, a couple of library features can now also be used at compile time.
 
 \mySubsubsection{18.6.1}{constexpr Language Extensions}
 
+Since C++20, the following language features can be used in compile-time functions (whether declared with constexpr or consteval):
+
+\begin{itemize}
+\item 
+You can now use heap memory at compile time.
+
+\item 
+Runtime polymorphism is supported:
+
+\begin{itemize}
+\item 
+You can now use virtual functions.
+
+\item 
+You can now use dynamic\_cast.
+
+\item 
+You can now use typeid.
+\end{itemize}
+
+\item
+You can have try-catch blocks now (but you are still not allowed to throw).
+
+\item
+You can now change the active member of a union.
+\end{itemize}
+
+Note that you are still not allowed to use static in constexpr or consteval functions.
+
+
 \mySubsubsection{18.6.2}{constexpr Library Extensions}
+
+The C++ standard library has extended the utilities that can be used at compile time.
+
+\mySamllsection{constexpr Algorithms and Utilities}
+
+Most algorithms in <algorithm>, <numeric>, and <utility> are constexpr now. This means that you can now sort and accumulate elements at compile time (see the example using vectors at compile time).
+
+However, parallel algorithms (algorithms that have an execution policy parameter) can still only be used at runtime.
+
+\mySamllsection{constexpr Library Types}
+
+Several types of the C++ standard library now have better support for constexpr so that objects can be used (better) at compile time:
+
+\begin{itemize}
+\item 
+Vectors and strings can be used at compile time now.
+
+\item 
+A couple of std::complex<> operations became constexpr.
+
+\item 
+A couple of missing constexpr in std::optional<> and std::variant<> were added.
+
+\item 
+constexpr was added to std::invoke(), std::ref(), std::cref(), mem\_fn(), not\_fn(), std::bind(), and std::bind\_front(),
+
+\item 
+In pointer\_traits, pointer\_to() for raw pointers can now be used at compile time.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

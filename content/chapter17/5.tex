@@ -1,12 +1,225 @@
 
 
-
+C++20 introduces several new extensions to the capturing of values and objects in lambdas.
 
 \mySubsubsection{17.5.1}{Capturing this and *this}
 
+If a lambda is defined inside a member function, the question is how you can access data of the object for which the member function is called. Before C++20, we had the following rules:
+
+\begin{cpp}
+class MyType {
+	std::string name;
+	...
+	void foo() {
+		int val = 0;
+		...
+		auto l0 = [val] { bar(val, name); }; // ERROR: member name not captured
+		auto l1 = [val, name=name] { bar(val, name); }; // OK, capture val and name by value
+		
+		auto l2 = [&] { bar(val, name); }; // OK (val and name by reference)
+		auto l3 = [&, this] { bar(val, name); }; // OK (val and name by reference)
+		auto l4 = [&, *this] { bar(val, name); }; // OK (val by reference, name by value)
+		
+		auto l5 = [=] { bar(val, name); }; // OK (val by value, name by reference)
+		auto l6 = [=, this] { bar(val, name); }; // ERROR before C++20
+		auto l7 = [=, *this] { bar(val, name); }; // OK (val and name by value)
+		...
+	}
+};
+\end{cpp}
+
+Since C++20, the following rules apply:
+
+\begin{cpp}
+class MyType {
+	std::string name;
+	...
+	void foo() {
+		int val = 0;
+		...
+		auto l0 = [val] { bar(val, name); }; // ERROR: member name not captured
+		auto l1 = [val, name=name] { bar(val, name); }; // OK, capture val and name by value
+		
+		auto l2 = [&] { bar(val, name); }; // deprecated (val and name by ref.)
+		auto l3 = [&, this] { bar(val, name); }; // OK (val and name by reference)
+		auto l4 = [&, *this] { bar(val, name); }; // OK (val by reference, name by value)
+		
+		auto l5 = [=] { bar(val, name); }; // deprecated (val by value, name by ref.)
+		auto l6 = [=, this] { bar(val, name); }; // OK (val by value, name by reference)
+		auto l7 = [=, *this] { bar(val, name); }; // OK (val and name by value)
+		...
+	}
+};
+\end{cpp}
+
+Thus, since C++20, we have the following changes:
+
+\begin{itemize}
+\item 
+[=, this] is now allowed as a lambda capture (some compilers did allow it before, although it was formally invalid).
+
+\item 
+The implicit capture of *this is deprecated.
+\end{itemize}
+
 \mySubsubsection{17.5.2}{Capturing Structured Bindings}
+
+Since C++20, it the capture of structured bindings (introduced with C++17) is allowed:
+
+\begin{cpp}
+std::map<int, std::string> mymap;
+...
+
+for (const auto& [key,val] : mymap) {
+	auto l = [key, val] { // OK since C++20
+				...
+			};
+	...
+}
+\end{cpp}
+
+Some compilers did allow the capture of structured bindings before, although it was formally invalid.
+
+
 
 
 \mySubsubsection{17.5.3}{Capturing Parameter Packs of Variadic Templates}
 
+If you have a variadic template, you could capture parameter packs as follows:
+
+\begin{cpp}
+template<typename... Args>
+void foo(Args... args)
+{
+	auto l1 = [&] {
+					bar(args...); // OK
+				};
+	auto l2 = [args...] { // or [=]
+					bar(args...); // OK
+				};
+	...
+}
+\end{cpp}
+
+However, if you wanted to return the lambda that was created for later use, there was a problem:
+
+\begin{itemize}
+\item 
+Using [\&], you would return a lambda that refers to a destroyed parameter pack.
+
+\item 
+Using [args...] or [=], you would copy the passed parameter pack.
+\end{itemize}
+
+You can usually use init-captures to use move semantics when capturing objects:
+
+\begin{cpp}
+template<typename T>
+void foo(T arg)
+{
+	auto l3 = [arg = std::move(arg)] { // OK since C++14
+				bar(arg); // OK
+			};
+	...
+}
+\end{cpp}
+
+However, there was no syntax provided to use init-captures with parameter packs.
+
+C++20 introduces a corresponding syntax:
+
+\begin{cpp}
+template<typename... Args>
+void foo(Args... args)
+{
+	auto l4 = [...args = std::move(args)] { // OK since C++20
+				bar(args...); // OK
+			};
+	...
+}
+\end{cpp}
+
+You can also init-capture parameter packs by reference. For example, we can change to a parameter name for the lambda as follows:
+
+\begin{cpp}
+template<typename... Args>
+void foo(Args... args)
+{
+	auto l4 = [&...fooArgs = args] { // OK since C++20
+				bar(fooArgs...); // OK
+			};
+	...
+}
+\end{cpp}
+
+\mySamllsection{Example of Capturing Parameter Packs of Variadic Templates}
+
+A generic function that creates and returns a lambda that captures a variadic number of parameters by value now looks as follows:
+
+\begin{cpp}
+template<typename Callable, typename... Args>
+auto createToCall(Callable op, Args... args)
+{
+	return [op, ...args = std::move(args)] () -> decltype(auto) {
+				return op(args...);
+			};
+}
+\end{cpp}
+
+Using the new syntax for abbreviated function templates, the code looks as follows:
+
+\begin{cpp}
+auto createToCall(auto op, auto... args)
+{
+	return [op, ...args = std::move(args)] () -> decltype(auto) {
+				return op(args...);
+			};
+}
+\end{cpp}
+
+Here is a complete example:
+
+\filename{lang/capturepack.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <string_view>
+
+auto createToCall(auto op, auto... args)
+{
+	return [op, ...args = std::move(args)] () -> decltype(auto) {
+		return op(args...);
+	};
+}
+
+void printWithGAndNoG(std::string_view s)
+{
+	std::cout << s << "g " << s << '\n';
+}
+
+int main()
+{
+	auto printHero = createToCall(printWithGAndNoG, "Zhan");
+	...
+	printHero();
+}
+\end{cpp}
+
+Run it to print a hero!
+
 \mySubsubsection{17.5.4}{Lambdas as Coroutines}
+
+Lambdas can also be coroutines, which were introduced with C++20. However, note that in this case, the lambdas should not capture anything, because a coroutine may easily be used longer than the lambda object, which is created locally, exists.
+
+
+
+
+
+
+
+
+
+
+
+
+

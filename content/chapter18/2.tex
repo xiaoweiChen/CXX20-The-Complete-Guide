@@ -1,9 +1,402 @@
 
+Since C++11, C++ has the keyword constexpr to support the evaluation of functions at compile time. Provided all aspects of the functions are known at compile time, you can also use the results in compile-time contexts. However, constexpr functions also serve as “normal” runtime functions.
+
+C++20 introduces a similar keyword consteval, which mandates compile-time computing. In contrast to functions marked with constexpr, functions marked with consteval cannot be called at runtime; instead, they are required to be called at compile time. If this is not possible, the program is ill-formed. Because these functions are called immediately, when the compiler sees calls of them, these functions are also called immediate functions.
 
 \mySubsubsection{18.2.1}{A First consteval Example}
 
+Consider the following example:
+
+\filename{comptime/consteval1.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <array>
+
+constexpr
+bool isPrime(int value)
+{
+	for (int i = 2; i <= value/2; ++i) {
+		if (value % i == 0) {
+			return false;
+		}
+	}
+	return value > 1; // 0 and 1 are not prime numbers
+}
+template<
+int Num>
+consteval
+std::array<int, Num> primeNumbers()
+{
+	std::array<int, Num> primes;
+	int idx = 0;
+	for (int val = 1; idx < Num; ++val) {
+		if (isPrime(val)) {
+			primes[idx++] = val;
+		}
+	}
+	return primes;
+}
+
+int main()
+{
+	// init with prime numbers:
+	auto primes = primeNumbers<100>();
+	for (auto v : primes) {
+		std::cout << v << '\n';
+	}
+}
+\end{cpp}
+
+Here, we use consteval to define the function primeNumbers<N>(), which returns an array of the first N prime numbers at compile time:
+
+\begin{cpp}
+template<int Num>
+consteval
+std::array<int, Num> primeNumbers()
+{
+	std::array<int, Num> primes;
+	...
+	return primes;
+}
+\end{cpp}
+
+To compute the prime numbers, primeNumbers() uses a helper function isPrime() that is declared with constexpr to be usable at both runtime and compile time (we could also declare it with consteval, but then it would not be usable at runtime).
+
+The program then uses primeNumbers<>() to initialize an array of 100 prime numbers:
+
+\begin{cpp}
+auto primes = primeNumbers<100>();
+\end{cpp}
+
+Because primeNumbers<>() is consteval, this initialization must happens at compile time. You would have the same effect if primeNumbers<>() is declared with constexpr and the function is called in a compile-time context (such as to initialize a constexpr or constinit array prime):
+
+\begin{cpp}
+template<int Num>
+constexpr
+std::array<int, Num> primeNumbers()
+{
+	std::array<int, Num> primes;
+	...
+	return primes;
+}
+...
+constinit static auto primes = primeNumbers<100>();
+\end{cpp}
+
+In both cases, you can see that the compile time becomes significantly slower when the number of prime numbers to compute for the initializations grows significantly.
+
+However, note that compilers usually have a limit when evaluating constant expressions. The C++ standard only guarantees the evaluation of 1,048,576 expressions within a core constant exp
+
+
+\mySamllsection{consteval Lambdas}
+
+You can also declare lambdas to be consteval now. This requires that the lambda is evaluated at compile time.
+
+Consider the following example:
+
+\begin{cpp}
+int main(int argc, char* argv[])
+{
+	// compile-time function to compute hash value for string literals:
+	// (for the algorithm, see http: // www. cse. yorku. ca/ ~ oz/ hash. html )
+	auto hashed = [] (const char* str) consteval {
+					std::size_t hash = 5381;
+					while (*str != '\0') {
+						hash = hash * 33 ^ *str++;
+					}
+					return hash;
+				};
+	
+	// OK (requires hashed() in compile-time context):
+	enum class drinkHashes : long { beer = hashed("beer"), wine = hashed("wine"),
+									water = hashed("water"), ... };
+	// OK (hashed() guaranteed to be called at compile time):
+	std::array arr{hashed("beer"), hashed("wine"), hashed("water")};
+	
+	if (argc > 1) {
+		switch (hashed(argv[1])) { // ERROR: argv is not known at compile time
+			...
+		}
+	}
+}
+\end{cpp}
+
+Here we initialize hashed with a lambda that can be used only at compile time. Therefore, the use of the lambda has to happen in a compile-time context with compile-time values. The calls are valid only if they take string literals or a parameter of type constexpr const char*.
+
+If you declare the lambda with constexpr the switch statement would become valid. (the declaration with constexpr is not necessary, because since C++17, all lambdas are implicitly constexpr if possible). Then, however, it is no longer guaranteed that the computation of the initial values for arr happens at compile time.
+
+See the discussion on consteval lambdas in the chapter of all new lambda features for more details and another example.
+
 \mySubsubsection{18.2.2}{constexpr versus consteval}
+
+With constexpr and consteval, we now have the following options for influencing when a function can be and is called:
+
+\begin{itemize}
+\item 
+Neither constexpr nor consteval: 
+
+These functions can be used only in runtime contexts. However, the compiler can still perform optimizations that evaluate them at compile time.
+
+\item 
+constexpr: 
+
+These functions can be used in compile-time and runtime contexts. Even in runtime contexts, the compiler can still perform optimizations that evaluate the functions at compile time. The compiler is also allowed to evaluate the functions in compile-time contexts at runtime.
+
+\item 
+consteval: 
+
+These functions can be used only at compile-time. However, the result can be used in a runtime context.
+\end{itemize}
+
+For example, consider the following three functions declared in a header file (therefore, squareR() is declared with inline):
+
+\filename{comptime/consteval2.hpp}
+
+\begin{cpp}
+// square() for runtime only:
+inline int squareR(int x) {
+	return x * x;
+}
+
+// square() for compile time and runtime:
+constexpr int squareCR(int x) {
+	return x * x;
+}
+
+// square() for compile time only:
+consteval int squareC(int x) {
+	return x * x;
+}
+\end{cpp}
+
+We can use these functions as follows:
+
+\filename{comptime/consteval2.cpp}
+
+\begin{cpp}
+#include "consteval2.hpp"
+#include <iostream>
+#include <array>
+
+int main()
+{
+	int i = 42;
+	
+	// using the square functions at runtime with runtime value:
+	std::cout << squareR(i) << '\n'; // OK
+	std::cout << squareCR(i) << '\n'; // OK
+	// std::cout << squareC(i) << ’’; // ERROR
+	// using the square functions at runtime with c
+	ompile-time value:
+	std::cout << squareR(42) << '\n'; // OK
+	std::cout << squareCR(42) << '\n'; // OK
+	std::cout << squareC(42) << '\n'; // OK: square computed at compile time
+	
+	// using the square functions at compile time:
+	// std::array<int, squareR(42)> arr1; // ERROR
+	std::array<int, squareCR(42)> arr2; // OK: square computed at compile time
+	std::array<int, squareC(42)> arr3; // OK: square computed at compile time
+	// std::array<int, squareC(i)> arr4; // ERROR
+}
+\end{cpp}
+
+The differences between constexpr and consteval are as follows:
+
+\begin{itemize}
+\item 
+The consteval function is not allowed to process parameters that are not known at compile time:
+
+\begin{cpp}
+std::cout << squareCR(i) << '\n'; // OK
+std::cout << squareC(i) << '\n'; // ERROR
+std::array<int, squareC(i)> arr4; // ERROR
+\end{cpp}
+
+\item 
+The consteval function must to perform its computing at compile time:
+
+\begin{cpp}
+std::cout << squareCR(42) << '\n'; // may be computed at compile time or runtime
+std::cout << squareC(42) << '\n'; // computed at compile time
+\end{cpp}
+
+\end{itemize}
+
+This means that it makes sense to use consteval in two situations:
+
+\begin{itemize}
+\item 
+You want to enforce compile-time computation.
+
+\item 
+You want to disable a function to be used at runtime.
+\end{itemize}
+
+For example, whether a function square() or hashed() is constexpr or consteval makes no difference in compile-time contexts such as the following:
+
+\begin{cpp}
+enum class Drink = { water = hashed("water"), wine = hashed("wine") };
+
+switch (value) {
+	case square(42):
+	...
+}
+
+if constexpr(hashed("wine") > hashed("water")) {
+	...
+}
+\end{cpp}
+
+However, in runtime contexts, consteval might make a difference because compile-time computing is not required then:
+
+\begin{cpp}
+std::array drinks = { hashed("water"), hashed("wine") };
+
+std::cout << hashed("water");
+
+if (hashed("wine") > hashed("water")) {
+	...
+}
+\end{cpp}
 
 \mySubsubsection{18.2.3}{Using consteval in Practice}
 
+For consteval functions, a couple of restrictions apply when using them in practice.
+
+\mySamllsection{Constraints for consteval}
+
+consteval functions share most of the other aspects of constexpr functions (note that these constraints were relaxed for constexpr functions with C++20):
+
+\begin{itemize}
+\item 
+Parameters and the return type (if it is not void) have to be literal types.
+
+\item 
+The body may contain only variables of literal types that are neither static nor thread\_local.
+
+\item 
+Using goto and labels is not allowed.
+
+\item 
+The function may only be a constructor or destructor, the class has no virtual base class.
+
+\item 
+consteval functions are implicitly inline.
+
+\item 
+consteval functions cannot be used as coroutines.
+\end{itemize}
+
+
+\mySamllsection{Call Chains with consteval Functions}
+
+Functions marked with consteval can call other functions marked with constexpr or consteval:
+
+\begin{cpp}
+constexpr int funcConstExpr(int i) {
+	return i;
+}
+
+consteval int funcConstEval(int i) {
+	return i;
+}
+
+consteval int foo(int i) {
+	return funcConstExpr(i) + funcConstEval(i); // OK
+}
+\end{cpp}
+
+However, constexpr functions cannot call consteval functions for variables:
+
+\begin{cpp}
+consteval int funcConstEval(int i) {
+	return i;
+}
+
+constexpr int foo(int i) {
+	return funcConstEval(i); // ERROR
+}
+\end{cpp}
+
+The function foo() does not compile. The reason is that i is still not a compile-time value because it could be called at runtime. foo() could only call funcConstEval() with a compile-time variable:
+
+\begin{cpp}
+constexpr int foo(int i) {
+	return funcConstEval(42); // OK
+}
+\end{cpp}
+
+Note that even if(std::is\_constant\_evaluated()) does not help here.
+
+Functions marked with consteval are also not permitted to call pure runtime functions (functions marked with neither constexpr nor consteval). However, this is only checked if the call is really performed. For a consteval function, it is not an error to contain statements that call runtime functions as long as they are not reached (this rule already applies to constexpr functions called at compile time).
+
+Consider the following example:
+
+\begin{cpp}
+void compileTimeError()
+{
+}
+
+consteval int nextTwoDigitValue(int val)
+{
+	if (val < 0 || val >= 99) {
+		compileTimeError(); // call something not valid to call at compile time
+	}
+	return ++val;
+}
+\end{cpp}
+
+This compile-time function has the interesting effect that it can be used only for some arguments that have a value from zero to 98:
+
+\begin{cpp}
+constexpr int i1 = nextTwoDigitValue(0); // OK (initializes i1 with 1)
+constexpr int i2 = nextTwoDigitValue(98); // OK (initializes i2 with 99)
+constexpr int i3 = nextTwoDigitValue(99); // compile-time ERROR
+constexpr int i4 = nextTwoDigitValue(-1); // compile-time ERROR
+\end{cpp}
+
+Note that using static\_assert() would not work here because it can only be called for values known at compile time and consteval does not make val a compile-time value inside the function:
+
+\begin{cpp}
+consteval int nextTwoDigitValue(int val)
+{
+	static_assert(val >= 0 && val < 99); // always ERROR: val is not a compile-time value
+	...
+}
+\end{cpp}
+
+By using this trick, you can constrain compile-time functions to certain values. That way, you could signal an invalid format of a string parsed at compile time.
+
 \mySubsubsection{18.2.4}{Compile-Time Value versus Compile-Time Context}
+
+You might assume that each and every value in a compile-time function is a compile-time value. However, that is not true. In compile-time functions, there is also a difference between static typing of the code and dynamic computing of values.
+
+Consider the following example:
+
+\begin{cpp}
+consteval void process()
+{
+	constexpr std::array a1{0, 8, 15};
+	constexpr auto n1 = std::ranges::count(a1, 0); // OK
+	std::array<int, n1> a1b; // OK
+	
+	std::array a2{0, 8, 15};
+	constexpr auto n2 = std::ranges::count(a2, 0); // ERROR
+	
+	std::array a3{0, 8, 15};
+	auto n3 = std::ranges::count(a3, 0); // OK
+	std::array<int, n3> a3b; // ERROR
+}
+\end{cpp}
+
+Although we are in a function that can be used only at compile time, a2 is not a compile-time value. Therefore, it cannot be used where usually a compile-time value is required, such as to initialize the constexpr variable n2.
+
+For the same reason, only n1 can be used to declare the size of a std::array. Using n3, which is not constexpr, fails (even if n3 were to be declared as const).
+
+The same applies if process() is declared as a constexpr function. Whether it is called in a compiletime context does not matter.
+
+
+
+
+

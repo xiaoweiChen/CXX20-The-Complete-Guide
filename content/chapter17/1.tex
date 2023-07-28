@@ -1,7 +1,178 @@
 
 
+C++20 introduces an extension to enable the use of template parameters for generic lambdas. You can specify these template parameters between the capture clause and the call parameters (if there are any):
+
+\begin{cpp}
+auto foo = []<typename T>(const T& param) { // OK since C++20
+				T tmp{}; // declare object with type of the template parameter
+				...
+			};
+\end{cpp}
+
+Template parameters for lambdas provide the benefit of having a name for the type or a part of it when declaring generic parameters. For example:
+
+\begin{cpp}
+[]<typename T>(T* ptr) { // OK since C++20
+	... // can use T as type of the value that ptr points to
+};
+\end{cpp}
+
+Or:
+
+\begin{cpp}
+[]<typename T, int N>(T (&arr)[N]) {
+	... // can use T as element type and N as size of the passed array
+};
+\end{cpp}
+
+If you are wondering why you would not use a function template in these cases, remember that lambdas provide some benefits that functions cannot provide:
+
+\begin{itemize}
+\item 
+They can be defined inside functions.
+
+\item 
+They can capture runtime values to specify their functional behavior at runtime.
+
+\item 
+You can pass them as arguments without the need to specify the parameter types.
+\end{itemize}
 
 
 \mySubsubsection{17.1.1}{Using Template Parameters for Generic Lambdas in Practice}
 
+Explicit template parameters can be useful for specializing (or partially restricting the type of parameters of) generic lambdas. Consider the following example:
+
+\begin{cpp}
+[]<typename T>(const std::vector<T>& vec) { // can only pass vectors
+	...
+};
+\end{cpp}
+
+This lambda accepts only vectors as arguments. When using auto, it would not be easy to restrict the argument to vectors because C++ does not (yet) support something like std::vector<auto>. However, in this case, you could also use type constraints to constrain the type of the parameter (such as to require random access or even a specific type).
+
+Explicit template parameters also help to avoid the need for decltype. For example, for perfect forwarding of a generic parameter pack in a lambda, you can write:
+
+\begin{cpp}
+[]<typename... Types>(Types&&... args) {
+	foo(std::forward<Types>(args)...);
+};
+\end{cpp}
+
+instead of:
+
+\begin{cpp}
+[] (auto&&... args) {
+	foo(std::forward<decltype(args)>(args)...);
+};
+\end{cpp}
+
+A similar example would be code to provide special behavior of a certain type when visiting a std::variant<> (introduced in C++17):
+
+\begin{cpp}
+std::variant<int, std::string> var;
+...
+// call generic lambda with type-specific behavior:
+std::visit([](const auto& val) {
+				if constexpr(std::is_same_v<decltype(val), const std::string&>) {
+					... // string-specific processing
+				}
+				std::cout << val << '\n';
+			},
+			var);
+\end{cpp}
+
+We have to use decltype() to get the type of the parameter and compare that type as a const\& (or remove const and the reference). Since C++20, you can just write the following:
+
+\begin{cpp}
+std::visit([]<typename T>(const T& val) { // since C++20
+				if constexpr(std::is_same_v<T, std::string>) {
+					... // string-specific processing
+				}
+				std::cout << "value: " << val << '\n';
+			},
+			var);
+\end{cpp}
+
+You can also declare template parameters for consteval lambdas to force that their execution at compile time.
+
 \mySubsubsection{17.1.2}{Explicit Specification of Lambda Template Parameters}
+
+Lambdas provide a convenient way to define function objects (functors). For generic lambdas, their function call operator (operator()) is a template. With the syntax to specify a name for the parameter instead of using auto, you have a name for the template parameter in the generated function call operator.
+
+For example, if you define the following lambda:
+
+\begin{cpp}
+auto primeNumbers = [] <int Num> () {
+						std::array<int, Num> primes{};
+						... // compute and assign first Num prime numbers
+						return primes;
+					};
+\end{cpp}
+
+the compiler defines a corresponding closure type:
+
+\begin{cpp}
+class NameChosenByCompiler {
+public:
+	...
+	template<int Num>
+	auto operator() () const {
+		std::array<int, Num> primes{};
+		... // compute and assign first Num prime numbers
+		return primes;
+	}
+};
+\end{cpp}
+
+and creates an object of this class (using the default constructor if no values are captured):
+
+\begin{cpp}
+auto primeNumbers = NameChosenByCompiler{};
+\end{cpp}
+
+To specify the template parameter explicitly, you have to pass it to operator() when you use the lambda as a function:
+
+\begin{cpp}
+// initialize array with the first 20 prime numbers:
+auto primes20 = primeNumbers.operator()<20>();
+\end{cpp}
+
+There is no way to avoid specifying operator() when specifying its template parameters except by using an indirect call.
+
+You can try to make the template parameter deducible by making it a compile-time value; however, the resulting syntax is not much better:
+
+\begin{cpp}
+auto primeNumbers = [] <int Num> (std::integral_constant<int, Num>) {
+						std::array<int, Num> primes{};
+						... // compute and assign first Num prime numbers
+						return primes;
+					};
+
+// initialize array with the first 20 prime numbers:
+auto primes20 = primeNumbers(std::integral_constant<int,20>{});
+\end{cpp}
+
+Alternatively, you might think about using a variable template, a technique introduced in C++14. With this, you can make the variable primeNumbers generic instead of making the lambda generic:
+
+\begin{cpp}
+template<int Num>
+auto primeNumbers = [] () {
+						std::array<int, Num> primes{};
+						... // compute and assign first Num prime numbers
+						return primes;
+					};
+...
+// initialize array with the first 20 prime numbers:
+auto primes20 = primeNumbers<20>();
+\end{cpp}
+
+However, in that case, you cannot define the lambda inside a function scope. Generic lambdas allow you to define generic functionality locally inside a scope.
+
+
+
+
+
+
+
+
