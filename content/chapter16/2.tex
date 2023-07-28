@@ -1,14 +1,499 @@
 
 
+The purpose of modules is to deal with code of significant size distributed over multiple files. Modules can be used to wrap code of small, medium-sized, and very large components consisting of 2, 10, or even 100 files. These files might even be provided and maintained by multiple programmers and teams.
 
+To demonstrate the scalability of this approach and its benefits, let us now look at how multiple files can be used to define a module that can be used/imported by other code. The code size of the example is still small so that you would normally not spread it over multiple files. The goal is to demonstrate the features with very simple examples.
 
 \mySubsubsection{16.2.1}{Module Units}
 
+In general, modules consist of multiple module units. Module units are translation units that belong to a module.
+
+All module units have to be compiled in some way. Even if they contain only declarations, which would go in header files in traditional code, some kind of precompilation is necessary. Therefore, the files are always transferred into some internal platform-specific format that is used to avoid having to (pre)compile the same code again and again.
+
+Besides the primary module interface unit, C++ provides three other unit types to split the code of a module into multiple files:
+
+\begin{itemize}
+\item 
+Module implementation units allow programmers to implement definitions in their own file so that they can be compiled separately (similar to traditional C++ source code in .cpp files).
+
+\item 
+Internal partitions allow programmers to provide declarations and definitions that are visible only within a module in separate files.
+
+\item 
+Interface partitions even allow programmers to split the exported module API into multiple files.
+\end{itemize}
+
+The next sections introduce these additional module units with examples.
+
 \mySubsubsection{16.2.2}{Using Implementation Units}
+
+The first example of a module that is implemented in multiple files demonstrates how to split definitions (such as function implementations) to avoid having them in one file. The usual motivation for this is to be able to compile the definitions separately.
+
+This can be done by using module implementations (the official name is module implementation units). They are handled like traditional source files that are compiled separately.
+
+Let us look at an example.
+
+\mySamllsection{A Primary Interface with a Global Module Fragment}
+
+As usual, first we need the primary interface that defines what we export:
+
+\filename{modules/mod1/mod1.cppm}
+
+\begin{cpp}
+module; // start module unit with global module fragment
+
+#include <string>
+#include <vector>
+
+export module Mod1; // module declaration
+
+struct Order {
+	int count;
+	std::string name;
+	double price;
+	
+	Order(int c, const std::string& n, double p)
+	: count{c}, name{n}, price{p} {
+	}
+};
+
+export class Customer {
+private:
+	std::string name;
+	std::vector<Order> orders;
+public:
+	Customer(const std::string& n)
+	: name{n} {
+	}
+	void buy(const std::string& ordername, double price) {
+		orders.push_back(Order{1, ordername, price});
+	}
+	void buy(int num, const std::string& ordername, double price) {
+		orders.push_back(Order{num, ordername, price});
+	}
+	double sumPrice() const;
+	double averagePrice() const;
+	void print() const;
+};
+\end{cpp}
+
+This time, the module starts with module; to signal that we have a module. That way we can use some preprocessor commands within modules:
+
+\begin{cpp}
+module; // start module unit with global module fragment
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+export module Mod1; // module declaration
+...
+\end{cpp}
+
+The area between module; and the module declaration is called the global module fragment. You can use it to place preprocessor commands like \#define and \#include. Nothing within this area is exported (no macros, no declarations, no definitions).
+
+Nothing else can be done before we formally start the module unit with its declaration (except comments, of course):
+
+\begin{cpp}
+export module mod1; // module declaration
+\end{cpp}
+
+The things defined in this module are:
+
+\begin{itemize}
+\item 
+An internal data structure Order:
+
+\begin{cpp}
+struct Order {
+	...
+};
+\end{cpp}
+
+This data structure is for order entries. Each entry holds information about how many items were ordered, their name, and their price. The constructor ensures that we initialize all members.
+
+\item 
+A class customer, which we export:
+
+\begin{cpp}
+export class Customer {
+	...
+};
+\end{cpp}
+\end{itemize}
+
+As you can see, we need the header files and the internal data structure Order to define the class Customer. However, by not exporting them, they cannot be used directly by code that imports this module.
+
+For the class Customer, the member functions averagePrice(), sumPrice(), and print() are only declared. Here, we use the feature to define them in module implementation units.
+
+\mySamllsection{Module Implementation Units}
+
+A module may have any number of implementation units. In our example, we provide two of them: one to implement numeric operations and one to implement I/O operations.
+
+The module implementation unit for numeric operations looks as follows:
+
+\filename{modules/mod1/mod1price.cpp}
+
+\begin{cpp}
+module Mod1; // implementation unit of module Mod1
+
+double Customer::sumPrice() const
+{
+	double sum = 0.0;
+	for (const Order& od : orders) {
+		sum += od.count * od.price;
+	}
+	return sum;
+}
+
+double Customer::averagePrice() const
+{
+	if (orders.empty()) {
+		return 0.0;
+	}
+	return sumPrice() / orders.size();
+}
+\end{cpp}
+
+The file is a module implementation unit because it starts with a declaration stating that this is a file of module Mod1:
+
+\begin{cpp}
+module Mod1;
+\end{cpp}
+
+This declaration imports the primary interface unit of the module (but nothing else). Thus, the declarations of types Order and Customer are known and we can provide implementations of their member functions directly.
+
+Note that a module implementation unit does not export anything. export is allowed only in interface files of modules (primary interface or interface partition), which are declared with export module (and remember that only one primary interface is allowed per module).
+
+Again, a module implementation unit may start with a global module fragment, which we can see in the module implementation unit for I/O:
+
+\filename{modules/mod1/mod1io.cpp}
+
+\begin{cpp}
+module; // start module unit with global module fragment
+
+#include <iostream>
+#include <format>
+
+module Mod1; // implementation unit of module Mod1
+
+void Customer::print() const
+{
+	// print name:
+	std::cout << name << ":\n";
+	// print order entries:
+	for (const auto& od : orders) {
+		std::cout << std::format("{:3} {:14} {:6.2f} {:6.2f}\n",
+								  od.count, od.name, od.price, od.count * od.price);
+	}
+	// print sum:
+	std::cout << std::format("{:25} ------\n", ' ');
+	std::cout << std::format("{:25} {:6.2f}\n", " Sum:", sumPrice());
+}
+\end{cpp}
+
+Here, we introduce the module with module; to have a global module fragment for the header files that we use in the implementation unit. <format> is the header file of the new formatting library.
+
+As you can see, module implementation units use the file extension of traditional C++ translation units (most of the time .cpp). Compilers deal with them just like any other non-module C++ code.
+
+\mySamllsection{Using the Module}
+
+The code using the module looks as follows:
+
+\filename{modules/mod1/testmod1.cpp}
+
+\begin{cpp}
+#include <iostream>
+
+import Mod1;
+
+int main()
+{
+	Customer c1{"Kim"};
+	
+	c1.buy("table", 59.90);
+	c1.buy(4, "chair", 9.20);
+	
+	c1.print();
+	std::cout << " Average: " << c1.averagePrice() << '\n';
+}
+\end{cpp}
+
+Here, we use the exported class Customer from the primary interface to create a customer, place some orders, print the customer with all orders, and print the value of the average order.
+
+The program has the following output:
+
+\begin{shell}
+Kim:
+  1 table        59.90   59.90
+  4 chair         9.20   36.80
+                        ------
+    Sum:                 96.70
+Average: 48.35
+\end{shell}
+
+Note that any attempt to use type Order in the code that imports the module results in a compile-time error.
+
+Note also that the use of the module does not depend on how many implementation units we have. The number of implementation units matters only in that the linker has to use all object files generated for them.
 
 \mySubsubsection{16.2.3}{Internal Partitions}
 
+In the previous example, we introduced a data structure Order that is only used within the module. It looks like we have to declare it in the primary interface to make it available to all implementation units, which of course does not really scale in large projects. With internal partitions, you can declare and define internal types and functions of a module in separate files. Note that partitions can also be used to define parts of an exported interface in a separate file, which we will discuss later.
+
+Note that internal partitions are sometimes called partition implementation units, which is based on the fact that in the C++20 standard, they are officially called “module implementation units that are module partitions” and that sounds like they provide the implementations of interface partitions. They do not. They just act like internal header files for a module and may provide both declarations and definitions.
+
+\mySamllsection{Defining an Internal Partition}
+
+Using an internal partition, we can define the local type Order in its own module unit as follows:
+
+\filename{modules/mod2/mod2order.cppp}
+
+\begin{cpp}
+module; // start module unit with global module fragment
+
+#include <string>
+
+module Mod2:Order; // internal partition declaration
+
+struct Order {
+	int count;
+	std::string name;
+	double price;
+	
+	Order(int c, const std::string& n, double p)
+		: count{c}, name{n}, price{p} {
+	}
+};
+\end{cpp}
+
+As you can see, a partition has the name of the module, then a colon, and then its partition name:
+
+\begin{cpp}
+module Mod2:Order;
+\end{cpp}
+
+Sub-partitions such as Mod2:Order:Main are not supported.
+
+You might again recognize that the file uses another new file extension: .cppp, which we will discuss later after looking at its contents.
+
+The primary interface has to import this partition by only using the name :Order:
+
+\filename{modules/mod2/mod2.cpp}
+
+\begin{cpp}
+module; // start module unit with global module fragment
+
+#include <string>
+#include <vector>
+
+export module Mod2; // module declaration
+
+import :Order; // import internal partition Order
+
+export class Customer {
+private:
+	std::string name;
+	std::vector<Order> orders;
+public:
+	Customer(const std::string& n)
+	: name{n} {
+	}
+	void buy(const std::string& ordername, double price) {
+		orders.push_back(Order{1, ordername, price});
+	}
+	void buy(int num, const std::string& ordername, double price) {
+		orders.push_back(Order{num, ordername, price});
+	}
+	double sumPrice() const;
+	double averagePrice() const;
+};
+\end{cpp}
+
+The primary interface has to import the internal partition because it uses type Order. With that import, the partition is available in all units of the module. If the primary interface does not need type Order and does not import the internal partition, all module units that need type Order would have to import the internal partition directly.
+
+Again, note that partitions are only an internal implementation aspect of a module. For the user of the code, it does not matter whether code is in the primary module, its implementation, or in an internal partition. However, code from internal partitions cannot be exported.
 
 \mySubsubsection{16.2.4}{Interface Partitions}
 
+You can also split the interface of a module into multiple files. In that case, you declare interface partitions, which themselves export whatever should be exported.
+
+Interface partitions are especially useful if modules provide multiple interfaces that are maintained by different programmers and/or teams. For simplicity, let us just use the current example to demonstrate how to use this feature by defining only the Customer interface in a separate file.
+
+To define only the Customer interface, we can provide the following file:
+
+\filename{modules/mod3/mod3customer.cppm}
+
+\begin{cpp}
+module; // start module unit with global module fragment
+
+#include <string>
+#include <vector>
+
+export module Mod3:Customer; // interface partition declaration
+
+import :Order; // import internal partition to use Order
+
+export class Customer {
+private:
+	std::string name;
+	std::vector<Order> orders;
+public:
+	Customer(const std::string& n)
+	: name{n} {
+	}
+	void buy(const std::string& ordername, double price) {
+		orders.push_back(Order{1, ordername, price});
+	}
+	void buy(int num, const std::string& ordername, double price) {
+		orders.push_back(Order{num, ordername, price});
+	}
+	double sumPrice() const;
+	double averagePrice() const;
+	void print() const;
+};
+\end{cpp}
+
+The partition is more or less the former primary interface with one difference:
+
+\begin{itemize}
+\item 
+As a partition, we declare its name after the module name and a colon: Mod3:Customer
+\end{itemize}
+
+Like the primary interface:
+
+\begin{itemize}
+\item 
+We export this module partition:
+
+\begin{cpp}
+export module Mod3:Customer;
+\end{cpp}
+
+\item 
+We use the new file extension .cppm, which we will again discuss later
+\end{itemize}
+
+The primary interface is still the only place to specify what a module exports. However, the primary module can delegate exports to the interface partition. The way to do that is to export the imported interface partition directly as a whole:
+
+\filename{modules/mod3/mod3.cppm}
+
+\begin{cpp}
+export module Mod3; // module declaration
+
+export import :Customer; // import and export interface partition Customer
+... // import and export other interface partitions
+\end{cpp}
+
+By importing the interface partition and exporting it at the same time (yes, you have to write both keywords), the primary interface exports the interface of the partition Customer as its own interface:
+
+\begin{cpp}
+export import :Customer; // import and export partition Customer
+\end{cpp}
+
+Importing an interface partition without exporting it is not allowed.
+
+Again, note that partitions are only an internal implementation aspect of a module. It does not matter whether interfaces and implementations are provided in partitions. Partitions do not create a new scope.
+
+Therefore, for the implementation of the member functions of Customer, moving the declaration of the class to a partition does not matter. You implement a member function of the class Customer as part of the module Mod3:
+
+\filename{modules/mod3/mod3io.cppm}
+
+\begin{cpp}
+module; // start module unit with global module fragment
+
+#include <iostream>
+#include <vector>
+#include <format>
+
+module Mod3; // implementation unit of module Mod3
+
+import :Order; // import internal partition to use Order
+
+void Customer::print() const
+{
+	// print name:
+	std::cout << name << ":\n";
+	// print order entries:
+	for (const Order& od : orders) {
+		std::cout << std::format("{:3} {:14} {:6.2f} {:6.2f}\n",
+								   od.count, od.name, od.price, od.count * od.price);
+	}
+	// print sum:
+	std::cout << std::format("{:25} ------\n", ' ');
+	std::cout << std::format("{:25} {:6.2f}\n", " Sum:", sumPrice());
+}
+\end{cpp}
+
+However, there is one difference in this implementation unit: because the primary interface no longer imports the internal partition :Order, this module has to do so because it uses type Order.
+
+For code that imports the module, the way the code is distributed internally also does not matter. We still export the class Customer in the global scope:
+
+\filename{modules/mod3/testmod3.cpp}
+
+\begin{cpp}
+#include <iostream>
+
+import Mod3;
+
+int main()
+{
+	Customer c1{"Kim"};
+	
+	c1.buy("table", 59.90);
+	c1.buy(4, "chair", 9.20);
+	
+	c1.print();
+	std::cout << " Average: " << c1.averagePrice() << '\n';
+}
+\end{cpp}
+
+
 \mySubsubsection{16.2.5}{Summary of Splitting Modules into Different Files}
+
+The examples in this section demonstrate how you can deal with modules of increasing code size so that splitting the code is helpful or even necessary to “tame the beast:”
+
+\begin{itemize}
+\item 
+Module implementation units allow projects to split definitions into multiple files so that the source code can be maintained by different programmers and you do not have to recompile all code if local things change.
+
+\item 
+Internal partitions allow projects to move module-local declarations and definitions outside the primary interface. They can be imported by the primary interface or only by the module units that need them.
+
+\item 
+Interface partitions allow projects to maintain exported interfaces in different files. This usually makes sense if the exported API becomes so big that it helps to have different files (and therefore teams) to work on parts of it.
+\end{itemize}
+
+The primary interface brings everything together and specifies what is exported to the users of the module (by directly exporting symbols or exporting imported interface partitions).
+
+The kind of module unit we have depends on the module declaration within a C++ source file (which can come after comments and a global module fragment for preprocessor commands):
+
+\begin{itemize}
+\item 
+export module name; 
+
+identifies the primary interface. For each module, it may exist only once in a C++ program.
+
+\item 
+module name; 
+
+identifies an implementation unit providing just a definition (which might use local declarations). You can have as many of them as you like.
+
+\item 
+module name:partname; 
+
+identifies an internal partition with declarations and definitions used only within the module. You can have multiple partitions, but for each partname, you can have only one internal partition file.
+
+\item 
+export module name:partname; 
+
+identifies an interface partition. You can have multiple interface partitions, but for each partname, you can have only one interface partition file.
+\end{itemize}
+
+Because we have no standard suffixes for the different module units, tools have to parse the beginning of the C++ source files to detect whether and which kind of a module unit they are. Note that the module declaration might occur after comments and the global module fragment. See clmod.py in \url{http://github.com/josuttis/cppmodules} for a Python script that demonstrates how this might look.
+
+
+
+
+
+
