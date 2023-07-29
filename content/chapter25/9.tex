@@ -1,0 +1,36 @@
+
+
+
+\mySamllsection{semiregular type}
+
+A type that is regular but does not provide comparison operators:
+
+\begin{itemize}
+\item [-]
+If one object is a copy of the other, the objects are equal.
+
+\item [-]
+A copy of an object is equal to an object created with the default constructor to which the source value was assigned.
+
+\item [-]
+Objects have value semantics. If two objects are equal and we modify one of them, they are no longer equal.
+\end{itemize}
+
+\mySamllsection{substitution failure is not an error (SFINAE)}
+
+A mechanism that silently discards templates instead of triggering compilation errors when arguments to template parameters make their declarations ill-formed. You can use the mechanism to disable templates for certain arguments by forcing ill-formed declarations then.
+
+\mySamllsection{small string optimization (SSO)}
+
+An approach to save allocating memory for short strings by always reserving memory for a certain number of characters. A typical value in standard library implementations is to always reserve 16 or 24 bytes of memory so that the string can have 15 or 23 characters (plus 1 byte for the null terminator) without allocating memory. This makes all string objects larger but usually saves a lot of running time because in practice, strings are often shorter than 16 or 24 characters and allocating memory on the heap is quite an expensive operation.
+
+\mySamllsection{stateless}
+
+A function or operation is stateless if it does not change its state due to a call. This has the effect that it does not change its behavior over time and always yields the same result for the same arguments.
+
+\mySamllsection{standard template library (STL)}
+
+The STL is the part of the C++ standard library that deals with containers (data structures), algorithms, and as glue, the iterators. This approach was adopted for the first C++ standard with the goal that programmers can benefit from various standard data structures and algorithms without having to implement them. As generic code, you still get compile-time error messages when you try to combine things that are not supported.
+
+
+

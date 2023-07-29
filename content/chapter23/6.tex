@@ -1,0 +1,23 @@
+C++20 introduces a new header file <version>. This header file provides no active functionality. Instead, it provides all implementation-specific general information about the C++ standard library being used.
+
+For example, <version> might contain:
+
+\begin{itemize}
+\item 
+The version and release date of the C++ standard library
+
+\item 
+Copyright information
+\end{itemize}
+
+
+In addition, <version> defines the feature test macros of the C++ standard library (they are also defined in the header files they apply to).
+
+Because this header file is short and fast to load, tools can include this header file to get all necessary information to make decisions based on the feature set provided or find all information they need to deal with general information of the library used.
+
+
+
+
+
+
+

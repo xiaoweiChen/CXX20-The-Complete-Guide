@@ -1,8 +1,239 @@
 
+C++20 provides better and cleaner support for dealing with bits:
 
+\begin{itemize}
+\item 
+Missing low-level bit operations
+
+\item 
+Bit casts
+
+\item 
+Checks for the endianness of a platform
+\end{itemize}
+
+All of these utilities are defined in the header file <bit>.
 
 \mySubsubsection{23.5.1}{Bit Operations}
 
+Hardware usually has special support for bit operations such as “rotate left” or “rotate right.” However, before C++20, C++ programmers did not have direct access to these instructions. The newly introduced bit operations provide a direct API to the bit instructions of the underlying CPU.
+
+Table Bit operations lists all standardized bit operations that C++20 introduced. They are provided in the header file <bit> as free-standing functions in the namespace std.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Operation}    & \textbf{Meaning}                                    \\ \hline
+\endfirsthead
+%
+\endhead
+%
+rotl(val, n)          & Yields val with n bits rotated to the left          \\ \hline
+rotr(val, n)          & Yields val with n bits rotated to the right         \\ \hline
+countl\_zero(val)     & Yields number of leading(most significant) 0 bits   \\ \hline
+countl\_one(val)      & Yields number of leading(most significant) 1 bits   \\ \hline
+countr\_zero(val)     & Yields number of trailing(least significant) 0 bits \\ \hline
+countl\_one(val)      & Yields number of trailing(least significant) 1 bits \\ \hline
+popcount(val)         & Yields number of 1 bits in the value                \\ \hline
+has\_single\_bit(val) & Yields whether val is a power of 2 (ont bit set)    \\ \hline
+bit\_floor(val)       & Yields previous power-of-two value                  \\ \hline
+bit\_ceil(val)        & Yields next power-of-two value                      \\ \hline
+bit\_width(val)       & Yields number of bits necessary to store the value  \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 23.3. Bit operations
+\end{center}
+
+Consider the following program:
+
+\filename{lib/bitops8.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <format>
+#include <bitset>
+#include <bit>
+
+int main()
+{
+	std::uint8_t i8 = 0b0000’1101;
+	std::cout
+		<< std::format("{0:08b} {0:3}\n", i8) // 00001101
+		<< std::format("{0:08b} {0:3}\n", std::rotl(i8, 2)) // 00110100
+		<< std::format("{0:08b} {0:3}\n", std::rotr(i8, 1)) // 10000110
+		<< std::format("{0:08b} {0:3}\n", std::rotr(i8, -1)) // 00011010
+		<< std::format("{}\n", std::countl_zero(i8)) // four leading zeros
+		<< std::format("{}\n", std::countr_one(i8)) // one trailing one
+		<< std::format("{}\n", std::popcount(i8)) // three ones
+		<< std::format("{}\n", std::has_single_bit(i8)) // false
+		<< std::format("{0:08b} {0:3}\n", std::bit_floor(i8)) // 00001000
+		<< std::format("{0:08b} {0:3}\n", std::bit_ceil(i8)) // 00010000
+		<< std::format("{}\n", std::bit_width(i8)); // 4
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+00001101  13
+00110100  52
+10000110 134
+00011010  26
+4 
+1 
+3
+false
+00001000  8
+00010000 16
+4
+\end{shell}
+
+Note the following:
+
+\begin{itemize}
+\item 
+All these functions are provided only if the passed type is an unsigned integral type.
+
+\item 
+The rotate functions also take a negative n, which means that the rotation changes its direction.
+
+\item 
+All functions that return a count have the return type int. The only exception is bit\_width(), which returns a value of the passed type, which is an inconsistency (I would assume a bug) in the standard. Therefore, when using it as an int or printing it directly, you might have to use a static cast.
+\end{itemize}
+
+If you run a corresponding program for a std::uint16\_t (see lib/bitops16.cpp), you get the following output:
+
+\begin{shell}
+0000000000001101    13
+0000000000110100    52
+1000000000000110 32774
+0000000000011010    26
+12
+1 
+3
+false
+0000000000001000     8
+0000000000010000    16
+4
+\end{shell}
+
+Note also that these functions are defined only for unsigned integral types. That means:
+
+\begin{itemize}
+\item 
+You cannot use the bit operations for signed integral types:
+
+\begin{cpp}
+int b1 = ... ;
+auto b2 = std::rotl(b1, 2); // ERROR
+\end{cpp}
+
+\item
+You cannot use the bit operations for type char:
+
+\begin{cpp}
+char b1 = ... ;
+auto b2 = std::rotl(b1, 2); // ERROR
+\end{cpp}
+
+Type unsigned char works fine.
+
+\item
+You cannot use the bit operations for type std::byte:
+
+\begin{cpp}
+std::byte b1{ ... };
+auto b2 = std::rotl(b1, 2); // ERROR
+\end{cpp}
+
+\end{itemize}
+
+Table Hardware support for bit operations, taken from \url{http://wg21.link/p0553r4}, lists the possible mapping of some of the new bit operations to existing hardware.
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|l|}
+\hline
+\textbf{Operation} & \textbf{Intel/AMD} & \textbf{ARM} & \textbf{PowerPC} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+rotl()             & ROL                & -            & rldicl           \\ \hline
+rotr()             & ROR                & ROR, EXTR    & -                \\ \hline
+popcount()         & POPCNT             & -            & popcntb          \\ \hline
+countl\_zero()     & BSR, LZCNT         & CLZ          & cntlzd           \\ \hline
+countl\_one()      & -                  & CLS          & -                \\ \hline
+countr\_zero()     & BSF, TZCNT         & -            & -                \\ \hline
+countr\_ont()      & -                  & -            & -                \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 23.4. Hardware support for bit operations
+\end{center}
+
 \mySubsubsection{23.5.2}{std::bit\_cast<>()}
 
+C++20 provides a new cast operation for changing the type of a sequence of bits. In contrast to using reinterpret\_cast<> or unions, the operator std::bit\_cast<> ensures that the number of bits fits, a standard layout is used, and no pointer type is used.
+
+For example:
+
+\begin{cpp}
+std::uint8_t b8 = 0b0000’1101;
+
+auto bc = std::bit_cast<char>(b8); // OK
+auto by = std::bit_cast<std::byte>(b8); // OK
+auto bi = std::bit_cast<int>(b8); // ERROR: wrong number of bits
+\end{cpp}
+
 \mySubsubsection{23.5.2}{std::endian}
+
+C++20 introduces a new utility enumeration type std::endian, which can be used to check the endianness of the execution environment. It introduces three enumeration values:
+
+\begin{itemize}
+\item 
+std::endian::big, a value that stands for “big-endian” (scalar types are stored with the most significant byte placed first and the rest in descending order)
+
+\item 
+std::endian::little, a value that stands for “little-endian” (scalar types are stored with the least significant byte placed first and the rest in ascending order)
+
+\item 
+std::endian::native, a value that specifies the endianness of the execution environment
+\end{itemize}
+
+If all scalar types are big-endian, std::endian::native is equal to std::endian::big. If all scalar types are little-endian, std::endian::native is equal to std::endian::little. Otherwise, std::endian::native has a value that is neither std::endian::big nor std::endian::little.
+
+If all scalar types have a size of 1, then std::endian::little, std::endian::big, and std::endian::native all have the same value.
+
+The type is defined in the header file <bit>.
+
+As enumeration values, these values can be used at compile time. For example:
+
+\begin{cpp}
+#include <bit>
+...
+
+if constexpr (std::endian::native == std::endian::big) {
+	... // handle big-endian
+}
+else if constexpr (std::endian::native == std::endian::little) {
+	... // handle little-endian
+}
+else {
+	... // handle mixed endian
+}
+\end{cpp}
+
+
+
+
+
+
+
+
+

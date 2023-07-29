@@ -1,0 +1,43 @@
+
+
+\mySamllsection{partial specialization}
+
+An alternative definition for a (primary) template that still depends on one or more template parameters.
+
+\mySamllsection{predicate}
+
+A callable (function, function object, or lambda) that checks whether a certain criterion applies to one or more arguments. It returns a Boolean value, is read-only, and stateless.
+
+\mySamllsection{prvalue}
+
+A value category of expressions that perform initializations. Prvalues can be assumed to designate pure mathematical values such as 1 or true and temporary objects without names. Examples are:
+
+\begin{itemize}
+\item [-]
+All literals except string literals (42, true, nullptr, etc.)
+
+\item [-]
+Returned values (values not returned by reference)
+
+\item [-]
+Returned lvalue references
+
+\item [-]
+Results of constructor calls
+
+\item [-]
+Lambdas
+
+\item [-]
+this
+\end{itemize}
+
+What was called an rvalue before C++11 is called a prvalue since C++11.
+
+
+
+
+
+
+
+

@@ -1,0 +1,62 @@
+
+
+
+\mySamllsection{resource acquisition is initialization (RAII)}
+
+A programming pattern to delegate clean-ups necessary for the end of using a resource to a destructor so that the clean-ups happen automatically when the object that represents the resource leaves its scope or ends its lifetime.
+
+
+\mySamllsection{regular type}
+
+A type that matches the semantics of built-in value types (such as int). Based on the definition in \url{http://stepanovpapers.com/DeSt98.pdf}, a regular type provides the following basic operations:
+
+\begin{itemize}
+\item [-]
+Default construction (T x;)
+
+\item [-]
+Copying (T y = x;) and in C++, moving
+
+\item [-]
+Assignment (x = y;) and in C++, move assignment
+
+\item [-]
+Equality and inequality (x == y and x != y)
+
+\item [-]
+Ordering (x < y etc.)
+\end{itemize}
+
+These operations follow the “usual” naive rules:
+
+\begin{itemize}
+\item [-]
+If one object is a copy of the other, the objects are equal.
+
+\item [-]
+A copy of an object is equal to an object created with the default constructor to which the source value was assigned.
+
+\item [-]
+Objects have value semantics. If two objects are equal and we modify one of them, they are no longer equal.
+\end{itemize}
+
+\mySamllsection{rvalue}
+
+A value category of expressions that are not lvalues. An rvalue can be a prvalue (such as a temporary object without a name) or an xvalue (e.g., an lvalue marked with std::move()). What was called an rvalue before C++11 is called a prvalue since C++11.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

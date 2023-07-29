@@ -3,4 +3,29 @@
 
 \mySubsubsection{24.2.1}{Deprecated Library Features}
 
+The following library features are deprecated since C++20 and should no longer be used:
+
+\begin{itemize}
+\item 
+The type trait is\_pod<>.
+
+Use is\_trivial<> or a similar type trait instead.
+
+\item 
+Atomic operations for regular shared pointers are deprecated now. Use atomic shared pointers instead.
+\end{itemize}
+
+
+
 \mySubsubsection{24.2.2}{Removed Library Features}
+
+\begin{itemize}
+\item 
+For strings, the member function reserve() can no longer be called with no argument and it no longer shrinks the capacity.
+
+\item 
+You can no longer write a UTF-8 string to a standard output stream.
+\end{itemize}
+
+
+

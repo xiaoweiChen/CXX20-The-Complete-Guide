@@ -1,0 +1,47 @@
+
+
+\mySamllsection{value category}
+
+A classification of expressions. The traditional value categories lvalues and rvalues were inherited from the programming language C. C++11 introduced additional categories, meaning that C++ now has the following primary value categories:
+
+\begin{itemize}
+\item [-]
+prvalues (pure rvalues), which are values used to initialize objects (including parameters)
+
+\item [-]
+lvalues (localizable values), which are objects you can ask for the address
+
+\item [-]
+xvalues (eXpiring values), which are objects where we no longer need the value (usually, objects marked with std::move())
+\end{itemize}
+
+In addition, C++ has the following combined value categories:
+
+\begin{itemize}
+\item [-]
+glvalues (generalized lvalues), which means “either lvalue or xvalue”
+
+\item [-]
+rvalues (readable values), which means “either rvalue or xvalue”
+\end{itemize}
+
+\mySamllsection{variable template}
+
+A generic variable. It allows us to define variables or static members by substituting the template parameters with specific types or values.
+
+
+\mySamllsection{variadic template}
+
+A template with a template parameter that represents an arbitrary number of types or values.
+
+
+
+
+
+
+
+
+
+
+
+

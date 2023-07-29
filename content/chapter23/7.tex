@@ -1,9 +1,240 @@
 
 
-
+For algorithms, C++20 provides a couple of extensions (some of which have already been described in other chapters of this book).
 
 \mySubsubsection{23.7.1}{Range Support}
 
+As discussed in the chapter about ranges, for many algorithms, there is now support:
+
+\begin{itemize}
+\item 
+For passing whole ranges (containers, views) as a single argument
+
+\item 
+For passing a projection parameter as a single argument
+\end{itemize}
+
+This support requires the algorithms to be called in the namespace std::ranges.
+
+For the following algorithms, there is no support for ranges (yet):
+
+\begin{itemize}
+\item 
+Numeric algorithms (such as accumulate())
+
+\item 
+Algorithms with parallel execution
+
+\item 
+Algorithm lexicographical\_compare\_three\_way()
+\end{itemize}
+
+For more details of the range support for all standard algorithms, see the algorithm overview.
+
 \mySubsubsection{23.7.2}{New Algorithms}
 
+Table New standard algorithms lists the standard algorithms that were introduced with C++20.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Name}  & \textbf{Effect}                            \\ \hline
+\endfirsthead
+%
+\endhead
+%
+min()          & Yield the minimum value of a passed ranged \\ \hline
+max()          & Yield the maximum value of a passed ranged \\ \hline
+minmax()                               & Yield the minimum and maximum value of a passed ranged       \\ \hline
+shift\_left()  & Shift all elements to the front            \\ \hline
+shift\_right() & Shift all elements to fht back             \\ \hline
+lexicographical\_compare\_three\_way() & Sort two ranges by using operator \textless{}=\textgreater{} \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 23.5. New standard algorithms
+\end{center}
+
+
+\mySamllsection{min(), max(), and minmax() for Ranges}
+
+The algorithms std::ranges::min(), std::ranges::max(), and std::ranges::minmax() were introduced with the ranges library to yield the minimum and/or maximum value of a passed range. You can optionally pass a comparison criterion and a projection.
+
+For example:
+
+\filename{lib/minmax.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+int main()
+{
+	std::vector coll{0, 8, 15, 47, 11};
+	
+	std::cout << std::ranges::min(coll) << '\n';
+	std::cout << std::ranges::max(coll) << '\n';
+	auto [min, max] = std::ranges::minmax(coll);
+	std::cout << min << ' ' << max << '\n';
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+0
+47
+0 47
+\end{shell}
+
+Note that there are no corresponding algorithms in std that take two iterators. There are only functions that take two values or a std::initializer\_list<> (and a comparison criterion) as arguments. As usual, the ranges library also provides them with the option to pass a projection.
+
+\mySamllsection{shift\_left() and shift\_right()}
+
+With the new standard algorithms shift\_left() and shift\_right, you can move elements to the front or back, respectively. The algorithms return the new end or beginning, respectively.
+
+For example:
+
+\filename{lib/shift.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <ranges>
+
+void print (const auto& coll)
+{
+	for (const auto& elem : coll) {
+		std::cout << elem << ' ';
+	}
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector coll{1, 2, 3, 4, 5, 6, 7, 8};
+	
+	print(coll);
+	
+	// shift one element to the front (returns new end):
+	std::shift_left(coll.begin(), coll.end(), 1);
+	print(coll);
+	
+	// shift three elements to the back (returns new begin):
+	auto newbeg = std::shift_right(coll.begin(), coll.end(), 3);
+	print(coll);
+	print(std::ranges::subrange{newbeg, coll.end()});
+}
+\end{cpp}
+
+The program has the following output:
+
+\begin{shell}
+1 2 3 4 5 6 7 8
+2 3 4 5 6 7 8 8
+2 3 4 2 3 4 5 6
+2 3 4 5 6
+\end{shell}
+
+You can pass an execution policy to allow the use of multiple threads. However, the support for ranges with passing a single-argument range and/or projects is not provided (probably an oversight).
+
+\mySamllsection{lexicographical\_compare\_three\_way()}
+
+To compare the elements of two different containers in such a way that one of the new comparison category types is returned, the algorithm std::lexicographical\_compare\_three\_way() was introduced with C++20. It is described in the chapter about the operator <=>.
+
+Note that for this algorithm, there is no support for ranges (yet). You can neither pass a range as a single argument nor pass projection parameters (this is probably an oversight).
+
 \mySubsubsection{23.7.2}{unseq Execution Policy for Algorithms}
+
+C++17 introduced various execution policies for the newly introduced parallel algorithms. You could enable parallel computing and allow threads to operate on multiple data items in parallel (called vectorization or SIMD processing).
+
+However, you could not allow algorithms to operate on multiple data items but restrict the algorithms to use only one thread. For this, C++20 now provides the execution policy std::execution::unseq. As usual, the new execution policy is a constexpr object of a corresponding unique class unsequenced\_policy in the namespace std::execution. Table Execution policies lists all standardized execution policies now supported.
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Policy}     & \textbf{Meaning}                                           \\ \hline
+\endfirsthead
+%
+\endhead
+%
+std::execution::seq & Sequential execution of a single value with one thread     \\ \hline
+std::execution::par & Parallel execution of a single value with multiple threads \\ \hline
+std::execution::unseq      & Parallel execution of multiple values with one thread (since C++20) \\ \hline
+std::execution::par\_unseq & Parallel execution of multiple values with multiple threads         \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 23.6. Execution policies
+\end{center}
+
+The unsequenced execution policy allows the execution of the operations passed to access the elements to be interleaved on a single thread of execution. You should not use this policy with blocking synchronization (such as using mutexes) because that might result in deadlocks.
+
+Here is an example that uses it:
+
+\filename{lib/unseq.cpp}
+
+\begin{cpp}
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+#include <execution>
+
+int main (int argc, char** argv)
+{
+	// init number of argument from command line (default: 1000):
+	int numElems = 1000;
+	if (argc > 1) {
+		numElems = std::atoi(argv[1]);
+	}
+	
+	// init vector of different double values:
+	std::vector<double> coll;
+	coll.reserve(numElems);
+	for (int i=0; i<numElems; ++i) {
+		coll.push_back(i * 4.37);
+	}
+	
+	// process square roots:
+	// - allow SIMD processing but only one thread
+	std::for_each(std::execution::unseq, // since C++20
+				  coll.begin(), coll.end(),
+				  [](auto& val) {
+					val = std::sqrt(val);
+				  });
+				  
+	for (double value : coll) {
+		std::cout << value << '\n';
+	}
+}
+\end{cpp}
+
+As usual for execution policies, you have no way of impacting when and how the policy is used. With this policy, you enable vectorization or SIMD computing; however, you do not mandate it. On hardware that does not support this policy, or if the implementation decides at runtime not to use it (e.g., because the CPU load is too high), the unseq policy results in sequential execution.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

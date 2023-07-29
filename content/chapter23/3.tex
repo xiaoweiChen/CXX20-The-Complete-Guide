@@ -22,11 +22,96 @@ unsigned y = 42;
 if (x < y) ... // OOPS: false
 \end{cpp}
 
+The reason for this behavior is that when comparing a signed with an unsigned value by rule (from the programming language C), the signed value is converted into an unsigned type, which makes it a big positive integral value.
 
+To fix this code, you have to write the following instead:
 
+\begin{cpp}
+if (x < static_cast<int>(y)) ... // true
+\end{cpp}
 
+Other problems can occur if we compare small integral values with large integral values.
+
+C++20 now provides functions for safe integral comparisons in <utility>. Table Safe integral comparison functions lists these functions. You can use them to simply write:
+
+\begin{cpp}
+if (std::cmp_less(x, y)) ... // true
+\end{cpp}
+
+This integral comparison is always safe.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Constant}          & \textbf{Template}                  \\ \hline
+\endfirsthead
+%
+\endhead
+%
+std::cmp\_equal(x, y)      & Yields whether x is equal to y     \\ \hline
+std::cmp\_not\_equal(x, y) & Yields whether x is not equal to y \\ \hline
+std::cmp\_less(x, y)       & Yields whether x is less than y    \\ \hline
+std::cmp\_less\_equal(x, y)                 & Yields whether x is less than or equal to y    \\ \hline
+std::cmp\_greater(x, y)    & Yields whether x is greater than y \\ \hline
+std::cmp\_greater\_equal(x, y)              & Yields whether x is greater than or equal to y \\ \hline
+std::in\_range\textless{}T\textgreater{}(x) & Yields whether x is a vaild value for type T   \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 23.1. Safe integral comparison functions
+\end{center}
+
+The function std::in\_range() yields true if a passed value is a value that can be represented by the passed type:
+
+\begin{cpp}
+bool b = std::in_range<int>(x); // true if x has a valid int value
+\end{cpp}
+
+It simply yields whether x is greater than or equal to the minimum value and less than or equal to the maximum value of the passed type.
+
+Note that these functions cannot be used to compare values of bool, character types, or std::byte.
 
 \mySubsubsection{23.3.2}{ssize()}
+
+We often need the size of a collection, array, or range as a signed value. For example, to avoid a warning here:
+
+\begin{cpp}
+for (int i = 0; i < coll.size(); ++coll) { // possible warning
+	...
+}
+\end{cpp}
+
+The problem is that size() yields an unsigned value and comparisons between signed and unsigned values might fail if the values are very high.
+
+While you can declare i as an unsigned int or std::size\_t, there might be a good reason to use it as int.
+
+A helper function std::ssize() was introduced that allows the following use instead:
+
+\begin{cpp}
+for (int i = 0; i < std::ssize(coll); ++coll) { // usually no warning
+	...
+}
+\end{cpp}
+
+Thanks to ADL, it is enough to write the following when a standard container or other standard types are used:
+
+\begin{cpp}
+for (int i = 0; i < ssize(coll); ++coll) { // OK for std types
+	...
+}
+\end{cpp}
+
+Note that this is sometimes even necessary to avoid compile-time errors. An example is the initialization of latches, barriers, and semaphores.
+
+Note also that the ranges library provides ssize() in the namespace std::ranges.
+
+
+
+
+
+
 
 
 

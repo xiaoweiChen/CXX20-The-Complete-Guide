@@ -1,0 +1,76 @@
+C++20 introduces constants for the most important mathematical floating-point constants. Table Math constants lists them.
+
+The constants are provided in the header file <numbers> in the namespace std::numbers.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|}
+\hline
+\textbf{Constant}        & \textbf{Template}                                    \\ \hline
+\endfirsthead
+%
+\endhead
+%
+std::number::e           & std::number::e\_v\textless{}\textgreater{}           \\ \hline
+std::number::pi          & std::number::pi\_v\textless{}\textgreater{}          \\ \hline
+std::number::inv\_pi     & std::number::inv\_pi\_v\textless{}\textgreater{}     \\ \hline
+std::number::inv\_sqrtpi & std::number::inv\_sqrtpi\_v\textless{}\textgreater{} \\ \hline
+std::number::sqrt2       & std::number::sqrt2\_v\textless{}\textgreater{}       \\ \hline
+std::number::sqrt3       & std::number::sqrt3\_v\textless{}\textgreater{}       \\ \hline
+std::number::inv\_sqrt3  & std::number::inv\_sqrt3\_v\textless{}\textgreater{}  \\ \hline
+std::number::log2e       & std::number::log2e\_v\textless{}\textgreater{}       \\ \hline
+std::number::log10e      & std::number::log10e                                  \\ \hline
+std::number::ln2         & std::number::ln2\_v\textless{}\textgreater{}         \\ \hline
+std::number::ln10        & std::number::ln10\_v                                 \\ \hline
+std::number::egamma      & std::number::egamma\_v\textless{}\textgreater{}      \\ \hline
+std::number::phi         & std::number::phi\_v\textless{}\textgreater{}         \\ \hline
+\end{longtable}
+
+\begin{center}
+Table 23.2. Math constants
+\end{center}
+
+The constants are specializations for type double of corresponding variable templates that have the suffix \_v. The values are the nearest representable values of the corresponding type. For example:
+
+\begin{cpp}
+namespace std::number {
+	template<std::floating_point T> inline constexpr T pi_v<T> = ... ;
+	inline constexpr double pi = pi_v<double>;
+}
+\end{cpp}
+
+As you can see, the definitions use the std::floating\_point concept (which was introduced for that reason).
+
+Therefore, you can use them as follows:
+
+\begin{cpp}
+#include <numbers>
+...
+
+double area1 = rad * rad * std::numbers::pi;
+
+long double area2 = rad * rad * std::numbers::pi_v<long double>;
+\end{cpp}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

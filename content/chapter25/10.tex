@@ -1,0 +1,8 @@
+
+
+\mySamllsection{universal reference}
+
+A reference that can universally refer to any object while not making it const. It can also extend the lifetime of return values. It is declared as an rvalue reference of a template parameter (T\&\&) or with auto\&\&. Universal references are useful for perfectly forwarding arguments with std::forward<>() (for that reason, the C++ standard names them forwarding references).
+
+However, they also are the only kind of references that can refer to any expression (both lvalues and rvalues) without making the value const. For this reason, they are necessary to declare parameters of generic functions that take views.
+
