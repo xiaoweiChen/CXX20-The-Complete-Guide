@@ -1,59 +1,59 @@
 
-Note the following hints about the way I write code and comments in this book
+请注意以下关于我在本书中编写代码和注释的提示
 
-\subsubsection*{\zihao{3} Initializations}
-\addcontentsline{toc}{subsubsection}{Initializations}
+\subsubsection*{\zihao{3} 初始化}
+\addcontentsline{toc}{subsubsection}{初始化}
 
-I usually use the modern form of initialization (introduced in C++11 as uniform initialization) with curly braces or with = in trivial cases:
+我通常使用现代形式的初始化(C++11中作为统一初始化引入)，通常情况下使用花括号或=:
 
 \begin{cpp}
 int i = 42;
 std::string s{"hello"};
 \end{cpp}
 
-The brace initialization has the following advantages:
+大括号初始化有以下优点:
 
 \begin{itemize}
 \item
-It can be used with fundamental types, class types, aggregates, enumeration types, and auto
+可以与基本类型、类类型、聚合、枚举类型和auto一起使用
 
 \item
-It can be used to initialize containers with multiple values
+可用于初始化具有多个值的容器
 
 \item
-It can detect narrowing errors (e.g., initialization of an int by a floating-point value)
+可以检测窄化错误(例如，用浮点值初始化int)。
 
 \item
-It cannot be confused with function declarations or calls
+不可与函数声明或函数调用混淆
 \end{itemize}
 
-If the braces are empty, the default constructors of (sub)objects are called and fundamental data types are guaranteed to be initialized with 0/false/nullptr.
+若大括号为空，则调用(子)对象的默认构造函数，并保证基本数据类型用0/false/nullptr初始化。
 
 
-\subsubsection*{\zihao{3} Error Terminology}
-\addcontentsline{toc}{subsubsection}{Error Terminology}
+\subsubsection*{\zihao{3} 术语“错误”}
+\addcontentsline{toc}{subsubsection}{术语“错误”}
 
-I often talk about programming errors. If there is no special hint, the term error or a comment such as
+我经常谈论编程错误，若没有特殊提示，则使用术语“错误”或注释，例如
 
 \begin{cpp}
 ... // ERROR
 \end{cpp}
 
-means a compile-time error. The corresponding code should not compile (with a conforming compiler).
+表示编译时错误。相应的代码不应该编译(使用符合标准的编译器)。
 
-If I use the term runtime error, the program might compile but not behave correctly or result in undefined behavior (thus, it might or might not do what is expected)
+若使用术语“运行时错误”，则程序可能会编译，但行为不正确或导致未定义的行为(因此，可能会或可能不会执行预期的操作)。
 
-\subsubsection*{\zihao{3} Code Simplifications}
-\addcontentsline{toc}{subsubsection}{Code Simplifications}
+\subsubsection*{\zihao{3} 代码简化}
+\addcontentsline{toc}{subsubsection}{代码简化}
 
-I try to explain all features with helpful examples. However, to concentrate on the key aspects to be taught, I might often skip other details that should be part of the code.
+我试图用有用的例子来解释所有的特性，但为了专注于教授的关键方面，我可能经常会跳过代码的其他细节。
 
 \begin{itemize}
 \item
-Most of the time I use an ellipsis (“...”) to signal additional code that is missing. Note that I do not use code font here. If you see an ellipsis with code font, code must have these three dots as a language feature (such as for “typename...”).
+大多数情况下，我使用省略号(“…”)来表示缺少额外的代码。注意，在这里没有使用代码字体。若看到带有代码字体的省略号，则代码必须将这三个点作为语言特性(例如“typename…”)。
 
 \item
-In header files, I usually skip the preprocessor guards. All header files should have something like the following:
+头文件中，我通常跳过预处理器保护。所有的头文件都应该像下面这样写:
 
 \begin{cpp}
 #ifndef MYFILE_HPP
@@ -62,5 +62,19 @@ In header files, I usually skip the preprocessor guards. All header files should
 #endif // MYFILE_HPP
 \end{cpp}
 
-Therefore, please beware and fix the code when using these header files in your projects.
+因此，在项目中使用这些头文件时，请注意补全代码。
 \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -10,3 +10,6 @@
 *.epub
 *.pygtex
 *.pygstyle
+/_minted-C++20-The-Complete-Guide/
+*.fls
+*.fdb_latexmk
