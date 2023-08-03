@@ -1,10 +1,10 @@
-Let us look first at the motivation for the new way comparisons are handled since C++20 and the new operator <=>.
+首先了解一下C++20处理比较的新方式和新操作符<=>的动机。
 
-\mySubsubsection{1.1.1}{Defining Comparison Operators Before C++20}
+\mySubsubsection{1.1.1}{C++20前如何定义比较运算符}
 
-Before C++20, you had to define six operators for a type to provide full support for all possible comparisons of its objects.
+C++20之前，必须为一个类型定义六个操作符，以提供对象所有比较的支持。
 
-For example, if you wanted to compare objects of a type Value (having an integral ID), you had to implement the following:
+例如，若要比较Value类型的对象(具有整型ID)，则须实现以下操作:
 
 \begin{cpp}
 class Value {
@@ -36,7 +36,7 @@ public:
 };
 \end{cpp}
 
-This enables you to call any of the six comparison operators for a Value (the object the operator is defined for) with another Value (passed as parameter rhs). For example:
+当使用另一个Value(作为参数rhs传递)调用Value(为其定义操作符的对象)的六个比较操作符中的一个。例如:
 
 \begin{cpp}
 Value v1, v2;
@@ -46,7 +46,7 @@ if (v1 <= v2) { // calls v1.operator<=(v2)
 }
 \end{cpp}
 
-The operators might also be called indirectly (e.g., by calling sort()):
+操作符也可以间接调用(例如，使用sort()):
 
 \begin{cpp}
 std::vector<Value> coll;
@@ -54,31 +54,31 @@ std::vector<Value> coll;
 std::sort(coll.begin(), coll.end()); // uses operator < to sort
 \end{cpp}
 
-Since C++20 , the call might alternatively use ranges:
+C++20开始，可以使用range:
 
 \begin{cpp}
 std::ranges::sort(coll); // uses operator < to sort
 \end{cpp}
 
-The problem is that even though most of the operators are defined in terms of other operators (they are all based on either operator == or operator <), the definitions are tedious and they add a lot of visual clutter.
+问题是，尽管大多数操作符都是根据其他操作符定义的(都基于operator ==或operator <)，但这些定义很繁琐，而且会增加很多阅读上的混乱。
 
-In addition, for a well-implemented type, you might need more:
+此外，对于实现良好的类型，可能需要更多声明:
 
 \begin{itemize}
 \item
-Declare the operators with noexcept if they cannot throw
+若操作符不能抛出，就用noexcept声明
 
 \item
-Declare the operators with constexpr if they can be used at compile time
+若操作符可以在编译时使用，则使用constexpr声明
 
 \item
-Declare the operators as “hidden friends” (declare them with friend inside the class structure so that both operands become parameters and support implicit type conversions) if the constructors are not explicit
+若构造函数不是显式的，则将操作符声明为“隐藏友元”(在类结构中与友元一起声明，以便两个操作数都成为参数，并支持隐式类型转换)
 
 \item
-Declare the operators with [[nodiscard]] to force warnings if the return value is not used
+声明带有[[nodiscard]]的操作符，以便在返回值未使用时强制发出警告
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 // lang/valueold.hpp
@@ -121,57 +121,57 @@ public:
 };
 \end{cpp}
 
-\mySubsubsection{1.1.2}{Defining Comparison Operators Since C++20}
+\mySubsubsection{1.1.2}{C++20后如何定义比较运算符}
 
-Since C++20, a couple of things have changed regarding comparison operators.
+C++20后，关于比较操作符的定义发生了一些变化。
 
-\mySamllsection{Operator == Implies Operator !=}
+\mySamllsection{==与!=}
 
-To check for inequality, it is now enough to define operator ==.
+为了检查是否相等，现在定义==操作符就够了。
 
-When the compiler finds no matching declaration for an expression a!=b, the compiler rewrites the expressions and looks for !(a==b) instead. If that does not work, the compiler also tries to change the order of the operands, so it also tries !(b==a):
+当编译器找不到表达式的匹配声明a!=b时，编译器会重写表达式并查找!(a==b)。若这不起作用，编译器也会尝试改变操作数的顺序，所以它也会尝试!(b==a):
 
 \begin{cpp}
 a != b // tries: a!=b, !(a==b), and !(b==a)
 \end{cpp}
 
-Therefore, for a of TypeA and b of TypeB, the compiler will be able to compile
+因此，对于TypeA的a和TypeB的b，编译器将能够识别并编译
 
 \begin{cpp}
 a != b
 \end{cpp}
 
-It can do this if there is
+若需要的话，可以这样做
 
 \begin{itemize}
 \item
-A free-standing operator!=(TypeA, TypeB)
+一个独立的operator!=(TypeA, TypeB)
 
 \item
-A free-standing operator==(TypeA, TypeB)
+一个独立的operator==(TypeA, TypeB)
 
 \item
-A free-standing operator==(TypeB, TypeA)
+一个独立的operator==(TypeB, TypeA)
 
 \item
-A member function TypeA::operator!=(TypeB)
+一个成员函数TypeA::operator!=(TypeB)
 
 \item
-A member function TypeA::operator==(TypeB)
+一个成员函数TypeA::operator==(TypeB)
 
 \item
-A member function TypeB::operator==(TypeA)
+一个成员函数TypeB::operator==(TypeA)
 \end{itemize}
 
-Directly calling a defined operator != is preferred (but the order of the types has to fit). Changing the order of the operands has the lowest priority. Having both a free-standing and a member function is an ambiguity error.
+直接调用已定义的operator!=是首选(但类型的顺序必须合适)，更改操作数的顺序为最低的优先级。同时拥有独立函数和成员函数是一种歧义错误。
 
-Thus, with
+因此，
 
 \begin{cpp}
 bool operator==(const TypeA&, const TypeB&);
 \end{cpp}
 
-or
+或
 
 \begin{cpp}
 class TypeA {
@@ -181,7 +181,7 @@ public:
 };
 \end{cpp}
 
-the compiler will be able to compile:
+编译器可以进行编译:
 
 \begin{cpp}
 MyType a;
@@ -193,15 +193,15 @@ a != b; // OK, rewritten as: !(a == b)
 b != a; // OK, rewritten as: !(a == b)
 \end{cpp}
 
-Note that thanks to rewriting, implicit type conversions for the first operand are also possible when rewriting converts the operand so that it becomes the parameter of the defined member function.
+当重写将操作数转换为已定义成员函数的参数时，也可以对第一个操作数进行隐式类型转换。
 
-See the example sentinel1.cpp for how to benefit from this feature by only defining a member operator == when != with a different order of operands is called.
+请参阅示例sentinel1.cpp，了解如何在调用具有不同顺序的操作数的!=时仅定义成员操作符==。
 
-\mySamllsection{Operator <=>}
+\mySamllsection{操作符<=>}
 
-There is no equivalent rule that for all relational operators it is enough to have operator < defined. However, you only have to define the new operator <=>.
+对于所有的关系操作符，没有等价的规则说定义operator<就足够了。但现在，只需要定义新的操作符<=>即可。
 
-In fact, the following is enough to enable programmers to use all possible comparators:
+事实上，以下内容足以让开发者使用所有可能的比较操作符:
 
 \begin{cpp}
 // lang/value20.hpp
@@ -221,7 +221,7 @@ public:
 };
 \end{cpp}
 
-In general, operator == handles the equality of objects by defining == and !=, while operator <=> handles the order of objects by defining the relational operators. However, by declaring an operator<=> with =default, we use a special rule that a defaulted member operator<=>:
+通常，operator==可以通过定义==和!=来处理对象的相等性，而operator <=>通过定义关系操作符来处理对象的顺序。若通过=default声明操作符<=>，则可以使用了一个特殊的规则，即默认成员操作符<=>:
 
 \begin{cpp}
 class Value {
@@ -230,7 +230,7 @@ class Value {
 };
 \end{cpp}
 
-generates a corresponding member operator==, so that we effectively get:
+生成对应的成员操作符==，从而得到:
 
 \begin{cpp}
 class Value {
@@ -240,9 +240,9 @@ class Value {
 };
 \end{cpp}
 
-The effect is that both operators use their default implementation, which compares objects member by member. This means that the order of the members in the class matters.
+结果是两个操作符都使用了默认实现，逐个成员对象进行比较，所以类中成员的顺序很重要。
 
-Thus, with
+因此，
 
 \begin{cpp}
 class Value {
@@ -251,42 +251,42 @@ class Value {
 };
 \end{cpp}
 
-we get all we need to be able to use all six comparison operators.
+至此，我们得到了能够使用所有六个比较操作符所需的一切。
 
-In addition, even when declaring the operator as a member function, the following applies for the generated operators:
-
-\begin{itemize}
-\item
-They are noexcept if comparing the members never throws
-
-\item
-They are constexpr if comparing the members is possible at compile time
-
-\item
-Thanks to rewriting, implicit type conversions for the first operand are also supported
-\end{itemize}
-
-This reflects that, in general, operator== and operator<=> handle different but related things:
+此外，即使将操作符声明为成员函数，也适用于生成的操作符:
 
 \begin{itemize}
 \item
-operator== defines equality and can be used by the equality operators == and !=.
+若比较成员不抛出异常，则是noexcept
 
 \item
-operator<=> defines the ordering and can be used by the relational operators <, <=, >, and >=.
+若可以在编译时比较成员，则是constexpr
+
+\item
+因为重写，还可以支持第一个操作数的隐式类型转换
 \end{itemize}
 
-Note that you have to include header <compare> when defaulting or using operator <=>.
+所以，通常情况下，operator==和operator<=>处理不同但相关的事情:
+
+\begin{itemize}
+\item
+operator==定义相等性，可由相等操作符==和!=使用。
+
+\item
+operator<=>定义了排序，可以由关系操作符<、<=、>和>=使用。
+\end{itemize}
+
+注意，当默认或使用操作符<=>时，必须包含头文件<compare>。
 
 \begin{cpp}
 #include <compare>
 \end{cpp}
 
-However, most header files for standard types (strings, containers, <utility>) include this header anyway.
+不过，大多数标准类型(字符串、容器、<utility>)的头文件都会包含这个头文件。
 
-\mySamllsection{Implementing Operator <=>}
+\mySamllsection{操作符<=>的实现}
 
-To have more control over the generated comparison operators, you can define operator== and operator<=> yourself. For example:
+为了更好地控制生成的比较操作符，可以自己定义operator==和operator<=>。例如:
 
 \begin{cpp}
 // lang/value20def.hpp
@@ -312,42 +312,42 @@ public:
 };
 \end{cpp}
 
-This means that you can specify which members in which order matter or implement special behavior.
+可以指定哪个成员以哪个顺序重要或实现特殊行为。
 
-The way these basic operators work is that if an expression uses one of the comparison operators and does not find a matching direct definition, the expression is rewritten so that it can use these operators.
+这些基本操作符的工作方式是，若表达式使用其中一个比较操作符，并且没有找到匹配的直接定义，则重写表达式，以便使用这些操作符。
 
-Corresponding to rewriting calls of equality operators, rewriting might also change the order of relational operands, which might enable implicit type conversion for the first operand. For example, if
+与重写相等操作符调用相对应，重写也可能改变关系操作数的顺序，从而可能对第一个操作数启用隐式类型转换。例如：
 
 \begin{cpp}
 x <= y
 \end{cpp}
 
-does not find a matching definition of operator<=, it might be rewritten as
+没有找到操作符<=的匹配定义，可以重写为
 
 \begin{cpp}
 (x <=> y) <= 0
 \end{cpp}
 
-or even
+甚至
 
 \begin{cpp}
 0 <= (y <=> x)
 \end{cpp}
 
-As you can see by this rewriting, the new operator<=> performs a three-way comparison, which yields a value you can compare with 0:
+通过重写可以看到，操作符<=>执行一个三向比较，生成一个可以与0比较的值:
 
 \begin{itemize}
 \item
-If the value of x<=>y is equal to 0, x and y are equal or equivalent.
+若x<=>y的值等于0，则x和y等于或相等。
 
 \item
-If the value of x<=>y is less than 0, x is less than y.
+若x<=>y小于0，则x小于y.
 
 \item
-If the value of x<=>y is greater than 0, x is greater than y.
+若x<=>y大于0，则x大于y。
 \end{itemize}
 
-However, note that the return type of operator<=> is not an integral value. The return type is a type that signals the comparison category, which could be strong ordering, weak ordering, or partial ordering. These types support the comparison with 0 to deal with the result.
+但请注意，操作符<=>的返回类型不是整数值。返回类型是表示比较类别的类型，可以是强排序、弱排序或部分排序。不过，这些类型支持与0进行比较。
 
 
 
