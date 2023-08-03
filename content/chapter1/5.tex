@@ -1,21 +1,21 @@
 
-In generic code, the new operator <=> provides some challenges. This is because there might be types that provide operator <=> and there might be types that provide some or all of the basic comparison operators.
+泛型代码中，使用<=>时就有了一些挑战。因为可能存在提供操作符<=>的类型，也可能存在提供偏或全基本比较操作符的类型。
 
 \mySubsubsection{1.5.1}{compare\_three\_way}
 
-std::compare\_three\_way is a new function object type for calling operator <=>, just like std::less is a function object type for calling operator <.
+std::compare\_three\_way是用于调用<=>的函数对象类型，就像std::less是用于调用<的函数对象类型一样。
 
-You can use it as follows:
+可以这样使用:
 
 \begin{itemize}
 \item
-To compare values of a generic type
+比较泛型类型的值
 
 \item
-As a default type when you have to specify the type of a function object
+必须指定函数对象的类型时作为默认类型
 \end{itemize}
 
-For example:
+例如：
 
 \begin{cpp}
 template<typename T>
@@ -28,9 +28,9 @@ struct Value {
 };
 \end{cpp}
 
-Using std::compare\_three\_way has (like std::less) the benefit that it even defines a total order for raw pointers (which is not the case for operators <=> or <). Therefore, you should use it when generic types are used that can be raw pointer types.
+使用std::compare\_three\_way(与std::less一样)的好处是，定义了原始指针的总顺序(操作符<=>或<不是这种情况)。因此，当使用可以是原始指针类型的泛型类型时，应该使用。
 
-To allow programmers to forward declare operator<=>(), C++20 also introduces the type trait std::compare\_three\_way\_result with the alias template std::compare\_three\_way\_result\_t:
+允许程序员前向声明operator<=>()，C++20还引入了类型特性std::compare\_three\_way\_result和别名模板std::compare\_three\_way\_result\_t:
 
 \begin{cpp}
 template<typename T>
@@ -42,11 +42,11 @@ struct Value {
 };
 \end{cpp}
 
-\mySubsubsection{1.5.2}{Algorithm lexicographical\_compare\_three\_way()}
+\mySubsubsection{1.5.2}{算法lexicographical\_compare\_three\_way()}
 
-To be able to compare two ranges and yield a value of the matching comparison category, C++20 also introduced the algorithm lexicographical\_compare\_three\_way(). This algorithm is particularly helpful for implementing operator<=> for members that are collections.
+为了能够比较两个范围并产生匹配比较类别的值，C++20还引入了lexicographical\_compare\_three\_way()算法。该算法对于为集合成员实现operator<=>特别有帮助。
 
-For example:
+例如:
 
 \filename{lib/lexicothreeway.cpp}
 
@@ -78,14 +78,14 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序应有以下输出:
 
 \begin{shell}
 r1: 1
 r2: less
 \end{shell}
 
-Note that there is no ranges support (yet) for lexicographical\_compare\_three\_way(). You can neither pass a range as a single argument nor pass projection parameters:
+注意，lexicographical\_compare\_three\_way()还没有支持范围。既不能将范围作为单个参数传递，也不能传递投射形参:
 
 \begin{cpp}
 auto r3 = std::ranges::lexicographical_compare(v1, v2); // OK

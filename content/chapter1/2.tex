@@ -2,21 +2,21 @@
 
 \mySubsubsection{1.2.1}{使用<=>}
 
-Operator <=> is a new binary operator. It is defined for all fundamental data types for which the relational operators are defined. As usual, it can be user-defined as operator<=>().
+<=>操作符是一个新的二元操作符。所有基本数据类型都有定义，对于其中定义了关系运算符的数据类型，也可以由用户自行重载定义。
 
-Operator <=> takes precedence over all other comparison operators, which means that you need parentheses to use it in an output statement but not to compare its result with another value:
+<=>操作符优先于所有其他比较操作符，所以需要在输出语句中使用括号，但不需要将其结果与其他值进行比较:
 
 \begin{cpp}
 std::cout << (0 < x <=> y) << '\n'; // calls 0 < (x <=> y)
 \end{cpp}
 
-Please note that you have to include a specific header file to deal with the result of operator <=>:
+请注意，必须包含一个特定的头文件来处理运算符<=>的结果:
 
 \begin{cpp}
 #include <compare>
 \end{cpp}
 
-This applies to declaring it (as defaulted), implementing it, or using it. For example:
+这适用于声明(默认情况下)、实现或使用。例如:
 
 \begin{cpp}
 #include <compare> // for calling <=>
@@ -24,59 +24,59 @@ This applies to declaring it (as defaulted), implementing it, or using it. For e
 auto x = 3 <=> 4; // does not compile without header <compare>
 \end{cpp}
 
-Most header files for standard types (strings, containers, <utility>) include this header anyway. However, to call the operator on values or types that do not require this header, you have to include <compare>.
+大多数标准类型(字符串、容器、<utility>)的头文件都包含这个头文件。但要对不需要此头的值或类型使用操作符，必须包含<compare>。
 
-Note that operator <=> is for implementing types. Outside the implementation of an operator<=>, programmers should never invoke <=> directly. Although you can, you should never write a<=>b < 0 instead of a<b.
+注意，操作符<=>用于实现类型。在操作符<=>的实现之外，开发者不应该直接调用<=>。虽然这样做是可以，但永远不要用a<=>b < 0来代替a<b。
 
 \mySubsubsection{1.2.2}{比较类别类型}
 
-The new operator <=> does not return a Boolean value. Instead, it acts similarly to three-way-comparisons yielding a negative value to signal less, a positive value to signal greater, and 0 to signal equal or equivalent. This behavior is similar to the return value of the C function strcmp(); however, there is an important difference: the return value is not an integral value. Instead, the C++ standard library provides three possible return types, which reflect the category of the comparison.
+新的操作符<=>不返回布尔值，但其作用类似于三向比较，产生负值表示信号较少，正值表示信号较大，0表示信号相等或等效。这种行为类似于C函数strcmp()的返回值，也有一个重要的区别:返回值不是整数值，C++标准库提供了三种可能的返回类型，其反映了相应的比较类别。
 
 \mySamllsection{比较类别}
 
-When comparing two values to put them in an order, we have different categories of behavior that could happen:
+当比较两个值并按顺序排列时，有可能发生不同的“类别”行为:
 
 \begin{itemize}
 \item
-With strong ordering (also called total ordering), any value of a given type is less than or equal to or greater than any other value of this type (including itself).
+对于\textbf{强排序}(也称为全排序)，给定类型的值都小于或等于或大于该类型的其他值(包括其本身)。
 
-Typical examples of this category are integral values or common string types. A string s1 is less than or equal to or greater than a string s2.
+这一类的典型例子是整数值或常见的字符串类型，字符串s1小于等于或大于字符串s2。
 
-If a value of this category is neither less than nor greater than another value, both values are equal. If you have multiple objects, you can sort them in ascending or descending order (with equal values having any order among each other).
-
-\item
-With weak ordering, any value of a given type is less than or equivalent to or greater than any other value of this type (including itself). However, equivalent values do not have to be equal (have the same value).
-
-A typical example of this category is a type for case-insensitive strings. A string "hello" is less than "hello1" and greater than "hell". However, "hello" is equivalent to "HELLO" although these two strings are not equal.
-
-If a value of this category is neither less than nor greater than another value, both values are at least equivalent (they might even be equal). If you have multiple objects, you can sort them in ascending or descending order (with equivalent values having any order among each other).
+若此类别的一个值既不小于也不大于另一个值，则两个值相等。如有多个对象，可以按升序或降序进行排序(相等的值彼此之间可以是任意顺序)。
 
 \item
-With partial ordering, any value of a given type could be less than or equivalent to or greater than any other value of this type (including itself). However, in addition, it may not be possible to specify a specific order between two values at all.
+对于\textbf{弱排序}，给定类型的任何值都小于、等于或大于该类型的任何其他值(包括其本身)，但相等的值不一定是相等的(具有相同的值)。
 
-A typical example of this category are floating-point types, because they might have the special value NaN (“not a number”). Any comparison with NaN yields false. Therefore, in this case a comparison might yield that two values are unordered and the comparison operator might return one of four values.
+此类别的典型示例是用于不区分大小写的字符串的类型。字符串"hello"小于"hello1"且大于"hell"。尽管，"hello"与"HELLO"这两个字符串不相等但等价。
 
-If you have multiple objects, you might not be able to sort them in ascending or descending order (unless you ensure that values that cannot be ordered are not there).
+若这个类别的值既不小于也不大于另一个值，那么这两个值至少是相等的(甚至可能是相等的)。若有多个对象，则可以按升序或降序进行排序(等效值之间的顺序可以任意)。
+
+\item
+对于\textbf{偏排序}，给定类型的任何值都可以小于、等于或大于该类型的任何其他值(包括其本身)，可能根本不能指定两个值之间的特定顺序。
+
+这种类型的典型示例是浮点类型，因为它们可能具有特殊值NaN(“非数字”)。任何与NaN的比较结果都为false。因此，比较可能导致两个值是无序的，并且比较操作符可能返回四个值中的一个。
+
+若有多个对象，可能无法按升序或降序对其进行排序(除非确保不存在无法排序的值)。
 \end{itemize}
 
 \mySamllsection{使用标准库比较类别}
 
 \begin{itemize}
 \item
-std::strong\_ordering with the values:
+std::strong\_ordering的值:
 \begin{itemize}
 \item
 std::strong\_ordering::less
 
 \item
-std::strong\_ordering::equal (also available as std::strong\_ordering::equivalent)
+std::strong\_ordering::equal (也可是std::strong\_ordering::equivalent)
 
 \item
 std::strong\_ordering::greater
 \end{itemize}
 
 \item
-std::weak\_ordering with the values:
+std::weak\_ordering的值:
 \begin{itemize}
 \item
 std::weak\_ordering::less
@@ -89,7 +89,7 @@ std::weak\_ordering::greater
 \end{itemize}
 
 \item
-std::partial\_ordering with the values:
+std::partial\_ordering的值:
 \begin{itemize}
 \item
 std::partial\_ordering::less
@@ -105,15 +105,15 @@ std::partial\_ordering::unordered
 \end{itemize}
 \end{itemize}
 
-Note that all types have the values less, greater, and equivalent. However, strong\_ordering also has equal, which is the same as equivalent there, and partial\_ordering has the value unordered, representing neither less nor equal nor greater.
+注意，所有类型都有less、greater和equivalent值。但strong\_ordering也有equal，这与这里的equal相同，而partial\_ordering的值为unordered，既不表示小于，也不表示等于，也不表示大于。
 
-Stronger comparison types have implicit type conversions to weaker comparison types. This means that you can use any strong\_ordering value as weak\_ordering or partial\_ordering value (equal then becomes equivalent).
+较强比较类型具有向较弱比较类型的隐式类型转换，所以可以将任何strong\_ordering值用作weak\_ordering值，或partial\_ordering值(相等则为equivalent)。
 
 \mySubsubsection{1.2.3}{使用运算符<=>比较类别}
 
-The new operator <=> should return a value of one of the comparison category types, representing the result of the comparison combined with the information about whether this result is able to create a strong/total, weak, or partial ordering.
+<=>操作符应该返回比较类别类型之一的值，表示比较的结果以及该结果是否能够创建强/全、弱或偏排序的信息。
 
-For example, this is how a free-standing operator<=> might be defined for a type MyType:
+例如，为MyType类型定义的<=>如下所示:
 
 \begin{cpp}
 std::strong_ordering operator<=> (MyType x, MyOtherType y)
@@ -124,7 +124,7 @@ std::strong_ordering operator<=> (MyType x, MyOtherType y)
 }
 \end{cpp}
 
-Or, as a more concrete example, defining operator<=> for a type MyType:
+或者，作为一个更具体的例子，为MyType类型定义<=>操作符:
 
 \begin{cpp}
 class MyType {
@@ -137,7 +137,7 @@ class MyType {
 };
 \end{cpp}
 
-However, it is usually easier to define the operator by mapping it to results of underlying types. Therefore, it would be better for the member operator<=> above to just yield the value and category of its member value:
+但通过将操作符映射到底层类型的结果，通常更容易定义操作符。所以，上面的成员操作符<=>最好只输出其成员值的值和类别:
 
 \begin{cpp}
 class MyType {
@@ -148,11 +148,11 @@ class MyType {
 };
 \end{cpp}
 
-This not only returns the right value; it also ensures that the return value has the right comparison category type depending on the type of the member value.
+这不仅返回正确的值，还确保根据成员值的类型，返回值具有正确的比较类别类型。
 
 \mySubsubsection{1.2.4}{直接调用<=>}
 
-You can call any defined operator <=> directly:
+也可以直接使用已定义的<=>操作符:
 
 \begin{cpp}
 MyType x, y;
@@ -160,9 +160,9 @@ MyType x, y;
 x <=> y // yields a value of the resulting comparison category type
 \end{cpp}
 
-As written, you should only call operator <=> directly when implementing operator<=>. However, it can be very helpful to know the returned comparison category.
+如前所述，在实现<=>操作符时，应该只直接调用operator<=>，了解返回的比较类别会非常有意义。
 
-As also written, operator<=> is predefined for all fundamental types for which the relational operators are defined. For example:
+<=>操作符是为定义了关系操作符的所有基本类型预定义的。例如:
 
 \begin{cpp}
 int x = 17, y = 42;
@@ -172,52 +172,52 @@ x <=> 17.0 // yields std::partial_ordering::equivalent
 &x <=> nullptr // ERROR: relational comparison with nullptr not supported
 \end{cpp}
 
-In addition, all types of the C++ standard library that provide relational operators also provide operator<=> now. For example:
+此外，所有提供关系操作符的C++标准库类型现在也提供了operator<=>。例如:
 
 \begin{cpp}
 std::string{"hi"} <=> "hi" // yields std::strong_ordering::equal;
 std::pair{42, 0.0} <=> std::pair{42, 7.7} // yields std::partial_ordering::less
 \end{cpp}
 
-For your own type(s), you only have to define operator<=> as a member or free-standing function.
+对于自己的类型，只需将operator<=>定义为成员或独立函数即可。
 
-Because the return type depends on the comparison category, you can check against a specific return value:
+因为返回类型取决于比较类别，所以可以根据特定的返回值进行检查:
 
 \begin{cpp}
 if (x <=> y == std::partial_ordering::equivalent) // always OK
 \end{cpp}
 
-Due to the implicit type conversions to weaker ordering types, this will even compile if operator<=> yields a strong\_ordering or weak\_ordering value.
+由于隐式类型转换为较弱排序类型，若operator<=>产生strong\_ordering或weak\_ordering类型的值，这也是可以编译的。
 
-The other way around does not work. If the comparison yields a weak\_ordering or partial\_ordering value, you cannot compare it with a strong\_ordering value.
+反过来是不行的。若比较产生weak\_ordering或partial\_ordering类型的值，则不能将其与strong\_ordering类型的值进行比较。
 
 \begin{cpp}
 if (x <=> y == std::strong_ordering::equal) // might not compile
 \end{cpp}
 
-However, a comparison with 0 is always possible and usually easier:
+然而，与0的比较总是可能的，而且通常更容易理解:
 
 \begin{cpp}
 if (x <=> y == 0) // always OK
 \end{cpp}
 
-In addition, operator<=> might be called indirectly due to the new rewriting of relational operator calls:
+此外，由于关系型操作符调用的新重写，操作符<=>可以间接调用:
 
 \begin{cpp}
 if (!(x < y || y < x)) // might call operator<=> to check for equality
 \end{cpp}
 
-Or:
+或:
 
 \begin{cpp}
 if (x <= y && y <= x) // might call operator<=> to check for equality
 \end{cpp}
 
-Note that operator!= is never rewritten to call operator<=>. However, it might call an operator== member that is implicitly generated due to a defaulted operator<=> member.
+注意操作符!=，永远不会重写为调用operator<=>，但它可能调用由于默认操作符<=>成员而隐式生成的操作符==。
 
 \mySubsubsection{1.2.5}{处理多种排序条件}
 
-To compute the result of operator<=> based on multiple attributes, you can usually implement just a chain of sub-comparisons until the result is not equal/equivalent or you reach the final attribute to be compared:
+要基于多个属性计算运算符<=>的结果，通常可以实现一连串的子比较，直到结果不相等或到达要最终属性的比较:
 
 \begin{cpp}
 class Person {
@@ -232,7 +232,7 @@ class Person {
 };
 \end{cpp}
 
-However, the return type does not compile if the attributes have different comparison categories. For example, if a member name is a string and a member value is a double, we have conflicting return types:
+但若属性具有不同的比较类别，则返回类型不会编译。例如，若成员名是string类型，而成员值是double类型，则返回类型会冲突:
 
 \begin{cpp}
 class Person {
@@ -247,7 +247,7 @@ class Person {
 };
 \end{cpp}
 
-In that case, you can use a conversion to the weakest comparison type. If you know the weakest comparison type, you can just declare it as the return type:
+可以使用到最弱比较类型的转换。若已知最弱的比较类型，可以把它声明为返回类型:
 
 \begin{cpp}
 class Person {
@@ -262,7 +262,7 @@ class Person {
 };
 \end{cpp}
 
-If you do not know the comparison types (e.g., their type is a template parameter), you can use a new type trait std::common\_comparison\_category<> that computes the strongest comparison category:
+若不知道比较类型(例如，类型是模板形参)，可以使用一个新的类型特征std::common\_comparison\_category<>来计算最强的比较类型:
 
 \begin{cpp}
 class Person {
@@ -279,9 +279,9 @@ class Person {
 };
 \end{cpp}
 
-By using the trailing return type syntax (with auto in front and the return type after ->), we can use the parameters to compute the comparison types. Even though in this case, you could just use name instead of rhs.name, this approach works in general (e.g., also for free-standing functions).
+通过使用尾部返回类型语法(auto在前面，返回类型在->后面)，可以使用参数来计算比较类型。这种情况下，可以只使用name，而非rhs.name，这种方法通常是有效的(例如，也适用于独立的函数)。
 
-If you want to provide a stronger category than the one that is used internally, you have to map all possible values of the internal comparsions to values of the return type. This might include some error handling if you cannot map some values. For example:
+若希望提供比内部使用的类别更强的类别，则必须将内部比较的所有可能值映射到返回类型的值。若不能映射某些值，这可能包括一些错误处理。例如:
 
 \begin{cpp}
 class Person {
@@ -301,7 +301,7 @@ class Person {
 };
 \end{cpp}
 
-The C++ standard library provides some helper function objects for this. For example, to map floating-point values, you can call std::strong\_order() for the two values to be compared:
+C++标准库为此提供了一些辅助函数对象。例如，映射浮点值，可以使用std::strong\_order()来比较两个值:
 
 \begin{cpp}
 class Person {
@@ -317,24 +317,24 @@ class Person {
 };
 \end{cpp}
 
-If possible, std::strong\_order() yields a std::strong\_ordering value according to the passed arguments as follows:
+如若可能，std::strong\_order()会根据传入的参数产生一个std::strong\_ordering值，如下所示:
 
 \begin{itemize}
 \item
-Using strong\_order(val1, val2) for the passed types if defined
+对传递的类型使用strong\_order(val1, val2)(若已定义)
 
 \item
-Otherwise, if the passed values are floating-point types, using the value of totalOrder() as specified in ISO/IEC/IEEE 60559 (for which, e.g., -0 is less than +0 and -NaN is less than any non-NAN value and +NaN)
+否则，若传递的值是浮点类型，则使用ISO/IEC/IEEE 60559中指定的totalOrder()的值(例如，-0小于+0，-NaN小于任何非NaN值和+NaN)
 
 \item
-Using the new function object std::compare\_three\_way\{\}(val1, val2) if defined for the passed types
+若是为传递的类型定义的，使用新的函数对象std::compare\_three\_way\{\}(val1, val2)，
 \end{itemize}
 
-This is the easiest way to give floating-point types a strong ordering which even works at runtime if one or both of the operands might have the value NaN.
+这为浮点类型提供强排序的最简单方法，即使在运行时，若一个或两个操作数可能具有值NaN，这种方法也可以工作。
 
-std::compare\_three\_way is a new function object type for calling operator <=>, just like std::less is a function object type for calling operator <.
+std::compare\_three\_way是用于调用operator <=>的新函数对象类型，就像std::less是用于调用operator <的函数对象类型一样。
 
-For other types that have a weaker ordering and operators == and < defined, you can use the function object std::compare\_strong\_order\_fallback() accordingly:
+对于其他具有较弱排序和操作符==和<定义的类型，可以使用函数对象std::compare\_strong\_order\_fallback():
 
 \begin{cpp}
 class Person {
@@ -350,6 +350,6 @@ class Person {
 };
 \end{cpp}
 
-Table Function objects for mapping comparison category types lists all available helper functions for mapping comparison category types.
+用于映射比较类别类型的表，函数对象列出了用于映射比较类型的所有的辅助函数。
 
-To define operator<=> for a generic type, you should also consider using the function object std::compare\_three\_way or the algorithm std::lexicographical\_compare\_three\_way().
+要为泛型类型定义运算符<=>，还应该考虑使用函数对象std::compare\_three\_way或算法std::lexicographical\_compare\_three\_way()。

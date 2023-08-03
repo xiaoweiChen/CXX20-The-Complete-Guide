@@ -1,66 +1,66 @@
 
 
-Both operator<=> and operator== can be defined for your data types:
+自定义数据类型都可以定义operator<=>和operator==:
 
 \begin{itemize}
 \item
-Either as a member function taking one parameter
+要么作为带一个参数的成员函数
 
 \item
-Or as a free-standing function taking two parameters
+或者一个独立的函数，有两个参数
 \end{itemize}
 
 
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Function Object in std::} & \textbf{Effect}                                             \\ \hline
+\textbf{std::中的函数对象} & \textbf{效果}                                             \\ \hline
 \endfirsthead
 %
 \endhead
 %
-strong\_order()                   & Maps to a strong order value also for floating-point values \\ \hline
-weak\_order()                     & Maps to a weak order value also for floating-point values   \\ \hline
-partial\_order()                  & Maps to a partial order value                               \\ \hline
-compare\_strong\_order\_fallback()  & Maps to a strong order value even if only == and \textless are defined  \\ \hline
-compare\_weak\_order\_fallback()    & Maps to a weak order value even if only == and \textless are defined    \\ \hline
-compare\_partial\_order\_fallback() & Maps to a partial order value even if only == and \textless are defined \\ \hline
+strong\_order()                   & 映射到强序值也适用于浮点值 \\ \hline
+weak\_order()                     & 映射到弱序值，也适用于浮点值   \\ \hline
+partial\_order()                  & 映射到偏序值                               \\ \hline
+compare\_strong\_order\_fallback()  & 映射到强序值，即使只定义了==和<  \\ \hline
+compare\_weak\_order\_fallback()    & 映射到弱序值，即使只定义了==和<    \\ \hline
+compare\_partial\_order\_fallback() & 映射到偏序值，即使只定义了==和< \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 1.1. Function objects for mapping comparison category types
+表1.1 用于映射比较类别类型的函数对象
 \end{center}
 
 
-\mySubsubsection{1.3.1}{Defaulted operator== and operator<=>}
+\mySubsubsection{1.3.1}{默认操作符==和<=>}
 
-Inside a class or data structure (as a member or friend function), all comparison operators can be declared as defaulted with =default. However, this usually only makes sense for operator== and operator<=>. The member functions have to take the second parameter as const lvalue reference (const \&). Friend functions might alternatively take both parameters by value.
+在类或数据结构中(作为成员或友元函数)，可以使用=default将所有比较操作符声明为默认值，但这通常只对operator==和operator<=>有意义。成员函数必须接受第二个形参作为const左值引用(const \&)，友元函数也可以按值接受这两个形参。
 
-The defaulted operators require the support of the members and possible base classes:
-
-\begin{itemize}
-\item
-Defaulted operators == require the support of == in the members and base classes.
-
-\item
-Defaulted operators <=> require the support of == and either an implemented operator < or a defaulted operator <=> in the members and base classes (for details, see below).
-\end{itemize}
-
-For the generated defaulted operators, the following then applies:
+默认操作符需要成员和可能的基类的支持:
 
 \begin{itemize}
 \item
-The operator is noexcept if comparing the members guarantees not to throw.
+默认操作符==要求在成员和基类中支持==。
 
 \item
-The operator is constexpr if comparing the members is possible at compile time.
+默认操作符<=>要求在成员和基类中支持==和已实现的操作符<或默认操作符<=>(详细信息请参见下文)。
 \end{itemize}
 
-For empty classes, the defaulted operators compare all objects as equal: operators ==, <=, and >= yield true, operators !=, <, and > yield false, and <=> yields std::strong\_ordering::equal.
+对于生成的默认操作符，有两点要提一下:
+
+\begin{itemize}
+\item
+若比较成员保证不抛出异常，则操作符为noexcept型。
+
+\item
+若可以在编译时比较成员，则操作符为constexpr型。
+\end{itemize}
+
+对于空类，默认操作符比较所有对象为相等:operator ==、<=和>=生成true, operator !=、<和>生成false，而<=>生成std::strong\_ordering::equal。
 
 
-\mySubsubsection{1.3.2}{Defaulted operator<=> Implies Defaulted operator==}
+\mySubsubsection{1.3.2}{默认<=>操作符实现默认==操作符}
 
-If and only if an operator<=> member is defined as defaulted, then by definition a corresponding operator== member is also defined if no defaulted operator== is provided. All aspects (visibility, virtual, attributes, requirements, etc.) are adopted. For example:
+当操作符<=>成员定义为默认值时，若没有提供默认操作符==，则根据定义也定义相应的操作符==成员。可采用了所有方式(可见性、虚拟、属性、需求等)。例如:
 
 \begin{cpp}
 template<typename T>
@@ -72,7 +72,7 @@ class Type {
 };
 \end{cpp}
 
-is equivalent to the following:
+等价于:
 
 \begin{cpp}
 template<typename T>
@@ -87,7 +87,7 @@ class Type {
 };
 \end{cpp}
 
-For example, the following is enough to support all six comparison operators for objects of the type Coord:
+例如，下面的代码足以支持Coord类型对象的所有六种比较操作符:
 
 \filename{lang/coord.hpp}
 
@@ -101,9 +101,9 @@ struct Coord {
 };
 \end{cpp}
 
-Note again that the member function must be const and that the parameter must be declared to be a const lvalue reference (const \&).
+成员函数必须是const，形参必须声明为const左值引用(const \&)。
 
-You can use this data structure as follows:
+可以这样使用这个数据结构:
 
 \filename{lang/coord.cpp}
 
@@ -123,7 +123,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序应有如下的输出:
 
 \begin{shell}
 0/5/5
@@ -133,32 +133,32 @@ The program has the following output:
 5/0/0
 \end{shell}
 
-\mySubsubsection{1.3.3}{Implementation of the Defaulted operator<=>}
+\mySubsubsection{1.3.3}{默认操作符<=>的实现}
 
-If operator<=> is defaulted and you have members or base classes and you call one of the relational operators, then the following happens:
-
-\begin{itemize}
-\item
-If operator<=> is defined for a member or base class, that operator is called.
-
-\item
-Otherwise, operator== and operator< are called to decide whether (from the point of view of the members or base classes)
+若operator<=>是默认的，并且有成员或基类，并且调用关系操作符之一，则会发生以下情况:
 
 \begin{itemize}
 \item
-The objects are equal/equivalent (operator== yields true)
+若为成员或基类定义了操作符<=>，则调用该操作符。
 
 \item
-The objects are less or greater
+否则，使用operator==和operator<来决定是否(从成员或基类的角度)
+
+\begin{itemize}
+\item
+对象是相等/等价的(运算符==产生true)
 
 \item
-The objects are unordered (only when partial ordering is checked)
+对象有“大”有“小”
+
+\item
+对象是无序的(仅在检查偏排序时)
 \end{itemize}
 
-In that case, the return type of the defaulted operator<=> calling these operators cannot be auto.
+这种情况下，调用这些操作符的默认操作符<=>的返回类型不能为auto。
 \end{itemize}
 
-For example, consider the following declarations:
+例如，以下声明:
 
 \begin{cpp}
 struct B {
@@ -171,16 +171,14 @@ struct D : public B {
 };
 \end{cpp}
 
-Then:
+然后:
 
 \begin{cpp}
 D d1, d2;
 d1 > d2; // calls B::operator== and possibly B::operator<
 \end{cpp}
 
-If operator== yields true, we know that the result of > is false and that is it. Otherwise, operator< is called to find out whether the expression is true or false.
-
-With
+若操作符==的结果为true，则知道>的结果为false，仅此而已。否则，调用操作符<来判断表达式是true还是false。
 
 \begin{cpp}
 struct D : public B {
@@ -188,9 +186,7 @@ struct D : public B {
 };
 \end{cpp}
 
-the compiler might even call operator< twice to find out whether there is any order at all.
-
-With
+编译器甚至可能两次调用operator<来确定是否有顺序。
 
 \begin{cpp}
 struct B {
@@ -203,9 +199,9 @@ struct D : public B {
 };
 \end{cpp}
 
-the compiler does not compile any call with relational operators because it cannot decide which ordering category the base class has. In that case, you need operator<=> in the base class too.
+编译器不会编译带有关系操作符的调用，它无法确定基类具有哪个排序类别在这种情况下，在基类中也需要操作符<=>。
 
-However, checks for equality work, because in D, operator== is automatically declared equivalent to the following:
+然而，检查相等性是有效的，因为在D中，operator==自动声明为等价于以下内容的代码:
 
 \begin{cpp}
 struct D : public B {
@@ -214,7 +210,7 @@ struct D : public B {
 };
 \end{cpp}
 
-This means that we have the following behavior:
+当有以下行为:
 
 \begin{cpp}
 D d1, d2;
@@ -222,6 +218,6 @@ d1 > d2; // ERROR: cannot deduce comparison category of operator<=>
 d1 != d2; // OK (note: only tries operator<=> and B::operator== of a base class)
 \end{cpp}
 
-Equality checks always use only operator== of a base class (which might be generated according to a defaulted operator<=> though). Any operator< or operator!= in the base class is ignored.
+相等性检查总是只使用基类的操作符==(但可以根据默认操作符<=>生成)，可忽略基类中的<或!=运算符。
 
-The same applies, if D has a member of type B.
+同样地，若D中有B类型的成员。

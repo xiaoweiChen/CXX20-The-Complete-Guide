@@ -1,9 +1,9 @@
 
-After introducing the new rules for comparisons, it turned out that C++20 introduces some issues that may be a problem when switching from older C++ versions.
+引入了新的比较规则之后，事实证明C++20引入了一些问题，当从旧C++版本进行切换时，这些问题就会暴露。
 
-\mySubsubsection{1.6.1}{Delegating Free-Standing Comparison Operators}
+\mySubsubsection{1.6.1}{委托独立比较操作符}
 
-The following example demonstrates the essence of the most typical problem:
+下面的例子演示了最典型问题:
 
 \filename{lang/spacecompat.cpp}
 
@@ -34,7 +34,7 @@ int main()
 }
 \end{cpp}
 
-We have a trivial class that stores an integral value and has an implicit constructor to initialize the object (the implicit constructor is necessary to support initialization with =):
+有一个简单的类，存储整型值，并有一个隐式构造函数来初始化对象(隐式构造函数是支持使用=初始化的必要条件):
 
 \begin{cpp}
 class MyType {
@@ -46,7 +46,7 @@ class MyType {
 MyType x = 42; // OK
 \end{cpp}
 
-The class also declares a member function to compare objects:
+类还声明了一个成员函数来比较对象:
 
 \begin{cpp}
 class MyType {
@@ -56,7 +56,7 @@ class MyType {
 };
 \end{cpp}
 
-However, before C++20, this does only enable implicit type conversions for the second operand. Therefore, the class or some other code introduces a global operator that swaps the order of the arguments:
+然而，C++20之前，这只允许对第二个操作数进行隐式类型转换。因此，类或其他代码引入了一个全局操作符来交换参数的顺序:
 
 \begin{cpp}
 bool operator==(int i, const MyType& t) {
@@ -64,9 +64,9 @@ bool operator==(int i, const MyType& t) {
 }
 \end{cpp}
 
-It would be better for the class to define the operator==() as a “hidden friend” (define it with friend inside the class structure so that both operators become parameters, you have direct access to members, and implicit type conversions are only performed if at least one parameter type fits). However, the code above had pretty much the same effect before C++20.
+对于类来说，最好将操作符==()定义为“隐藏的友元”(在类结构中使用友元定义它，以便两个操作符都成为参数，可以直接访问成员，并且只有在至少有一个参数类型适合时才执行隐式类型转换)。然而，上面的代码在C++20之前具有相同的效果。
 
-Unfortunately, this code no longer works in C++20.[Thanks to Peter Dimov and Barry Revzin for pointing out the problem and discussing it in \url{http://stackoverflow.com/questions/65648897}.] It results in an endless recursion. This is because inside the global function, the expression t == i can also call the global operator==() itself, because the compiler also tries to rewrite the call as i == t:
+不幸的是，这段代码在C++20中不再可用。[感谢Peter Dimov和Barry Revzin指出了这个问题，并在\url{http://stackoverflow.com/questions/65648897}上进行了讨论]其导致了一个无尽的递归。这是因为在全局函数内部，因为表达式t == i，编译器也试图将调用重写为i == t，所以也可以调用全局operator==()本身:
 
 \begin{cpp}
 bool operator==(int i, const MyType& t) {
@@ -74,13 +74,13 @@ bool operator==(int i, const MyType& t) {
 }
 \end{cpp}
 
-Unfortunately, the rewritten statement is a better match because it does not need the implicit type conversion. We have no solution yet to support backward compatibility here; however, compilers are already starting to warn about code like this.
+因为它不需要隐式类型转换，所以重写的语句是更好的匹配项。我们目前还没有解决方案来支持这里的向后兼容性，但编译器已经开始对这样的代码发出警告了。
 
-If your code only has to work with C++20, you can simply remove the free-standing function. Otherwise you have two options:
+若的代码只使用C++20，则可以简单地删除独立函数。否则，就只有两个选择:
 
 \begin{itemize}
 \item
-Use an explicit conversion:
+使用显式转换:
 
 \begin{cpp}
 bool operator==(int i, const MyType& t) {
@@ -89,14 +89,14 @@ bool operator==(int i, const MyType& t) {
 \end{cpp}
 
 \item
-Use a feature test macro to disable the code as soon as the new feature is available:
+新特性可用时，使用特性测试宏来禁用代码:
 \end{itemize}
 
-\mySubsubsection{1.6.2}{Inheritance with Protected Members}
+\mySubsubsection{1.6.2}{受保护成员的继承}
 
-For derived classes with defaulted comparison operators, there might be problems if the base class has the operators as protected members.
+对于具有默认比较操作符的派生类，若基类将操作符作为受保护成员，则可能会出现问题。
 
-Note that the defaulted comparison operators require the support of comparisons in the base class. Therefore, the following does not work:
+注意，默认的比较操作符需要在基类中支持比较，所以以下操作不起作用:
 
 \begin{cpp}
 struct Base {
@@ -112,7 +112,7 @@ Child c1, c2;
 c1 == c2; // ERROR
 \end{cpp}
 
-As a consequence, you also have to provide a defaulted operator == in the base class. However, if you do not want the base class to provide operator == for the public, the obvious approach is to add a protected defaulted operator == in the base class:
+因此，还必须在基类中提供默认操作符==，但若不希望基类为public提供操作符==，那么显而易见的方法是在基类中添加受保护的默认操作符==:
 
 \begin{cpp}
 struct Base {
@@ -126,9 +126,9 @@ Child : Base {
 };
 \end{cpp}
 
-However, in this case, the defaulted comparisons for the derived class does not work. It is rejected by the current compilers implementing the specified behavior of defaulted operators that is too strict here. This hopefully will be fixed soon (see \url{http://wg21.link/cwg2568}).
+但在这种情况下，派生类的默认比较不起作用。其会被当前实现默认操作符的指定行为的编译器拒绝，这里的默认操作符过于严格。这个问题有望很快得到解决(参见\url{http://wg21.link/cwg2568})。
 
-As a workaround, you have to implement the derived operator yourself.
+作为一种解决方法，开发者必须自己实现派生操作符。
 
 
 

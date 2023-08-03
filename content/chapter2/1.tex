@@ -1,4 +1,4 @@
-Since C++14, lambdas can use placeholders such as auto to declare/define their parameters:
+C++14起，Lambda可以使用auto等占位符来声明/定义其参数:
 
 \begin{cpp}
 auto printColl = [] (const auto& coll) { // generic lambda
@@ -8,7 +8,7 @@ auto printColl = [] (const auto& coll) { // generic lambda
 }
 \end{cpp}
 
-These placeholders allow us to pass arguments of any type, provided the operations inside the lambda are supported:
+这些占位符允许传递任何类型的参数，只要支持Lambda内部的操作:
 
 \begin{cpp}
 std::vector coll{1, 2, 4, 5};
@@ -18,7 +18,7 @@ printColl(coll); // compiles the lambda for vector<int>
 printColl(std::string{"hello"}); // compiles the lambda for std::string
 \end{cpp}
 
-Since C++20, you can use placeholders such as auto for all functions (including member functions and operators):
+C++20起，可以对所有函数(包括成员函数和操作符)使用auto等占位符:
 
 \begin{cpp}
 void printColl(const auto& coll) // generic function
@@ -29,7 +29,7 @@ void printColl(const auto& coll) // generic function
 }
 \end{cpp}
 
-Such a declaration is just a shortcut for declaring a template such as the following:
+这样的声明只是声明模板的快捷方式，如下所示:
 
 \begin{cpp}
 template<typename T>
@@ -41,11 +41,11 @@ void printColl(const T& coll) // equivalent generic function
 }
 \end{cpp}
 
-The only difference is that by using auto, you no longer have a name for the template parameter T. For this reason, this feature is also called the abbreviated function template syntax.
+唯一的区别是，通过使用auto，不再拥有模板参数T。因此，该特性也称为简化函数模板的语法。
 
-Because functions with auto are function templates, all rules of using function templates apply. This means especially that you cannot implement a function with auto parameters in one translation unit (CPP file) while calling it in a different translation unit. For functions with auto parameters, the whole implementation belongs in a header file so that they can be used in multiple CPP files (otherwise, you have to explicitly instantiate the function in one translation unit). On the other hand, they do not need to be declared as inline because function templates are always inline.
+因为带有auto的函数是函数模板，所以使用函数模板的所有规则都适用。所以不能在一个翻译单元(CPP文件)中实现带有自动参数的函数，同时在另一个翻译单元中调用。对于具有auto参数的函数，整个实现属于头文件，以便它们可以在多个CPP文件中使用(否则，必须在一个翻译单元中显式地实例化函数)。另一方面，它们不需要声明为内联，因为函数模板总是内联。
 
-In addition, you can specify the template parameters explicitly:
+另外，可以显式地指定模板参数:
 
 \begin{cpp}
 void print(auto val)
@@ -58,9 +58,9 @@ print<char>(64); // val has type char
 \end{cpp}
 
 
-\mySubsubsection{2.1.1}{auto for Parameters of Member Functions}
+\mySubsubsection{2.1.1}{auto用于成员函数的参数}
 
-You can also use this feature to define member functions:
+也可以使用这个特性来定义成员函数:
 
 \begin{cpp}
 class MyType {
@@ -69,7 +69,7 @@ class MyType {
 };
 \end{cpp}
 
-That declaration is equivalent to (with the difference that there is no type T defined):
+该声明等价于(不同之处在于没有定义类型T):
 
 \begin{cpp}
 class MyType {
@@ -79,7 +79,7 @@ class MyType {
 };
 \end{cpp}
 
-Note that templates may not be declared inside functions. With member functions using auto parameters, you can no longer define the class or data structure locally inside a function:
+注意，模板不能在函数内部声明。对于使用auto形参的成员函数，不能再在函数内部局部定义类或数据结构:
 
 \begin{cpp}
 void foo()
@@ -90,4 +90,4 @@ void foo()
 }
 \end{cpp}
 
-See sentinel1.cpp for an example of a member operator == with auto.
+有关带有auto的成员操作符==的示例，请参阅sentinel1.cpp。
