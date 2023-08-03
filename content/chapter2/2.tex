@@ -1,11 +1,11 @@
 
-Using auto for parameters has some benefits and consequences.
+参数使用auto是有一些好处的。
 
-\mySubsubsection{2.2.1}{Deferred Type Checks with auto}
+\mySubsubsection{2.2.1}{使用auto进行延迟类型检查}
 
-With auto parameters, it is significantly easier to implement code with circular dependencies.
+使用auto参数，实现具有循环依赖关系的代码会容易得多。
 
-Consider, for example, two classes that use objects of other classes. To use objects of another class, you need the definition of their type; a forward declaration is not enough (except when only declaring a reference or pointer):
+考虑两个使用其他类的对象的类。要使用另一个类的对象，需要定义它们的类型，前向声明是不够的(除非只声明引用或指针):
 
 \begin{cpp}
 class C2; // forward declaration
@@ -28,9 +28,9 @@ class C2 {
 };
 \end{cpp}
 
-While you can implement C2::foo() inside the class definition, you cannot implement C1::foo() because to check whether the call of c2.print() is valid, the compiler needs the definition of class C2.
+虽然可以在类定义中实现C2::foo()，但不能实现C1::foo()，因为要检查C2.print()的调用是否有效，编译器需要类C2的定义。
 
-As a consequence, you have to implement C2::foo() after the structures of both classes are declared:
+因此，必须在声明两个类结构之后实现C2::foo():
 
 \begin{cpp}
 class C2;
@@ -54,7 +54,7 @@ inline void C1::foo(const C2& c2) const { // implementation (inline if in header
 }
 \end{cpp}
 
-Because generic functions check members of generic parameters when the call happens, by using auto, you can just implement the following:
+因为泛型函数在调用时检查泛型形参的成员，所以使用auto可以实现:
 
 \begin{cpp}
 class C1 {
@@ -75,9 +75,9 @@ class C2 {
 };
 \end{cpp}
 
-This is nothing new. You would have the same effect when declaring C1::foo() as a member function template. However, using auto makes it easier to do so.
+这没什么新鲜的，将C1::foo()声明为成员函数模板时也会有同样的效果，但使用auto会更容易做到这一点。
 
-Note that auto allows the caller to pass parameters of any type as long as the type provides a member function print(). If you do not want that, you can use the standard concept std::same\_as to constrain the use of this member function for parameters of type C2 only:
+注意，auto允许调用者传递任何类型的参数，只要该类型提供成员函数print()。若不想这样做，可以使用标准概念std::same\_as来约束这个成员函数只对C2类型的形参使用:
 
 \begin{cpp}
 #include <concepts>
@@ -94,11 +94,11 @@ class C1 {
 ...
 \end{cpp}
 
-For the concept, an incomplete type works fine.
+对于概念来说，不完整的类型可以工作得很好。
 
-\mySubsubsection{2.2.2}{auto Functions versus Lambdas}
+\mySubsubsection{2.2.2}{auto函数与Lambda表达式}
 
-A function with auto parameters is different from a lambda. For example, you still cannot pass a function with auto as a parameter without specifying the generic parameter:
+带有auto参数的函数不同于Lambda表达式。例如，不能在不指定泛型参数的情况下，传递带有auto作为参数的函数:
 
 \begin{cpp}
 bool lessByNameFunc(const auto& c1, const auto& c2) { // sorting criterion
@@ -109,7 +109,7 @@ std::sort(persons.begin(), persons.end(),
 		  lessByNameFunc); // ERROR: can’t deduce type of parameters in sorting criterion
 \end{cpp}
 
-Remember that the declaration of lessByName() is equivalent to:
+记住，lessByName()的声明相当于:
 
 \begin{cpp}
 template<typename T1, typename T2>
@@ -118,14 +118,14 @@ bool lessByNameFunc(const T1& c1, const T2& c2) { // sorting criterion
 }
 \end{cpp}
 
-Because the function template is not called directly, the compiler cannot deduce the template parameters to compile the call. Therefore, you have to specify the template parameters explicitly when passing a function template as a parameter:
+因为没有直接调用函数模板，编译器不能推断模板参数来编译调用。所以在传递函数模板作为形参时，必须显式指定模板形参:
 
 \begin{cpp}
 std::sort(persons.begin(), persons.end(),
 		  lessByName<Customer, Customer>); // OK
 \end{cpp}
 
-By using a lambda, you can just pass the lambda as it is:
+通过使用Lambda表达式，可以按原样传递表达式:
 
 \begin{cpp}
 auto lessByNameLambda = [] (const auto& c1, const auto& c2) { // sorting criterion
@@ -136,13 +136,13 @@ std::sort(persons.begin(), persons.end(),
 		  lessByNameLambda); // OK
 \end{cpp}
 
-The reason is that the lambda is an object that does not have a generic type. Only the use of the object as a function is generic.
+因为Lambda是一个没有泛型类型的对象，所以只有将对象作为函数使用才可通用。
 
-On the other hand, the explicit specification of an (abbreviated) function template parameter is easier:
+另外，显式指定(缩写)函数模板参数更容易:
 
 \begin{itemize}
 \item
-Just pass the specified type after the function name:
+只需在函数名后传递指定的类型:
 
 \begin{cpp}
 void printFunc(const auto& arg) {
@@ -153,7 +153,7 @@ printFunc<std::string>("hello"); // call function template compiled for std::str
 \end{cpp}
 
 \item
-For a generic lambda, we have to do the following:
+对于泛型Lambda表达式，必须做以下操作:
 
 \begin{cpp}
 auto printFunc = [] (const auto& arg) {
@@ -163,7 +163,7 @@ auto printFunc = [] (const auto& arg) {
 printFunc.operator()<std::string>("hello"); // call lambda compiled for std::string
 \end{cpp}
 
-For a generic lambda, the function call operator operator() is generic. Therefore, you have to pass the requested type as an argument to operator() to specify the template parameter explicitly.
+对于泛型Lambda表达式，函数调用运算符operator()为泛型。所以必须将请求的类型作为参数传递给operator()，以显式指定模板形参。
 \end{itemize}
 
 

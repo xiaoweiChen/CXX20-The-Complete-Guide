@@ -1,10 +1,10 @@
 
 
-You can use requires clauses or concepts to constrain almost all forms of generic code:
+可以使用requirea子句或概念来约束几乎所有形式的泛型代码:
 
 \begin{itemize}
 \item
-Function templates:
+函数模板:
 \begin{cpp}
 template<typename T>
 requires ...
@@ -14,7 +14,7 @@ void print(const T&) {
 \end{cpp}
 
 \item
-Class templates
+类模板：
 \begin{cpp}
 template<typename T>
 requires ...
@@ -24,25 +24,25 @@ class MyType {
 \end{cpp}
 
 \item
-Alias templates
+别名模板
 
 \item
-Variable templates
+变量模板
 
 \item
-You can even constrain member functions
+甚至可以约束成员函数
 \end{itemize}
 
-For these templates, you can constrain both type and value parameters.
+对于这些模板，可以约束类型和值参数。
 
-However, note that you cannot constrain concepts:
+但请注意，这里不能约束概念:
 
 \begin{cpp}
 template<std::ranges::sized_range T> // ERROR
 concept IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
 \end{cpp}
 
-Instead, you have to specify this as follows:
+相反，这里必须这样指定:
 
 \begin{cpp}
 template<typename T>
@@ -51,16 +51,16 @@ concept IsIntegralValType = std::ranges::sized_range<T> &&
 \end{cpp}
 
 
-\mySubsubsection{3.2.1}{Constraining Alias Templates}
+\mySubsubsection{3.2.1}{约束别名模板}
 
-Here is an example of constraining alias templates (generic using declarations):
+下面是一个约束别名模板的例子(使用声明的泛型):
 
 \begin{cpp}
 template<std::ranges::range T>
 using ValueType = std::ranges::range_value_t<T>;
 \end{cpp}
 
-The declaration is equivalent to the following:
+该声明等价于:
 
 \begin{cpp}
 template<typename T>
@@ -68,7 +68,7 @@ requires std::ranges::range<T>
 using ValueType = std::ranges::range_value_t<T>;
 \end{cpp}
 
-Type ValueType<> is now defined only for types that are ranges:
+类型ValueType<>现在只对范围类型定义:
 
 \begin{cpp}
 ValueType<int> vt1; // ERROR
@@ -76,16 +76,16 @@ ValueType<std::vector<int>> vt2; // int
 ValueType<std::list<double>> vt3; // double
 \end{cpp}
 
-\mySubsubsection{3.2.2}{Constraining Variable Templates}
+\mySubsubsection{3.2.2}{约束变量模板}
 
-Here is an example of constraining variable templates:
+下面是一个约束变量模板的例子:
 
 \begin{cpp}
 template<std::ranges::range T>
 constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
 \end{cpp}
 
-Again, this is equivalent to the following:
+同样，这相当于以下内容:
 
 \begin{cpp}
 template<typename T>
@@ -93,7 +93,7 @@ requires std::ranges::range<T>
 constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
 \end{cpp}
 
-The Boolean variable template is now defined only for ranges:
+布尔变量template现在只在范围中定义:
 
 \begin{cpp}
 bool b1 = IsIntegralValType<int>; // ERROR
@@ -101,11 +101,11 @@ bool b2 = IsIntegralValType<std::vector<int>>; // true
 bool b3 = IsIntegralValType<std::list<double>>; // false
 \end{cpp}
 
-\mySubsubsection{3.2.3}{Constraining Member Functions}
+\mySubsubsection{3.2.3}{约束成员函数}
 
-Requires clauses can also be part of the declaration of member functions. That way, programmers can specify different APIs based on requirements and concepts.
+requires子句也可以是成员函数声明的一部分，开发者就可以根据需求和概念指定不同的API。
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{lang/valorcoll.hpp}
 
@@ -137,17 +137,17 @@ class ValOrColl {
 };
 \end{cpp}
 
-Here, we define a class ValOrColl that can hold a single value or a collection of values as value of type T. Two print() member functions are provided and the class uses the standard concept std::ranges::range to decided which one to call:
+这里，我们定义了一个类ValOrColl，可以保存一个值或一个值的集合，作为T类型的值。提供了两个print()成员函数，类使用标准概念std::ranges::range来决定调用哪一个:
 
 \begin{itemize}
 \item
-If type T is a collection, the constraint is satisfied so that both print() member functions are available. However, the second print(), which iterates over the elements of the collection, is preferred by overload resolution, because this member function has a constraint.
+若类型T是一个集合，则满足约束，因此两个print()成员函数都可用。然而，重载解析首选第二个print()，将遍历集合的元素，因为该成员函数有约束。
 
 \item
-If type T is not a collection, only the first print() is available and therefore used.
+若类型T不是集合，则只有第一个print()可用，因此使用它。
 \end{itemize}
 
-For example, you can use the class as follows:
+例如，可以这样使用这个类:
 
 \filename{lang/valorcoll.cpp}
 
@@ -164,14 +164,14 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序应有以下输出:
 
 \begin{shell}
 42
 1 2 3 4
 \end{shell}
 
-Note that you can constrain only templates this way. You cannot use requires to constrain ordinary functions:
+注意，这种方式只能约束模板，不能使用requires来约束普通函数:
 
 \begin{cpp}
 void foo() requires std::numeric_limits<char>::is_signed // ERROR
@@ -180,25 +180,25 @@ void foo() requires std::numeric_limits<char>::is_signed // ERROR
 }
 \end{cpp}
 
-One example of a constraining member function inside the C++standard library is the conditional availability of begin() for const views.
+C++标准库中约束成员函数的一个例子是，const视图的begin()的条件可用性。
 
-\mySubsubsection{3.2.4}{Constraining Non-Type Template Parameters}
+\mySubsubsection{3.2.4}{约束非类型模板参数}
 
-It is not only types that you can constrain. You can also constrain values that are template parameters (non-type template parameters (NTTP)). For example:
+可以约束的不仅仅是类型，还可以约束作为模板参数的值(非类型模板参数(NTTP))。例如:
 
 \begin{cpp}
 template<int Val>
 concept LessThan10 = Val < 10;
 \end{cpp}
 
-Or more generic:
+或者更通用的情况:
 
 \begin{cpp}
 template<auto Val>
 concept LessThan10 = Val < 10;
 \end{cpp}
 
-This concept can be used as follows:
+这个概念可以如下使用:
 
 \begin{cpp}
 template<typename T, int Size>
@@ -208,7 +208,7 @@ class MyType {
 };
 \end{cpp}
 
-We will discuss more examples later.
+稍后我们将讨论更多的示例。
 
 
 

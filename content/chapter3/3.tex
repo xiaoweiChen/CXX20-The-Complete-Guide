@@ -1,30 +1,30 @@
 
 
-There are multiple reasons why using requirements as constraints can be useful:
+使用需求作为约束可能有用的原因有很多:
 
 \begin{itemize}
 \item
-Constraints help us to understand the restrictions on templates and to get more understandable error messages when requirements are broken.
+约束帮助我们理解模板上的限制，并在需求破坏时获得更容易理解的错误消息。
 
 \item
-Constraints can be used to disable generic code for cases where the code does not make sense:
+约束可以用于在代码没有意义的情况下禁用泛型代码:
 \begin{itemize}
 \item
-For some types, generic code might compile but not do the right thing.
+对于某些类型，泛型代码可能可以编译，但不能做正确的事情。
 
 \item
-We might have to fix overload resolution, which decides which operation to call if there are multiple valid options.
+可能必须修复重载解析，若有多个有效选项，重载解析将决定使用哪个操作。
 \end{itemize}
 
 \item
-Constraints can be used to overload or specialize generic code so that different code is compiled for different types.
+约束可用于重载或特化泛型代码，以便针对不同的类型编译不同的代码。
 \end{itemize}
 
-Let us take a closer look at these reasons by developing another example step by step. This way, we can also introduce a couple of additional details about constraints, requirements, and concepts.
+通过逐步开发另一个示例来进一步了解这些原因。这样，我们还可以引入一些关于约束、需求和概念的更多细节。
 
-\mySubsubsection{3.3.1}{Using Concepts to Understand Code and Error Messages}
+\mySubsubsection{3.3.1}{理解代码和错误消息}
 
-Assume we want to write generic code that inserts the value of an object into a collection. Thanks to templates, we can implement it once as generic code that is compiled for the types of passed objects once we know them:
+假设要编写将对象的值插入到集合中的泛型代码。多亏了模板，可以将其实现为泛型代码，当知道传递的对象类型，就会对其进行编译:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -34,22 +34,22 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-This code does not always compile. There is an implicit requirement for the types of the passed arguments: the call to push\_back() for the value of type T has to be supported for the container of type Coll.
+这段代码并不总是可以编译。对于传递的参数的类型有一个隐含的要求:对于类型为Coll的容器，必须支持对类型为T的值的push\_back()。
 
-You could also argue that this is a combination of multiple basic requirements:
+也可以认为这是多个基本需求的组合:
 
 \begin{itemize}
 \item
-Type Coll has to support push\_back().
+类型Coll必须支持push\_back()。
 
 \item
-There has to be a conversion from type T to the type of the elements of Coll.
+必须进行从类型T到Coll元素类型的转换。
 
 \item
-If the passed argument has the element type of Coll, that type has to support copying (because a new element is initialized with the passed value).
+若传递的实参具有元素类型Coll，则该类型必须支持复制(使用传递的值初始化新元素)。
 \end{itemize}
 
-If any of these requirements are broken, the code does not compile. For example:
+若这些要求中的任意一个被打破，代码将无法编译。例如:
 
 
 \begin{cpp}
@@ -66,7 +66,7 @@ add(aiVec, ai); // ERROR: cannot copy/move atomics
 \end{cpp}
 
 
-When compilation fails, error messages can be very clear, such as when the member push\_back() is not found on the top level of a template:
+当编译失败时，错误消息可能非常清楚，例如在模板的顶层没有找到成员push\_back():
 
 {\footnotesize
 \begin{shell}
@@ -79,7 +79,7 @@ prog.cpp:11:8: error: ’class std::set<int>’ has no member named ’push_back
 \end{shell}
 }
 
-However, generic error messages can also be very tough to read and understand. For example, when the compiler has to deal with the broken requirement that copying is not supported, the problem is detected in the deep darkness of the implementation of std::vector<>. We get between 40 and 90 lines of error messages where we have to look carefully for the broken requirement:
+然而，一般的错误消息也很难阅读和理解。例如，当编译器必须处理不支持复制的坏要求时，问题就会在std::vector<>实现的深处检测到。我们会得到40到90行错误信息，从而必须仔细寻找被破坏的需求:
 
 {\footnotesize
 \begin{shell}
@@ -97,7 +97,7 @@ prog.cpp:25:18:     required from here
 }
 
 
-You might think that you can improve the situation by defining and using a concept that checks whether you can perform the push\_back() call:
+你可能认为可以通过定义和使用一个检查，确定是否可以执行push\_back()调用的概念来改善这种情况:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -113,7 +113,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-The error message for not finding push\_back() might now be as follows:
+没有找到push\_back()的错误信息现在可能如下所示:
 
 {\scriptsize
 \begin{shell}
@@ -138,9 +138,9 @@ prog.cpp:9:16: note: the required expression ’c.push_back(v)’ is invalid
 \end{shell}
 }
 
-However, when passing atomics, the check for being copyable is still detected in the deep darkness of the code for std::vector<> (this time when the concept is checked, instead of when the code is compiled).
+然而，在传递原子类型时，仍然会在std::vector<>的代码深处检测可复制性检查(这一次是在检查概念时，而不是在编译代码时)。
 
-In that case, the situation improves when we specify the basic constraint for the use of push\_back() as a requirement instead:
+这种情况下，当指定使用push\_back()的基本约束作为要求时，情况会有所改善:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -151,9 +151,9 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-Here, we use the standard concept std::convertible\_to to require that the type of the passed argument T can be (implicitly or explicitly) converted to the element type of the collection.
+这里，使用标准概念std::convertible\_to来要求，(隐式或显式)将传递的实参T的类型转换为集合的元素类型。
 
-Now, if the requirement is broken, we can get an error message with the broken concept and the location where it is broken. For example[This is just one example of a possible message, not necessarily matching the situation of a specific compiler]:
+现在，若需求被破坏，就可以得到一条错误消息，其中包含被破坏的概念和位置。例如[这只是一种可能的消息例子，不一定与特定编译器的情况相匹配]:
 
 {\footnotesize
 \begin{shell}
@@ -177,13 +177,13 @@ prog.cpp:25:18: required from here
 \end{shell}
 }
 
-See rangessort.cpp for another example of algorithms that check the constraints of their parameters.
+参见rangessort.cpp中的另一个检查参数约束的算法示例。
 
-\mySubsubsection{3.3.2}{Using Concepts to Disable Generic Code}
+\mySubsubsection{3.3.2}{使用概念禁用泛型代码}
 
-Assume we want to provide a special implementation for an add() function template like the one introduced above. When dealing with floating-point values, something different or extra should happen.
+假设想为上面介绍的add()函数模板提供一个特殊的实现。在处理浮点值时，应该发生一些不同的或额外的事情。
 
-A naive approach might be to overload the function template for double:
+一种简单的方法可能是为double重载函数模板:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -200,7 +200,7 @@ void add(Coll& coll, double val) // for floating-point value types
 }
 \end{cpp}
 
-As expected, when we pass a double as a second argument, the second function is called; otherwise, the generic argument is used:
+正如预期的那样，当传递一个double类型的参数作为第二个参数时，第二个函数被调用;否则，使用泛型参数:
 
 \begin{cpp}
 std::vector<int> iVec;
@@ -210,30 +210,30 @@ std::vector<double> dVec;
 add(dVec, 0.7); // OK: calls 2nd add() for double
 \end{cpp}
 
-When passing a double, both function overloads match. The second overload is preferred because it is a perfect match for the second argument.
+当传递double类型时，两个函数重载匹配。首选第二个重载，因为其与第二个参数完美匹配。
 
-However, if we pass a float, we have the following effect:
+然而，若传递一个浮点数，可以有以下效果:
 
 \begin{cpp}
 float f = 0.7;
 add(dVec, f); // OOPS: calls 1st add() for T being float
 \end{cpp}
 
-The reason lies in the sometimes subtle details of overload resolution. Again, both functions could be called. Overload resolution has some general rules, such as:
+原因在于重载解析的一些微妙细节，这两个函数都可以调用。重载解析有一些通用规则，例如:
 
 \begin{itemize}
 \item
-Calls with no type conversion are preferred over calls having a type conversion.
+没有类型转换的调用优先于具有类型转换的调用。
 
 \item
-Calls of ordinary functions are preferred over calls of function templates.
+调用普通函数优于调用函数模板。
 \end{itemize}
 
-Here, however, overload resolution has to decide between a call with a type conversion and a call of a function template. By rule, in that case, the version with the template parameter is preferred.
+在这里，重载解析必须在调用类型转换和调用函数模板之间做出决定。按照规则，优先选择带有模板参数的版本。
 
-\mySamllsection{Fixing Overload Resolution}
+\mySamllsection{修复重载解析}
 
-The fix for the wrong overload resolution is pretty simple. Instead of declaring the second parameter with a specific type, we should just require that the value to be inserted has a floating-point type. For this, we can constrain the function template for floating-point values by using the new standard concept std::floating\_point:
+错误的重载解析的修复非常简单。不需要用特定类型声明第二个形参，只需要求要插入的值为浮点类型即可。为此，可以使用新的标准概念std::floating\_point来约束浮点值的函数模板:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -245,7 +245,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-Because we use a concept that applies to a single template parameter we can also use the shorthand notation:
+因为使用的概念只适用于单个模板形参，所以也可以使用速记表示法:
 
 \begin{cpp}
 template<typename Coll, std::floating_point T>
@@ -256,7 +256,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-Alternatively, we can use auto parameters:
+或者，可以使用auto参数:
 
 \begin{cpp}
 void add(auto& coll, const std::floating_point auto& val)
@@ -266,7 +266,7 @@ void add(auto& coll, const std::floating_point auto& val)
 }
 \end{cpp}
 
-For add(), we now have two function templates that can be called: one without and one with a specific requirement:
+对于add()，现在有两个可以调用的函数模板:一个不带特定要求，一个带特定要求:
 
 \begin{cpp}
 uirement:
@@ -284,7 +284,7 @@ void add(Coll& coll, const T& val) // for floating-point value types
 }
 \end{cpp}
 
-This is enough because overload resolution also prefers overloads or specializations that have constraints over those that have fewer or no constraints:
+这就足够了，因为重载解析也更喜欢有约束的重载或特化，而不是那些约束较少或没有约束的重载或特化:
 
 \begin{cpp}
 std::vector<int> iVec;
@@ -294,11 +294,11 @@ std::vector<double> dVec;
 add(dVec, 0.7); // OK: calls add() for floating-point types
 \end{cpp}
 
-\mySamllsection{Do Not Differ More Than Necessary}
+\mySamllsection{非必须，则相同}
 
-If two overloads or specializations have constraints, it is important that overload resolution can decide which one is better. To support this, the signatures should not differ more than necessary.
+若两个重载或特化都有约束，重载解析可以决定哪一个更好，这一点很重要。为了支持这一点，签名不应超过必要的差异。
 
-If the signatures differ too much, the more constrained overload might not be preferred. For example, if we declare the overload for floating-point values to take the argument by value, passing a floating-point value becomes ambiguous:
+若签名差异太大，则可能不适用更受约束的重载。例如，如声明浮点值的重载以按值接受实参，则传递浮点值会产生二义性:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -318,13 +318,13 @@ std::vector<double> dVec;
 add(dVec, 0.7); // ERROR: both templates match and no preference
 \end{cpp}
 
-The latter declaration is no longer a special case of the former declaration. We just have two different function templates that could both be called.
+后一项声明不再是前一项声明的特例。我们只有两个不同的函数模板，都可以调用。
 
-If you really want to have different signatures, you have to constrain the first function template not to be available for floating-point values.
+若确实希望使用不同的签名，则必须约束第一个函数模板不能用于浮点值。
 
-\mySamllsection{Restrictions on Narrowing}
+\mySamllsection{窄化限制}
 
-We have another interesting issue in this example: both function templates allow us to pass a double to add it into a collection of int:
+这个例子中还有一个有趣的问题:两个函数模板都允许我们传递一个double类型的值，将其添加到int类型的集合中:
 
 \begin{cpp}
 std::vector<int> iVec;
@@ -332,17 +332,17 @@ std::vector<int> iVec;
 add(iVec, 1.9); // OOPS: add 1
 \end{cpp}
 
-The reason is that we have implicit type conversions from double to int (due to being compatible with the programming language C). Such an implicit conversion where we might lose parts of the value is called narrowing. It means that the code above compiles and converts the value 1.9 to 1 before it is inserted.
+原因是我们有从double到int的隐式类型转换(由于与编程语言C兼容)，这种可能丢失部分值的隐式转换称为窄化。所以上面的代码在插入之前编译，会将值1.9转换为1。
 
-If you do not want to support narrowing, you have multiple options. One option is to disable type conversions completely by requiring that the passed value type matches the element type of the collection:
+若不希望支持窄化，可有多个选项。一种选择是通过要求传递的值类型与集合的元素类型匹配，来完全禁用类型转换:
 
 \begin{cpp}
 requires std::same_as<typename Coll::value_type, T>
 \end{cpp}
 
-However, this would also disable useful and safe type conversions.
+但是，这也会禁用有用和安全的类型转换。
 
-For that reason, it is better to define a concept that yields whether a type can be converted to another type without narrowing, which is possible in a short tricky requirement[Thanks to Giuseppe D’Angelo and Zhihao Yuan for the trick to check for narrowing conversions introduced in \url{http://wg21.link/p0870}.]:
+出于这个原因，最好定义一个概念来确定一个类型是否可以在不缩小的情况下转换为另一个类型，这在一个简短的棘手需求中是可能的[感谢Giuseppe D 'Angelo和Zhihao Yuan在\url{http://wg21.link/p0870}中介绍的检查窄化转换的技巧]:
 
 \begin{cpp}
 template<typename From, typename To>
@@ -354,7 +354,7 @@ concept ConvertsWithoutNarrowing =
 	};
 \end{cpp}
 
-We can then use this concept to formulate a corresponding constraint:
+然后，可以使用这个概念来制定相应的约束:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -365,9 +365,9 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-\mySamllsection{Subsuming Constraints}
+\mySamllsection{包含约束}
 
-It would probably be enough to define the concept for narrowing conversions above without requiring the concept std::convertible\_to, because the rest checks this implicitly:
+定义上面的窄化转换的概念可能就足够了，而不需要std::convertible\_to概念，因为剩下的部分会隐式地进行检查:
 
 \begin{cpp}
 template<typename From, typename To>
@@ -376,9 +376,9 @@ concept ConvertsWithoutNarrowing = requires (From&& x) {
 };
 \end{cpp}
 
-However, there is an important benefit if the concept ConvertsWithoutNarrowing also checks for the concept std::convertible\_to. In that case, the compiler can detect that ConvertsWithoutNarrowing is more constrained than std::convertible\_to. The terminology is that ConvertsWithoutNarrowing subsumes std::convertible\_to.
+但若ConvertsWithoutNarrowing概念也检查std::convertible\_to概念，则有一个重要的好处。这种情况下，编译器可以检测到ConvertsWithoutNarrowing比std::convertible\_to更受约束。术语是ConvertsWithoutNarrowing包含std::convertible\_to。
 
-That allows a programmer to do the following:
+这允许开发者做以下事情:
 
 \begin{cpp}
 emplate<typename F, typename T>
@@ -396,29 +396,29 @@ void foo(F, T)
 }
 \end{cpp}
 
-Without specifying that ConvertsWithoutNarrowing subsumes std::convertible\_to, the compiler would raise an ambiguity error here when calling foo() with two parameters that convert to each other without narrowing.
+若没有指定ConvertsWithoutNarrowing 包含std::convertible\_to，编译器在调用带有两个参数的foo()时将引发歧义错误，这两个参数相互转换而不进行窄化。
 
-In the same way, concepts can subsume other concepts, which means that they count as more specialized for overload resolution. In fact, the C++ standard concepts build a pretty complex subsumption graph.
+以同样的方式，概念可以包含其他概念，多以它们更特化地用于重载解析。事实上，C++标准概念构建了一个相当复杂的包含图。
 
-We will discuss details of subsumption later.
+稍后我们将讨论包含的细节。
 
-\mySubsubsection{3.3.3}{Using Requirements to Call Different Functions}
+\mySubsubsection{3.3.3}{使用需求调用不同的函数}
 
-Finally, we should make our add() function template more flexible:
+最后，我们应该让add()函数模板更灵活:
 
 \begin{itemize}
 \item
-We might also want to support collections that provide only insert() instead of push\_back() for inserting new elements.
+可能还希望支持只提供insert()而不是push\_back()来插入新元素的集合。
 
 \item
-We might want to support passing a collection (container or range) to insert multiple values.
+可能希望支持传递一个集合(容器或范围)来插入多个值。
 \end{itemize}
 
-Yes, you can argue that these are different functions and that they should have different names and if that works, it is often better to use different names. However, the C++ standard library is a good example of the benefits you can get if different APIs are harmonized. For example, you can use the same generic code to iterate over all containers, although internally, containers use very different ways to go to the next element and access its value.
+可以争辩说这些是不同的函数，应该有不同的名字，可以的话，通常使用不同的名字会更好。然而，C++标准库是一个很好的例子，说明如果协调不同的API。例如，可以使用相同的泛型代码遍历所有容器，尽管在内部，容器使用非常不同的方式转到下一个元素并访问其值。
 
-\mySamllsection{Using Concepts to Call Different Functions}
+\mySamllsection{使用概念调用不同的函数}
 
-Having just introduced concepts, the “obvious” approach might be to introduce a concept to find out whether a certain function call is supported:
+刚刚介绍了概念，“显而易见”的方法可能是引入一个概念来找出是否支持某个函数调用:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -427,7 +427,7 @@ concept SupportsPushBack = requires(Coll c, T v) {
 };
 \end{cpp}
 
-Note that we can also define a concept that needs only the collection as a template parameter:
+注意，我们也可以定义一个只需要集合作为模板形参的概念:
 
 \begin{cpp}
 template<typename Coll>
@@ -436,13 +436,13 @@ concept SupportsPushBack = requires(Coll coll, Coll::value_type val) {
 };
 \end{cpp}
 
-Note that we do not have to use typename here to use Coll::value\_type. Since C++20, typename is no longer required when it is clear by the context that a qualified member must be a type.
+注意，我们不必在这里使用typename来使用Coll::value\_type。从C++20开始，当上下文明确限定成员必须是类型时，不再需要typename。
 
-There are various other ways to declare this concept:
+还有各种其他方式来声明这个概念:
 
 \begin{itemize}
 \item
-You can use std::declval<>() to get a value of the element type:
+可以使用std::declval<>()来获取元素类型值:
 
 \begin{cpp}
 template<typename Coll>
@@ -451,14 +451,12 @@ concept SupportsPushBack = requires(Coll coll) {
 };
 \end{cpp}
 
-Here, you can see that the definition of concepts and requirements does not create code. It is an unevaluated context where we can use std::declval<>() for “assume we have an object of this type” and it does not matter whether we declare coll as a value or as a non-const reference.
+这里，可以看到概念和需求的定义并没有创建代码。它是一个未求值的上下文，可以使用std::declval<>()来表示“假设有一个这种类型的对象”，无论将coll声明为值，还是非const引用都无关紧要。
 
-Note that the \& is important here. Without \&, we would only require that we can insert an rvalue (such as a temporary object) using move semantics. With \&, we create an lvalue so that we require that push\_back() copies.
+注意，这里的\&很重要。若没有\&，只需要使用移动语义插入一个右值(比如一个临时对象)。对于\&，我们创建了一个左值，因此需要push\_back()进行复制。
 
 \item
-You could use std::ranges::range\_value\_t instead of the value\_type member:
-
-You can use std::declval<>() to get a value of the element type:
+您可以使用std::ranges::range\_value\_t来代替value\_type的成员:
 
 \begin{cpp}
 template<typename Coll>
@@ -467,11 +465,11 @@ concept SupportsPushBack = requires(Coll coll) {
 };
 \end{cpp}
 
-In general, using std::ranges::range\_value\_t<> makes code more generic when the element type of a collection is needed (e.g., it also works with raw array). However, because we require the member push\_back() here, also requiring the member value\_type does not hurt.
+通常，当需要集合的元素类型时，使用std::ranges::range\_value\_t<>使代码更具泛型(例如，也适用于原始数组)。但因为这里需要成员push\_back()，所以也需要成员的value\_type。
 
 \end{itemize}
 
-With the concept SupportPushBack for one parameter, we can provide two implementations:
+使用一个参数的SupportPushBack概念，这里可以提供两个实现:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -488,9 +486,9 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-In this case, we not need a named requirement SupportsInsert here because the add() with the additional requirement is more special, which means that overload resolution prefers it. However, there are only a few containers that support calling insert() with only one argument. To avoid problems with other overloads and calls of add(), we should probably better also have a constraint here.
+这种情况下，这里不需要命名需求SupportsInsert，因为带有附加需求的add()更特殊，所以重载解析更喜欢它。但只有少数容器支持只使用一个参数调用insert()，为了避免其他重载和add()调用的问题，最好在这里也有一个约束。
 
-Because we define the requirement as a concept, we can even use it as a type constraint for the template parameter:
+因为这里将需求定义为一个概念，甚至可以将它用作模板形参的类型约束:
 
 \begin{cpp}
 template<SupportsPushBack Coll, typename T>
@@ -500,7 +498,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-As a concept, we can also use it as a type constraint for auto as parameter types:
+作为一个概念，也可以将它用作auto作为参数类型的类型约束:
 
 \begin{cpp}
 void add(SupportsPushBack auto& coll, const auto& val)
@@ -515,9 +513,9 @@ void add(auto& coll, const auto& val)
 }
 \end{cpp}
 
-\mySamllsection{Concepts for if constexpr}
+\mySamllsection{if constexpr的概念}
 
-We can also use the concept SupportsPushBack directly in an if constexpr condition:
+我们也可以在if constexpr条件中直接使用SupportsPushBack这个概念:
 
 \begin{cpp}
 if constexpr (SupportsPushBack<decltype(coll)>) {
@@ -528,9 +526,9 @@ else {
 }
 \end{cpp}
 
-\mySamllsection{Combining requires with if constexpr}
+\mySamllsection{组合requires和if constexpr}
 
-We can even skip introducing a concept and pass the requires expression directly as a condition to the compile-time if:
+甚至可以跳过引入概念，直接将requires表达式作为条件传递给编译时if:
 
 \begin{cpp}
 if constexpr (requires { coll.push_back(val); }) {
@@ -541,11 +539,11 @@ else {
 }
 \end{cpp}
 
-This is a nice way to switch between two different function calls in generic code. It is especially recommended when introducing a concept is not worthwhile.
+这在泛型代码中切换两个不同函数调用的好方法。当引入一个不值得的概念时，特别建议这样做。
 
-\mySamllsection{Concepts versus Variable Templates}
+\mySamllsection{概念vs变量模板}
 
-You might wonder why using concepts is better than using a variable template of type bool (like type traits do) such as the following:
+你可能想知道，为什么使用概念比使用bool类型的变量模板更好(就像类型特性一样)，比如:
 
 \begin{cpp}
 template<typename T>
@@ -554,24 +552,24 @@ constexpr bool SupportsPushBack = requires(T coll) {
 };
 \end{cpp}
 
-Concepts have the following benefits:
+概念有以下好处:
 
 \begin{itemize}
 \item
-They subsume.
+可包含。
 
 \item
-They can be used as type constraints directly in front of template parameters or auto.
+可以直接用作模板参数或auto前面的类型约束。
 
 \item
-They can be used with a compile-time if when using ad-hoc requirements.
+若使用特殊需求，可以与编译时一起使用。
 \end{itemize}
 
-If you do not need any of these benefits, the question of whether to prefer the definition of a concept or a variable template of type bool becomes interesting and this is discussed later in detail.
+若不需要这些好处，那么选择概念定义还是bool类型的变量模板的问题就变得有趣了，稍后将详细讨论这个问题。
 
-\mySamllsection{Inserting Single and Multiple Values}
+\mySamllsection{插入单个和多个值}
 
-To provide an overload that deals with multiple values passed as one collection, we can simply add constraints for them. The standard concept std::ranges::input\_range can be used for that:
+为了提供处理作为一个集合传递的多个值的重载，可以简单地为它们添加约束。标准概念std::ranges::input\_range可用于此:
 
 \begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
@@ -587,9 +585,9 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-Again, as long as the overload has this as an additional constraint, these functions will be preferred.
+同样，只要重载将此作为附加约束，这些函数将是首选的。
 
-The concept std::ranges::input\_range is a concept introduced to deal with ranges, which are collections you can iterate over with begin() and end(). However, ranges are not required to have begin() and end() as member functions. Code that deals with ranges should therefore use the helpers std::ranges::begin() and std::ranges::end() that the ranges library provides:
+概念std::ranges::input\_range是一个用于处理范围的概念，范围是可以使用begin()和end()迭代的集合。但范围不需要将begin()和end()作为成员函数，所以处理范围的代码应该使用范围库提供的std::ranges::begin()和std::ranges::end():
 
 \begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
@@ -604,11 +602,11 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-These helpers are function objects so that using them avoids ADL problems.
+这些帮助程序是函数对象，因此使用它们可以避免ADL问题。
 
-\mySamllsection{Dealing with Multiple Constraints}
+\mySamllsection{处理多重约束}
 
-By bringing together all useful concepts and requirements, we could place them all in one function at different locations.
+通过汇集所有有用的概念和需求，可以将它们放在不同位置的一个功能中。
 
 \begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
@@ -621,9 +619,9 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-To disable narrowing conversions, we use std::ranges::range\_value\_t to pass the element type of the ranges to ConvertsWithoutNarrowing. std::ranges::range\_value\_t is another ranges utility for getting the element type of ranges when iterating over them.
+要禁用窄化转换，可以使用std::ranges::range\_value\_t将范围的元素类型传递给ConvertsWithoutNarrowing。std::ranges::range\_value\_t是另一个range工具，用于在迭代范围时获取元素的类型。
 
-We could also formulate them together in the requires clause:
+也可以在requires从句中将它们组合在一起:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -638,11 +636,11 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-Both ways of declaring the function template are equivalent.
+声明函数模板的两种方式是等价的。
 
-\mySubsubsection{3.3.4}{The Example as a Whole}
+\mySubsubsection{3.3.4}{完整的例子}
 
-The previous subsections provided a huge amount of flexibility. So, let us bring all options together to have at least one full example as a whole:
+前面的小节提供了很大的灵活性，让我们把所有的选项放在一起，至少有一个完整的例子:
 
 \filename{lang/add.cpp}
 
@@ -727,17 +725,17 @@ int main()
 }
 \end{cpp}
 
-As you can see, I decided to use the concept SupportsPushBack for one template parameter inside the various function templates with if constexpr.
+如您所见，我决定使用概念SupportsPushBack作为各种函数模板中的一个模板参数，并使用if constexpr。
 
-\mySubsubsection{3.3.5}{Former Workarounds}
+\mySubsubsection{3.3.5}{以前的解决方法}
 
-Constraining templates was already possible before C++20. However, the approaches for doing this were often not easy to use and could provide significant drawbacks.
+C++20前，约束模板已经成为可能。但这样做的方法通常不容易使用，并且可能存在明显的缺点。
 
 \mySamllsection{SFINAE}
 
-The major approach for disabling the availability of templates before C++20 was SFINAE. The term “SFINAE” (pronounced like sfee-nay) stands for “substitution failure is not an error” and means the rule that we simply ignore generic code if its declaration is not well-formed instead of raising a compile-time error.
+C++20前禁用模板可用性的主要方法是SFINAE。术语“SFINAE”(发音类似于sfee-nay)代表“替换失败不是错误”，若泛型代码的声明格式不佳，就忽略它，而不是引发编译时错误。
 
-For example, to switch between push\_back() and insert(), we could declare the function templates before C++20 as follows:
+例如，要在push\_back()和insert()之间切换，可以在C++20之前的代码中声明如下的函数模板:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -753,17 +751,17 @@ auto add(Coll& coll, const T& val) -> decltype(coll.insert(val))
 }
 \end{cpp}
 
-Because we make the call to push\_back() here part of the first template declaration, this template is ignored if push\_back() is not supported. The corresponding declaration is necessary in the second template for insert() (overload resolution does ignore return types and would complain if both function templates can be used).
+因为我们把这里的push\_back()调用作为第一个模板声明的一部分，所以若不支持push\_back()，则忽略此模板。对应的声明在insert()的第二个模板中是必需的(重载解析不会忽略返回类型，若两个函数模板都可以使用，则会报错)。
 
-However, that is a very subtle way to place a requirement and programmers might overlook it easily.
+然而，这是放置需求的一种非常微妙的方式，开发者可能很容易忽略它。
 
 \mySamllsection{std::enable\_if<>}
 
-For more complicated cases of disabling generic code, since C++11, the C++ standard library provides std::enable\_if<>.
+对于更复杂的禁用泛型代码的情况，从C++11开始，C++标准库提供了std::enable\_if<>。
 
-This is a type trait that takes a Boolean condition that yields invalid code if false. By using the std::enable\_if<> somewhere inside a declaration, this could also “SFINAE out” generic code.
+这是一个接受布尔条件的类型特性，若为false则产生无效代码。通过在声明中的某个地方使用std::enable\_if<>，这也可以“SFINAE out”泛型代码。
 
-For example, you could use the std::enable\_if<> type trait to exclude types from calling the add() function template in the following way:
+例如，可以使用std::enable\_if<>类型特性，以以下方式排除调用add()函数模板的类型:
 
 \begin{cpp}
 // disable the template for floating-point values:
@@ -775,11 +773,11 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-The trick is to insert an additional template parameter to be able to use the trait std::enable\_if<>. The trait yields void if it does not disable the template (you can specify that it yields another type as an optional second template parameter).
+诀窍是插入一个额外的模板参数，以便能够使用trait std::enable\_if<>。若特性没有禁用模板，将产生void(可以指定它产生另一种类型，作为可选的第二个模板参数)。
 
-Code like this is also hard to write and read and has subtle drawbacks. For example, to provide another overload of add() with a different constraint, you would need yet another template parameter. Otherwise, you would have two different overloads of the same function because for the compiler std::enable\_if<> does not change the signature. In addition, you have to take care that for each call exactly one of the different overloads is available.
+这样的代码也很难编写和阅读，并且有一些缺点。例如，要用不同的约束提供add()的另一个重载，还需要另一个模板参数。否则，将对同一个函数进行两次不同的重载，因为对于编译器std::enable\_if<>不会更改签名。此外，必须注意，对于每个调用，只有一个不同的重载是可用的。
 
-Concepts provide a far more readable way of formulating constraints. This includes that overloads of a template with different constraints do not violate the one definition rule as long as only one constraint is met and that even multiple constraints can be met provided one constraint subsumes another constraint.
+概念提供了一种更具可读性的表述约束的方式。包括只要只满足一个约束，具有不同约束的模板的重载就不会违反一个定义规则，只要一个约束包含另一个约束，甚至可以满足多个约束。
 
 
 

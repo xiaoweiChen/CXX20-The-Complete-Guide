@@ -1,6 +1,6 @@
 
 
-Consider the following function template that returns the maximum of two values:
+考虑下面的函数模板，它返回两个值中的最大值:
 
 \begin{cpp}
 template<typename T>
@@ -9,16 +9,16 @@ T maxValue(T a, T b) {
 }
 \end{cpp}
 
-This function template can be called for two arguments that have the same type, provided the operations performed for the parameters (comparing with operator< and copying) are valid.
+此函数模板可以为具有相同类型的两个实参调用，前提是对形参执行的操作(与operator<和复制进行比较)有效。
 
-However, passing two pointers would compare their addresses instead of the values they refer to.
+然而，传递两个指针将比较它们的地址，而不是其所引用的值。
 
-\mySubsubsection{3.1.1}{Improving the Template Step by Step}
+\mySubsubsection{3.1.1}{逐步完善模板}
 
-\mySamllsection{Using a requires Clause}
+\mySamllsection{使用requires子句}
 
 
-To fix that, we can equip the template with a constraint so that it is not available if raw pointers are passed:
+为了解决这个问题，可以为模板配置一个约束，这样在传递原始指针时就不可用了:
 
 \begin{cpp}
 template<typename T>
@@ -29,9 +29,9 @@ T maxValue(T a, T b)
 }
 \end{cpp}
 
-Here, the constraint is formulated in a requires clause, which is introduced with the keyword requires (there are other ways to formulate constraints).
+这里，约束是在requires子句中表述的，该子句是通过关键字requires引入的(还有其他方式来表述约束)。
 
-To specify the constraint that the template cannot be used for raw pointers, we use the standard type trait std::is\_pointer\_v<> (which yields the value member of the standard type trait std::is\_pointer<>)[Type traits were introduced as standard type functions with C++11 and the ability to call them with an \_v suffix was introduced with C++17.]. With this constraint, we can no longer use the function template for raw pointers:
+为了指定模板不能用于原始指针的约束，可以使用标准类型特征std::is\_pointer\_v<>(产生标准类型特征std::is\_pointer<>的值成员)[类型特征是在C++11中作为标准类型函数引入的，在C++17中引入了以\_v后缀的使用方式]。有了这个约束，就不能再为原始指针使用函数模板了:
 
 \begin{cpp}
 int x = 42;
@@ -40,20 +40,20 @@ std::cout << maxValue(x, y) << '\n'; // OK: maximum value of ints
 std::cout << maxValue(&x, &y) << '\n'; // ERROR: constraint not met
 \end{cpp}
 
-The requirement is a compile-time check and has no impact on the performance of the compiled code. It merely means that the template cannot be used for raw pointers. When raw pointers are passed, the compiler behaves as if the template were not there.
+该要求是编译时检查，对编译后代码的性能没有影响。所以模板不能用于原始指针，当传递原始指针时，编译器的行为就好像模板不存在一样。
 
-\mySamllsection{Defining and Using a concept}
+\mySamllsection{定义和使用概念}
 
-Probably, we will need a constraint for pointers more than once. For this reason, we can introduce a concept for the constraint:
+可能，我们将不止一次地需要指针约束，所以可以为约束引入一个概念:
 
 \begin{cpp}
 template<typename T>
 concept IsPointer = std::is_pointer_v<T>;
 \end{cpp}
 
-A concept is a template that introduces a name for one or more requirements that apply to the passed template parameters so that we can use these requirements as constraints. After the equal sign (you cannot use braces here), we have to specify the requirements as a Boolean expression that is evaluated at compile time. In this case, we require that the template argument used to specialize IsPointer<> has to be a raw pointer.
+概念是一个模板，应用于传递的模板参数的一个或多个需求引入一个名称，以便可以将这些需求用作约束。在等号之后(这里不能使用大括号)，必须将需求指定为在编译时求值的布尔表达式。这种情况下，我们要求用于特化IsPointer<>的模板实参必须是一个裸指针。
 
-We can use this concept to constrain the maxValue() template as follows:
+我们可以使用这个概念来约束maxValue()模板，如下所示:
 
 \begin{cpp}
 template<typename T>
@@ -64,9 +64,9 @@ T maxValue(T a, T b)
 }
 \end{cpp}
 
-\mySamllsection{Overloading with Concepts}
+\mySamllsection{重载概念}
 
-By using constraints and concepts, we can even overload the maxValue() template to have one implementation for pointers and one for other types:
+通过使用约束和概念，甚至可以重载maxValue()模板，为指针和其他类型分别提供一个实现:
 
 \begin{cpp}
 template<typename T>
@@ -84,9 +84,9 @@ auto maxValue(T a, T b) // maxValue() for pointers
 }
 \end{cpp}
 
-Note that requires clauses that just constrain a template with a concept (or multiple concepts combined with \&\&) no longer need parentheses. A negated concept always needs parentheses.
+注意，仅用一个概念(或多个概念与\&\&组合)约束模板的requires子句不再需要括号，否定的概念总是需要括号。
 
-We now have two function templates with the same name, but only one of them is available for each type:
+现在有了两个同名的函数模板，但每种类型只能使用其中一个:
 
 \begin{cpp}
 int x = 42;
@@ -95,9 +95,9 @@ std::cout << maxValue(x, y) << '\n'; // calls maxValue() for non-pointers
 std::cout << maxValue(&x, &y) << '\n'; // calls maxValue() for pointers
 \end{cpp}
 
-Because the implementation for pointers delegates the computations of the return value to the objects the pointers refer to, the second call uses both maxValue() templates. When passing pointers to int, we instantiate the template for pointers with T as int*, and the basic maxValue() template that is for nonpointers with T as int.
+因为指针的实现将返回值的计算委托给指针所引用的对象，所以第二次调用同时使用了maxValue()模板。将指针传递给int时，实例化T为int*的指针模板，以及将T为int的非指针基本模板maxValue()。
 
-This even works recursively now. We can ask for the maximum value of a pointer to a pointer to an int:
+现在它甚至可以递归地工作，可以请求指向int类型指针的指针的最大值:
 
 \begin{cpp}
 int* xp = &x;
@@ -105,9 +105,9 @@ int* yp = &y;
 std::cout << maxValue(&xp, &yp) << '\n'; // calls maxValue() for int**
 \end{cpp}
 
-\mySamllsection{Overload Resolution with Concepts}
+\mySamllsection{使用概念解析的重载}
 
-Overload resolution considers templates with constraints as more specialized than templates without constraints. Therefore, it is enough to constrain the implementation only for pointers:
+重载解析认为有约束的模板比没有约束的模板更特化，所以只对指针约束实现就足够了:
 
 \begin{cpp}
 template<typename T>
@@ -124,13 +124,13 @@ auto maxValue(T a, T b) // maxValue() for pointers (higher priority)
 }
 \end{cpp}
 
-However, be careful: overloading once using references and once using non-references might cause ambiguities.
+但要小心:重载一旦使用引用和使用非引用可能引起歧义。
 
-By using concepts, we can even prefer some constraints over others. However, this requires the use of concepts that subsume other concepts.
+通过使用概念，甚至可以偏爱某些约束，但这需要使用包含其他概念的概念。
 
-\mySamllsection{Type Constraints}
+\mySamllsection{类型约束}
 
-If a constraint is a single concept that is applied to a parameter, there are ways to shortcut the specification of the constraint. First, you can specify it directly as a type constraint when declaring the template parameter:
+若约束是应用于参数的单个概念，则有几种方法可以简化约束的说明。首先，可以在声明模板形参时直接将其指定为类型约束:
 
 \begin{cpp}
 template<IsPointer T> // only for pointers
@@ -140,7 +140,7 @@ auto maxValue(T a, T b)
 }
 \end{cpp}
 
-In addition, you can use the concept as a type constraint when declaring parameters with auto:
+此外，在使用auto声明参数时，可以将该概念用作类型约束:
 
 \begin{cpp}
 auto maxValue(IsPointer auto a, IsPointer auto b)
@@ -149,7 +149,7 @@ auto maxValue(IsPointer auto a, IsPointer auto b)
 }
 \end{cpp}
 
-This also works for parameters passed by reference:
+这也适用于通过引用传递的参数:
 
 \begin{cpp}
 auto maxValue3(const IsPointer auto& a, const IsPointer auto& b)
@@ -158,9 +158,9 @@ auto maxValue3(const IsPointer auto& a, const IsPointer auto& b)
 }
 \end{cpp}
 
-Note that by constraining both parameters directly, we changed the specification of the template: we no longer require that a and b have to have the same type. We require only that both are pointer-like objects of an arbitrary type.
+注意，通过直接约束这两个形参，我们改变了模板的规范:不再要求a和b必须具有相同的类型。只要求两者都是任意类型的类指针对象。
 
-When using the template syntax, the equivalent code looks as follows:
+当使用模板语法时，等效代码如下所示:
 
 \begin{cpp}
 template<IsPointer T1, IsPointer T2> // only for pointers
@@ -170,7 +170,7 @@ auto maxValue(T1 a, T2 b)
 }
 \end{cpp}
 
-We should probably also allow different types for the basic function template that compares the values. One way to do that is to specify two template parameters:
+我们可能还应该允许比较值的基本函数模板使用不同的类型。一种方法是指定两个模板参数:
 
 \begin{cpp}
 template<typename T1, typename T2>
@@ -180,7 +180,7 @@ auto maxValue(T1 a, T2 b) // maxValue() for values
 }
 \end{cpp}
 
-The other option would be to also use auto parameters:
+另一种选择是使用auto参数:
 
 \begin{cpp}
 auto maxValue(auto a, auto b) // maxValue() for values
@@ -189,11 +189,11 @@ auto maxValue(auto a, auto b) // maxValue() for values
 }
 \end{cpp}
 
-We could now pass a pointer to an int and a pointer to a double.
+现在可以传递一个指向整型类型的指针和一个指向双精度类型的指针。
 
-\mySamllsection{Trailing requires Clauses}
+\mySamllsection{尾接requires子句}
 
-Consider the pointer version of maxValue():
+maxValue()的指针版本:
 
 \begin{cpp}
 auto maxValue(IsPointer auto a, IsPointer auto b)
@@ -202,11 +202,11 @@ auto maxValue(IsPointer auto a, IsPointer auto b)
 }
 \end{cpp}
 
-There is still an implicit requirement that is not obvious: after dereferencing, the values have to be comparable.
+还有一个不明显的隐含要求:在解引用之后，值必须可比较。
 
-Compilers detect that requirement when (recursively) instantiating the maxValue() templates. However, the error message might be a problem because the error occurs late and the requirement is not visible in the declaration of maxValue() for pointers.
+编译器在(递归地)实例化maxValue()模板时检测到该需求。但错误消息可能是一个问题，因为错误发生较晚，并且在指针的maxValue()声明中该要求不可见。
 
-To let the pointer version directly require in its declaration that the values the pointers point to have to be comparable, we can add another constraint to the function:
+为了让指针版本在声明中直接要求指针所指向的值必须具有可比性，可以在函数中添加另一个约束:
 
 \begin{cpp}
 auto maxValue(IsPointer auto a, IsPointer auto b)
@@ -216,11 +216,11 @@ requires IsComparableWith<decltype(*a), decltype(*b)>
 }
 \end{cpp}
 
-Here, we use a trailing requires clause, which can be specified after the parameter list. It has the benefit that it can use the name of a parameter or combine even multiple parameter names to formulate constraints.
+这里，我们使用后面的requires子句，可以在参数列表之后指定。好处是可以使用一个参数的名称，甚至可以组合多个参数名称来制定约束。
 
-\mySamllsection{Standard Concepts}
+\mySamllsection{标准概念}
 
-In the previous example, we did not define the concept IsComparableWith. We could do that using a requires expression (which we introduce in a moment); however, we could also use a concept of the C++ standard library, For example, we could declare the following:
+前面的例子中，我们没有定义IsComparableWith这个概念。可以使用require表达式(稍后会介绍)，但也可以使用C++标准库的概念。例如，如下声明:
 
 \begin{cpp}
 auto maxValue(IsPointer auto a, IsPointer auto b)
@@ -230,28 +230,28 @@ requires std::totally_ordered_with<decltype(*a), decltype(*b)>
 }
 \end{cpp}
 
-The concept std::totally\_ordered\_with takes two template parameters to check whether the values of the passed types are comparable with the operators ==, !=, <, <=, >, and >=.
+概念std::totally\_ordered\_with接受两个模板形参，用于检查传递的类型的值是否与操作符==、!=、<、<=、>和>=可比较。
 
-The standard library has many standard concepts for common constraints. They are provided in the namespace std (sometimes a subnamespace is used).
+标准库为常见约束提供了许多标准概念，它们在命名空间std中提供(有时使用子命名空间)。
 
-For example, we could also use the concept std::three\_way\_comparable\_with, which in addition requires that the new operator <=> (which gives the concept the name) is supported. To check support for comparisons of two objects of the same type, we can use the concept std::totally\_ordered.
+例如，还可以使用概念std::three\_way\_comparable\_with，这还要求支持操作符<=>(为概念提供了名称)。要检查是否支持对相同类型的两个对象进行比较，可以使用std::totally\_ordered这个概念。
 
-\mySamllsection{requires Expressions}
+\mySamllsection{requires表达式}
 
-So far, the maxValue() templates do not work for pointer-like types that are not raw pointers, such as smart pointers. If the code should also compile for those types, we should better define that pointers are objects for which we can call operator*.
+目前为止，maxValue()模板不适用于非原始指针的类指针类型，例如智能指针。若代码也要为这些类型编译，最好将指针定义为可以调用operator*的对象。
 
-Such a requirement is easy to specify since C++20:
+C++20起，这样的需求很容易指定:
 
 \begin{cpp}
 template<typename T>
 concept IsPointer = requires(T p) { *p; }; // expression *p has to be well-formed
 \end{cpp}
 
-Instead of using the type trait for raw pointers, the concept formulates a simple requirement: the expression *p has to be valid for an object p of the passed type T.
+这个概念没有对原始指针使用类型特性，而是提出了一个简单的要求:表达式*p必须对类型T的对象p有效。
 
-Here, we are using the requires keyword again to introduce a requires expression, which can define one or more requirements for types and parameters. By declaring a parameter p of type T, we can simply specify which operations for such an object have to be supported.
+这里，再次使用requires关键字来引入一个requires表达式，其可以定义类型和参数的一个或多个需求。通过声明类型为T的形参p，就可以简单地指定必须支持这种对象的哪些操作。
 
-We can also require multiple operations, type members, and that expressions yield constrained types. For example:
+我们还可以要求多个操作、类型成员以及表达式产生约束类型。例如:
 
 \begin{cpp}
 template<typename T>
@@ -262,26 +262,26 @@ concept IsPointer = requires(T p) {
 };
 \end{cpp}
 
-We specify three requirements, which all apply to a parameter p of the type T that we define this concept for:
+这里指定了三个要求，都适用于定义这个概念的类型，为T的参数p:
 
 \begin{itemize}
 \item
-The type has to support the operator *.
+该类型必须支持操作符*。
 
 \item
-The type has to support the operator <, which has to yield type bool.
+该类型必须支持<操作符，该操作符必须产生bool类型。
 
 \item
-Objects of that type have to be comparable with nullptr.
+该类型的对象必须与nullptr比较。
 \end{itemize}
 
-Note that we do not need two parameters of type T to check whether < can be called. The runtime value does not matter. However, note that there are some restrictions for how to specify what an expression yields (e.g., you cannot specify just bool without std::same\_as<> there).
+注意，不需要两个T类型的形参来检查是否可以调用<，运行时值无关紧要。但请注意，对于如何指定表达式产生的结果有一些限制(例如，不能只指定bool而，不指定std::same\_as<>)。
 
-Note also that we do not require p to be a pointer that is equal to nullptr here. We require only that we can compare p with nullptr. However, that rules out iterators, because in general, they cannot be compared with nullptr (except when they happen to be implemented as raw pointers, which, for example, is typically the case for type std::array<>).
+还需要注意的是，这里不要求p是一个等于nullptr的指针，只要求可以将p与nullptr进行比较。但这就排除了迭代器，因为一般来说，它们不能与nullptr进行比较(除非碰巧实现为原始指针，例如std::array<>类型通常就是这种情况)。
 
-Again, this is a compile-time constraint that has no impact on the generated code; we only decide for which types the code compiles. Therefore, it does not matter whether we declare the parameter p as a value or as a reference.
+同样，这是一个编译时约束，对生成的代码没有影响，我们只决定代码编译哪种类型。因此，将形参p声明为值还是引用都无关紧要。
 
-You could also use the requires expression as an ad-hoc constraint directly in the requires clause (which looks a bit funny but makes total sense once you understand the difference between a requires clause and a requires expression and that both need the keyword requires):
+也可以直接在requires子句中使用requires表达式作为临时约束(这看起来有点滑稽，但当你理解了requires子句和requires表达式之间的区别，并且两者都需要关键字requires，就有意义了):
 
 \begin{cpp}
 template<typename T>
@@ -292,9 +292,9 @@ auto maxValue(T a, T b)
 }
 \end{cpp}
 
-\mySamllsection{A Complete Example with Concepts}
+\mySamllsection{一个使用概念的完整例子}
 
-We have now introduced everything necessary to look at a complete example program for concepts that computes the maximum value for plain values and pointer-like objects:
+现在，我们已经介绍了所有必要的内容，以查看一个完整的示例程序，用于计算普通值和指针类对象的最大值:
 
 \filename{lang/maxvalue.cpp}
 
@@ -336,7 +336,7 @@ int main()
 }
 \end{cpp}
 
-Note that we cannot use maxValue() to check for the maximum of two iterator values:
+注意，不能使用maxValue()来检查两个迭代器值的最大值:
 
 \begin{cpp}
 std::vector coll{0, 8, 15, 11, 47};
@@ -347,7 +347,7 @@ if (pos != coll.end()) {
 }
 \end{cpp}
 
-The reason is that we require the parameters to be comparable with nullptr, which is not required to be supported by iterators. Whether or not this is what you want is a design question. However, this example demonstrates that it is important to think carefully about the definition of general concepts.
+原因是我们要求形参与nullptr可比较，而迭代器不需要支持nullptr。这是否是一个设计问题？所以，这个例子表明，仔细考虑一般概念的定义非常重要。
 
 
 
