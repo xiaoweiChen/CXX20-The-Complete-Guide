@@ -1,8 +1,8 @@
-To specify requirements for generic parameters you need constraints, which are used at compile time to decide whether to instantiate and compile a template or not.
+要指定对泛型参数的需求，需要约束，这些约束在编译时用于决定是否实例化和编译模板。
 
-You can constrain function templates, class templates, variable templates, and alias templates.
+可以约束函数模板、类模板、变量模板和别名模板。
 
-An ordinary constraint is usually specified by using a requires clause. For example:
+普通的约束通常使用requires子句来指定。例如:
 
 \begin{cpp}
 template<typename T>
@@ -11,7 +11,7 @@ requires MyConcept<T>
 ...
 \end{cpp}
 
-In front of a template parameter or auto you can also use a concept as a type constraint directly:
+在模板参数或auto前面，也可以直接使用一个概念作为类型约束:
 
 \begin{cpp}
 template<MyConcept T>
@@ -19,7 +19,7 @@ void foo(const T& arg)
 ...
 \end{cpp}
 
-Alternatively:
+或者:
 
 \begin{cpp}
 void foo(const MyConcept auto& arg)

@@ -1,22 +1,21 @@
-A requires clause uses the keyword requires with a compile-time Boolean expression to restrict the availability of the template. The Boolean expression can be:
+requires子句使用关键字requires和编译时布尔表达式来限制模板的可用性。布尔表达式可以是:
 
 \begin{itemize}
 \item
-An ad-hoc Boolean compile-time expression
+特别的布尔编译时表达式
 
 \item
-A concept
+一个概念
 
 \item
-A requires expression
+一个requires表达式
 \end{itemize}
 
-All constraints can also be used wherever a Boolean expression can be used (especially as an if constexpr condition).
+可以使用布尔表达式的地方都可以使用有约束(特别是以if constexpr作为条件的)。
 
+\mySubsubsection{4.2.1}{在requires字句中使用\&\&和||}
 
-\mySubsubsection{4.2.1}{Using \&\& and || in requires Clauses}
-
-To combine multiple constraints in requires clauses, we can use the operator \&\&. For example:
+要在requires子句中组合多个约束，可以使用运算符\&\&。例如:
 
 \begin{cpp}
 template<typename T>
@@ -28,9 +27,9 @@ void foo(T x) {
 }
 \end{cpp}
 
-The order of the constraints does not matter.
+约束的顺序无关紧要。
 
-We can also express “alternative” constraints using the operator ||. For example:
+还可以使用运算符||表示“可选”约束。例如:
 
 \begin{cpp}
 template<typename T>
@@ -38,9 +37,9 @@ requires std::integral<T> || std::floating_point<T>
 T power(T b, T p);
 \end{cpp}
 
-Specifying alternative constraints is rarely necessary and should not be done casually because excessive use of the operator || in requires clauses may potentially tax compilation resources (i.e., make compilation noticeably slower).
+很少需要指定可选约束，也不应该随意指定，因为在requires子句中过度使用运算符||可能会增加编译资源的负担(使编译明显变慢)。
 
-A single constraint can also involve multiple template parameters. That way, constraints can impose a relationship between multiple types (or values). For example:
+单个约束还可以涉及多个模板参数，约束可以在多个类型(或值)之间施加影响。例如:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -50,7 +49,7 @@ auto f(T x, U y) {
 }
 \end{cpp}
 
-The operators \&\& and || are the only operators you can use to combine multiple constraints without having to use parentheses. For everything else, use parentheses (which formally pass an ad-hoc Boolean expression to the requires clause).
+操作符\&\&和||是唯一可以用来组合多个约束而不必使用括号的操作符。对于其他所有内容，使用括号(正式地将一个特殊的布尔表达式传递给requires子句)。
 
 
 

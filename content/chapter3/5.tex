@@ -1,51 +1,47 @@
 
-Let us look at some guidelines for how to use concepts. Note that concepts are new and we are still learning how to use them best. In addition, improved support for concepts might change some guidelines over time.
+现在，看看如何使用概念的一些指导方针。请注意，我们仍在学习如何最好地使用概念。此外，随着时间的推移，对概念的改进支持可能会改变一些指导方针。
 
-\mySubsubsection{3.5.1}{Concepts Should Group Requirements}
+\mySubsubsection{3.5.1}{概念应该分组}
 
+为类型的每个属性或功能引入一个概念肯定是过于细粒度了，所以我们有太多编译器必须处理的概念，并且都必须将其指定为约束。
 
-Introducing a concept for each attribute or functionality of types is certainly too fine-grained. As a consequence, we would get far too many concepts that a compiler has to deal with and that we would all have to specify as constraints.
+因此，应该提供常见和典型方面的概念，以区分不同类别的需求或类型。然而，也有一些极端情况。
 
-Therefore, concepts should provide common and typical aspects that separate different categories of requirements or types. However, there are corner cases.
+C++标准库提供了一个很好的设计示例，可以遵循这种方法。提供的大多数概念都用于将类型分类，如范围、迭代器、函数等作为一个整体。然而，为了支持包容并确保概念的一致性，提供了几个基本概念(例如std::movable)。
 
-The C++ standard library provides a good example of a design that might follow this approach. Most concepts are provided to categorize types such as ranges, iterators, functions, and so on as a whole. However, to support subsumption and ensure that concepts are consistent, several basic concepts (such as std::movable) are provided.
+结果是一个相当复杂的包含图。描述C++标准概念的那一章，将对概念进行分组。
 
-The consequence is a pretty complex subsumption graph. The chapter that describes the C++ standard concepts groups the concepts accordingly.
+\mySubsubsection{3.5.2}{小心定义概念}
 
-\mySubsubsection{3.5.2}{Define Concepts with Care}
+概念包含，这意味着一个概念可以是另一个概念的子集，因此在重载解析中更受约束的概念是首选。
 
-Concepts subsume, which means that a concept can be a subset of another concept, so that in overload resolution the more constrained concept is preferred.
+然而，需求和约束可以用不同的方式定义。对于编译器来说，找出一组需求是否是另一组需求的子集可能并不容易。
 
-However, requirements and constraints can be defined in various ways. For a compiler, it might not be easy to find out whether a set of requirements is a subset of another set of requirements.
+例如，若两个模板参数的概念是可交换的(因此两个参数的顺序不重要)，则需要仔细设计概念。有关详细信息和示例，请参阅如何定义概念std::same\_as的讨论。
 
-For example, when a concept for two template parameters is commutative (so that the order of two parameters should not matter), a concept needs careful design. For details and an example, see the discussion of how the concept std::same\_as is defined.
+\mySubsubsection{3.5.3}{概念与类型特征和布尔表达式}
 
-\mySubsubsection{3.5.3}{Concepts versus Type Traits and Boolean Expressions}
+概念不仅仅是在编译时计算布尔值结果的表达式。与类型特征和其他编译时表达式相比，读者们通常应该更喜欢使用它们。
 
-Concepts are more than just expressions that evaluate Boolean results at compile time. You should usually prefer them over type traits and other compile-time expressions.
-
-However, concepts have a couple of benefits:
+不过，概念有几个好处:
 
 \begin{itemize}
 \item
-They subsume.
+互包含。
 
 \item
-They can be used as type constraints directly in front of template parameters or auto.
+可以直接用作模板参数或auto前面的类型约束。
 
 \item
-They can be used with the compile-time if (if constexpr) as introduced before.
+可以与前面介绍的编译时if(if constexpr)一起使用。
 \end{itemize}
 
-\mySamllsection{Benefit From Subsumption}
+\mySamllsection{从包含中获益}
 
 
-The main benefit of concepts is that they subsume. Type traits do not subsume.
+概念的主要好处是互包含，而类型特征不可互包含。
 
-Consider the following example, where we overload a function foo() with two requirements defined as
-
-
-\mySamllsection{type traits:}
+考虑下面的例子，用定义为类型特性的两个需求重载函数foo():
 
 \begin{cpp}
 template<typename T, typename U>
@@ -65,9 +61,9 @@ void foo(T, U)
 foo(1, 2); // ERROR: ambiguity: both requirements are true
 \end{cpp}
 
-The problem is that if both requirements evaluate to true, both overloads fit and there is no rule that one of them has priority over the other. Therefore, the compiler stops compiling with an ambiguity error.
+问题是，若两个需求都求值为true，则两个重载都适合，并且没有规则表明其中一个优先于另一个。因此，编译器将停止编译，并出现歧义错误。
 
-If we use the corresponding concepts instead, the compiler finds out that the second requirement is a specialization and prefers it if both requirements are met:
+若使用相应的概念，编译器会发现第二个需求是一种特化，若两个需求都满足，则更倾向于使用它:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -87,11 +83,11 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-\mySamllsection{Benefit From Using Concepts with if constexpr}
+\mySamllsection{从if constexpr概念中获益}
 
-C++17 introduced a compile-time if that allows us to switch between code depending on certain compiletime conditions.
+C++17引入了编译时if，允许根据特定的编译时条件切换代码。
 
-For example (as introduced before):
+例如(如前所述):
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -104,9 +100,9 @@ void add(Coll& coll, const T& val) // for floating-point value types
 }
 \end{cpp}
 
-When generic code must provide different implementations for different kinds of arguments, but the signature is the same, using this approach can be way more readable than providing overloaded or specialized templates.
+当泛型代码必须为不同类型的参数提供不同的实现，但签名是相同的时候，使用这种方法比提供重载或特化的模板更具可读性。
 
-However, you cannot use if constexpr to provide different APIs, to allow others to add other overloads or specializations later on, or to disable this template in some cases completely. However, remember that you can constrain member functions to enable or disable parts of an API based on requirements.
+但是，不能使用if constexpr来提供不同的API，以允许其他人稍后添加其他重载或特化，或者在某些情况下完全禁用此模板。但请记住，可以根据需求约束成员函数来启用或禁用API的某些部分。
 
 
 
