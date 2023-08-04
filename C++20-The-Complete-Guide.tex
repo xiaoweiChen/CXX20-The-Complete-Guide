@@ -381,7 +381,7 @@
 \NewDocumentCommand { \mySection } { mmm }
 {
 \section*{\zihao{2}{#1}\hspace{0.5cm}{#2}}
-\addcontentsline{toc}{section}{{#2}}
+\addcontentsline{toc}{section}{{#1}\hspace{0.5cm}{#2}}
 \subfile{{#3}}
 }
 
