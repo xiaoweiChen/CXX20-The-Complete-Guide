@@ -1,19 +1,19 @@
 
 
-Requires expressions (which are distinct from requires clauses) provide a simple but flexible syntax for specifying multiple requirements on one or multiple template parameters. You can specify:
+需求表达式(不同于requires子句)提供了一种简单而灵活的语法，用于在一个或多个模板参数上指定多个需求。可以指定:
 
 \begin{itemize}
 \item
-Required type definitions
+必需的类型定义
 
 \item
-Expressions that have to be valid
+表达式必须是有效的
 
 \item
-Requirements on the types that expressions yield
+对表达式产生的类型的要求
 \end{itemize}
 
-A requires expression starts with requires followed by an optional parameter list and then a block of requirements (all ending with semicolons). For example:
+表达式以requires开头，后跟一个可选的参数列表，然后是一个需求块(都以分号结束)。例如:
 
 \begin{cpp}
 template<typename Coll>
@@ -23,7 +23,7 @@ template<typename Coll>
 	}
 \end{cpp}
 
-The optional parameter list allows you to introduce a set of “dummy variables” that can be used to express requirements in the body of the requires expression:
+可选参数列表允许引入一组“虚拟变量”，可用于在表达式的主体中表达需求:
 
 \begin{cpp}
 template<typename T>
@@ -33,9 +33,9 @@ template<typename T>
 	}
 \end{cpp}
 
-These parameters are never replaced by arguments. Therefore, it usually does not matter whether you declare them by value or by reference.
+这些形参永远不会被实参取代，所以通过值或引用声明它们并不重要。
 
-The parameters also allow us to introduce (parameters of) sub-types:
+参数还允许引入子类型(参数):
 
 \begin{cpp}
 template<typename Coll>
@@ -44,11 +44,11 @@ template<typename Coll>
 	}
 \end{cpp}
 
-This requirements checks whether Coll::value\_type is valid and whether objects of this type support the output operator.
+要求检查Coll::value\_type是否有效，以及该类型的对象是否支持输出操作符。
 
-Note that type members in this parameter list do not have to be qualified with typename.
+注意，此参数列表中的类型成员不必用typename限定。
 
-When using this to check only whether Coll::value\_type is valid, you do not need anything in the body of the block of the requirements. However, the block cannot be empty. Therefore, you could simply use true in that case:
+当使用此方法仅检查Coll::value\_type是否有效时，在需求块的主体中不需要任何内容，但不能为空。因此，可以简单地使用true:
 
 \begin{cpp}
 template<typename Coll>
@@ -57,11 +57,11 @@ template<typename Coll>
 	}
 \end{cpp}
 
-\mySubsubsection{4.4.1}{Simple Requirements}
+\mySubsubsection{4.4.1}{简单的需求}
 
-Simple requirements are just expressions that have to be well-formed. This means that the calls have to compile. The calls are not performed, meaning that it does not matter what the operations yield.
+简单的需求就是必须格式良好的表达式，必须进行编译。调用不会执行，从而操作产生的结果并不重要。
 
-For example:
+例如:
 
 \begin{cpp}
 template<typename T1, typename T2>
@@ -74,17 +74,17 @@ template<typename T1, typename T2>
 	}
 \end{cpp}
 
-The last call does not require that p is the nullptr (to require that, you have to check whether T2 is type std::nullptr\_t). Instead, we require that we can compare an object of type T2 with nullptr.
+最后一个调用不要求p是nullptr(要做到这一点，必须检查T2是否是类型std::nullptr\_t)。相反，可以要求将T2类型的对象与nullptr类型的对象进行比较。
 
-It usually does not make sense to use the operator ||. A simple requirement such as
+通常使用运算符||是没有意义的。一个简单的需求，例如
 
 \begin{cpp}
 *p > val || p == nullptr;
 \end{cpp}
 
-does not require that either the left or the right sub-expression is possible. It formulates the requirement that we can combine the results of both sub-expressions with the operator ||.
+不要求左子表达式或右子表达式是可能的，其规定了可以用运算符||组合两个子表达式的结果的要求。
 
-To require either one of the two sub-expressions, you have to use:
+要满足这两个子表达式中的一个，必须使用:
 
 \begin{cpp}
 template<typename T1, typename T2>
@@ -96,7 +96,7 @@ template<typename T1, typename T2>
 	}
 \end{cpp}
 
-Note also that this concept does not require that T is an integral type:
+注意，这个概念并不要求T是整型:
 
 \begin{cpp}
 template<typename T>
@@ -106,7 +106,7 @@ template<typename T>
 	};
 \end{cpp}
 
-The concept requires only that the expression std::integral<T> is valid, which is the case for all types. The requirements that T is integral you have to formulate as follows:
+概念只要求表达式std::integral<T>有效，这是所有类型的情况。T是整型的要求必须这样表述:
 
 \begin{cpp}
 template<typename T>
@@ -116,7 +116,7 @@ template<typename T>
 	};
 \end{cpp}
 
-Alternatively, as follows:
+或者，如下所示:
 
 \begin{cpp}
 template<typename T>
@@ -126,11 +126,11 @@ template<typename T>
 	};
 \end{cpp}
 
-\mySubsubsection{4.4.2}{Type Requirements}
+\mySubsubsection{4.4.2}{类型的需求}
 
-Type requirements are expressions that have to be well-formed when using a name of a type. This means that the specified name has to be defined as a valid type.
+类型需求是在使用类型名称时必须格式良好的表达式，所以名称必须定义为有效类型。
 
-For example:
+例如:
 
 \begin{cpp}
 template<typename T1, typename T2>
@@ -141,9 +141,9 @@ template<typename T1, typename T2>
 }
 \end{cpp}
 
-For all type requirements, if the type exists but is void, then the requirement is met.
+对于所有类型需求，若类型存在但为空，则满足需求。
 
-Note that you can only check for names given to types (names of classes, enumeration types, from typedef or using). You cannot check for other type declarations using the type:
+注意，只能检查给定类型的名称(类名、枚举类型的名称，来自typedef或using)。不能使用类型检查其他类型声明:
 
 \begin{cpp}
 template<typename T>
@@ -153,7 +153,7 @@ template<typename T>
 }
 \end{cpp}
 
-The way to test the latter is to declare a corresponding parameter:
+测试后者的方法是声明一个相应的形参:
 
 \begin{cpp}
 template<typename T>
@@ -162,7 +162,7 @@ template<typename T>
 };
 \end{cpp}
 
-Again, the requirement checks whether using the passed type(s) to define another type is valid. For example:
+同样，需求检查使用传递的类型来定义另一个类型是否有效。例如:
 
 \begin{cpp}
 template<std::integral T>
@@ -182,7 +182,7 @@ mytype1(42); // OK
 mytype1(7.7); // ERROR
 \end{cpp}
 
-Therefore, the following requirement does not check whether there is a standard hash function for type T:
+因此，以下要求不检查类型T是否存在标准哈希函数:
 
 \begin{cpp}
 template<typename T>
@@ -191,7 +191,7 @@ concept StdHash = requires {
 };
 \end{cpp}
 
-The way to require a standard hash function is to try to create or use it:
+需要标准哈希函数的方法是尝试创建或使用:
 
 \begin{cpp}
 template<typename T>
@@ -200,11 +200,11 @@ concept StdHash = requires {
 };
 \end{cpp}
 
-Note that simple requirements check only whether a requirement is valid, not whether it is fulfilled. For this reason:
+注意，简单需求只检查需求是否有效，而不检查需求是否满足。出于这个原因:
 
 \begin{itemize}
 \item
-It does not make sense to use type functions that always yield a value:
+使用总是产生值的类型函数没有意义:
 
 \begin{cpp}
 template<typename T>
@@ -213,17 +213,17 @@ template<typename T>
 }
 \end{cpp}
 
-To check for constness, use:
+要检查const性，需要使用:
 
 \begin{cpp}
 template<typename T>
 ... std::is_const_v<T> // ensure that T is const
 \end{cpp}
 
-Inside a requires expression, you can use a nested requirement (see below).
+requires表达式中，可以使用嵌套的需求(见下文)。
 
 \item
-It does not make sense to use type functions that always yield a type:
+使用总是产生类型的类型函数没有意义:
 
 \begin{cpp}
 template<typename T>
@@ -232,10 +232,10 @@ template<typename T>
 }
 \end{cpp}
 
-The requirement checks only whether the type expression yields a type, which is always the case.
+需求只检查类型表达式是否产生类型，这总是正确的。
 \end{itemize}
 
-It also does not make sense to use type functions that may have undefined behavior. For example, the type trait std::make\_unsigned<> requires that the passed argument is an integral type other than bool. If the passed type is not an integral type, you get undefined behavior. Therefore, you should not use std::make\_unsigned<> as requirement without constraining the type you call it for:
+使用可能具有未定义行为的类型函数也没有意义。例如，类型特性std::make\_unsigned<>要求传递的参数是整型而不是bool型。若传递的类型不是整型，则会得到未定义的行为，所以不应该使用std::make\_unsigned<>作为要求，而不限制调用其类型:
 
 \begin{cpp}
 template<typename T>
@@ -244,7 +244,7 @@ template<typename T>
 }
 \end{cpp}
 
-In this case, the requirement can only be fulfilled or results in undefined behavior (which might mean that the requirement is still fulfilled). Instead, you should also constrain the type T for which you can use a nested requirement:
+这种情况下，需求只能满足或导致未定义的行为(这可能需求仍然满足)。相反，应该约束可以使用嵌套需求的类型T:
 
 \begin{cpp}
 template<typename T>
@@ -254,19 +254,19 @@ template<typename T>
 }
 \end{cpp}
 
-\mySubsubsection{4.4.3}{Compound Requirements}
+\mySubsubsection{4.4.3}{复合需求}
 
-Compound requirements allow us to combine the abilities of simple and type requirements. In this case, you can specify an expression (inside a block of braces) and then add one or both of the following:
+复合需求允许将简单需求和类型需求结合起来，可以指定一个表达式(在大括号内)，然后添加以下一个或两个:
 
 \begin{itemize}
 \item
-noexcept to require that the expression guarantees not to throw
+noexcept要求表达式保证不抛出异常
 
 \item
--> type-constraint to apply a concept on what the expression evaluates to
+-> type-constraint将概念应用于表达式的求值
 \end{itemize}
 
-Here are some examples:
+下面是一些例子:
 
 \begin{cpp}
 template<typename T>
@@ -279,23 +279,23 @@ template<typename T>
 }
 \end{cpp}
 
-Note that the type constraint after the -> takes the resulting type as its first template argument. That means:
+注意->之后的类型约束将结果类型作为其第一个模板参数:
 
 \begin{itemize}
 \item
-In the first requirement, we require that the concept std::input\_or\_output\_iterator is satisfied when using operator\& for an object of type T (std::input\_or\_output\_iterator<decltype(\&x)> yields true).
+第一个需求中，需求在对类型为T的对象使用运算符\&时满足std::input\_or\_output\_iterator的概念(std::input\_or\_output\_iterator<decltype(\&x)>产生true)。
 
-You could also specify this as follows:
+也可以这样指定:
 
 \begin{cpp}
 { &x } -> std::is_pointer_v<>;
 \end{cpp}
 
 \item
-In the last requirement, we require that we can use the result of operator== for two objects of type T as bool (the concept std::convertible\_to is satisfied when passing the result of operator== for two objects of type T and bool as arguments).
+最后一个需求中，需求可以将两个T类型对象的operator==的结果用作bool(当将两个T类型对象和bool类型对象的operator==的结果作为参数传递时，满足std::convertible\_to的概念)。
 \end{itemize}
 
-Requires expressions can also express the need for associated types. For example:
+需求表达式还可以表达对关联类型的需求。例如:
 
 \begin{cpp}
 template<typename T>
@@ -304,13 +304,13 @@ template<typename T>
 }
 \end{cpp}
 
-However, you cannot specify type requirements using nested types. For example, you cannot use them to require that the return value of calling the operator * yields an integral value. The problem is that the return value is a reference that you have to dereference first:
+但是，不能使用嵌套类型指定类型需求。例如，不能使用它们来要求调用运算符*的返回值产生整数值。问题是，返回值是一个引用，必须先解除引用:
 
 \begin{cpp}
 std::integral<std::remove_reference_t<T>>
 \end{cpp}
 
-and you cannot use such a nested expression with a type trait in a result of a requires expression:
+而且不能在requires表达式的结果中使用带有类型特性的嵌套表达式:
 
 \begin{cpp}
 template<typename T>
@@ -320,7 +320,7 @@ concept Check = requires(T p) {
 };
 \end{cpp}
 
-You either have to define a corresponding concept first:
+要么先定义一个相应的概念:
 
 \begin{cpp}
 template<typename T>
@@ -332,13 +332,13 @@ concept Check = requires(T p) {
 };
 \end{cpp}
 
-Alternatively, you have to use a nested requirement.
+要么使用嵌套需求。
 
-\mySubsubsection{4.4.4}{Nested Requirements}
+\mySubsubsection{4.4.4}{嵌套需求}
 
-Nested requirements can be used to specify additional constraints inside a requires expression. They start with requires followed by a compile-time Boolean expression, which might itself again be or use a requires expression. The benefit of nested requirements is that we can ensure that a compile-time expression (that uses parameters or sub-expressions of the requires expression) yields a certain result instead of ensuring only that the expression is valid.
+嵌套需求可用于在requires表达式中指定附加约束。以requires开头，后跟一个编译时布尔表达式，该表达式本身也可能是或使用一个requires表达式。嵌套需求的好处是，可以确保编译时表达式(使用所需表达式的参数或子表达式)产生特定的结果，而不是仅仅确保表达式有效。
 
-For example, consider a concept that has to ensure that both the operator * and the operator [] yield the same type for a given type. By using nested requirements, we can specify this as follows:
+例如，考虑一个概念，必须确保对于给定类型，操作符*和操作符[]产生相同的类型。通过使用嵌套需求，可以这样指定:
 
 \begin{cpp}
 template<typename T>
@@ -348,7 +348,7 @@ concept DerefAndIndexMatch = requires (T p) {
 							};
 \end{cpp}
 
-The good thing is that we have an easy syntax here for “assume we have an object of type T.” We do not have to use a requires expression here; however, the code then has to use std::declval<>():
+好的方面是，对于“假设有一个T类型的对象”，这里有一个简单的语法，不必在这里使用requires表达式，但代码必须使用std::declval<>():
 
 \begin{cpp}
 template<typename T>
@@ -356,7 +356,7 @@ concept DerefAndIndexMatch = std::same_as<decltype(*std::declval<T>()),
 			 decltype(std::declval<T>()[0])>;
 \end{cpp}
 
-As another example, we can use a nested requirement to solve the problem just introduced to specify a complex type requirement on an expression:
+作为另一个例子，可以使用嵌套需求来解决刚才介绍的，在表达式上指定复杂类型需求的问题:
 
 \begin{cpp}
 template<typename T>
@@ -365,7 +365,7 @@ concept Check = requires(T p) {
 };
 \end{cpp}
 
-Note the following difference inside a requires expression:
+请注意requires表达式中的区别:
 
 \begin{cpp}
 template<typename T>
@@ -375,13 +375,13 @@ template<typename T>
 }
 \end{cpp}
 
-Here, we use the type trait is\_const\_v<> without and with requires. However, only the second requirement is useful:
+这里，使用的类型特性是is\_const\_v<>带/不带requires。然而，只有第二个需求有用:
 
 \begin{itemize}
 \item
-The first expression requires only that checking for constness and negating the result is valid. This requirement is always met (even if T is const int) because doing this check is always valid. This requirement is worthless.
+第一个表达式只要求检查const性并对结果取反有效，这个需求总是可满足(即使T是const int)，因为做这个检查总是有效的。所以，这个需求毫无价值。
 
 \item
-The second expression with requires has to be fulfilled. The requirement is met if T is int but not if T is const int.
+第二个需求表达式必须满足。若T是int则满足要求，但若T是const int则不满足。
 \end{itemize}
 

@@ -1,7 +1,7 @@
 
-Two concepts can have a subsuming relationship. That is, one concept can be specified such that it restricts one or more other concepts. The benefit is that overload resolution then prefers the more constrained generic code over the less constrained generic code when both constraints are satisfied.
+两个概念可以有一个包含关系，可以指定一个概念，使其限制一个或多个其他概念。这样做的好处是，当两个约束都得到满足时，重载解析更倾向于使用约束较多的泛型代码，而不是使用约束较少的泛型代码。
 
-For example, assume that we introduce the following two concepts:
+例如，假设引入以下两个概念:
 
 \begin{cpp}
 template<typename T>
@@ -20,9 +20,9 @@ concept ColoredGeoObject =
 	};
 \end{cpp}
 
-The concept ColoredGeoObject explicitly subsumes the concept GeoObject because it explicitly formulates the constraint that type T also has to satisfy the concept GeoObject.
+因为它显式地规定了类型T也必须满足概念GeoObject的约束，所以概念ColoredGeoObject显式地包含了概念GeoObject。
 
-As a consequence, we do not get an ambiguity error, when we overload templates for both concepts and both concepts are satisfied, Overload resolution prefers the concept that subsumes the other(s):
+因此，当为两个概念重载模板并且两个概念都满足时，不会得到歧义错误，重载解析更倾向于包含其他概念的概念:
 
 \begin{cpp}
 template<GeoObject T>
@@ -38,9 +38,9 @@ void process(T) // called for objects that provide setColor() and getColor()
 }
 \end{cpp}
 
-Constraint subsumption works only when concepts are used. There is no automatic subsumption when one concept/constraint is more special than another.
+约束包含仅在使用概念时起作用。当一个概念/约束比另一个更特殊时，不存在自动包含。
 
-Constraints and concepts do not subsume based only on requirements. Consider the following example:
+约束和概念不会仅仅基于需求进行包含。考虑下面的例子:
 
 \begin{cpp}
 // declared in a header file:
@@ -57,7 +57,7 @@ concept Cowboy = requires(T obj) {
 				};
 \end{cpp}
 
-Assume that we overload a function template for both GeoObject and Cowboy:
+假设为GeoObject和Cowboy重载一个函数模板:
 
 \begin{cpp}
 template<GeoObject T>
@@ -71,9 +71,9 @@ void print(T) {
 }
 \end{cpp}
 
-We do not want that for a Circle or Rectangle, which both have a draw() member function, the call to print() prefers the print() for cowboys just because the Cowboy concept is more special. We want to see that there are two possible print() functions that in this case collide.
+对于Circle或Rectangle(都有draw()成员函数)，我们不希望这样，因为Cowboy的概念更特殊，所以对print()的调用更倾向于对Cowboy的print()调用，所以希望看到在本例中有两个可能的print()函数发生冲突。
 
-The effort to check for subsumptions is evaluated only for concepts. Overloading with different constraints is ambiguous if no concepts are used:
+检查假设的工作只针对概念进行评估。若没有使用任何概念，则具有不同约束的重载不明确:
 
 \begin{cpp}
 template<typename T>
@@ -91,7 +91,7 @@ void print(T) {
 print(42); // ERROR: ambiguous (if both constraints are true)
 \end{cpp}
 
-When using concepts instead, this code works:
+当使用概念时，下面的代码可以工作:
 
 \begin{cpp}
 template<typename T>
@@ -109,29 +109,28 @@ void print(T) {
 print(42); // OK
 \end{cpp}
 
-One reason for this behavior is that it takes compile time to process dependencies between concepts in detail.
+产生这种行为的一个原因是，详细处理概念之间的依赖关系需要编译时间。
 
-The concepts provided by the C++ standard library are carefully designed to subsume other concepts when this makes sense. In fact, the standard concepts build a pretty complex subsumption graph. For example:
+C++标准库提供的概念经过精心设计，以便在有意义时包含其他概念。事实上，标准概念构建了一个相当复杂的包含图。例如:
 
 \begin{itemize}
 \item
-std::random\_access\_range subsumes std::bidirectional\_range, both subsume the concept std::forward\_range, all three subsume std::input\_range, and all of them subsume std::range.
+std::random\_access\_range包含了std::bidirectional\_range，两者都包含了std::forward\_range，三者都包含了std::input\_range，所以都包含了std::range。
 
-However, std::sized\_range only subsumes std::range and none of the others.
-
-\item
-std::regular subsumes std::semiregular, while both subsume std::copyable and std::default\_initializable (which subsume several other concepts such as std::movable, std::copy\_constructible, and std::destructible).
+但是，std::sized\_range只包含std::range，而不包含其他的。
 
 \item
-std::sortable subsumes std::permutable and both subsume std::indirectly\_swappable for both parameters being the same type.
+std::regular包含了std::semiregular，而两者都包含了std::copyable和std::default\_initializable(其中包含了其他几个概念，如std::movable、std::copy\_constructible和std::destructible)。
+
+\item
+std::sortable包含std::permutable，两者都包含std::indirectly\_swappable，这两个参数都是相同的类型。
 \end{itemize}
 
-\mySubsubsection{4.7.1}{Indirect Subsumptions}
+\mySubsubsection{4.7.1}{间接包含}
 
-Constraints can even subsume indirectly.3 This means that overload resolution can still prefer one overload
-or specialization over the other, even though their constraints are not defined in terms of each other.
+约束甚至可以间接包含，所以重载解析仍然可以选择一个重载或特化，而非另一个(即使其约束不是根据彼此定义的)。
 
-For example, assume that you have defined the following two concepts:
+例如，假设已经定义了以下两个概念:
 
 \begin{cpp}
 template<typename T>
@@ -141,7 +140,7 @@ template<typename T>
 concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
 \end{cpp}
 
-When we now overload two functions for these two concepts and pass an object that fits both concepts, this is not ambiguous:
+现在，当我们为这两个概念重载两个函数，并传递一个同时适合这两个概念的对象时，这并不具有二义性:
 
 \begin{cpp}
 template<RgSwap T>
@@ -157,21 +156,21 @@ void foo1(T) {
 foo1(std::vector<int>{}); // OK: both fit, ContCopy is more constrained
 \end{cpp}
 
-The reason is that ContCopy subsumes RgSwap because:
+原因是ContCopy包含RgSwap，因为:
 
 \begin{itemize}
 \item
-The concept contiguous\_range is defined in terms of the concept input\_range.
+contiguous\_range概念是根据input\_range概念定义的。
 
-(It implies random\_access\_range, which implies bidirectional\_range, which implies forward\_range, which implies input\_range.)
+(包含random\_access\_range，包含bidirectional\_range，包含forward\_range，包含input\_range。)
 
 \item
-The concept copyable is defined in terms of the concept swappable.
+copyable概念是根据可交换的概念来定义的。
 
-(It implies movable, which implies swappable.)
+(包含movable，也就包含着可互换。)
 \end{itemize}
 
-However, with the following declarations, we get an ambiguity when both concepts fit:
+但使用以下声明，当两个概念都适合时，就会产生歧义:
 
 \begin{cpp}
 template<typename T>
@@ -181,9 +180,9 @@ template<typename T>
 concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
 \end{cpp}
 
-The reason for is that neither of the concepts contiguous\_range or sized\_range imply the other.
+原因是contiguous\_range和sized\_range这两个概念都不包含对方。
 
-Also, for the following declarations, no concept subsumes the other:
+此外，对于下列声明，没有一个概念包含另一个概念:
 
 \begin{cpp}
 template<typename T>
@@ -193,22 +192,22 @@ template<typename T>
 concept ContMove = std::ranges::contiguous_range<T> && std::movable<T>;
 \end{cpp}
 
-On the one hand, ContMove is more constrained because contiguous\_range implies input\_range; however, on the other hand, RgCopy is more constrained because copyable implies movable.
+一方面，ContMove更受约束，因为contiguous\_range意味着input\_range。另一方面，因为copyable包含着可移动，所以RgCopy更受约束。
 
-To avoid confusion, do not make too many assumptions about concepts subsuming each other. When in doubt, specify all the concepts you require.
+为了避免混淆，不要对相互包含的概念做太多的假设。若有疑问，请指定所需的所有概念。
 
-\mySubsubsection{4.7.2}{Defining Commutative Concepts}
+\mySubsubsection{4.7.2}{定义交换概念}
 
-To implement subsumptions correctly, you have to be careful. A good example is the implementation of the concept std::same\_as, which checks whether two template parameters have the same type.
+要正确地实现假设，必须非常小心。一个很好的例子是std::same\_as概念的实现，它检查两个模板形参是否具有相同的类型。
 
-To understand why defining the concept is not trivial, let us assume that we define our own concept SameAs just as follows:
+为了理解为什么定义概念并不简单，假设定义了一个概念SameAs，如下所示:
 
 \begin{cpp}
 template<typename T, typename U>
 concept SameAs = std::is_same_v<T, U>; // define concept SameAs
 \end{cpp}
 
-This definition is good enough for cases like this:
+这个定义对于这样的情况是够用的:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -231,9 +230,9 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-Here, the second definition of foo() subsumes the first one, which means that the second foo() is called when two arguments of the same integral type are passed and for both foo() the constraints are satisfied.
+这里，foo()的第二个定义包含了第一个定义，所以当传递了两个相同整型的参数并且两个foo()的约束都满足时，调用第二个foo()。
 
-However, note what happens if we slightly modify the parameters when we call SameAs<> in the constraints of the second foo():
+但请注意，当在第二个foo()的约束中调用SameAs<>时，若稍微修改参数会发生什么:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -253,9 +252,9 @@ void foo(T, U)
 foo(1, 2); // ERROR: ambiguity: both constraints are satisfied without one subsuming the other
 \end{cpp}
 
-The problem is that the compiler cannot detect that SameAs<> is commutative. For the compiler, the order of the template parameters matters, and therefore, the first requirement is not necessarily a subset of the second requirement.
+问题是编译器无法检测到SameAs<>是可交换的。对于编译器来说，模板参数的顺序很重要。因此，第一个需求不一定是第二个需求的子集。
 
-To solve this problem, we have to design the concept SameAs in a way that the order of the arguments does not matter. This requires a helper concept:
+为了解决这个问题，必须以一种不影响参数顺序的方式来设计SameAs概念，这里需要一个辅助概念:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -265,8 +264,7 @@ template<typename T, typename U>
 concept SameAs = SameAsHelper<T, U> && SameAsHelper<U, T>; // make commutative
 \end{cpp}
 
-Now, the order of the parameters no longer matters for IsSame<>:
-
+现在，对于IsSame<>，参数的顺序不再重要:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -286,9 +284,9 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-The compiler can find out that the first building block SameAs<U,T> is part of a sub-concept of the definition of SameAs so that the other building blocks SameAs<T,U> and std::integral<T> are an extension. Therefore, the second foo() now has preference.
+编译器可以发现第一个构建块SameAs<U,T>是SameAs定义的子概念的一部分，因此其他构建块SameAs<T,U>和std::integral<T>是扩展，所以第二个foo()更优先使用。
 
-Tricky details like this are designed into the concepts that the C++20 standard library provides (see std::same\_as). Therefore, you should use them when they fit your needs instead of providing your own concepts.
+C++20标准库提供的概念(请参见std::same\_as)中就包含了类似这样的棘手细节。因此，应该在它们适合你的需求时使用它们，而不是定义自己的概念。
 
 \begin{cpp}
 template<typename T, typename U>
@@ -308,7 +306,7 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-For your own concepts, take as many uses (and abuses) as possible into account. The more the better. Just like any good piece of software, concepts also require good design and test cases.
+对于您自己的概念，请考虑尽可能更多的使用方法(和滥用)，越多越好。就像任何好的软件一样，概念也需要好的设计和测试用例。
 
 
 

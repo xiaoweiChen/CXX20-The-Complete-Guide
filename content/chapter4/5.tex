@@ -1,21 +1,20 @@
 
-By defining a concept, you can introduce a name for one or more constraints.
+通过定义概念，可以为一个或多个约束引入名称。
 
-Templates (function, class, variable, and alias templates) can use concepts to constrain their ability (via a requires clause or as a direct type constraint for a template parameter). However, concepts are also Boolean compile-time expressions (type predicates) that you can use wherever you have to check something for a type (such as in an if constexpr condition).
+模板(函数、类、变量和别名模板)可以使用概念来约束其能力(通过requires子句或作为模板参数的直接类型约束)，但概念也是布尔编译时表达式(类型谓词)，可以在需要检查类型的地方使用(例如在if constexpr条件中)。
 
-\mySubsubsection{4.5.1}{Defining Conceptss}
+\mySubsubsection{4.5.1}{定义概念}
 
-Concepts are defined as follows:
+概念定义如下:
 
 \begin{cpp}
 template< ... >
 concept name = ... ;
 \end{cpp}
 
-The equal sign is required (you cannot declare a concept without defining it and you cannot use braces here).
-After the equal sign, you can specify any compile-time expression that converts to true or false.
+等号是必需的(不能在没有定义的情况下声明一个概念，也不能在这里使用大括号)。等号之后，可以指定任何转换为真或假的编译时表达式。
 
-Concepts are much like constexpr variable templates of type bool, but the type is not explicitly specified:
+概念很像bool类型的constexpr变量模板，但没有显式指定类型:
 
 \begin{cpp}
 template<typename T>
@@ -24,61 +23,61 @@ concept MyConcept = ... ;
 std::is_same<MyConcept< ... >, bool> // yields true
 \end{cpp}
 
-This means that both at compile time and at runtime you can always use a concept where the value of a Boolean expression is needed. However, you cannot take the address because there is no object behind it (it is a prvalue).
+无论在编译时还是在运行时，都可以在需要布尔表达式值的地方使用一个概念。但不能接受地址，因为它后面没有对象(地址是一个纯右值)。
 
-The template parameters may not have constraints (you cannot use a concept to define a concept).
+模板参数可能没有约束(不能使用一个概念来定义一个概念)。
 
-You cannot define concepts inside a function (as is the case for all templates).
+不能在函数中定义概念(所有模板都是如此)。
 
-\mySubsubsection{4.5.2}{Special Abilities of Concepts}
+\mySubsubsection{4.5.2}{概念的特殊能力}
 
-Concepts have special abilities.
+概念具有特殊的能力。
 
-Consider, for example, the following concept:
+例如，考虑以下概念:
 
 \begin{cpp}
 template<typename T>
 concept IsOrHasThisOrThat = ... ;
 \end{cpp}
 
-Compared to a definition of a Boolean variable template (which is the usual way type traits are defined):
+与布尔变量模板的定义(这是定义类型特征的常用方式)相比:
 
 \begin{cpp}
 template<typename T>
 inline constexpr bool IsOrHasThisOrThat = ... ;
 \end{cpp}
 
-we have the following differences:
+有以下不同之处:
 
 \begin{itemize}
 \item
-Concepts do not represent code. They have no type, storage, lifetime, or any other properties associated with objects.
+概念并不表示代码，没有类型、存储、生存期或与对象相关的任何其他属性。
 
-By instantiating them at compile time for specific template parameters, their instantiation just becomes true or false. Therefore, you can use them wherever you can use true or false and you get all properties of these literals.
-
-\item
-Concepts do not have to be declared as inline. They implicitly are inline.
+通过在编译时为特定模板参数实例化它们，实例化只会变为true或false，所以可以在任何你可以使用true或false的地方使用，可以得到这些字面量的所有属性。
 
 \item
-Concepts can be used as type constraints:
+概念不必声明为内联的，其隐式内联。
+
+\item
+概念可以用作类型约束:
 
 \begin{cpp}
 template<IsOrHasThisOrThat T>
 ...
 \end{cpp}
 
-Variable templates cannot be used that way.
+变量模板不能这样使用。
 
 \item
-Concepts are the only way to give constraints a name, which means that you need them to decide whether a constraint is a special case of another constraint.
+概念是给约束命名的唯一方法，所以需要其来决定一个约束是否是另一个约束的特殊情况。
 
 \item
-Concepts subsume. To let the compiler decide whether a constraint implies another constraint (and is therefore special), the constraints have to be formulated as concepts.
+包含的概念。为了让编译器决定一个约束是否意味着另一个约束(因此是特殊的)，必须将约束公式化为概念。
 \end{itemize}
 
-\mySubsubsection{4.5.3}{Concepts for Non-Type Template Parameters}
+\mySubsubsection{4.5.3}{非类型模板参数的概念}
 
-Concepts can also be applied to non-type template parameters (NTTP). For example:
+概念也可以应用于非类型模板参数(NTTP)。例如:
 
 \begin{cpp}
 template<auto Val>
@@ -91,7 +90,7 @@ class MyType {
 };
 \end{cpp}
 
-As a more useful example, we can use a concept to constrain the value of a non-type template parameter to be a power of two:
+作为一个更有用的例子，可以使用一个概念将非类型模板形参的值约束为2的幂:
 
 \filename{lang/conceptnttp.cpp}
 
@@ -117,16 +116,16 @@ int main()
 }
 \end{cpp}
 
-The concept PowerOf2 takes a value instead of a type as a template parameter (here, using auto to not require a specific type):
+概念PowerOf2接受一个值而不是类型作为模板参数(这里使用auto，不需要指定类型):
 
 \begin{cpp}
 template<auto Val>
 concept PowerOf2 = std::has_single_bit(static_cast<unsigned>(Val));
 \end{cpp}
 
-The concept is satisfied when the new standard function std::has\_single\_bit() yields true for the passed value (having only one bit set means that a value is a power of two). Note that std::has\_single\_bit() requires that we have an unsigned integral value. By casting to unsigned, programmers can pass signed integral values and reject types that cannot be converted to an unsigned integral value.
+当新的标准函数std::has\_single\_bit()对传递的值产生true(只设置一个位意味着值是2的幂)时，这个概念就满足了。注意，std::has\_single\_bit()要求我们有一个无符号整型值。通过强制转换为unsigned，开发者可以传递有符号整型值，并拒绝不能转换为无符号整型值的类型。
 
-The concept is then used to require that a class Memory, taking a type and a size, accepts only sizes that are a power of two:
+接下来，使用这个概念要求Memory类只接受2的幂次大小和类型:
 
 \begin{cpp}
 template<typename T, auto Val>
@@ -136,7 +135,7 @@ class Memory {
 };
 \end{cpp}
 
-Note that you cannot write the following:
+注意，不能写以下内容:
 
 
 \begin{cpp}
@@ -146,7 +145,7 @@ class Memory {
 };
 \end{cpp}
 
-This puts the requirement on the type of Val; however, the concept PowerOf2 does not constrain a type; it constrains the value.
+这就对Val类型提出了要求，但概念PowerOf2不约束其类型，并限制了值。
 
 
 

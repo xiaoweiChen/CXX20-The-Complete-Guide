@@ -1,17 +1,17 @@
-As introduced, concepts can be used as type constraints. There are different places where type constraints can be used:
+如前所述，概念可以用作类型约束。可以在不同的地方使用类型约束:
 
 \begin{itemize}
 \item
-In the declaration of a template type parameter
+在模板类型参数的声明中
 
 \item
-In the declaration of a call parameter declared with auto
+在用auto声明的调用参数的声明中
 
 \item
-As a requirement in a compound requirement
+作为复合需求中的一个需求
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 template<std::integral T> // type constraint for a template parameter
@@ -29,11 +29,11 @@ concept MyConcept = requires(T x) {
 	};
 \end{cpp}
 
-Here, we use unary constraints that are called for a single parameter or type returned by an expression.
+这里，我们使用一元约束，对表达式返回的单个参数或类型调用一元约束。
 
-\mySamllsection{Type Constraints with Multiple Parameters}
+\mySamllsection{具有多参数的类型约束}
 
-You can also use constraints with multiple parameters, for which the parameter type or return value is then used as the first argument:
+也可以使用带有多个参数的约束，然后将参数类型或返回值用作第一个参数:
 
 \begin{cpp}
 template<std::convertible_to<int> T> // conversion to int required
@@ -51,24 +51,24 @@ concept MyConcept = requires(T x) {
 	};
 \end{cpp}
 
-Another example often used is to constrain the type of a callable (function, function object, lambda) to require that you can pass a certain number of arguments of certain types using the concepts std::invocable or std::regular\_invocable: for example, to require the passing of an operation that takes an int and a std::string, you have to declare:
+另一个经常使用的例子是约束可调用对象(函数、函数对象、Lambda)的类型，可以使用std::invocable或std::regular\_invocable概念传递一定数量的特定类型的参数。例如，要求传递一个接受int和std::string的操作，则必须声明:
 
 \begin{cpp}
 template<std::invocable<int, std::string> Callable>
 void call(Callable op);
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 void call(std::invocable<int, std::string> auto op);
 \end{cpp}
 
-The difference between std::invocable and std::regular\_invocable is that the latter guarantees not to modify the passed operation and arguments. That is a semantic difference that helps only to document the intention. Often, just std::invocable is used.
+std::invocable和std::regular\_invocable的区别在于后者保证不修改传递的操作和参数。这是一种语义上的差异，只有助于记录意图，所以只使用std::invocable。
 
-\mySamllsection{Type Constraints and auto}
+\mySamllsection{类型约束和auto}
 
-Type constraints can be used in all places where auto can be used. The major application of this feature is to use the type constraints for the function parameters declared with auto. For example:
+类型约束可以在所有可以使用auto的地方使用，该特性的主要应用是对用auto声明的函数参数使用类型约束。例如:
 
 \begin{cpp}
 void foo(const std::integral auto& val)
@@ -77,11 +77,11 @@ void foo(const std::integral auto& val)
 }
 \end{cpp}
 
-However, you can also use type constraint for auto as follows:
+然而，也可以对auto使用类型约束，如下所示:
 
 \begin{itemize}
 \item
-To constrain declarations:
+约束声明:
 
 \begin{cpp}
 std::floating_point auto val1 = f(); // valid if f() yields floating-point value
@@ -92,7 +92,7 @@ for (const std::integral auto& elem : coll) { // valid if elements are integral 
 \end{cpp}
 
 \item
-To constrain return types:
+约束返回类型:
 
 \begin{cpp}
 std::copyable auto foo(auto) { // valid if foo() returns copyable value
@@ -101,7 +101,7 @@ std::copyable auto foo(auto) { // valid if foo() returns copyable value
 \end{cpp}
 
 \item
-To constrain non-type template parameters:
+约束非类型模板参数:
 
 \begin{cpp}
 template<typename T, std::integral auto Max>
@@ -111,7 +111,7 @@ class SizedColl {
 \end{cpp}
 \end{itemize}
 
-This also works with concepts that take multiple parameters:
+这也适用于接受多个参数的概念:
 
 \begin{cpp}
 template<typename T, std::convertible_to<T> auto DefaultValue>
@@ -120,7 +120,7 @@ class MyType {
 };
 \end{cpp}
 
-For another example, see the support for lambdas as non-type template parameters.
+另一个例子，请参阅对Lambda作为非类型模板参数的支持。
 
 
 
