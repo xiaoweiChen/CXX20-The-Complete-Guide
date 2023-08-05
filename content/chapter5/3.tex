@@ -1,50 +1,50 @@
 
-This section lists all basic concepts for iterators and ranges, which are useful in algorithms and similar functions.
+本节列出迭代器和范围的所有基本概念，这些概念在算法和类似函数中很有用。
 
-Note that the concepts for ranges are provided in the namespace std::ranges instead of std. They are declared in the header file <ranges>.
+注意，范围的概念是在命名空间std::ranges中提供的，不是在std中。并在头文件<ranges>中声明。
 
-Concepts for iterators are declared in the header file <iterator>.
+迭代器的概念在头文件<iterator>中声明。
 
-\mySubsubsection{5.3.1}{Concepts for Ranges and Views}
+\mySubsubsection{5.3.1}{范围和视图的概念}
 
-Several concepts are defined to constrain ranges. They correspond with the concepts for iterators and deal with the fact that we have new iterator categories since C++20.
+定义了几个概念来约束范围，其与迭代器的概念相对应，并处理了自C++20以来新的迭代器类别。
 
 \mySamllsection{std::ranges::range<Rg>}
 
 \begin{itemize}
 \item
-Guarantees that Rg is a valid range.
+保证Rg是一个有效的范围。
 
 \item
-This concept is defined in the header file <compare>.
+这个概念在头文件<compare>中定义。
 
 \item
-This means that objects of type Rg support iteration over the elements by using std::ranges::begin() and std::ranges::end().
+Rg类型的对象支持通过使用std::ranges::begin()和std::ranges::end()对元素进行迭代。
 
-This is the case if the range is either an array or provides begin() and end() members or can be used with free-standing begin() and end() functions.
+若范围是一个数组，或者提供begin()和end()成员，或者可以与独立的begin()和end()函数一起使用，就会出现这种情况。
 
 \item
-In addition, for std::ranges::begin() and std::ranges::end(), the following constraints apply:
+此外，对于std::ranges::begin()和std::ranges::end()，适用以下约束:
 
 \begin{itemize}
 \item
-They have to operate in (amortized) constant time.
+必须在(平摊的)常数时间内运行。
 
 \item
-They do not modify the range.
+不修改范围。
 
 \item
-begin() yields the same position when called multiple times (unless the range does not provide at least forward iterators).
+begin()在多次调用时产生相同的位置(除非该范围至少不提供前向迭代器)。
 \end{itemize}
 
-That all means that we can iterate over all elements with good performance (even multiple times unless we have pure input iterators).
+可以以良好的性能迭代所有元素(甚至多次迭代，除非有纯输入迭代器)。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-For an object rg of type Rg, std::ranges::begin(rg) is supported and std::ranges::end(rg) is supported
+对于Rg类型的对象rg，支持std::ranges::begin(rg)和std::ranges::end(rg)
 \end{itemize}
 \end{itemize}
 
@@ -52,17 +52,17 @@ For an object rg of type Rg, std::ranges::begin(rg) is supported and std::ranges
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range that provides at least output iterators (iterators that you can use to write) that accept values of type T.
+保证Rg至少可提供接受T类型值的输出迭代器(可以用来编写的迭代器)的范围。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::range<Rg> is satisfied
+需要满足std::range<Rg>
 
 \item
-std::output\_iterator is satisfied for the iterator type and T
+迭代器类型满足std::output\_iterator和T
 \end{itemize}
 \end{itemize}
 
@@ -71,17 +71,17 @@ std::output\_iterator is satisfied for the iterator type and T
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range that provides at least input iterators (iterators that you can use to read).
+保证Rg是一个至少提供输入迭代器(可用于读取的迭代器)的范围。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::range<Rg> is satisfied
+需要满足std::range<Rg>
 
 \item
-std::input\_iterator is satisfied for the iterator type
+迭代器类型满足std::input\_iterator
 \end{itemize}
 \end{itemize}
 
@@ -89,20 +89,20 @@ std::input\_iterator is satisfied for the iterator type
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range that provides at least forward iterators (iterators that you can use to read and write and to iterate over multiple times).
+保证Rg是一个至少提供前向迭代器(可用于读写和多次迭代的迭代器)的范围。
 
 \item
-Note that the iterator\_category member of the iterators may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，它是std::input\_iterator\_tag(若可用)。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::input\_range<Rg> is satisfied
+需要满足std::input\_range<Rg>
 
 \item
-std::forward\_iterator is satisfied for the iterator type
+迭代器类型满足std::forward\_iterator
 \end{itemize}
 \end{itemize}
 
@@ -110,20 +110,20 @@ std::forward\_iterator is satisfied for the iterator type
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range that provides at least bidirectional iterators (iterators that you can use to read and write and to iterate over also backward).
+保证Rg是一个至少提供双向迭代器的范围(可以用于读写和向后迭代的迭代器)。
 
 \item
-Note that the iterator\_category member of the iterators may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，它是std::input\_iterator\_tag(若可用)。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::forward\_range<Rg> is satisfied
+需要满足std::forward\_range<Rg>
 
 \item
-std::bidirectional\_iterator is satisfied for the iterator type
+迭代器类型满足std::bidirectional\_iterator
 \end{itemize}
 \end{itemize}
 
@@ -131,20 +131,20 @@ std::bidirectional\_iterator is satisfied for the iterator type
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range that provides random-access iterators (iterators that you can use to read and write, jump back and forth, and compute the distance).
+保证Rg是一个提供随机访问迭代器(可用于读写、前后跳转和计算距离的迭代器)的范围。
 
 \item
-Note that the iterator\_category member of the iterators may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，它是std::input\_iterator\_tag(若可用)。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::bidirectional\_range<Rg> is satisfied
+需要满足std::bidirectional\_range<Rg>
 
 \item
-std::random\_access\_iterator is satisfied for the iterator type
+迭代器类型满足std::random\_access\_iterator
 \end{itemize}
 \end{itemize}
 
@@ -152,23 +152,23 @@ std::random\_access\_iterator is satisfied for the iterator type
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range that provides random-access iterators with the additional constraint that the elements are stored in contiguous memory.
+保证Rg是一个范围，该范围提供随机访问迭代器，并附加约束元素存储在连续内存中。
 
 \item
-Note that the iterator\_category member of the iterators does not match. If the category member is defined, it is only std::random\_access\_iterator\_tag, or even only std::input\_iterator\_tag if the values are prvalues.
+注意，迭代器的iterator\_category成员不匹配。若定义了类别成员，则只有std::random\_access\_iterator\_tag，若值是右值，甚至只有std::input\_iterator\_tag。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::random\_access\_range<Rg> is satisfied
+需要满足std::random\_access\_range<Rg>
 
 \item
-std::contiguous\_iterator is satisfied for the iterator type
+迭代器类型满足std::contiguous\_iterator
 
 \item
-Calling std::ranges::data() yields a raw pointer to the first element
+调用std::ranges::data()将生成指向第一个元素的裸指针
 \end{itemize}
 \end{itemize}
 
@@ -176,23 +176,23 @@ Calling std::ranges::data() yields a raw pointer to the first element
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range where the number of elements can be computed in constant time (either by calling the member size() or by computing the difference between the beginning and the end).
+保证Rg是可以在常量时间内计算出元素数量的范围(通过调用成员size()或通过计算开始和结束之间的差值)。
 
 \item
-If this concept is satisfied, std::ranges::size() is fast and well-defined for objects of type Rg.
+若满足这个概念，std::ranges::size()对于Rg类型的对象是快速且定义良好的。
 
 \item
-Note that the performance aspect of this concept is a semantic constraint, which cannot be checked at compile time. To signal that a type does not satisfy this concept even though it provides size(), you can define that std::disable\_sized\_range<Rg> yields true.
+注意，这个概念的性能方面是一个语义约束，不能在编译时检查。为了表明一个类型即使提供了size()也不满足这个概念，可以定义std::disable\_size \_range<Rg>产生true。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::range<Rg> is satisfied
+需要满足std::range<Rg>
 
 \item
-Calling std::ranges::size() is supported
+支持std::ranges::size()
 \end{itemize}
 \end{itemize}
 
@@ -200,14 +200,14 @@ Calling std::ranges::size() is supported
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range where the begin iterator and the sentinel (end iterator) have the same type.
+保证Rg是一个范围，其中开始迭代器和哨兵(结束迭代器)具有相同的类型。
 
 \item
-The guarantee is always given by:
+保证总是由:
 
 \begin{itemize}
 \item
-All standard containers (vector, list, etc.)
+所有标准容器(vector, list等)
 
 \item
 empty\_view
@@ -219,30 +219,30 @@ single\_view
 common\_view
 \end{itemize}
 
-The guarantee is not given by:
+保证不是由:
 
 \begin{itemize}
 \item
-take views
+查看视图
 
 \item
-const drop views
+删除const视图
 
 \item
-iota views with no end value or an end value of a different type
+没有最终值或最终值为不同类型的iota视图
 \end{itemize}
 
-For other views, it depends on the type of the underlying ranges.
+对于其他视图，其取决于底层范围的类型。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::range<Rg> is satisfied
+需要满足std::range<Rg>
 
 \item
-std::ranges::iterator\_t<Rg> and std::ranges::sentinel\_t<Rg> have the same type
+std::ranges::iterator\_t<Rg>和std::ranges::sentinel\_t<Rg>具有相同类型
 \end{itemize}
 \end{itemize}
 
@@ -250,23 +250,23 @@ std::ranges::iterator\_t<Rg> and std::ranges::sentinel\_t<Rg> have the same type
 
 \begin{itemize}
 \item
-Guarantees that the passed range Rg in the current context yields iterators that can be used even when the range no longer exists. The concept is satisfied if an lvalue is passed or the passed range is always a borrowed range.
+保证在当前上下文中传递的范围Rg，产生即使该范围不再存在也可以使用的迭代器。若传递左值或传递的范围始终是借来的范围，则满足该概念。
 
 \item
-If the concept is satisfied, iterators of the range are not tied to the lifetime of the range. This means that iterators cannot dangle when the range they were created from is destroyed. However, they can still dangle if the iterators of the range refer to an underlying range and the underlying range is no longer there.
+若满足这个概念，则范围的迭代器与范围的生命周期无关。所以当创建迭代器的范围被销毁时，迭代器不能挂起。但若范围的迭代器指向基础范围，并且基础范围不再存在，则其仍然可以悬挂。
 
 \item
-Formally, the concept is met if Rg is an lvalue (such as an object with a name) or if the variable template std::ranges::enable\_borrowed\_range<Rg> is true, which is the case for the following views: subrange, ref\_view, string\_view, span, iota\_view, and empty\_view.
+形式上，若Rg是左值(例如有名称的对象)，或者变量模板std::ranges::enable\_borrow \_range<Rg>为真，则满足该概念，以下视图都是如此:subrange、ref\_view、string\_view、span、iota\_view和empty\_view。
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
-std::range<Rg> is satisfied
+需要满足std::range<Rg>
 
 \item
-Rg is an lvalue or enable\_borrowed\_range<Rg> yields true
+Rg是左值或enable\_borrow \_range<Rg>产生true
 \end{itemize}
 \end{itemize}
 
@@ -274,10 +274,10 @@ Rg is an lvalue or enable\_borrowed\_range<Rg> yields true
 
 \begin{itemize}
 \item
-Guarantees that Rg is a view (a range that is cheap to copy or move, assign, and destroy).
+保证Rg是一个视图(复制、移动、赋值和销毁代价很低的范围)。
 
 \item
-A view has the following requirements:
+视图有以下要求:
 
 \begin{itemize}
 \item
@@ -296,7 +296,7 @@ The move assignment operator and, if available, the copy assignment operator hav
 All but the last requirements are checked by corresponding concepts. The last requirement is a semantic constraint and has to be guaranteed by the implementer of a type by deriving publicly from std::ranges::view\_interface or by specializing std::ranges::enable\_view<Rg> to yield true.
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
@@ -320,7 +320,7 @@ Guarantees that Rg is a range that can be safely converted to a view with the st
 The concept is satisfied if Rg is either already a view or an lvalue of a range or a movable rvalue or a range but not an initializer list.
 
 \item
-Requires:
+要求:
 
 \begin{itemize}
 \item
@@ -329,7 +329,7 @@ std::range<Rg> is satisfied
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{5.3.2}{Concepts for Pointer-Like Objects}
+\mySubsubsection{5.3.2}{类指针对象的概念}
 
 This section lists all standard concepts for objects for which you can use the operator * to deal with a value they point to. This usually applies to raw pointers, smart pointers, and iterators. Therefore, these concepts are usually used as base constraints for concepts that deal with iterators and algorithms.
 
@@ -338,7 +338,7 @@ Note that support of the operator -> is not required for these concepts.
 These concepts are declared in the header file <iterator>.
 
 
-\mySamllsection{Basic Concepts for Indirect Support}
+\mySamllsection{基本概念的间接支持}
 
 \mySamllsection{std::indirectly\_writable<P, Val>}
 
@@ -362,7 +362,7 @@ Satisfied by raw pointers, smart pointers, and iterators.
 
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 The resulting value has the same reference type for both const and non-const objects (which rules out std::optional<>). This ensures that the constness of P does not propagate to where it points to (which is usually not the case when the operator returns a reference to a member).
@@ -372,7 +372,7 @@ std::iter\_value\_t<P> must be valid. The type does not have to support the oper
 \end{itemize}
 \end{itemize}
 
-\mySamllsection{Concepts for Indirectly Readable Objects}
+\mySamllsection{间接可读对象的概念}
 
 For pointer-like concepts that are indirectly readable, you can check additional constraints:
 
@@ -392,7 +392,7 @@ void foo(InP inPos, OutP, outPos) {
 \end{cpp}
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable<InP> is satisfied
@@ -419,7 +419,7 @@ void foo(InP inPos, OutP, outPos) {
 \end{cpp}
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_movable<InP, OutP> is satisfied
@@ -451,7 +451,7 @@ void foo(InP inPos, OutP outPos) {
 \end{cpp}
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable<InP> is satisfied
@@ -478,7 +478,7 @@ void foo(InP inPos, OutP outPos) {
 \end{cpp}
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_copyable<InP, OutP> is satisfied
@@ -501,7 +501,7 @@ The values InP refers to are copy/move constructible and assignable
 Guarantees that values of P or P1 and P2 can be swapped (using std::ranges::iter\_swap()).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable<P1> (and std::indirectly\_readable<P2>) is satisfied
@@ -518,7 +518,7 @@ For any two objects of types P1 and P2, std::ranges::iter\_swap() is supported
 Guarantees that you can compare the elements (optionally transformed with Proj1 and Proj2) to where P1 and P2 refer.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirect\_binary\_predicate for Comp
@@ -528,7 +528,7 @@ std::projected<P1, Proj1> and std::projected<P2, Proj2> are satisfied with std::
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{5.3.3}{Concepts for Iterators}
+\mySubsubsection{5.3.3}{迭代器的概念}
 
 This section lists the concepts for requiring different types of iterators. They deal with the fact that we have new iterator categories since C++20 and they correspond with the concepts for ranges.
 
@@ -543,7 +543,7 @@ Guarantees that Pos supports the basic interface of all iterators: operator++ an
 The concept does not require that the iterator is copyable (thus, this is less than the basic requirements for iterators used by algorithms).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::weakly\_incrementable<pos> is satisfied
@@ -570,7 +570,7 @@ Iterators of type Pos can be used to assign a value val of type T with:
 These iterators are only good for single-pass iterations.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::input\_or\_output\_iterator<Pos> is satisfied
@@ -590,7 +590,7 @@ Guarantees that Pos is an input iterator (an iterator where you can read values 
 These iterators are only good for single-pass iterations if std::forward\_iterator is not also satisfied.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::input\_or\_output\_iterator<Pos> is satisfied
@@ -613,7 +613,7 @@ Guarantees that Pos is a forward iterator (a reading iterator with which you can
 Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::input\_iterator<Pos> is satisfied
@@ -636,7 +636,7 @@ Guarantees that Pos is a bidirectional iterator (a reading iterator with which y
 Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::forward\_iterator<Pos> is satisfied
@@ -659,7 +659,7 @@ Guarantees that Pos is a random-access iterator (a reading iterator with which y
 Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::bidirectional\_iterator<Pos> is satisfied
@@ -688,7 +688,7 @@ Guarantees that Pos is an iterator that iterates over elements in contiguous mem
 Note that the iterator\_category member of the iterator does not match. If the category member is defined, it is only std::random\_access\_iterator\_tag, or even only std::input\_iterator\_tag if the values are prvalues.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::random\_access\_iterator<Pos> is satisfied
@@ -708,7 +708,7 @@ to\_address() for an element is a raw pointer to the element
 Guarantees that S can be used as a sentinel (end iterator of maybe a different type) for Pos.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::semiregular<S> is satisfied
@@ -731,7 +731,7 @@ Guarantees that S can be used as a sentinel (end iterator of maybe a different t
 To signal that you cannot compute the distance in constant time (even though you can compute the distance), you can define that std::disable\_sized\_sentinel\_for<Rg> yields true.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::sentinel\_for<S, Pos> is satisfied
@@ -744,7 +744,7 @@ std::disable\_sized\_sentinel\_for<S, Pos> is not defined to yield true
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{5.3.4}{Iterator Concepts for Algorithms}
+\mySubsubsection{5.3.4}{算法的迭代器概念}
 
 \mySamllsection{std::permutable<Pos>}
 
@@ -753,7 +753,7 @@ std::disable\_sized\_sentinel\_for<S, Pos> is not defined to yield true
 Guarantees that you can iterate forward by using the operator ++ and reorder elements by moving and swapping them
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::forward\_iterator<Pos> is satisfied
@@ -776,7 +776,7 @@ std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1, Proj2>,}
 Guarantees that you can merge the elements of two sorted sequences to where Pos1 and Pos2 refer by copying them into a sequence to where ToPos refers. The order is defined by the operator < or Comp (applied to the values optionally transformed with projections Proj1 and Proj2).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::input\_iterator is satisfied for both Pos1 and Pos2
@@ -812,7 +812,7 @@ std::strict\_weak\_order<Comp> is satisfied for Comp\& and the (projected) value
 Guarantees that you can sort the elements that the iterator Pos refers to with the operator < or Comp (after optionally applying the projection Proj to the values).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::permutable<Pos> is satisfied

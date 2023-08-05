@@ -24,7 +24,7 @@ Pointers to members (with the type of the object as an additional parameter)
 Guarantees that you can iterate forward by using the operator ++ and reorder elements by moving and swapping them
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 Guarantees that Op can be called for the arguments of types ArgTypes....
@@ -64,7 +64,7 @@ void callWithIntAndString(std::invocable<int, std::string> auto op);
 For a complete example, see the use of a lambda as a non-type template parameter.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
@@ -85,7 +85,7 @@ Op can be a function, function object, lambda, or pointer-to-member.
 Note that the difference to the concept std::invocable is purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
@@ -102,7 +102,7 @@ Guarantees that the callable (function, function object, lambda) Op is a predica
 This implies that the call changes neither the state of the passed operation nor of the passed arguments.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::regular\_invocable<Op> is satisfied
@@ -125,7 +125,7 @@ This implies that the call changes neither the state of the passed operation nor
 Note that the differences to the concepts std::equivalence\_relation and std::strict\_weak\_order are purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::predicate is satisfied for pred and any combination of two objects of types T1 and T2
@@ -147,7 +147,7 @@ This implies that the call changes neither the state of the passed operation nor
 Note that the differences to the concepts std::relation and std::strict\_weak\_order are purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::predicate is satisfied for pred and any combination of two objects of types T1 and T2
@@ -169,7 +169,7 @@ This implies that the call changes neither the state of the passed operation nor
 Note that the differences to the concepts std::relation and std::equivalence\_relation are purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::predicate is satisfied for pred and any combination of two objects of types T1 and T2
@@ -186,7 +186,7 @@ Guarantees that Op can be used as a random number generator that returns unsigne
 This concept is defined in the header file <random>.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::invocable<Op\&> is satisfied
@@ -214,7 +214,7 @@ Guarantees that Op can be called with the values that Pos refers to.
 Note that the difference to the concept indirectly\_regular\_unary\_invocable is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable<Pos> is satisfied
@@ -240,7 +240,7 @@ Guarantees that Op can be called with the values that Pos refers to and the call
 Note that the difference to the concept std::indirectly\_unary\_invocable is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable<Pos> is satisfied
@@ -263,7 +263,7 @@ The results of calling Op with both a value and a reference have a common refere
 Guarantees that the unary predicate Pred can be called with the values that Pos refers to.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable<Pos> is satisfied
@@ -286,7 +286,7 @@ All these calls of Pred yield a value that can be used as a Boolean value
 Guarantees that the binary predicate Pred can be called with the values that Pos1 and Pos2 refer to.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable is satisfied for Pos1 and Pos2
@@ -312,7 +312,7 @@ Guarantees that the binary predicate Pred can be called to check whether two val
 Note that the difference to the concept std::indirectly\_strict\_weak\_order is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable is satisfied for Pos1 and Pos2
@@ -338,7 +338,7 @@ Guarantees that the binary predicate Pred can be called to check whether two val
 Note that the difference to the concept std::indirectly\_equivalence\_relation is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::indirectly\_readable is satisfied for Pos1 and Pos2

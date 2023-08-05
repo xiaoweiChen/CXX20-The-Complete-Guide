@@ -1,20 +1,20 @@
 
 
-This section lists the concepts that apply to objects and types in general.
+本节列出一般适用于对象和类型的概念。
 
-\mySubsubsection{5.2.1}{Arithmetic Concepts}
+\mySubsubsection{5.2.1}{算法概念}
 
 \mySamllsection{std::integral<T>}
 
 \begin{itemize}
 \item
-Guarantees that type T is an integral type (including bool and all character types).
+保证类型T是整型(包括bool和所有字符类型)。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-The type trait std::is\_integral\_v<T> yields true
+类型特性std::is\_integral\_v<T>为true
 \end{itemize}
 \end{itemize}
 
@@ -23,16 +23,16 @@ The type trait std::is\_integral\_v<T> yields true
 
 \begin{itemize}
 \item
-Guarantees that type T is a signed integral type (including signed character types, which char might be).
+保证类型T是有符号整型(包括有符号字符类型，可能是char)。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::integral<T> is satisfied
+需要满足std::integral<T>
 
 \item
-The type trait std::is\_signed\_v<T> yields true
+类型特性std::is\_signed\_v<T>为true
 \end{itemize}
 \end{itemize}
 
@@ -40,16 +40,16 @@ The type trait std::is\_signed\_v<T> yields true
 
 \begin{itemize}
 \item
-Guarantees that type T is an unsigned integral type (including bool and unsigned character types, which char might be).
+保证类型T是无符号整型(包括bool和无符号字符类型，可能是char)。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::integral<T> is satisfied
+需要满足std::integral<T>
 
 \item
-The type trait std::is\_signed\_v<T> yields true
+类型特性std::is\_signed\_v<T>为true
 \end{itemize}
 \end{itemize}
 
@@ -57,43 +57,43 @@ The type trait std::is\_signed\_v<T> yields true
 
 \begin{itemize}
 \item
-Guarantees that type T is a floating-point type (float, double, or long double).
+保证类型T是浮点类型(float、double或long double)。
 
 \item
-The concept was introduced to enable the definition of the mathematical constants.
+引入这个概念是为了能够定义数学常数。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-The type trait std::is\_floating\_point\_v<T> yields true
+类型特性std::is\_floating\_point\_v<T>为true
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{5.2.2}{Object Concepts}
+\mySubsubsection{5.2.2}{对象概念}
 
-For objects (types that are neither references nor functions nor void) there is a hierarchy of required basic operations.
+对于对象(既不是引用也不是函数也不是void的类型)，有一个所需基本操作的层次结构。
 
 \mySamllsection{std::movable<T>}
 
 \begin{itemize}
 \item
-Guarantees that type T is movable and swappable. That is, you can move construct, move assign, and swap with another object of the type.
+保证类型T是可移动和可交换的。可以移动构造、移动赋值以及与该类型的另一个对象交换。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::move\_constructible<T> is satisfied
+需要满足std::move\_constructible<T>
 
 \item
-std::assignable\_from<T\&, T> is satisfied
+需要满足std::assignable\_from<T\&, T>
 
 \item
-std::swappable<T> is satisfied
+需要满足std::swappable<T>
 
 \item
-T is neither a reference nor a function nor void
+T既不是引用，也不是函数，也不是void
 \end{itemize}
 \end{itemize}
 
@@ -101,25 +101,25 @@ T is neither a reference nor a function nor void
 
 \begin{itemize}
 \item
-Guarantees that type T is copyable (which implies movable and swappable).
+保证类型T是可复制的(可移动和可交换)。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::movable<T> is satisfied
+需要满足std::movable<T>
 
 \item
-std::copy\_constructible<T> is satisfied
+需要满足std::copy\_constructible<T>
 
 \item
-std::assignable\_from for any T, T\&, const T, and const T\& to T\&
+std::assignable\_from用于任意T，T\&，const T，以及const T\&转换为T\&
 
 \item
-std::swappable<T> is satisfied
+需要满足std::swappable<T>
 
 \item
-T is neither a reference nor a function nor void
+T既不是引用，也不是函数，也不是void
 \end{itemize}
 \end{itemize}
 
@@ -127,31 +127,31 @@ T is neither a reference nor a function nor void
 
 \begin{itemize}
 \item
-Guarantees that type T is semiregular (can default initialize, copy, move, and swap).
+保证类型T是半常规的(可以默认初始化、复制、移动和交换)。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::copyable<T> is satisfied
+需要满足std::copyable<T>
 
 \item
-std::default\_initializable<T> is satisfied
+需要满足std::default\_initializable<T>
 
 \item
-std::movable<T> is satisfied
+需要满足std::movable<T>
 
 \item
-std::copy\_constructible<T> is satisfied
+需要满足std::copy\_constructible<T>
 
 \item
-std::assignable\_from for any T, T\&, const T, and const T\& to T\&
+std::assignable\_from用于任意T，T\&，const T，以及const T\&转换为T\&
 
 \item
-std::swappable<T> is satisfied
+需要满足std::swappable<T>
 
 \item
-T is neither a reference nor a function nor void
+T既不是引用，也不是函数，也不是void
 \end{itemize}
 \end{itemize}
 
@@ -159,59 +159,59 @@ T is neither a reference nor a function nor void
 
 \begin{itemize}
 \item
-Guarantees that type T is regular (can default initialize, copy, move, swap, and check for equality).
+保证类型T是常规的(可以默认初始化、复制、移动、交换和检查相等性)。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::semiregular<T> is satisfied
+需要满足std::semiregular<T>
 
 \item
-std::equality\_comparable<T> is satisfied
+需要满足std::equality\_comparable<T>
 
 \item
-std::copyable<T> is satisfied
+需要满足std::copyable<T>
 
 \item
-std::default\_initializable<T> is satisfied
+需要满足std::default\_initializable<T>
 
 \item
-std::movable<T> is satisfied
+需要满足std::movable<T>
 
 \item
-std::copy\_constructible<T> is satisfied
+需要满足std::copy\_constructible<T>
 
 \item
-std::assignable\_from for any T, T\&, const T, and const T\& to T\&
+std::assignable\_from用于任意T，T\&，const T，以及const T\&转换为T\&
 
 \item
-std::swappable<T> is satisfied
+需要满足std::swappable<T>
 
 \item
-T is neither a reference nor a function nor void
+T既不是引用，也不是函数，也不是void
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{5.2.3}{Concepts for Relationships between Types}
+\mySubsubsection{5.2.3}{概念间的关系类型}
 
 \mySamllsection{std::same\_as<T1, T2>}
 
 \begin{itemize}
 \item
-Guarantees that the types T1 and T2 are the same.
+保证T1和T2类型相同。
 
 \item
-The concept calls the std::is\_same\_v type trait twice to ensure that the order of the parameters does not matter.
+概念两次调用std::is\_same\_v类型特性，以确保与参数的顺序无关。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-The type trait std::is\_same\_v<T1, T2> yields true
+类型特性std::is\_same\_v<T1, T2>为true
 
 \item
-The order of T1 and T2 does not matter
+与T1和T2的顺序无关
 \end{itemize}
 \end{itemize}
 
@@ -219,19 +219,19 @@ The order of T1 and T2 does not matter
 
 \begin{itemize}
 \item
-Guarantees that objects of type From are both implicitly and explicitly convertible to objects of type To.
+保证From类型的对象隐式和显式可转换为To类型的对象。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-The type trait std::is\_convertible\_v<From, To> yields true
+类型特性std::is\_convertible\_v<From, To>为true
 
 \item
-A static\_cast from From to To is supported
+支持从From到To的static\_cast
 
 \item
-You can return an object of type From as a To
+可以将From类型的对象作为To返回
 \end{itemize}
 \end{itemize}
 
@@ -239,16 +239,16 @@ You can return an object of type From as a To
 
 \begin{itemize}
 \item
-Guarantees that type D is publicly derived from type B (or D and B are the same) so that any pointer of type D can be converted to a pointer of type B. In other words: the concept guarantees that a D reference/pointer can be used as a B reference/pointer.
+保证D类型是从B类型公开派生的(或者D和B是相同的)，D类型的指针都可以转换为B类型的指针。换句话说:这个概念保证了D引用/指针可以用作B引用/指针。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-The type trait std::is\_base\_of\_v<B, D> yields true
+类型特性std::is\_base\_of\_v<B, D>为true
 
 \item
-The type trait std::is\_convertible\_v for a const pointer of type D to B yields true
+对于类型D到B的const指针，类型特性std::is\_convertible\_v为true
 \end{itemize}
 \end{itemize}
 
@@ -256,16 +256,16 @@ The type trait std::is\_convertible\_v for a const pointer of type D to B yields
 
 \begin{itemize}
 \item
-Guarantees that you can initialize an object of type T with parameters of types Args...
+保证可以用Args…类型的参数初始化一个T类型的对象。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::destructible<T> is satisfied
+需要满足std::destructible<T> 
 
 \item
-The type trait std::is\_constructible\_v<T, Args...> yields true
+类型特性std::is\_constructible\_v<T, Args...>为true
 \end{itemize}
 \end{itemize}
 
@@ -273,21 +273,21 @@ The type trait std::is\_constructible\_v<T, Args...> yields true
 
 \begin{itemize}
 \item
-Guarantees that you can move or copy assign a value of type From to a value of type To.
+保证可以将From类型的值移动或复制赋值给To类型的值。
 
-The assignment also has to yield the original To object.
+赋值还必须产生原始To对象。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-To has to be an lvalue reference
+To必须是一个左值引用
 
 \item
-std::common\_reference\_with<To, From> is satisfied for const lvalue references of the types
+std::common\_reference\_with<To, From>满足类型的const左值引用
 
 \item
-The operator = has to be supported and yield the same type as To
+必须支持运算符=，并产生与To相同的类型
 \end{itemize}
 \end{itemize}
 
@@ -295,16 +295,16 @@ The operator = has to be supported and yield the same type as To
 
 \begin{itemize}
 \item
-Guarantees that values of types T1 and T2 can be swapped.
+保证类型T1和T2的值可以交换。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::common\_reference\_with<T1, T2> is satisfied
+需要满足std::common\_reference\_with<T1, T2>
 
 \item
-Any two objects of types T1 and T2 can swap values with each other by using std::ranges::swap()
+任意两个T1和T2类型的对象，都可以通过使用std::ranges::swap()交换值。
 \end{itemize}
 \end{itemize}
 
@@ -312,22 +312,22 @@ Any two objects of types T1 and T2 can swap values with each other by using std:
 
 \begin{itemize}
 \item
-Guarantees that types T1 and T2 share a common type to which they can be explicitly converted.
+保证类型T1和T2共享一个可以显式转换为的公共类型。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-The type trait std::common\_type\_t<T1, T2> yields a type
+类型特性std::common\_type\_t<T1, T2>会产生一个类型
 
 \item
-A static\_cast is supported to their common type
+其通用类型支持static\_cast
 
 \item
-References of both types share a common\_reference type
+这两种类型的引用共享一个common\_reference类型
 
 \item
-The order of T1 and T2 does not matter
+与T1和T2的顺序无关
 \end{itemize}
 \end{itemize}
 
@@ -335,47 +335,47 @@ The order of T1 and T2 does not matter
 
 \begin{itemize}
 \item
-Guarantees that types T1 and T2 share a common\_reference type to which they can be explicitly and implicitly converted.
+保证类型T1和T2共享一个common\_reference类型，可以显式和隐式地转换为该类型。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-The type trait std::common\_reference\_t<T1, T2> yields a type
+类型特性std::common\_reference\_t<T1, T2>会产生一个类型
 
 \item
-Both types are std::convertible\_to their common reference type
+这两种类型可通过std::convertible\_to转换为公共引用类型
 
 \item
-The order of T1 and T2 does not matter
+与T1和T2的顺序无关
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{5.2.4}{Comparison Concepts}
+\mySubsubsection{5.2.4}{比较概念}
 
 \mySamllsection{std::equality\_comparable<T>}
 
 \begin{itemize}
 \item
-Guarantees that objects of type T are comparable with the operators == and !=. The order should not matter.
+保证类型T的对象与操作符==和!=可比较，与顺序无关。
 
 \item
-The operator == for T should be symmetric and transitive:
+T的运算符==应该是对称的和可传递的:
 \begin{itemize}
 \item
-t1==t2 is true if and only if t2==t1
+当t2==t1时，t1==t2为真
 
 \item
-If t1==t2 and t2==t3 are true, then t1==t3 is true
+若t1==t2和t2==t3为真，则t1==t3为真
 \end{itemize}
 
-However, this a semantic constraint that cannot be checked at compile time.
+但这是在编译时无法检查的语义约束。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-Both == and != are supported and yield a value convertible to bool
+==和!=都受支持，并产生可转换为bool的值
 \end{itemize}
 \end{itemize}
 
@@ -383,13 +383,13 @@ Both == and != are supported and yield a value convertible to bool
 
 \begin{itemize}
 \item
-Guarantees that objects of types T1 and T2 are comparable using the operators == and !=.
+保证类型T1和T2的对象可以使用操作符==和!=进行比较。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-== and != are supported for all comparisons where objects of T1 and/or T2 are involved and yield a value of the same type convertible to bool
+对于涉及T1和/或T2对象的所有比较，都支持==和!=，并产生可转换为bool的相同类型的值
 \end{itemize}
 \end{itemize}
 
@@ -397,10 +397,10 @@ Requires:
 
 \begin{itemize}
 \item
-Guarantees that objects of type T are comparable with the operators ==, !=, <, <=, >, and >= so that two values are always either equal to, or less than, or greater than each other.
+保证类型T的对象可与操作符==、!=、<、<=、>和>=进行比较，以便两个值总是相互等于、小于或大于对方。
 
 \item
-The concept does not claim that type T has a total order for all values. In fact, the expression std::totally\_ordered<double> yields true even though floating-point values do not have a total order:
+这个概念并没有声称类型T具有所有值的总顺序。实际上，表达式std::totally\_ordered<double>的结果为真，即使浮点值没有顺序:
 
 \begin{cpp}
 std::totally_ordered<double> // true
@@ -408,16 +408,16 @@ std::totally_ordered<std::pair<double, double>> // true
 std::totally_ordered<std::complex<int>> // false
 \end{cpp}
 
-This concept is therefore provided to check the formal requirements to be able to sort elements. It is used by std::ranges::less, which is the default sorting criterion for sorting algorithms. That way, sorting algorithms do not fail to compile if types do not have a total order for all values. Supporting all six basic comparison operators is enough. The values to be sorted should have a total or weak order. However, this a semantic constraint that cannot be checked at compile time.
+因此，提供这个概念是为了检查能够对元素进行排序的正式需求。由std::ranges::less使用，这是排序算法的默认排序条件。这样，若类型没有所有值的总顺序，排序算法就不会编译失败，支持所有六个基本比较运算符就足够了。要排序的值应该是全序或弱序，但这是在编译时无法检查的语义约束。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::equality\_comparable<T> is satisfied
+需要满足std::equality\_comparable<T>
 
 \item
-All comparisons with the operators ==, !=, <, <=, >, and >= yield a value convertible to bool
+与操作符==、!=、<、<=、>和>=的所有比较都会产生可转换为bool的值
 \end{itemize}
 \end{itemize}
 
@@ -425,13 +425,13 @@ All comparisons with the operators ==, !=, <, <=, >, and >= yield a value conver
 
 \begin{itemize}
 \item
-Guarantees that objects of types T1 and T2 are comparable with the operators ==, !=, <, <=, >, and >= so that two values are always either equal to, or less than, or greater than each other.
+保证类型T1和T2的对象与操作符==、!=、<、<=、>和>=具有可比性，以便两个值总是相互等于、小于或大于对方。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-==, !=, <, <=, >, and >= are supported for all comparisons where objects of T1 and/or T2 are involved and yield a value of the same type convertible to bool
+对于涉及T1和/或T2对象的所有比较，都支持==，!=，<，<=，>和>=，并产生可转换为bool的相同类型的值
 \end{itemize}
 \end{itemize}
 
@@ -441,25 +441,25 @@ Requires:
 
 \begin{itemize}
 \item
-Guarantees that objects of type T are comparable with the operators ==, !=, <, <=, >, >=, and the operator <=> (and have at least the comparison category type Cat). If no Cat is passed, std::partial\_ordering is required.
+保证类型T的对象与操作符==、!=、<、<=、>、>=和操作符<=>可比较(并且至少具有比较类别类型Cat)。若没有传递Cat，则需要std::partial\_ordering。
 
 \item
-This concept is defined in the header file <compare>.
+这个概念在头文件<compare>中定义。
 
 \item
-Note that this concept does not imply and subsume std::equality\_comparable because the latter requires that the operator == yields true only for two objects that are equal. With a weak or partial order, this might not be the case.
+注意，这个概念并不包含std::equality\_comparable，因为后者要求操作符==只对两个相等的对象产生真值。对于弱序或偏序，情况可能不是这样。
 
 \item
-Note that this concept does not imply and subsume std::totally\_ordered because the latter requires that the comparison category is std::strong\_ordering or std::weak\_ordering.
+注意，这个概念并不暗示和包含std::totally\_ordered，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-All comparisons with the operators ==, !=, <, <=, >, and >= yield a value convertible to bool
+与操作符==、!=、<、<=、>和>=的所有比较都会产生可转换为bool的值
 
 \item
-Any comparison with the operator <=> yields a comparison category (which is at least Cat)
+与操作符<=>的任何比较都会产生一个比较类别(至少是Cat)。
 \end{itemize}
 \end{itemize}
 
@@ -467,31 +467,31 @@ Any comparison with the operator <=> yields a comparison category (which is at l
 
 \begin{itemize}
 \item
-Guarantees that any two objects of types T1 and T2 are comparable with the operators ==, !=, <, <=, >, >=, and the operator <=> (and have at least the comparison category type Cat). If no Cat is passed, std::partial\_ordering is required.
+保证任意两个T1和T2类型的对象都可以与操作符==、!=、<、<=、>、>=和操作符<=>进行比较(并且至少具有比较类别类型Cat)。若没有传递Cat，则需要std::partial\_ordering。
 
 \item
-This concept is defined in the header file <compare>.
+这个概念在头文件<compare>中定义。
 
 \item
-Note that this concept does not imply and subsume std::equality\_comparable\_with because the latter requires that the operator == yields true only for two objects that are equal. With a weak or partial order, this might not be the case.
+注意，这个概念并不包含std::equality\_comparable\_with，因为后者要求操作符==只对两个相等的对象产生真值。对于弱序或偏序，情况可能并不是这样。
 
 \item
-Note that this concept does not imply and subsume std::totally\_ordered\_with because the latter requires that the comparison category is std::strong\_ordering or std::weak\_ordering.
+注意，这个概念并不暗示和包含std::totally\_ordered\_with，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
-std::three\_way\_comparable is satisfied for values and common references of T1 and T2 (and Cat)
+std::three\_way\_comparable满足T1和T2(以及Cat)的值和公共引用
 
 \item
-All comparisons with the operators ==, !=, <, <=, >, and >= yield a value convertible to bool
+与操作符==、!=、<、<=、>和>=的所有比较都会产生可转换为bool的值
 
 \item
-Any comparison with the operator <=> yields a comparison category (which is at least Cat)
+与操作符<=>的任何比较都会产生一个比较类别(至少是Cat)。
 
 \item
-The order of T1 and T2 does not matter
+与T1和T2的顺序无关
 \end{itemize}
 \end{itemize}
 

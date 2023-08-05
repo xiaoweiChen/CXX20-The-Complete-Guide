@@ -11,7 +11,7 @@ This section describes some standardized concepts that are mainly specified to i
 Guarantees that the type T supports default construction (declaration/construction without an initial value).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::constructible\_from<T> is satisfied
@@ -43,7 +43,7 @@ T t2{std::move(t1)} // for any t1 of type T
 Afterwards, t2 shall have the former value of t1, which is a semantic constraint that cannot be checked at compile time.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::constructible\_from<T, T> is satisfied
@@ -72,7 +72,7 @@ T t2{t1} // for any t1 of type T
 Afterwards, t2 shall be equal to t1, which is a semantic constraint that cannot be checked at compile time.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::move\_constructible<T> is satisfied
@@ -94,7 +94,7 @@ Guarantees that objects of type T are destructible without throwing an exception
 Note that even implemented destructors automatically guarantee not to throw unless you explicitly mark them with noexcept(false).
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 The type trait std::is\_nothrow\_destructible\_v<T> yields true
@@ -108,7 +108,7 @@ The type trait std::is\_nothrow\_destructible\_v<T> yields true
 Guarantees that you can swap the values of two objects of type T.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::ranges::swap() can be called for two objects of type T
@@ -144,7 +144,7 @@ Two increments of the same value give different results
 Note that the differences to concept std::incrementable are purely semantic differences so that types for which increments yield different results might still technically satisfy the concept incrementable. To implement different behavior for this semantic difference, you should use iterator concepts instead.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::default\_initializable<T> is satisfied
@@ -181,7 +181,7 @@ The postfix increment operator returns a copy of the iterator (has return type T
 Note that the differences to concept std::weakly\_incrementable are purely semantic differences so that types for which increments yield different results might still technically satisfy the concept incrementable. To implement different behavior for this semantic difference, you should use iterator concepts instead.
 
 \item
-Requires:
+要求:
 \begin{itemize}
 \item
 std::weakly\_incrementable<T> is satisfied

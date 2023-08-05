@@ -1,107 +1,107 @@
 
-Table Basic concepts for types and objects lists the basic concepts for types and objects in general.
+“类型和对象基本概念表”列出了类型和对象的基本概念。
 
-Table Concepts for ranges, iterators, and algorithms lists the concepts for ranges, views, iterators, and algorithms.
+“范围、迭代器和算法概念表”列出了范围、视图、迭代器和算法的概念。
 
-Table Auxiliary concepts lists the concepts that are used mainly as building blocks for other concepts and are usually not used directly by application programmers.
+辅助概念表列出的概念主要用作其他概念的构建块，通常不会让应用程序开发者直接使用。
 
-\mySubsubsection{5.1.1}{Header Files and Namespaces}
+\mySubsubsection{5.1.1}{头文件和命名空间}
 
-Standard concepts are defined in different header files:
+标准概念在不同的头文件中定义:
 
 \begin{itemize}
 \item
-Many basic concepts are defined in the header file <concepts>, which is included by <ranges> and <iterator>.
+头文件<concepts>中定义了许多基本概念，其中包括<ranges>和<iterator>。
 
 \item
-Concepts for iterators are defined in the header file <iterator>.
+迭代器的概念在头文件<iterator>中定义。
 
 \item
-Concepts for ranges are defined in the header file <ranges>.
+范围的概念在头文件<ranges>中定义。
 
 \item
-three\_way\_comparable concepts are defined in <compare> (which is included by almost every other header file).
+<compare>中定义了three\_way\_comparable的概念(几乎包含在所有其他头文件中)。
 
 \item
-uniform\_random\_bit\_generator is defined in <random>.
+uniform\_random\_bit\_generator在<random>中定义。
 \end{itemize}
 
-Almost all concepts are defined in the namespace std. The only exceptions to this rule are the ranges concepts, which are defined in the namespace std::ranges.
+几乎所有的概念都定义在命名空间std中，唯一的例外是range概念，它定义在命名空间std::ranges中。
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Concept} &
-	\textbf{Constraint} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}integral\\ signed\_integral\\ unsigned\_integral\\ floating\_point\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Integral type\\ Signed integral type\\ Unsigned integral type\\ Floating-point type\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}movable\\ copyable\\ semiregular\\ regular\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Supports move initialization/assignment and swaps\\ Supports move and copy initialization/assignment and swaps\\ Supports default initialization, copies, moves and swaps\\ Supports default initialization, copies, moves, swaps, and equality comparisons\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}same\_as\\ convertible\_to\\ derived\_from\\ constructible\_from\\ assigneable\_from\\ swappable\_with\\ common\_with\\ common\_reference\_with\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Same types\\ Type convertible to another type\\ Type derived from another type\\ Type constructiable from others types\\ Type assignable from another type\\ Type swappable with another type\\ Two types have a common type\\ Two types have a common reference type\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}equality\_comparable\\ equality\_comparable\_with\\ totally\_ordered\\ totally\_ordered\_with\\ three\_way\_comparable\\ three\_way\_comparable\_with\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type supports checks for equality\\ Can check two types for equality\\ Types support a strict weak ordering\\ Can check two types for strict weak ordering\\ Can apply all comparison operators(includeing the operator\textless{}=\textgreater{})\\ Can compare two types with all comparison operators(including \textless{}=\textgreater{})\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}invocable\\ regular\_invocable\\ predicate\\ relation\\ equivalence\_relation\\ strict\_weak\_order\\ uniform\_random\_bit\_generator\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type is a callable for specified arguments\\ Type is a callable for specified arguments(no modifications)\\ Type is a predicate(callable that returns a Boolean value)\\ A callable type defines a relationship between two types\\ A callable type defines an equality relationship between two types\\ A callable type defines an ordering relationship between two types\\ A callable type can be used as a random number generator\end{tabular} \\ \hline
+\hline
+\textbf{概念} &
+\textbf{约束} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}integral\\ signed\_integral\\ unsigned\_integral\\ floating\_point\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}整型\\ 有符号整型\\ 无符号整型\\ 浮点类型\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}movable\\ copyable\\ semiregular\\ regular\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}支持移动初始化/赋值和交换\\ 支持移动和复制初始化/赋值和交换\\ 支持默认初始化、复制、移动和交换\\ 支持默认初始化、复制、移动、交换和相等比较\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}same\_as\\ convertible\_to\\ derived\_from\\ constructible\_from\\ assigneable\_from\\ swappable\_with\\ common\_with\\ common\_reference\_with\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}相同类型\\ 类型可转换为另一类型\\ 从另一类型派生的类型\\ 可从其他类型构造的类型\\ 可从另一类型赋值的类型\\ 类型可与其他类型交换\\ 两种类型有一个共同的类型\\ 两个类型有一个共同的引用类型\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}equality\_comparable\\ equality\_comparable\_with\\ totally\_ordered\\ totally\_ordered\_with\\ three\_way\_comparable\\ three\_way\_comparable\_with\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}类型支持相等性检查\\ 可以检查两种类型是否相等\\ 类型支持严格的弱排序\\ 是否可以检查两种类型的严格弱排序\\ 可以应用所有比较运算符(包括运算符\textless{}=\textgreater{})\\ 可以使用所有比较操作符(包括 \textless{}=\textgreater{})\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}invocable\\ regular\_invocable\\ predicate\\ relation\\ equivalence\_relation\\ strict\_weak\_order\\ uniform\_random\_bit\_generator\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}类型是指定参数的可调用对象\\ 类型是指定参数的可调用对象(无修改)\\ 类型是一个谓词(返回布尔值的可调用对象)\\ 可调用类型定义了两个类型之间的关系\\ 可调用类型定义了两个类型之间的相等关系\\ 可调用类型定义了两个类型之间的排序关系\\ 可调用类型可以用作随机数生成器\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 5.1. Basic concepts for types and objects
+表5.1 类型和对象的基本概念
 \end{center}
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Concept} &
-	\textbf{Constraint} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}default\_initializable\\ move\_constructible\\ copy\_constructible\\ destructible\\ swappable\\ weakly\_incrementables\\ incrementable\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type is default initializable\\ Type supports move initializations\\ Type supports copy initializations\\ Type is destructible\\ Type is swappable\\ Type supports the increment operators\\ Type supports equality-preserving increment operator\end{tabular} \\ \hline
+\hline
+\textbf{概念} &
+\textbf{约束} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}default\_initializable\\ move\_constructible\\ copy\_constructible\\ destructible\\ swappable\\ weakly\_incrementables\\ incrementable\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}类型可默认初始化\\ 类型支持移动初始化\\ 类型支持复制初始化\\ 类型是可销毁\\类型可交换\\ 类型支持自增操作符\\ 类型支持保持相等的递增运算符\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 5.2. Auxiliary concepts
+表5.2 辅助概念
 \end{center}
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Concept} &
-	\textbf{Constraint} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}range\\ output\_range\\ input\_range\\ forward\_range\\ bidirectional\_range\\ random\_access\_range\\ contiguous\_range\\ sized\_range\\ common\_range\\ borrowed\_range\\ view\\ vieable\_range\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type is a range\\ Type is a range to write to\\ Type is a range to read from\\ Type is a range to read from multiple times\\ Type is a range to read forward and backward from\\ Type is a range that supports jumping around over elements\\ Type is a range with elements in contiguous memory\\ Type is a range with cheap size support\\ Type is a range with iterators and sentinels that have the same type\\ Type is an lvalue or a borrowed range\\ Type is a view\\ Type is or can be converted to a view\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}indirectly\_writable\\ indirectly\_readable\\ indirectly\_movable\\ indirectly\_movable\_storable\\ indirectly\_copyable\\ indirectly\_copyable\_storable\\ indirectly\_swappable\\ indirectly\_comparable\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type can be used to write to where it refers\\ Type can be used to read from where it refers\\ Type refers to movable objects\\ Type refers to movable objects with support for temporaries\\ Type refers to copyable objects\\ Type refers to copyable objects with support for temporaries\\ Type refers to swappable objects\\ Type refers to comparable objects\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}input\_output\_iterator\\ output\_iterator\\ input\_iterator\\ forward\_iterator\\ bidirectional\_iterator\\ random\_access\_iterator\\ contiguous\_interator\\ sentinel\_for\\ sized\_sentinel\_for\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type is an iterator\\ Type is an output iterator\\ Type is (at least) an input iterator\\ Type is (at least) a forward iterator\\ Type is (at least) a bidirectional iterator\\ Type is (at least) a random-access iterator\\ Type is an iterator to elements in contiguous memory\\ Type can be used as a sentinel for an iterator type\\ Type can be used as a sentinel for an iterator type with cheap computaion of distance\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}permutable\\ mergeable\\ sortable\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type is(at least) a forward iterator that can reorder elements\\ Two types can be used to merge sorted elements into a third type\\ A type is sortable(according to a comparison and projection)\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}indirectly\_unary\_invocable\\ indirectly\_regular\_unary\_invocable\\ indirect\_unary\_predicate\\ indirect\_binary\_predicate\\ indirect\_equivalence\_relation\\ indirect\_strict\_weak\_order\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Operation can be called with the value type of an iterator\\ Stateless operation can be called with the value types of an iterator\\ Unary predicate can be called with the value type of an iterator\\ Binary predicate can be called with the value types of two iterators\\ Predicate can be used to check two values of the passed iterator(s) for equality\\ Predicate can be used to order two values of the passed iterator(s)\end{tabular} \\ \hline
+\hline
+\textbf{概念} &
+\textbf{约束} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}range\\ output\_range\\ input\_range\\ forward\_range\\ bidirectional\_range\\ random\_access\_range\\ contiguous\_range\\ sized\_range\\ common\_range\\ borrowed\_range\\ view\\ vieable\_range\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}类型是一个范围\\ 类型是要写入的范围\\ 类型是要读取的范围\\ 类型是一个可多次读取的范围\\ 类型是向前和向后读取的范围\\ 类型是一个支持在元素上跳跃的范围\\ 类型是在连续内存中包含元素的范围\\ 类型是一个大小支持范围\\ 类型是一系列迭代器和相同类型的哨兵\\ 类型是左值或借用的范围\\ 类型是视图\\ 类型或可以转换为视图\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}indirectly\_writable\\ indirectly\_readable\\ indirectly\_movable\\ indirectly\_movable\_storable\\ indirectly\_copyable\\ indirectly\_copyable\_storable\\ indirectly\_swappable\\ indirectly\_comparable\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}类型可用于写入它所引用的位置\\ 类型可用于从其所引用的位置进行读取\\ 类型是指可移动的对象\\ 类型是指支持临时的可移动对象\\ 类型指的是可复制对象\\ 类型是指支持临时对象的可复制对象\\ 类型指的是可交换的对象\\ 类型指的是可比较的对象\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}input\_output\_iterator\\ output\_iterator\\ input\_iterator\\ forward\_iterator\\ bidirectional\_iterator\\ random\_access\_iterator\\ contiguous\_interator\\ sentinel\_for\\ sized\_sentinel\_for\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}类型是一个迭代器\\ 类型是一个输出迭代器\\ 类型(至少)是输入迭代器\\ 类型(至少)是前向迭代器\\ 类型(至少)是一个双向迭代器\\ 类型(至少)是一个随机访问迭代器\\ 类型是指向连续内存中元素的迭代器\\ 类型可以用作迭代器类型的标记\\ 类型可以用作迭代器类型的哨点，距离计算的成本较低\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}permutable\\ mergeable\\ sortable\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}类型(至少)是一个前向迭代器，可以对元素重新排序\\ 可以使用两种类型将排序后的元素合并为第三种类型\\ 类型是可排序的(根据比较和投影)\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}indirectly\_unary\_invocable\\ indirectly\_regular\_unary\_invocable\\ indirect\_unary\_predicate\\ indirect\_binary\_predicate\\ indirect\_equivalence\_relation\\ indirect\_strict\_weak\_order\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}操作可以用迭代器的值类型调用\\ 无状态操作可以用迭代器的值类型调用\\ 一元谓词可以用迭代器的值类型调用\\ 二元谓词可以用两个迭代器的值类型调用\\ 谓词可用于检查传递的迭代器的两个值是否相等\\ 谓词可用于对传递的迭代器的两个值排序。\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 5.3. Concepts for ranges, iterators, and algorithms
+表5.3 范围、迭代器和算法的概念
 \end{center}
 
-\mySubsubsection{5.1.2}{Standard Concepts Subsume}
+\mySubsubsection{5.1.2}{标准概念的包含}
 
-The concepts provided by the C++ standard library are carefully designed to subsume other concepts when this makes sense. In fact, they build a pretty complex subsumption graph. Figure 5.1 gives an impression of how complex it is.
+C++标准库提供的概念经过精心设计，以便在有意义时包含其他概念，其建立了一个相当复杂的包含图。图5.1显示了它的复杂程度。
 
 \begin{center}
 \includegraphics[width=1.\textwidth]{content/chapter5/images/1.png}\\
-Figure 5.1. Subsumption graph of C++ standard concepts (extract)
+图5.1 C++标准概念的包含图(摘录)
 \end{center}
 
-For this reason, the description of the concepts lists which other key concepts are subsumed.
+出于这个原因，概念的描述列出了包含哪些其他关键概念。
 
 
 
