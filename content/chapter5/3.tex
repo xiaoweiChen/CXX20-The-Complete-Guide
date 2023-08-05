@@ -182,7 +182,7 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 若满足这个概念，std::ranges::size()对于Rg类型的对象是快速且定义良好的。
 
 \item
-注意，这个概念的性能方面是一个语义约束，不能在编译时检查。为了表明一个类型即使提供了size()也不满足这个概念，可以定义std::disable\_size \_range<Rg>产生true。
+注意，这个概念的性能方面是一个语义约束，不能在编译时检查。为了表明一个类型即使提供了size()也不满足这个概念，可以定义std::disable\_size\_range<Rg>产生true[disable\_size\_range的真正含义是“忽略size\_range的size()”。]。
 
 \item
 要求:
@@ -256,7 +256,7 @@ std::ranges::iterator\_t<Rg>和std::ranges::sentinel\_t<Rg>具有相同类型
 若满足这个概念，则范围的迭代器与范围的生命周期无关。所以当创建迭代器的范围被销毁时，迭代器不能挂起。但若范围的迭代器指向基础范围，并且基础范围不再存在，则其仍然可以悬挂。
 
 \item
-形式上，若Rg是左值(例如有名称的对象)，或者变量模板std::ranges::enable\_borrow \_range<Rg>为真，则满足该概念，以下视图都是如此:subrange、ref\_view、string\_view、span、iota\_view和empty\_view。
+形式上，若Rg是左值(例如有名称的对象)，或者变量模板std::ranges::enable\_borrow\_range<Rg>为真，则满足该概念，以下视图都是如此:subrange、ref\_view、string\_view、span、iota\_view和empty\_view。
 
 \item
 要求:
@@ -266,7 +266,7 @@ std::ranges::iterator\_t<Rg>和std::ranges::sentinel\_t<Rg>具有相同类型
 需要满足std::range<Rg>
 
 \item
-Rg是左值或enable\_borrow \_range<Rg>产生true
+Rg是左值或enable\_borrow\_range<Rg>产生true
 \end{itemize}
 \end{itemize}
 
@@ -277,36 +277,36 @@ Rg是左值或enable\_borrow \_range<Rg>产生true
 保证Rg是一个视图(复制、移动、赋值和销毁代价很低的范围)。
 
 \item
-视图有以下要求:
+视图有以下要求:[最初，C++20要求视图也应该是默认可构造的，并且销毁应该是低开销的，但\url{http://wg21.link/p2325r3}和\url{http://wg21.link/p2415r2}删除了这些要求。]
 
 \begin{itemize}
 \item
-It has to be a range (support iteration over the elements).
+必须是一个范围(支持对元素的迭代)。
 
 \item
-It has to be movable.
+必须可移动。
 
 \item
-The move constructor and, if available, the copy constructor have to have constant complexity.
+移动构造函数和复制构造函数(若可用)必须具有恒定的复杂性。
 
 \item
-The move assignment operator and, if available, the copy assignment operator have to be cheap (constant complexity or not worse than destruction plus creation).
+移动赋值运算符和复制赋值运算符(若可用的话)都必须是低开销的(保持不变的复杂度，或者不比销毁加创建的复杂度更低)。
 \end{itemize}
 
-All but the last requirements are checked by corresponding concepts. The last requirement is a semantic constraint and has to be guaranteed by the implementer of a type by deriving publicly from std::ranges::view\_interface or by specializing std::ranges::enable\_view<Rg> to yield true.
+除最后一个要求外，所有要求都通过相应的概念进行检查。最后一个要求是语义约束，必须由类型的实现者通过从std::ranges::view\_interface公开派生或特化std::ranges::enable\_view<Rg>生成true来保证。
 
 \item
 要求:
 
 \begin{itemize}
 \item
-std::range<Rg> is satisfied
+需要满足std::range<Rg>
 
 \item
-std::movable<Rg> is satisfied
+需要满足std::movable<Rg>
 
 \item
-The variable template std::ranges::enable\_view<Rg> is true
+变量模板std::ranges::enable\_view<Rg>为true
 \end{itemize}
 \end{itemize}
 
@@ -314,28 +314,28 @@ The variable template std::ranges::enable\_view<Rg> is true
 
 \begin{itemize}
 \item
-Guarantees that Rg is a range that can be safely converted to a view with the std::views::all() adaptor.
+保证Rg是一个可以使用std::views::all()适配器安全地转换为视图的范围。
 
 \item
-The concept is satisfied if Rg is either already a view or an lvalue of a range or a movable rvalue or a range but not an initializer list.
+若Rg已经是一个视图或一个范围的左值，或一个可移动的右值，或一个范围但不是初始化列表，则满足这个概念。[对于仅移动视图类型的左值，即使满足viewable\_range，也存在all()格式错误的问题。]
 
 \item
 要求:
 
 \begin{itemize}
 \item
-std::range<Rg> is satisfied
+需要满足std::range<Rg>
 
 \end{itemize}
 \end{itemize}
 
 \mySubsubsection{5.3.2}{类指针对象的概念}
 
-This section lists all standard concepts for objects for which you can use the operator * to deal with a value they point to. This usually applies to raw pointers, smart pointers, and iterators. Therefore, these concepts are usually used as base constraints for concepts that deal with iterators and algorithms.
+本节列出了对象的所有标准概念，可以使用操作符*来处理它们所指向的值。这通常适用于裸指针、智能指针和迭代器，所以这些概念通常用作处理迭代器和算法的概念的基本约束。
 
-Note that support of the operator -> is not required for these concepts.
+注意，这些概念不需要支持操作符->。
 
-These concepts are declared in the header file <iterator>.
+这些概念在头文件<iterator>中声明。
 
 
 \mySamllsection{基本概念的间接支持}
@@ -344,10 +344,10 @@ These concepts are declared in the header file <iterator>.
 
 \begin{itemize}
 \item
-Guarantees that P is a pointer-like object supporting the operator * to assign a Val.
+保证P是一个类似指针的对象，支持操作符*来赋值Val。
 	
 \item
-Satisfied by non-const raw pointers, smart pointers, and iterators provided Val can be assigned to where P refers to.
+满足非const裸指针、智能指针和迭代器的要求，提供Val可以赋值给P所指的位置。
 \end{itemize}
 
 
@@ -355,35 +355,35 @@ Satisfied by non-const raw pointers, smart pointers, and iterators provided Val 
 
 \begin{itemize}
 \item
-Guarantees that P is a pointer-like object supporting the operator * for read access.
+保证P是一个类似指针的对象，支持*的读访问方式。
 
 \item
-Satisfied by raw pointers, smart pointers, and iterators.
+满足裸指针，智能指针和迭代器。
 
 
 \item
 要求:
 \begin{itemize}
 \item
-The resulting value has the same reference type for both const and non-const objects (which rules out std::optional<>). This ensures that the constness of P does not propagate to where it points to (which is usually not the case when the operator returns a reference to a member).
+结果值对于const和非const对象具有相同的引用类型(排除了std::optional<>)，这确保了P的constness不会传播到所指向的位置(当操作符返回对成员的引用时通常不会出现这种情况)。
 
 \item
-std::iter\_value\_t<P> must be valid. The type does not have to support the operator ->.
+std::iter\_value\_t<P>必须有效，该类型不必支持操作符->。
 \end{itemize}
 \end{itemize}
 
 \mySamllsection{间接可读对象的概念}
 
-For pointer-like concepts that are indirectly readable, you can check additional constraints:
+对于间接可读的类指针概念，可以检查其他的约束:
 
 \mySamllsection{std::indirectly\_movable<InP,OutP>}
 
 \begin{itemize}
 \item
-Guarantees that values of InP can be move assigned directly to values of OutP.
+保证InP的值可以直接赋值给OutP。
 
 \item
-With this concept, the following code is valid:
+有了这个概念，以下代码是有效的:
 
 \begin{cpp}
 void foo(InP inPos, OutP, outPos) {
@@ -395,10 +395,10 @@ void foo(InP inPos, OutP, outPos) {
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable<InP> is satisfied
+需要满足std::indirectly\_readable<InP>
 
 \item
-std::indirectly\_writable is satisfied for rvalue references of the values of InP to (the values of) OutP
+std::indirectly\_writable满足从InP值到OutP的右值引用
 \end{itemize}
 \end{itemize}
 
@@ -406,10 +406,10 @@ std::indirectly\_writable is satisfied for rvalue references of the values of In
 
 \begin{itemize}
 \item
-Guarantees that values of InP can be move assigned indirectly to values of OutP even when using a (temporary) object of the type to where OutP points to.
+保证InP的值可以间接赋值给OutP，即使在使用OutP指向的类型的(临时)对象时也是如此。
 
 \item
-With this concept, the following code is valid:
+有了这个概念，以下代码是有效的:
 
 \begin{cpp}
 void foo(InP inPos, OutP, outPos) {
@@ -422,16 +422,16 @@ void foo(InP inPos, OutP, outPos) {
 要求:
 \begin{itemize}
 \item
-std::indirectly\_movable<InP, OutP> is satisfied
+需要满足std::indirectly\_movable<InP, OutP>
 
 \item
-std::indirectly\_writable is satisfied for the InP value to the objects OutP refers to
+std::indirectly\_writable满足OutP所引用对象的InP值
 
 \item
-std::movable is satisfied for the values InP refers to
+std::movable满足InP所引用的值
 
 \item
-Rvalues that InP refers to are copy/move constructible and assignable
+InP引用的右值是可复制/移动的、可构造的和可赋值的
 \end{itemize}
 \end{itemize}
 
@@ -439,10 +439,10 @@ Rvalues that InP refers to are copy/move constructible and assignable
 
 \begin{itemize}
 \item
-Guarantees that values of InP can be assigned directly to values of OutP.
+保证InP的值可以直接赋值给OutP。
 
 \item
-With this concept, the following code is valid:
+有了这个概念，以下代码是有效的:
 
 \begin{cpp}
 void foo(InP inPos, OutP outPos) {
@@ -454,10 +454,10 @@ void foo(InP inPos, OutP outPos) {
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable<InP> is satisfied
+需要满足std::indirectly\_readable<InP>
 
 \item
-std::indirectly\_writable is satisfied for references of the values of InP to (the values of) OutP assignable
+std::indirectly\_writable满足于对InP值的引用(OutP值)可赋值
 \end{itemize}
 \end{itemize}
 
@@ -465,10 +465,10 @@ std::indirectly\_writable is satisfied for references of the values of InP to (t
 
 \begin{itemize}
 \item
-Guarantees that values of InP can be assigned indirectly to values of OutP even when using a (temporary) object of the type to where OutP points to.
+保证InP的值可以间接赋值给OutP，即使在使用OutP指向类型的(临时)对象时也是如此。
 
 \item
-With this concept, the following code is valid:
+有了这个概念，以下代码是有效的:
 
 \begin{cpp}
 void foo(InP inPos, OutP outPos) {
@@ -481,16 +481,16 @@ void foo(InP inPos, OutP outPos) {
 要求:
 \begin{itemize}
 \item
-std::indirectly\_copyable<InP, OutP> is satisfied
+需要满足std::indirectly\_copyable<InP, OutP> 
 
 \item
-std::indirectly\_writable is satisfied for const lvalue and rvalue references of the InP value to the objects OutP refers to
+std::indirectly\_writable满足InP值对OutP所引用对象的const左值和右值引用
 
 \item
-std::copyable is satisfied for the values InP refers to
+std::copyable满足InP引用的值
 
 \item
-The values InP refers to are copy/move constructible and assignable
+InP引用的值是可复制/移动的、可构造的和可赋值的
 \end{itemize}
 \end{itemize}
 
@@ -498,16 +498,16 @@ The values InP refers to are copy/move constructible and assignable
 
 \begin{itemize}
 \item
-Guarantees that values of P or P1 and P2 can be swapped (using std::ranges::iter\_swap()).
+保证P或P1和P2的值可以交换(使用std::ranges::iter\_swap())。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable<P1> (and std::indirectly\_readable<P2>) is satisfied
+满足std::indirect\_readable<P1>(和std::indirect\_readable<P2>)
 
 \item
-For any two objects of types P1 and P2, std::ranges::iter\_swap() is supported
+对于任意两个类型为P1和P2的对象，支持std::ranges::iter\_swap()
 \end{itemize}
 \end{itemize}
 
@@ -515,41 +515,41 @@ For any two objects of types P1 and P2, std::ranges::iter\_swap() is supported
 
 \begin{itemize}
 \item
-Guarantees that you can compare the elements (optionally transformed with Proj1 and Proj2) to where P1 and P2 refer.
+保证可以将元素(可选地用Proj1和Proj2转换)与P1和P2所引用的位置进行比较。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirect\_binary\_predicate for Comp
+Comp满足std::indirect\_binary\_predicate
 
 \item
-std::projected<P1, Proj1> and std::projected<P2, Proj2> are satisfied with std::identity as default projections
+std::projected<P1, Proj1>和std::projected<P2, Proj2>满足std::identity为默认投影
 \end{itemize}
 \end{itemize}
 
 \mySubsubsection{5.3.3}{迭代器的概念}
 
-This section lists the concepts for requiring different types of iterators. They deal with the fact that we have new iterator categories since C++20 and they correspond with the concepts for ranges.
+本节列出了需要不同类型迭代器的概念。其处理的是自C++20起的新迭代器类别，它们与范围的概念相对应。
 
-These concepts are provided in the header file <iterator>.
+这些概念在头文件<iterator>中提供。
 
 \mySamllsection{std::input\_output\_iterator<Pos>}
 
 \begin{itemize}
 \item
-Guarantees that Pos supports the basic interface of all iterators: operator++ and operator*, where operator* has to refer to a value.
+保证Pos支持所有迭代器的基本接口:operator++和operator*，其中operator*必须引用一个值。
 
-The concept does not require that the iterator is copyable (thus, this is less than the basic requirements for iterators used by algorithms).
+这个概念并不要求迭代器可复制(所以，这低于算法使用的迭代器的基本要求)。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::weakly\_incrementable<pos> is satisfied
+满足std::weakly\_incrementable<pos>
 
 \item
-The operator * yields a reference
+操作符*产生了一个引用
 \end{itemize}
 \end{itemize}
 
@@ -557,26 +557,26 @@ The operator * yields a reference
 
 \begin{itemize}
 \item
-Guarantees that Pos is an output iterator (an iterator where you can assign values to the elements) to whose values you can assign values of typeT.
+保证Pos是一个输出迭代器(可以为元素赋值的迭代器)，可以为其赋类型为typeT的值。
 
 \item
-Iterators of type Pos can be used to assign a value val of type T with:
+Pos类型的迭代器可用于赋值T类型的值val:
 
 \begin{cpp}
 *i++ = val;
 \end{cpp}
 
 \item
-These iterators are only good for single-pass iterations.
+这些迭代器只适用于单遍迭代。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::input\_or\_output\_iterator<Pos> is satisfied
+满足std::input\_or\_output\_iterator<Pos>
 
 \item
-std::indirectly\_writable<Pos, I> is satisfied
+满足std::indirectly\_writable<Pos, I>
 \end{itemize}
 \end{itemize}
 
@@ -584,22 +584,22 @@ std::indirectly\_writable<Pos, I> is satisfied
 
 \begin{itemize}
 \item
-Guarantees that Pos is an input iterator (an iterator where you can read values from the elements).
+保证Pos是一个输入迭代器(可以从元素中读取值的迭代器)。
 
 \item
-These iterators are only good for single-pass iterations if std::forward\_iterator is not also satisfied.
+若std::forward\_iterator也不满足，这些迭代器只适用于单通迭代。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::input\_or\_output\_iterator<Pos> is satisfied
+满足std::input\_or\_output\_iterator<Pos>
 
 \item
-std::indirectly\_readable<Pos> is satisfied
+满足std::indirectly\_readable<Pos>
 
 \item
-Pos has an iterator category derived from std::input\_iterator\_tag
+Pos有一个派生自std::input\_iterator\_tag的迭代器类别
 \end{itemize}
 \end{itemize}
 
@@ -607,22 +607,22 @@ Pos has an iterator category derived from std::input\_iterator\_tag
 
 \begin{itemize}
 \item
-Guarantees that Pos is a forward iterator (a reading iterator with which you can iterate forward multiple times over elements).
+确保Pos是一个前向迭代器(一个读取迭代器，可以对元素进行多次前向迭代)。
 
 \item
-Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，是std::input\_iterator\_tag(若可用)。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::input\_iterator<Pos> is satisfied
+满足std::input\_iterator<Pos>
 
 \item
-std::incrementable<Pos> is satisfied
+满足std::incrementable<Pos>
 
 \item
-Pos has an iterator category derived from std::forward\_iterator\_tag
+Pos有一个派生自std::forward\_iterator\_tag的迭代器类别
 \end{itemize}
 \end{itemize}
 
@@ -630,22 +630,22 @@ Pos has an iterator category derived from std::forward\_iterator\_tag
 
 \begin{itemize}
 \item
-Guarantees that Pos is a bidirectional iterator (a reading iterator with which you can iterate forward and backward multiple times over elements).
+确保Pos是一个双向迭代器(一个读取迭代器，可以使用它在元素上向前或向后迭代多次)。
 
 \item
-Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，是std::input\_iterator\_tag(若可用)。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::forward\_iterator<Pos> is satisfied
+满足std::forward\_iterator<Pos>
 
 \item
-Support to iterate backward with the operator -{}-
+支持使用操作符向后迭代-{}-
 
 \item
-Pos has an iterator category derived from std::bidirectional\_iterator\_tag
+Pos有一个派生自std::bidirectional\_iterator\_tag的迭代器类别
 \end{itemize}
 \end{itemize}
 
@@ -653,28 +653,28 @@ Pos has an iterator category derived from std::bidirectional\_iterator\_tag
 
 \begin{itemize}
 \item
-Guarantees that Pos is a random-access iterator (a reading iterator with which you can jump back and forth over the elements).
+确保Pos是一个随机访问迭代器(可以在元素上来回跳转的读取迭代器)。
 
 \item
-Note that the iterator\_category member of the iterator may not match. For iterators that yield prvalues, it is std::input\_iterator\_tag (if available).
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，是std::input\_iterator\_tag(若可用)。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::bidirectional\_iterator<Pos> is satisfied
+满足std::bidirectional\_iterator<Pos> 
 
 \item
-std::totally\_ordered<Pos> is satisfied
+满足std::totally\_ordered<Pos> 
 
 \item
-std::sized\_sentinel\_for<Pos, Pos> is satisfied
+满足std::sized\_sentinel\_for<Pos, Pos>
 
 \item
-Support for +, +=, -, -=, []
+支持+, +=, -, -=, [] 操作符
 
 \item
-Pos has an iterator category derived from std::random\_access\_iterator\_tag
+Pos有一个派生自std::random\_access\_iterator\_tag的迭代器类别
 \end{itemize}
 \end{itemize}
 
@@ -682,22 +682,22 @@ Pos has an iterator category derived from std::random\_access\_iterator\_tag
 
 \begin{itemize}
 \item
-Guarantees that Pos is an iterator that iterates over elements in contiguous memory.
+保证Pos是迭代器，迭代连续内存中的元素。
 
 \item
-Note that the iterator\_category member of the iterator does not match. If the category member is defined, it is only std::random\_access\_iterator\_tag, or even only std::input\_iterator\_tag if the values are prvalues.
+注意，迭代器的iterator\_category成员不匹配。若定义了类别成员，则只有std::random\_access\_iterator\_tag，若值是右值，甚至只有std::input\_iterator\_tag。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::random\_access\_iterator<Pos> is satisfied
+满足std::random\_access\_iterator<Pos> 
 
 \item
-Pos has an iterator category derived from std::contiguous\_iterator\_tag
+Pos有一个派生自std::consecuous\_iterator\_tag的迭代器类别
 
 \item
-to\_address() for an element is a raw pointer to the element
+元素的to\_address()是指向该元素的裸指针
 \end{itemize}
 \end{itemize}
 
@@ -705,19 +705,19 @@ to\_address() for an element is a raw pointer to the element
 
 \begin{itemize}
 \item
-Guarantees that S can be used as a sentinel (end iterator of maybe a different type) for Pos.
+保证S可以用作Pos的哨兵(可能是不同类型的结束迭代器)。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::semiregular<S> is satisfied
+满足std::semiregular<S>
 
 \item
-std::input\_or\_output\_iterator<Pos> is satisfied
+满足std::input\_or\_output\_iterator<Pos> 
 
 \item
-Can compare Pos and S using the operators == and !=
+可以使用操作符==和!=比较Pos和S
 \end{itemize}
 \end{itemize}
 
@@ -725,22 +725,22 @@ Can compare Pos and S using the operators == and !=
 
 \begin{itemize}
 \item
-Guarantees that S can be used as a sentinel (end iterator of maybe a different type) for Pos and you can compute the distance between them in constant time.
+保证S可以用作Pos的哨兵(可能是不同类型的结束迭代器)，并且可以在常数时间内计算它们之间的距离。
 
 \item
-To signal that you cannot compute the distance in constant time (even though you can compute the distance), you can define that std::disable\_sized\_sentinel\_for<Rg> yields true.
+要表示不能在常数时间内计算距离(尽管可以计算距离)，可以定义std::disable\_size\_sentinel\_for<Rg>的结果为true。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::sentinel\_for<S, Pos> is satisfied
+满足std::sentinel\_for<S, Pos> 
 
 \item
-Calling the operator - for a Pos and S yields a value of the difference type of the iterator
+对Pos和S调用操作符减号，将产生迭代器不同类型的值
 
 \item
-std::disable\_sized\_sentinel\_for<S, Pos> is not defined to yield true
+std::disable\_size\_sentinel\_for<S, Pos>未定义为返回true
 \end{itemize}
 \end{itemize}
 
@@ -750,55 +750,55 @@ std::disable\_sized\_sentinel\_for<S, Pos> is not defined to yield true
 
 \begin{itemize}
 \item
-Guarantees that you can iterate forward by using the operator ++ and reorder elements by moving and swapping them
+保证您可以使用操作符++向前迭代，并通过移动和交换元素来重新排序
 
 \item
 要求:
 \begin{itemize}
 \item
-std::forward\_iterator<Pos> is satisfied
+满足std::forward\_iterator<Pos> 
 
 \item
-std::indirectly\_movable\_storable<Pos> is satisfied
+满足std::indirectly\_movable\_storable<Pos>
 
 \item
-std::indirectly\_swappable<Pos> is satisfied
+满足std::indirectly\_swappable<Pos>
 \end{itemize}
 \end{itemize}
 
-\mySamllsection{std::mergeable<Pos1, Pos2, ToPos>,
-std::mergeable<Pos1, Pos2, ToPos, Comp>,
-std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1>,
+\mySamllsection{std::mergeable<Pos1, Pos2, ToPos>, \\
+std::mergeable<Pos1, Pos2, ToPos, Comp>, \\
+std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1>, \\
 std::mergeable<Pos1, Pos2, ToPos, Comp, Proj1, Proj2>,}
 
 \begin{itemize}
 \item
-Guarantees that you can merge the elements of two sorted sequences to where Pos1 and Pos2 refer by copying them into a sequence to where ToPos refers. The order is defined by the operator < or Comp (applied to the values optionally transformed with projections Proj1 and Proj2).
+保证可以通过将两个排序序列的元素复制到ToPos所引用的序列中，从而将其合并到Pos1和Pos2所引用的位置。顺序由运算符<或Comp定义(应用于可选地用投影Proj1和Proj2转换的值)。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::input\_iterator is satisfied for both Pos1 and Pos2
+Pos1和Pos2满足std::input\_iterator
 
 \item
-std::weakly\_incrementable<ToPos> is satisfied
+满足std::weakly\_incrementable<ToPos>
 
 \item
-std::indirectly\_copyable<PosN, ToPos> is satisfied for both Pos1 and Pos2
+Pos1和Pos2满足std::indirect\_copyable<PosN, ToPos>
 
 \item
-std::indirect\_strict\_weak\_order of Comp as well as std::projected<Pos1, Proj1> and std::projected<Pos2, Proj2> are satisfied (with < as the default comparison and std::identity as the default projection), which implies:
+Comp满足std::indirect\_strict\_weak\_order，以及满足std::projected<Pos1, Proj1>和std::projected<Pos2, Proj2>(以<作为默认比较，std::identity作为默认投影):
 
 \begin{itemize}
 \item
-std::indirectly\_readable is satisfied for Pos1 and Pos2
+Pos1和Pos2满足std::indirectly\_readable
 
 \item
-std::copy\_constructible<Comp> is satisfied
+满足std::copy\_constructible<Comp>
 
 \item
-std::strict\_weak\_order<Comp> is satisfied for Comp\& and the (projected) value/reference types
+Comp\&和(投影的)值/引用类型满足std::strict\_weak\_order<Comp>
 \end{itemize}
 \end{itemize}
 \end{itemize}
@@ -809,26 +809,26 @@ std::strict\_weak\_order<Comp> is satisfied for Comp\& and the (projected) value
 
 \begin{itemize}
 \item
-Guarantees that you can sort the elements that the iterator Pos refers to with the operator < or Comp (after optionally applying the projection Proj to the values).
+保证可以使用操作符<或Comp对迭代器Pos引用的元素进行排序(在可选地对值应用投影Proj之后)。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::permutable<Pos> is satisfied
+满足std::permutable<Pos>
 
 \item
-std::indirect\_strict\_weak\_order of Comp and the (projected) values is satisfied (with < as the default comparison and std::identity as the default projection), which implies:
+std::indirect\_strict\_weak\_order的Comp和(投影)值满足(以<作为默认比较，std::identity作为默认投影):
 
 \begin{itemize}
 \item
-std::indirectly\_readable<Pos> is satisfied
+满足std::indirectly\_readable<Pos>
 
 \item
-std::copy\_constructible<Comp> is satisfied
+满足std::copy\_constructible<Comp>
 
 \item
-std::strict\_weak\_order<Comp> is satisfied for Comp\& and the (projected) value/reference types
+Comp\&和(投影的)值/引用类型满足std::strict\_weak\_order<Comp>
 \end{itemize}
 \end{itemize}
 \end{itemize}

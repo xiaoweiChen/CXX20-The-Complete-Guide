@@ -1,42 +1,36 @@
 
-This section lists all concepts for callables
+本节列出了可调用对象的所有概念
 
 \begin{itemize}
 \item
-Functions
+函数
 
 \item
-Function objects
+函数对象
 
 \item
-Lambdas
+Lambda表达式
 
 \item
-Pointers to members (with the type of the object as an additional parameter)
+指向成员的指针(带对象类型作为附加参数)
 \end{itemize}
 
-\mySubsubsection{5.4.1}{Basic Concepts for Callables}
+\mySubsubsection{5.4.1}{可调用对象的基本概念}
 
 \mySamllsection{std::invocable<Op, ArgTypes...>}
 
 \begin{itemize}
 \item
-Guarantees that you can iterate forward by using the operator ++ and reorder elements by moving and swapping them
+保证可以为ArgTypes....类型的参数调用Op
 
 \item
-要求:
-\begin{itemize}
-\item
-Guarantees that Op can be called for the arguments of types ArgTypes....
+Op可以是函数、函数对象、Lambda或指向成员的指针。
 
 \item
-Op can be a function, function object, lambda, or pointer-to-member.
+要证明操作和传递的参数都没有修改，可以使用std::regular\_invocable代替。但请注意，这两个概念之间只有语义上的差异，不能在编译时进行检查，所以概念上的差异只说明了意图。
 
 \item
-To document that neither the operation nor the passed arguments are modified, you can use std::regular\_invocable instead. However, note that there is only a semantic difference between these two concepts, which cannot be checked at compile time. Therefore, the concept differences only document the intention.
-
-\item
-For example:
+例如:
 
 \begin{cpp}
 struct S {
@@ -55,20 +49,19 @@ void testCallable()
 }
 \end{cpp}
 
-Note that as a type constraint, you only have to specify the parameter types:
+注意，作为类型约束，只需要指定参数类型:
 
 \begin{cpp}
 void callWithIntAndString(std::invocable<int, std::string> auto op);
 \end{cpp}
 
-For a complete example, see the use of a lambda as a non-type template parameter.
+完整示例，请参见使用Lambda作为非类型模板参数。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
-\end{itemize}
+std::invoke(op, args)对Op类型和ArgTypes...类型的args有效
 \end{itemize}
 \end{itemize}
 
@@ -76,19 +69,19 @@ std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
 
 \begin{itemize}
 \item
-Guarantees that Op can be called for the arguments of types ArgTypes... and that the call changes neither the state of the passed operation nor of the passed arguments.
+保证可以为ArgTypes…类型的参数调用Op。并且调用既不改变所传递操作的状态，也不改变所传递参数的状态。
 
 \item
-Op can be a function, function object, lambda, or pointer-to-member.
+Op可以是函数、函数对象、Lambda或指向成员的指针。
 
 \item
-Note that the difference to the concept std::invocable is purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
+注意，std::invocable与std::invocable概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只是证明了意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
+std::invoke(op, args)对Op类型和ArgTypes...类型的args有效
 \end{itemize}
 \end{itemize}
 
@@ -96,19 +89,19 @@ std::invoke(op, args) is valid for an op of type Op and args of type ArgTypes...
 
 \begin{itemize}
 \item
-Guarantees that the callable (function, function object, lambda) Op is a predicate that can be called for the arguments of types ArgTypes....
+保证可调用的(函数，函数对象，Lambda)Op是一个谓词，可以为ArgTypes...类型的参数所调用。
 
 \item
-This implies that the call changes neither the state of the passed operation nor of the passed arguments.
+若依调用既不改变所传递操作的状态，也不改变所传递参数的状态。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::regular\_invocable<Op> is satisfied
+满足std::regular\_invocable<Op>
 
 \item
- All calls of Op with ArgTypes... yield a value that can be used as a as Boolean value
+所有使用ArgTypes...的Op调用，都会生成一个可当作布尔值的值
 \end{itemize}
 \end{itemize}
 
@@ -116,19 +109,19 @@ std::regular\_invocable<Op> is satisfied
 
 \begin{itemize}
 \item
-Guarantees that any two objects of types T1 and T2 have a binary relationship in that they can be passed as arguments to the binary predicate Pred.
+保证任意两个类型T1和T2的对象具有二元关系，可以作为参数传递给二元谓词Pred。
 
 \item
-This implies that the call changes neither the state of the passed operation nor of the passed arguments.
+调用既不改变所传递操作的状态，也不改变所传递参数的状态。
 
 \item
-Note that the differences to the concepts std::equivalence\_relation and std::strict\_weak\_order are purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
+注意，std::equivalence\_relation和std::strict\_weak\_order的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::predicate is satisfied for pred and any combination of two objects of types T1 and T2
+对于pred以及两个对象类型T1和T2的任意组合，都满足std::predicate
 \end{itemize}
 \end{itemize}
 
@@ -136,21 +129,21 @@ std::predicate is satisfied for pred and any combination of two objects of types
 
 \begin{itemize}
 \item
-Guarantees that any two objects of types T1 and T2 have an equivalence relationship when compared with Pred.
+保证任意两个类型T1和T2的对象与Pred相比具有等价关系。
 
-That is, they can be passed as arguments to the binary predicate Pred and the relationship is reflexive, symmetric, and transitive.
-
-\item
-This implies that the call changes neither the state of the passed operation nor of the passed arguments.
+可以作为参数传递给二进制谓词Pred，并且这种关系是自反的、对称的和可传递的。
 
 \item
-Note that the differences to the concepts std::relation and std::strict\_weak\_order are purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
+调用既不改变所传递操作的状态，也不改变所传递参数的状态。
+
+\item
+注意，std::relation和std::strict\_weak\_order的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::predicate is satisfied for pred and any combination of two objects of types T1 and T2
+对于pred以及两个对象类型T1和T2的任意组合，都满足std::predicate
 \end{itemize}
 \end{itemize}
 
@@ -158,21 +151,21 @@ std::predicate is satisfied for pred and any combination of two objects of types
 
 \begin{itemize}
 \item
-Guarantees that any two objects of types T1 and T2 have a strict weak ordering relationship when compared with Pred.
+与Pred相比，任意两个类型T1和T2的对象具有严格的弱序关系。
 
-That is, they can be passed as arguments to the binary predicate Pred and the relationship is irreflexive and transitive.
-
-\item
-This implies that the call changes neither the state of the passed operation nor of the passed arguments.
+可以作为参数传递给二元谓词Pred，并且这种关系是非自反的和传递的。
 
 \item
-Note that the differences to the concepts std::relation and std::equivalence\_relation are purely semantic and cannot be checked at compile time. Therefore, the concept differences only document the intention.
+调用既不改变所传递操作的状态，也不改变所传递参数的状态。
+
+\item
+注意，std::relation和std::equivalence\_relation的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::predicate is satisfied for pred and any combination of two objects of types T1 and T2
+对于pred以及两个对象类型T1和T2的任意组合，都满足std::predicate
 \end{itemize}
 \end{itemize}
 
@@ -180,53 +173,53 @@ std::predicate is satisfied for pred and any combination of two objects of types
 
 \begin{itemize}
 \item
-Guarantees that Op can be used as a random number generator that returns unsigned integral values of (ideally) equal probability.
+保证Op可以用作返回(理想情况下)相等概率的无符号整数值的随机数生成器。
 
 \item
-This concept is defined in the header file <random>.
+这个概念在头文件<random>中定义。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::invocable<Op\&> is satisfied
+满足std::invocable<Op\&>
 
 \item
-std::unsigned\_integral is satisfied for the result of the call
+结果满足std::unsigned\_integral
 
 \item
-Expressions Op::min() and Op::max() are supported and yield the same type as the generator calls
+支持表达式Op::min()和Op::max()，并产生与生成器调用相同的类型
 
 \item
- Op::min() is less than Op::max()
+Op::min()小于Op::max()
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{5.4.2}{Concepts for Callables Used by Iterators}
+\mySubsubsection{5.4.2}{迭代器使用可调用对象的概念}
 
 \mySamllsection{std::indirectly\_unary\_invocable<Op, Pos>}
 
 \begin{itemize}
 \item
-Guarantees that Op can be called with the values that Pos refers to.
+保证可以用Pos所引用的值调用Op。
 
 \item
-Note that the difference to the concept indirectly\_regular\_unary\_invocable is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
+请注意，与indirectly\_regular\_unary\_invocable概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable<Pos> is satisfied
+满足std::indirectly\_readable<Pos>
 
 \item
-std::copy\_constructible<Op> is satisfied
+满足std::copy\_constructible<Op>
 
 \item
-std::invocable is satisfied for Op\& and the value and (common) reference type of Pos
+满足Op\&和Pos的值和(常用)引用类型的std::invocable
 
 \item
-The results of calling Op with both a value and a reference have a common reference type
+同时使用值和引用调用Op的结果，具有共同的引用类型
 \end{itemize}
 \end{itemize}
 
@@ -234,25 +227,25 @@ The results of calling Op with both a value and a reference have a common refere
 
 \begin{itemize}
 \item
-Guarantees that Op can be called with the values that Pos refers to and the call does not change the state of Op.
+保证可以使用Pos所引用的值调用Op，并且调用不会改变Op的状态。
 
 \item
-Note that the difference to the concept std::indirectly\_unary\_invocable is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
+请注意，与std::indirect\_unary\_invocable概念的区别是纯语义的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable<Pos> is satisfied
+满足std::indirectly\_readable<Pos>
 
 \item
-std::copy\_constructible<Op> is satisfied
+满足std::copy\_constructible<Op>
 
 \item
-std::regular\_invocable is satisfied for Op\& and the value and (common) reference type of Pos
+Op\&和Pos的值，以及(常见)引用类型都满足std::regular\ _invocation
 
 \item
-The results of calling Op with both a value and a reference have a common reference type
+同时使用值和引用调用Op的结果具有共同的引用类型
 \end{itemize}
 \end{itemize}
 
@@ -260,22 +253,22 @@ The results of calling Op with both a value and a reference have a common refere
 
 \begin{itemize}
 \item
-Guarantees that the unary predicate Pred can be called with the values that Pos refers to.
+保证可以用Pos引用的值调用一元谓词Pred。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable<Pos> is satisfied
+满足std::indirectly\_readable<Pos>
 
 \item
-std::copy\_constructible<Pred> is satisfied
+满足std::copy\_constructible<Pred>
 
 \item
-std::predicate is satisfied for Pred\& and the value and (common) reference type of Pos
+Pred\&和Pos值，以及(常见)引用类型都满足std::predicate
 
 \item
-All these calls of Pred yield a value that can be used as a Boolean value
+所有这些对Pred的调用，都会产生一个可以当作布尔值的值
 \end{itemize}
 \end{itemize}
 
@@ -283,48 +276,48 @@ All these calls of Pred yield a value that can be used as a Boolean value
 
 \begin{itemize}
 \item
-Guarantees that the binary predicate Pred can be called with the values that Pos1 and Pos2 refer to.
+确保可以用Pos1和Pos2引用的值调用二元谓词Pred。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable is satisfied for Pos1 and Pos2
+Pos1和Pos2满足了std::indirect\_readable
 
 \item
-std::copy\_constructible<Pred> is satisfied
+满足std::copy\_constructible<Pred>
 
 \item
-std::predicate is satisfied for Pred\&, a value or (common) reference type of Pos1, and a value or (common) reference type of Pos2
+若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-All these calls of Pred yield a value that can be used as a Boolean value
+所有这些对Pred的调用都会产生一个可作为布尔值使用的值
 \end{itemize}
 \end{itemize}
 
-\mySamllsection{std::indirect\_equivalence\_relation<Pred, Pos1>, std::indirect\_equivalence\_relation<Pred, Pos1, Pos2>}
+\mySamllsection{std::indirect\_equivalence\_relation<Pred, Pos1>, \\ std::indirect\_equivalence\_relation<Pred, Pos1, Pos2>}
 
 \begin{itemize}
 \item
-Guarantees that the binary predicate Pred can be called to check whether two values of Pos1 and Pos1/Pos2 are equivalent.
+确保可以调用二元谓词Pred来检查Pos1和Pos1/Pos2的两个值是否相等。
 
 \item
-Note that the difference to the concept std::indirectly\_strict\_weak\_order is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
+注意，与std::indirectly\_strict\_weak\_order概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable is satisfied for Pos1 and Pos2
+Pos1和Pos2满足了std::indirect\_readable
 
 \item
-std::copy\_constructible<Pred> is satisfied
+满足std::copy\_constructible<Pred>
 
 \item
-std::predicate is satisfied for Pred\&, a value or (common) reference type of Pos1, and a value or (common) reference type of Pos2
+若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-All these calls of Pred yield a value that can be used as a Boolean value
+所有这些对Pred的调用都会产生一个可以作为布尔值使用的值
 \end{itemize}
 \end{itemize}
 
@@ -332,25 +325,25 @@ All these calls of Pred yield a value that can be used as a Boolean value
 
 \begin{itemize}
 \item
-Guarantees that the binary predicate Pred can be called to check whether two values of Pos1 and Pos1/Pos2 have a strict weak order.
+保证可以调用二元谓词Pred来检查Pos1和Pos1/Pos2的两个值是否具有严格的弱序。
 
 \item
-Note that the difference to the concept std::indirectly\_equivalence\_relation is purely semantic and cannot be checked at compile time. Therefore, the different concepts only document the intention.
+注意，与std::indirect\_equivalence\_relation概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
 \begin{itemize}
 \item
-std::indirectly\_readable is satisfied for Pos1 and Pos2
+Pos1和Pos2满足了std::indirect\_readable
 
 \item
-std::copy\_constructible<Pred> is satisfied
+满足std::copy\_constructible<Pred>
 
 \item
-std::predicate is satisfied for Pred\&, a value or (common) reference type of Pos1, and a value or (common) reference type of Pos2
+若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-All these calls of Pred yield a value that can be used as a Boolean value
+所有这些对Pred的调用都会产生一个可以作为布尔值使用的值
 \end{itemize}
 \end{itemize}
 
