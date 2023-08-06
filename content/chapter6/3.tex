@@ -32,35 +32,35 @@ All of the views provide move (and optional copy) operations with constant compl
 The range factories/adaptors all(), counted(), and common() are described in a special section. Details of all view types and the other adaptors and factories are described in the chapter about View Types in Detail.
 
 \begin{longtable}[c]{|l|l|l|}
-	\hline
-	\textbf{Adaptor/Factory} &
-	\textbf{Type} &
-	\textbf{Effect} \\ \hline
-	all(rg) &
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}Varies:\\ type of rg\\ ref\_view\\ owning\_view\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Yields rang rg as view\\ - Yields rg if it is already a view\\ - Yields a ref\_view if rg is an lvalue\\ - Yields an owning\_view if rg is an rvalue\end{tabular} \\ \hline
-	counted(beg, sz) &
-	\begin{tabular}[c]{@{}l@{}}Vaires:\\ std::span\\ subrange\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Yields a view from a begin iterator and a count\\ - Yields a span if rg is contiguous and common\\ - Yields a subrange otherwise(if valid)\end{tabular} \\ \hline
-	iota(val) &
-	iota\_view &
-	Yields an endless view with an incrementing sequence of values starting with val \\ \hline
-	iota(val, endVal) &
-	iota\_view &
-	Yields a view with an incrementing sequence of values from val up to (but not including) endVal \\ \hline
-	single(val) &
-	signle\_view &
-	Yields a view with val as the only element \\ \hline
-	\begin{tabular}[c]{@{}l@{}}empty\textless{}T\textgreater\\ -\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}empty\_view\\ basic\_istream\_view\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Yields an empty view of elements of type T\\ Yields a view that reads Ts elements of type T\end{tabular} \\ \hline
-	\begin{tabular}[c]{@{}l@{}}istream\textless{}T\textgreater{}(s)\\ -\\ -\\ -\\ -\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}istream\_view\\ wistream\_view\\ std::basic\_string\_view\\ std::span\\ subrange\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Yields a view that reads Ts from char stream s\\ Yields a view that reads Ts from wchar\_t stream s\\ Yields a read-only view to a character array\\ Yields a view to elements in contiguous memory\\ Yields a view for a begin iterator and a sentinel\end{tabular} \\ \hline
+\hline
+\textbf{Adaptor/Factory} &
+\textbf{Type} &
+\textbf{Effect} \\ \hline
+all(rg) &
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}Varies:\\ type of rg\\ ref\_view\\ owning\_view\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}Yields rang rg as view\\ - Yields rg if it is already a view\\ - Yields a ref\_view if rg is an lvalue\\ - Yields an owning\_view if rg is an rvalue\end{tabular} \\ \hline
+counted(beg, sz) &
+\begin{tabular}[c]{@{}l@{}}Vaires:\\ std::span\\ subrange\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}Yields a view from a begin iterator and a count\\ - Yields a span if rg is contiguous and common\\ - Yields a subrange otherwise(if valid)\end{tabular} \\ \hline
+iota(val) &
+iota\_view &
+Yields an endless view with an incrementing sequence of values starting with val \\ \hline
+iota(val, endVal) &
+iota\_view &
+Yields a view with an incrementing sequence of values from val up to (but not including) endVal \\ \hline
+single(val) &
+signle\_view &
+Yields a view with val as the only element \\ \hline
+\begin{tabular}[c]{@{}l@{}}empty\textless{}T\textgreater\\ -\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}empty\_view\\ basic\_istream\_view\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}Yields an empty view of elements of type T\\ Yields a view that reads Ts elements of type T\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}istream\textless{}T\textgreater{}(s)\\ -\\ -\\ -\\ -\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}istream\_view\\ wistream\_view\\ std::basic\_string\_view\\ std::span\\ subrange\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}Yields a view that reads Ts from char stream s\\ Yields a view that reads Ts from wchar\_t stream s\\ Yields a read-only view to a character array\\ Yields a view to elements in contiguous memory\\ Yields a view for a begin iterator and a sentinel\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
@@ -68,26 +68,26 @@ Table 6.3. Source views
 \end{center}
 
 \begin{longtable}[c]{|l|l|l|}
-	\hline
-	\textbf{Adaptor} & \textbf{Type}   & \textbf{Effect}                                       \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	take(num)        & Varies          & The frist(up to) num elements                         \\ \hline
-	take\_while(pred)                    & take\_while\_view & All leading elements that match a predicate                        \\ \hline
-	drop(num)        & Varies          & All except the first num elements                     \\ \hline
-	drop\_while(pred)                    & drop\_while\_view & All except leading elements that match a predicate                 \\ \hline
-	filter(pred)     & filter\_view    & All elements that match a predicate                   \\ \hline
-	transform(func)  & transform\_view & The transformed values of all elements                \\ \hline
-	elements\textless{}idx\textgreater{} & elements\_view    & the idxth member/attribute of all elements                         \\ \hline
-	keys             & elements\_view  & The first member of all elements                      \\ \hline
-	values           & elements\_view  & The second member of all elements                     \\ \hline
-	reverse          & Varies          & All elements in reverse order                         \\ \hline
-	join             & join\_view      & All elements of a range of multiple ranges            \\ \hline
-	split(sep)       & split\_view     & All elements of a range split info multiple ranges    \\ \hline
-	lazy\_split(sep)                     & lazy\_split\_view & All elements of an input or const range split into multiple ranges \\ \hline
-	common           & Varies          & All elements with same type for iterator and sentinel \\ \hline
+\hline
+\textbf{Adaptor} & \textbf{Type}   & \textbf{Effect}                                       \\ \hline
+\endfirsthead
+%
+\endhead
+%
+take(num)        & Varies          & The frist(up to) num elements                         \\ \hline
+take\_while(pred)                    & take\_while\_view & All leading elements that match a predicate                        \\ \hline
+drop(num)        & Varies          & All except the first num elements                     \\ \hline
+drop\_while(pred)                    & drop\_while\_view & All except leading elements that match a predicate                 \\ \hline
+filter(pred)     & filter\_view    & All elements that match a predicate                   \\ \hline
+transform(func)  & transform\_view & The transformed values of all elements                \\ \hline
+elements\textless{}idx\textgreater{} & elements\_view    & the idxth member/attribute of all elements                         \\ \hline
+keys             & elements\_view  & The first member of all elements                      \\ \hline
+values           & elements\_view  & The second member of all elements                     \\ \hline
+reverse          & Varies          & All elements in reverse order                         \\ \hline
+join             & join\_view      & All elements of a range of multiple ranges            \\ \hline
+split(sep)       & split\_view     & All elements of a range split info multiple ranges    \\ \hline
+lazy\_split(sep)                     & lazy\_split\_view & All elements of an input or const range split into multiple ranges \\ \hline
+common           & Varies          & All elements with same type for iterator and sentinel \\ \hline
 \end{longtable}
 
 \begin{center}
@@ -254,7 +254,6 @@ By using std::views::transform(), we negate each value.
 
 The program has the following output:
 
-{\footnotesize
 \begin{shell}
 *** coll | filter | transform:
 filter 8
@@ -271,7 +270,6 @@ filter 9
 trans 9
 val: -9
 \end{shell}
-}
 
 First, note that neither filter() nor transform() are called when or after we define the view vColl. The processing starts when we use the view (here: iterating over vColl). This means that views use lazy evaluation. A view is just the description of a processing. The processing is performed when we need the next element or value.
 
@@ -293,7 +291,6 @@ std::cout << "val: " << val << "\n\n";
 
 For this code, we get the following output:
 
-{\footnotesize
 \begin{shell}
 pos = vColl.begin():
 filter 8
@@ -309,7 +306,6 @@ filter 0
 trans 0
 val: 0
 \end{shell}
-}
 
 Let us look at what happens step by step:
 
@@ -364,7 +360,6 @@ std::ranges::find(vColl, 0);
 
 The output would then be only:
 
-{\footnotesize
 \begin{shell}
 filter 8
 filter 15
@@ -373,7 +368,6 @@ filter 7
 filter 0
 trans 0
 \end{shell}
-}
 
 Another benefit of the pull model is that sequences or pipelines of views can even operate on infinite ranges. We do not compute an unlimited number of values not knowing how many are used; we compute as many values as requested by the user of the view.
 
@@ -422,7 +416,6 @@ int main()
 
 The program has the following output:
 
-{\footnotesize
 \begin{shell}
 *** coll | filter | transform:
 filter 8
@@ -447,7 +440,6 @@ filter 9
 trans 9
 val: -9
 \end{shell}
-}
 
 As you can see, when used for the second time, calling vColl.begin() no longer tries to find the first element because it was cached with the first iteration over the elements of the filter.
 
@@ -583,7 +575,6 @@ int main()
 
 Now, the output of the program is as follows:
 
-{\footnotesize
 \begin{shell}
 *** coll | transform | filter:
 trans: 8
@@ -605,7 +596,6 @@ filt: -9
 trans: 9
 val: -9
 \end{shell}
-}
 
 We have additional calls of the transform view:
 

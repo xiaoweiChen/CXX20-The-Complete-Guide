@@ -126,7 +126,6 @@ int main()
 
 It has the following output:
 
-{\footnotesize
 \begin{shell}
 containers and elements over 2:
 1 2 3 4 5
@@ -142,7 +141,6 @@ elements over 2 after copying the view:
 -1 3 4 5
 9 3 4 5
 \end{shell}
-}
 
 The problem is the caching of the filter view. With the first iteration, both views cache the beginning of the view. Note that this happens in different ways:
 
@@ -178,22 +176,19 @@ Finally, note that the previous example demonstrates that copying a view may som
 \item
 The views that have cached begin() have this output:
 
-{\footnotesize
 \begin{shell}
 -1 3 4 5
 3 4 5
 \end{shell}
-}
 
 \item
 The copies of these views have a different output:
 
-{\footnotesize
 \begin{shell}
 -1 3 4 5
 9 3 4 5
 \end{shell}
-}
+
 \end{itemize}
 
 he cached offset for the view to the vector is still used after copying, while the cached begin() for the view to the list (begin()) was removed.
@@ -204,9 +199,7 @@ If there is one consequence of this behavior, it is the following: use views ad 
 
 This is a little bit sad, because the lazy evaluation of views, in principle, would allow some incredible use cases, which cannot be implemented in practice because the behavior of code is hard to predict if views are not used ad hoc and underlying ranges might change.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Write Access with Filter Views}
+\mySamllsection{Write Access with Filter Views}
 
 When using filter views, there are important additional restrictions on write access:
 

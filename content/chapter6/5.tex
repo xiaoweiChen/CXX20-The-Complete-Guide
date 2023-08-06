@@ -115,10 +115,7 @@ This does not mean that vectors always work fine. If, for example, we pass a fil
 print(vec | std::views::filter(isEven)); // ERROR
 \end{cpp}
 
-
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{const\& Does Not Work for All Views}
+\mySamllsection{const\& Does Not Work for All Views}
 
 The reason for this very strange and unexpected behavior is that some views do not always support iterating over elements when the view is const. It is a consequence of the fact that iterating over the elements of these views sometimes needs the ability to modify the state of the view (e.g., due to caching). For some views (such as the filter view), it never works; for some views (such as the drop view), it only works sometimes.
 
@@ -197,9 +194,7 @@ void foo(const T& coll); // not callable for all views
 \end{cpp}
 
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Non-const \&\& Does Work for All Views}
+\mySamllsection{Non-const \&\& Does Work for All Views}
 
 To also support these views in generic code, you should declare the range parameters as universal references (also called forwarding references). These are references that can refer to all expressions while retaining the fact that the referred object is not const[ In the C++ standard, universal references are called forwarding references, which is unfortunate because they do not really forward until std::forward<>() is called for them, and perfect forwarding is not always the reason to use these references (as this example demonstrates).]. For example:
 
@@ -319,11 +314,9 @@ int main()
 
 The output of the program is:
 
-{\footnotesize
 \begin{shell}
 15
 \end{shell}
-}
 
 Are you wondering now how to declare a generic function that can be called for all const and non-const ranges and views and guarantees that the elements are not modified? Well, again, there is an important lesson to learn here:
 
@@ -348,9 +341,7 @@ std::ranges::cbegin() and std::cbegin() are broken for views.
 Declaring a view element as const might have no effect.
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Use const\& for Concurrent Iterations}
+\mySamllsection{Use const\& for Concurrent Iterations}
 
 Regarding the advice to use universal/forwarding references, there is an important restriction: you should not use them when you iterate over views concurrently.
 
@@ -390,9 +381,7 @@ auto sum = std::accumulate(v.begin(), v.end(), // compile-time ERROR
 0L);
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Overloading for Views}
+\mySamllsection{Overloading for Views}
 
 You might claim that you can simply overload a generic function for containers and views. For views, it might be enough to just add an overload that constrains the function for views and takes the parameter by value:
 
@@ -568,9 +557,7 @@ const might not be propagated to the elements of a view
 
 The obvious question then is how to ensure that code cannot modify the elements of a range when using a view.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Making the Elements const When Using Them}
+\mySamllsection{Making the Elements const When Using Them}
 
 The only easy way to ensure that elements of a view cannot be modified is to force constness on element access:
 
@@ -604,9 +591,7 @@ for (const auto& elem : myZipView) {
 
 Maybe we can still stop this. However, beware that making collections or their elements const may not work when using C++ standard views.
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{const\_iterator and cbegin() Are Not Provided or Are Broken}
+\mySamllsection{const\_iterator and cbegin() Are Not Provided or Are Broken}
 
 Unfortunately, the usual approach of making all elements of a container const does not work for views:
 
