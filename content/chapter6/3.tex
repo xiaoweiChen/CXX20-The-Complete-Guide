@@ -1,50 +1,50 @@
 
-As introduced, views are lightweight ranges that can be used as building blocks to deal with the (modified) values of all or some elements of other ranges and views.
+如前所述，视图是轻量级范围，可以用作构建块来处理其他范围和视图的所有或部分元素的(修改过的)值。
 
-C++20 provides several standard views. They can be used to convert a range into a view or yield a view to a range/view where the elements are modified in various ways:
+C++20提供了几个标准视图，可以用来将一个范围转换为一个视图，或者将一个视图转换为一个范围/视图，其中元素可以以各种方式修改:
 
 \begin{itemize}
 \item
-Filter out elements
+过滤元素
 
 \item
-Yield transformed values of elements
+生成转换后的元素值
 
 \item
-Change the order of iterating over elements
+修改迭代元素的顺序
 
 \item
-Split or merge ranges
+拆分或合并范围
 \end{itemize}
 
-In addition, there are some views that generate values themselves.
+此外，还有一些视图本身产生值。
 
-For almost every view type, there is a corresponding customization point object (usually a function object) that allows programmers to create a view by calling a function. Such a function object is called a range adaptor if the function creates a view from a passed range, or a range factory if the function creates a view without passing an existing range. Most of the time, these function objects have the name of the view without the \_view suffix. However, some more general function objects might create different views depending on the passed arguments. These function objects are all defined in the special namespace std::views, which is an alias to the namespace std::ranges::views.
+对于几乎每一种视图类型，都有一个相应的定制点对象(通常是函数对象)，其允许开发者通过调用函数来创建视图。若函数从传递的范围中创建视图，则这样的函数对象称为范围适配器。若函数在不传递现有范围的情况下创建视图，则称为范围工厂。大多数情况下，这些函数对象具有不带\_view后缀的视图名，但一些更通用的函数对象可能会根据传递的参数创建不同的视图。这些函数对象都定义在特殊的命名空间std::views中，这命名空间std::ranges::views的别名。
 
-Table Source views lists the standard views of C++20 that create a view from an external resource or generate values themselves. These views especially can serve as the starting building blocks in a pipeline of views. You can also see which range adaptors or factories may create them (if there are any). If available, you should prefer using them rather than the raw view types.
+表“源视图”列出了C++ 0中从外部资源创建视图或生成值的标准视图，这些视图可以作为视图管道中的起始构建块。还可以查看哪些范围适配器或工厂可以创建它们(若有的话)，若可用，更推荐使用它们，而非原始视图类型。
 
-If not specified differently, the adaptors and factories are available in the namespace std::views and the view types are available in the namespace std::ranges. std::string\_view was already introduced with C++17. All other views were introduced with C++20 and usually end with \_view. The only view types not ending with \_view are std::subrange and std::span.
+若没有另行指定，适配器和工厂在名称空间std::视图中可用，视图类型在名称空间std::范围中可用。std::string\_view已经在C++17中引入。所有其他视图都是在C++20中引入的，通常以\_view结尾。唯一不以\_view结尾的视图类型是std::subange和std::span。
 
-Table Adapting views lists the range adaptors and standard views of C++20 that process ranges and other views. They can serve as a building block anywhere in a pipeline of views, including at their beginning. Again, you should prefer to use the adaptors.
+表“适配视图”列出了C++20中处理范围和其他视图的范围适配器和标准视图，可以作为视图管道中的任何地方的构建块，包括在视图的开头。同样，更推荐使用它们。
 
-All of the views provide move (and optional copy) operations with constant complexity (the time these operations take does not depend on the number of elements)[The original C++20 standard also required views to have a default constructor and a destructor with constant complexity. However, these requirements were removed later with http://wg21.link/P2325R3 and http://wg21.link/p2415r2.]. The concept std::ranges::view checks the corresponding requirements.
+所有视图都提供了具有恒定复杂性的移动(和可选的复制)操作(这些操作所需的时间与元素的数量无关)[原始C++20标准还要求视图具有具有恒定复杂性的默认构造函数和析构函数，但这些要求后来被\url{http://wg21.link/P2325R3}和\url{http://wg21.link/p2415r2}删除了]。概念std::ranges::视图检查相应的需求。
 
-The range factories/adaptors all(), counted(), and common() are described in a special section. Details of all view types and the other adaptors and factories are described in the chapter about View Types in Detail.
+范围工厂/适配器all()、counts()和common()将在一个特殊的章节中描述，所有视图类型以及其他适配器和工厂的详细信息将在视图类型细节一章中描述。
 
 \begin{longtable}[c]{|l|l|l|}
 \hline
-\textbf{Adaptor/Factory} &
-\textbf{Type} &
-\textbf{Effect} \\ \hline
-all(rg) &
+\textbf{适配器/工厂} &
+\textbf{类型} &
+\textbf{效果} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\begin{tabular}[c]{@{}l@{}}Varies:\\ type of rg\\ ref\_view\\ owning\_view\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}Yields rang rg as view\\ - Yields rg if it is already a view\\ - Yields a ref\_view if rg is an lvalue\\ - Yields an owning\_view if rg is an rvalue\end{tabular} \\ \hline
+all(rg) &
+\begin{tabular}[c]{@{}l@{}}种类:\\ rg的类型\\ ref\_view\\ owning\_view\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}生成的范围rg是视图\\ - 若已经是视图，则返回rg\\ - 若rg是左值，则返回ref\_view\\ - 若rg是右值，则返回一个owning\_view\end{tabular} \\ \hline
 counted(beg, sz) &
-\begin{tabular}[c]{@{}l@{}}Vaires:\\ std::span\\ subrange\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}种类:\\ std::span\\ 子范围\end{tabular} &
 \begin{tabular}[c]{@{}l@{}}Yields a view from a begin iterator and a count\\ - Yields a span if rg is contiguous and common\\ - Yields a subrange otherwise(if valid)\end{tabular} \\ \hline
 iota(val) &
 iota\_view &
