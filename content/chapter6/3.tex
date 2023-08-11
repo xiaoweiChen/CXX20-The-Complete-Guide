@@ -45,111 +45,111 @@ all(rg) &
 \begin{tabular}[c]{@{}l@{}}生成的范围rg是视图\\ - 若已经是视图，则返回rg\\ - 若rg是左值，则返回ref\_view\\ - 若rg是右值，则返回一个owning\_view\end{tabular} \\ \hline
 counted(beg, sz) &
 \begin{tabular}[c]{@{}l@{}}种类:\\ std::span\\ 子范围\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}Yields a view from a begin iterator and a count\\ - Yields a span if rg is contiguous and common\\ - Yields a subrange otherwise(if valid)\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}从begin迭代器和计数产生一个视图\\ - 若rg是连续且常规的，则生成一个span\\ - 否则产生子范围(若有效)\end{tabular} \\ \hline
 iota(val) &
 iota\_view &
-Yields an endless view with an incrementing sequence of values starting with val \\ \hline
+产生一个无限视图，其中包含以val开头的值的递增序列 \\ \hline
 iota(val, endVal) &
 iota\_view &
-Yields a view with an incrementing sequence of values from val up to (but not including) endVal \\ \hline
+生成一个视图，其值序列从val递增到(但不包括)endVal \\ \hline
 single(val) &
 signle\_view &
-Yields a view with val as the only element \\ \hline
+生成一个只有val元素的视图 \\ \hline
 \begin{tabular}[c]{@{}l@{}}empty\textless{}T\textgreater\\ -\end{tabular} &
 \begin{tabular}[c]{@{}l@{}}empty\_view\\ basic\_istream\_view\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}Yields an empty view of elements of type T\\ Yields a view that reads Ts elements of type T\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}生成类型为T的元素的空视图\\ 生成读取T类型的T个元素的视图\end{tabular} \\ \hline
 \begin{tabular}[c]{@{}l@{}}istream\textless{}T\textgreater{}(s)\\ -\\ -\\ -\\ -\end{tabular} &
 \begin{tabular}[c]{@{}l@{}}istream\_view\\ wistream\_view\\ std::basic\_string\_view\\ std::span\\ subrange\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}Yields a view that reads Ts from char stream s\\ Yields a view that reads Ts from wchar\_t stream s\\ Yields a read-only view to a character array\\ Yields a view to elements in contiguous memory\\ Yields a view for a begin iterator and a sentinel\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}产生从字符流s读取Ts的视图\\ 产生一个从wchar\_t流s中读取Ts的视图\\ 生成字符数组的只读视图\\ 生成连续内存中元素的视图\\ 生成begin迭代器和哨兵的视图\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 6.3. Source views
+表6.3 源视图
 \end{center}
 
 \begin{longtable}[c]{|l|l|l|}
 \hline
-\textbf{Adaptor} & \textbf{Type}   & \textbf{Effect}                                       \\ \hline
+\textbf{适配器} & \textbf{类型}   & \textbf{效果}                                       \\ \hline
 \endfirsthead
 %
 \endhead
 %
-take(num)        & Varies          & The frist(up to) num elements                         \\ \hline
-take\_while(pred)                    & take\_while\_view & All leading elements that match a predicate                        \\ \hline
-drop(num)        & Varies          & All except the first num elements                     \\ \hline
-drop\_while(pred)                    & drop\_while\_view & All except leading elements that match a predicate                 \\ \hline
-filter(pred)     & filter\_view    & All elements that match a predicate                   \\ \hline
-transform(func)  & transform\_view & The transformed values of all elements                \\ \hline
-elements\textless{}idx\textgreater{} & elements\_view    & the idxth member/attribute of all elements                         \\ \hline
-keys             & elements\_view  & The first member of all elements                      \\ \hline
-values           & elements\_view  & The second member of all elements                     \\ \hline
-reverse          & Varies          & All elements in reverse order                         \\ \hline
-join             & join\_view      & All elements of a range of multiple ranges            \\ \hline
-split(sep)       & split\_view     & All elements of a range split info multiple ranges    \\ \hline
-lazy\_split(sep)                     & lazy\_split\_view & All elements of an input or const range split into multiple ranges \\ \hline
-common           & Varies          & All elements with same type for iterator and sentinel \\ \hline
+take(num)        & 变化          & 第一个(最多)num个元素                         \\ \hline
+take\_while(pred)                    & take\_while\_view & 匹配谓词的所有首元素                        \\ \hline
+drop(num)        & 变化          & 除了第一个num元素之外的所有元素                     \\ \hline
+drop\_while(pred)                    & drop\_while\_view & 除首元素外的所有匹配谓词的元素                 \\ \hline
+filter(pred)     & filter\_view    & 匹配谓词的所有元素                  \\ \hline
+transform(func)  & transform\_view & 转换后的值的所有元素                \\ \hline
+elements\textless{}idx\textgreater{} & elements\_view    & 所有元素的idxth成员/属性                         \\ \hline
+keys             & elements\_view  & 所有元素的第一个成员                      \\ \hline
+values           & elements\_view  & 所有元素的第二个成员                     \\ \hline
+reverse          & 变化          & 所有元素按倒序排列                         \\ \hline
+join             & join\_view      & 多个范围中的所有元素            \\ \hline
+split(sep)       & split\_view     & 一个范围的所有元素拆分为多个范围    \\ \hline
+lazy\_split(sep)                     & lazy\_split\_view & 输入或常量范围的所有元素拆分为多个范围 \\ \hline
+common           & 变化          & 迭代器和哨兵中所有类型相同的元素 \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 6.4. Adapting views
+表6.4 适配器视图
 \end{center}
 
-\mySubsubsection{6.3.1}{Views on Rangess}
+\mySubsubsection{6.3.1}{视图的范围性}
 
-Containers and strings are not views. This is because they are not lightweight enough: they provide no cheap copy constructors because they have to copy the elements.
+容器和字符串不是视图，因为它们不够轻量级:没有提供低成本的复制构造函数，所以必须复制元素。
 
-However, you can easily use containers as views:
+然而，可以很容易地使用容器作为视图:
 
 \begin{itemize}
 \item
-You can explicitly convert a container to a view by passing it to the range adaptor std::views::all().
+通过将容器传递给范围适配器std::views::all()，可以显式地将容器转换为视图。
 
 \item
-You can explicitly convert elements of a container to a view by passing a begin iterator and an end (sentinel) or a size to a std::ranges::subrange or std::views::counted().
+通过将begin迭代器和end(哨兵)或大小传递给std::ranges::subrange或std::views::counts()，可以显式地将容器的元素转换为视图。
 
 \item
-You can implicitly convert a container to a view by passing it to one of the adapting views. These views usually take a container by converting it implicitly to a view.
+可以通过将容器传递给其中一个自适应视图来隐式地将其转换为视图，这些视图通常通过将容器隐式地转换为视图来获取容器。
 \end{itemize}
 
-Usually, the latter option is and should be used. There are multiple ways of implementing this option. For example, you have the following options for passing a range coll to a take view:
+通常，应该使用后一种选项，有多种方法可以实现此选项。例如，有以下选项来传递一个范围coll给获取视图:
 
 \begin{itemize}
 \item
-You can pass the range as a parameter to the constructor of the view:
+可以将范围作为参数传递给视图的构造函数:
 
 \begin{cpp}
 std::ranges::take_view first4{coll, 4};
 \end{cpp}
 
 \item
-You can pass the range as a parameter to the corresponding adaptor:
+可以把这个范围作为参数传递给相应的适配器:
 
 \begin{cpp}
 auto first4 = std::views::take(coll, 4);
 \end{cpp}
 
 \item
-You can pipe the range into the corresponding adaptor:
+可以通过管道将范围传入相应的适配器:
 
 \begin{cpp}
 auto first4 = coll | std::views::take(4);
 \end{cpp}
 \end{itemize}
 
-In any case, the view first4 iterates over only the first four elements of coll (or fewer if there are not enough elements). However, what happens exactly here depends on what coll is:
+任何情况下，视图first4只迭代coll的前4个元素(若元素不够，迭代次数会更少)。然而，这里发生了什么取决于coll是什么类型:
 
 \begin{itemize}
 \item
-If coll is already a view, take() just takes the view as it is.
+若coll已经是一个视图，take()会按原样获取视图。
 
 \item
-If coll is a container, take() uses a view to the container that is automatically created with the adaptor std::views::all(). This adaptor yields a ref\_view that refers to all elements of the container if the container is passed by name (as an lvalue).
+若coll是一个容器，take()使用一个到容器的视图，该视图是用适配器std::views::all()自动创建的。适配器会产生一个ref\_view，若容器通过名称传递(作为左值)，将引用容器的所有元素。
 
 \item
-If an rvalue is passed (a temporary range such as a container returned by a function or a container marked with std::move()), the range is moved into an owning\_view, which then holds a range of the passed type with all moved elements directly.[The support of temporary objects (rvalues) for views was added after C++20 was published with \url{http://wg21.link/p2415r2}.]
+若传递了一个右值(一个临时范围，比如函数返回的容器或带有std::move()标记的容器)，则该范围将被移动到owning\＿view中，然后owning\＿view直接保存传递类型的范围，其中包含所有移动的元素。[C++20发布\url{http://wg21.link/p2415r2}后增加了对视图临时对象(右值)的支持。]
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<std::string> coll{"just", "some", "strings", "to", "deal", "with"};
@@ -162,28 +162,28 @@ auto v2 = std::views::take(std::move(coll), 4); // iterates over an owning_view
 auto v3 = std::views::take(v1, 2); // iterates over v1
 \end{cpp}
 
-In all cases, std::views::take() creates a new take view that finally iterates over the values initialized in coll. However, the resulting types and exact behavior differ as follows:
+std::views::take()会创建一个新的获取视图，最终迭代在coll中初始化的值，但结果类型和确切的行为有如下不同:
 
 \begin{itemize}
 \item
-v1 is a take\_view<ref\_view<vector<string>{}>{}>.
+v1是take\_view<ref\_view<vector<string>{}>{}>。
 
-Because we pass the container coll as lvalue (named object), the take view iterates over a ref view to the container.
-
-\item
-v2 is a take\_view<owning\_view<vector<string>{}>{}>.
-
-Because we pass coll as an rvalue (temporary object or object marked with std::move()), the take view iterates over an owning view that holds its own vector of strings move-initialized with the passed collection.
+将容器coll作为左值(命名对象)传递，所以获取视图通过一个ref视图迭代到容器。
 
 \item
-v3 is a take\_view<take\_view<ref\_view<vector<string>{}>{}>{}>.
+v2是take\_view<owning\_view<vector<string>{}>{}>.
 
-Because we pass the view v1, the take view iterates over this view. The effect is that we finally iterate over coll (for which the elements were moved away with the second statement, so do not do that after the second statement).
+将coll作为右值(临时对象或用std::move()标记的对象)传递，所以获取视图遍历拥有视图，该视图拥有用传递的集合初始化的字符串vector。
+
+\item
+v3是take\_view<take\_view<ref\_view<vector<string>{}>{}>{}>.
+
+因为传递了视图v1, 获取视图遍历这个视图。最终遍历了coll(其中的元素已经被第二条语句移除了，所以第二条语句之后不需要再遍历了)。
 \end{itemize}
 
-Internally, the initialization uses the deduction guides and the type utility std::views::all\_t<>, which is explained later in detail.
+在内部，初始化使用演绎指南和类型工具std::views::all\_t<>，后面将详细解释。
 
-Note that this behavior allows a range-based for loop to iterate on temporary ranges:
+注意，这种行为允许基于范围的for循环迭代临时范围:
 
 \begin{cpp}
 for (const auto& elem : getColl() | std::views::take(5)) {
@@ -195,21 +195,21 @@ for (const auto& elem : getColl() | std::views::take(5) | std::views::drop(2)) {
 }
 \end{cpp}
 
-This is remarkable, because in general, it is a fatal runtime error to use a reference to a temporary as a collection a range-based for loop iterates over (a bug that the C++ standards committee has not been willing to fix for years now; see \url{http://wg21.link/p2012}). Because passing a temporary range object (rvalue) moves the range into an owning\_view, the view does not refer to an external container and therefore there is no runtime error.
+值得注意的，一般来说，使用对临时对象的引用作为基于范围的for循环迭代的集合是一个致命的运行时错误(这是一个C++标准委员会多年来一直不愿意修复的错误，参见\url{http://wg21.link/p2012})。由于传递临时范围对象(rvalue)将范围移动到owning\_view中，因此视图不会引用外部容器，从而不会出现运行时错误。
 
-\mySubsubsection{6.3.2}{Lazy Evaluation}
+\mySubsubsection{6.3.2}{惰性计算}
 
-It is important to understand when exactly views are processed. Views do not start processing when they are defined; instead, they run on demand:
+理解什么时候处理视图是很重要的。视图在定义后不会开始处理，其会按需运行:
 
 \begin{itemize}
 \item
-If we need the next element of a view, we compute which one it is by performing the necessary iteration(s).
+若需要视图的下一个元素，则通过执行必要的迭代来计算其是哪一个。
 
 \item
-If we need the value of an element of a view, we compute its value by performing the defined transformation(s).
+若需要一个视图元素的值，测通过执行定义的转换来计算其值。
 \end{itemize}
 
-Consider the following program:
+考虑下面的代码:
 
 \filename{ranges/filttrans.cpp}
 
@@ -242,17 +242,17 @@ int main()
 }
 \end{cpp}
 
-We define a view vColl that only filters and transforms the elements of the range coll:
+这里定义了一个视图vColl，只过滤和转换范围coll的元素:
 
 \begin{itemize}
 \item
-By using std::views::filter(), we process only those elements that are a multiple of 3.
+使用std::views::filter()，只处理那些是3的倍数的元素。
 
 \item
-By using std::views::transform(), we negate each value.
+使用std::views::transform()，对每个值求反。
 \end{itemize}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 *** coll | filter | transform:
@@ -271,9 +271,9 @@ trans 9
 val: -9
 \end{shell}
 
-First, note that neither filter() nor transform() are called when or after we define the view vColl. The processing starts when we use the view (here: iterating over vColl). This means that views use lazy evaluation. A view is just the description of a processing. The processing is performed when we need the next element or value.
+首先，在定义视图vColl时或之后，都不会调用filter()和transform()。当使用视图时，处理就开始了(这里:迭代vColl)。视图使用延迟求值，只是对处理的描述，当需要下一个元素或值时才进行处理。
 
-Let us assume that we do the iteration over vColl more manually, calling begin() and ++ to get the next value and * to get its value:
+假设对vColl进行更多的手动迭代，调用begin()和++来获取下一个值，使用操作符*来获取它的值:
 
 \begin{cpp}
 std::cout << "pos = vColl.begin():\n";
@@ -289,7 +289,7 @@ val = *pos;
 std::cout << "val: " << val << "\n\n";
 \end{cpp}
 
-For this code, we get the following output:
+对于这段代码，可以得到以下输出:
 
 \begin{shell}
 pos = vColl.begin():
@@ -307,58 +307,58 @@ trans 0
 val: 0
 \end{shell}
 
-Let us look at what happens step by step:
+一步一步来看看会发生什么:
 
 \begin{itemize}
 \item
-When we call begin(), the following happens:
+当调用begin()时，会发生以下情况:
 
 \begin{itemize}
 \item
-The request to get the first element of vColl is passed to the transform view, which passes it to the filter view, which passes it to coll, which yields an iterator to the first element 8.
+获取vColl的第一个元素的请求被传递给转换视图，转换视图将其传递给过滤器视图，过滤器视图将其传递给coll，后者生成迭代器的第一个元素8。
 
 \item
-The filter view looks at the value of the first element and rejects it. As a consequence, it asks coll for the next element by calling ++ there. The filter gets the position of the second element 15 and passes its position to the transform view.
+过滤器视图查看第一个元素的值并拒绝它，并通过调用++向coll请求下一个元素。过滤器获取第二个元素的位置15，并将其位置传递给变换视图。
 
 \item
-As a result, pos is initialized as an iterator with the position to the second element.
+因此，pos初始化为指向第二个元素的位置的迭代器。
 \end{itemize}
 
 \item
-When calling *pos, the following happens:
+当调用*pos时，会发生以下情况:
 
 \begin{itemize}
 \item
-Because we need the value, the transform view is now called for the current element and yields its negated value.
+因为需要这个值，所以现在为当前元素调用转换视图，并生成其负值。
 
 \item
-As a result, val is initialized with the negated value of the current element.
+用当前元素的负值初始化val。
 \end{itemize}
 
 \item
-When calling ++pos, the same happens again:
+当调用++pos时，同样的情况再次发生:
 
 \begin{itemize}
 \item
-The request to get the next element is passed to the filter, which passes the request to coll until an element fits (or we are at the end of coll).
+获取下一个元素的请求被传递给过滤器，过滤器将请求传递给coll，直到找到合适的元素(或者到达coll的末尾)。
 
 \item
-As a result, pos gets the position of the fourth element.
+因此，pos获取第四个元素的位置。
 \end{itemize}
 
 \item
-By calling *pos again, we perform the transformation and yield the next value for the loop.
+通过再次调用*pos，执行转换并为循环生成下一个值。
 \end{itemize}
 
-This iteration continues until the range or one of the views signals that we are at the end.
+这个迭代会一直持续下去，直到范围或其中一个视图表示已经到达终点。
 
-This pull model has a big benefit: we do not process elements that we never need. For example, assume that we use the view to find the first resulting value that is 0:
+这种pull模型有一个很大的好处:不处理不需要的元素。例如，使用视图来查找第一个结果值为0:
 
 \begin{cpp}
 std::ranges::find(vColl, 0);
 \end{cpp}
 
-The output would then be only:
+那么输出将只有:
 
 \begin{shell}
 filter 8
@@ -369,13 +369,13 @@ filter 0
 trans 0
 \end{shell}
 
-Another benefit of the pull model is that sequences or pipelines of views can even operate on infinite ranges. We do not compute an unlimited number of values not knowing how many are used; we compute as many values as requested by the user of the view.
+pull模型的另一个好处是视图的序列或管道甚至可以在无限范围内操作。不会在不知道使用了多少的情况下计算无限个值，从而根据视图的用户请求计算尽可能多的值。
 
-\mySubsubsection{6.3.3}{Caching in Views}
+\mySubsubsection{6.3.3}{缓存视图}
 
-Assume that we want to iterate over a view multiple times. It seems a waste of performance if we compute the first valid element again and again. And indeed, views that might skip leading elements cache the begin() once it is called.
+假设想要多次迭代一个视图。若一次又一次地计算第一个有效元素，似乎是对性能的浪费。实际上，跳过的元素视图会在调用begin()后进行缓存。
 
-Let us change the program above so that it iterates twice over the elements of the view vColl:
+修改上面的程序，使其在视图vColl的元素上迭代两次:
 
 \filename{ranges/filttrans2.cpp}
 
@@ -414,7 +414,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+输出如下所示：
 
 \begin{shell}
 *** coll | filter | transform:
@@ -441,9 +441,9 @@ trans 9
 val: -9
 \end{shell}
 
-As you can see, when used for the second time, calling vColl.begin() no longer tries to find the first element because it was cached with the first iteration over the elements of the filter.
+在第二次使用vcol .begin()时，不再尝试查找第一个元素，因为与过滤器元素的第一次迭代一起进行了缓存。
 
-Note that this caching of begin() has good and bad and maybe unexpected consequences. First, it is better to initialize a caching view once and use it twice:
+注意，begin()的缓存有好有坏，可能还有意想不到的后果。首先，最好初始化一次缓存视图并使用它两次:
 
 \begin{cpp}
 // better:
@@ -452,7 +452,7 @@ check(v1);
 process(v1);
 \end{cpp}
 
-than to initialize and use it twice:
+然后初始化并使用两次:
 
 \begin{cpp}
 // worse:
@@ -460,13 +460,13 @@ check(coll | std::views::drop(5));
 process(coll | std::views::drop(5));
 \end{cpp}
 
-In addition, modifying leading elements of ranges (changing their value or inserting/deleting elements) may invalidate views if and only if begin() has already been called before the modification.
+此外，修改range的前导元素(改变它们的值或插入/删除元素)可能会使视图失效，当且仅当修改之前已经调用了begin()。
 
-That means:
+这意味着:
 
 \begin{itemize}
 \item
-If we do not call begin() before a modification, the view is usually valid and works fine when we use it later:
+若在修改之前不调用begin()，这个视图通常是有效的，以后使用时也能正常工作:
 
 \begin{cpp}
 std::list coll{1, 2, 3, 4, 5};
@@ -476,7 +476,7 @@ print(v); // initializes begin() with 2 and prints: 2 3 4 5
 \end{cpp}
 
 \item
-However, if we do call begin() before the modification (e.g., by printing the elements), we can easily get wrong elements. For example:
+但是，若在修改之前调用begin()(例如，打印元素)，就很容易得到错误的元素。例如:
 
 \begin{cpp}
 std::list coll{1, 2, 3, 4, 5};
@@ -486,9 +486,9 @@ coll.push_front(0); // coll is now: 0 1 2 3 4 5
 print(v); // begin() is still 3, so prints: 3 4 5
 \end{cpp}
 
-Here, begin() is cached as an iterator so that the view no longer operates on all elements of the underlying range if new elements are added to or removed from the range.
+这里，begin()缓存为一个迭代器，若向范围中添加或删除新元素，视图就不再对基础范围中的所有元素进行操作。
 
-However, we might also get invalid values. For example:
+也可能得到无效的值。例如:
 
 \begin{cpp}
 std::vector vec{1, 2, 3, 4};
@@ -506,39 +506,39 @@ print(vVec); // OOPS: 0 4;
 
 \end{itemize}
 
-Note that this means that an iteration, even if it only reads, may count as a write access. Therefore, iterating over the elements of a view might invalidate a later use if its referred range has been modified in the meantime.
+注意，这是一个迭代，即使它只是读，也可以算作写访问，若视图的引用范围在此期间被修改，那么迭代视图的元素可能会使以后的使用无效。
 
-The effect depends on when and how caching is done. See the remarks about caching views in their specific sections:
-
-\begin{itemize}
-\item
-Filter views, which cache begin() as an iterator or offset
-
-\item
-Drop views, which cache begin() as an iterator or offset
-
-\item
-Drop-while views, which cache begin() as an iterator or offset
-
-\item
-Reverse views, which cache begin() as an iterator or offset
-\end{itemize}
-
-Here, you see again that C++ cares about performance:
+其效果取决于何时，以及如何进行缓存。请参阅关于缓存视图特定部分的注释:
 
 \begin{itemize}
 \item
-Caching at initialization time would have unnecessary performance cost if we never iterate over the elements of a view at all.
+Filter视图，将begin()缓存为迭代器或偏移量
 
 \item
-Not caching at all would have unnecessary performance cost if we iterate a second or more times over the elements of the view (applying a reverse view over a drop-while view might even have quadratic complexity in some cases).
+Drop视图，将begin()缓存为迭代器或偏移量
+
+\item
+Drop-while视图，将begin()缓存为迭代器或偏移量
+
+\item
+反向(Reverse)视图，将begin()缓存为迭代器或偏移量
 \end{itemize}
 
-However, due to caching, using a view not ad hoc can have pretty surprising consequences. Care must be taken when modifying ranges used by views.
+这里，看看C++对性能的关心:
 
-As another consequence, caching might require that a view cannot be const while iterating over its elements. The consequences are even more severe and are discussed later.
+\begin{itemize}
+\item
+若根本不遍历视图的元素，那么在初始化时进行缓存将会带来不必要的性能开销。
 
-\mySubsubsection{6.3.4}{Performance Issues with Filters}
+\item
+若在视图的元素上迭代一秒或更多次，完全不缓存将会带来不必要的性能成本(某些情况下，在drop-while视图上应用反向视图甚至可能具有二次复杂度)。
+\end{itemize}
+
+由于缓存，使用非临时视图可能会产生非常令人惊讶的结果。所以，在修改视图使用的范围时必须小心。
+
+另一个结果是，缓存可能要求视图在遍历其元素时不能是const。其后果更为严重，稍后再讨论。
+
+\mySubsubsection{6.3.4}{过滤器的性能问题}
 
 The pull model also has its drawbacks. To demonstrate that, let us change the order of the two views involved (above) so that we first call transform() and then filter():
 
