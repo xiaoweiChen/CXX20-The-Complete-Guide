@@ -1,9 +1,9 @@
-After adopting the Standard Template Llibrary for the first C++ standard, which introduced a pair of iterators as abstraction for containers/collections to deal with them in algorithms, there was always an ongoing discussion about how to deal with a single range object instead of passing begin iterators and end iterators. The Boost.Range library and the Adobe Source Libraries (ASL) were two early approaches that came up with concrete libraries.
+在第一个C++标准采用Standard Template Llibrary(该标准引入了一对迭代器作为容器/集合的抽象，以便在算法中处理)之后，一直有关于如何处理单个范围对象而不是传递begin迭代器和end迭代器的讨论。Boost的Range库和Adobe源库(ASL)是最早提出具体库的两种方法。
 
-The first proposal for ranges becoming a C++ standard was in 2005 by Thorsten Ottosen in \url{http://wg21.link/n1871}. Eric Niebler took on the task of driving this forward over years (supported by many other people), which resulted in another proposal in 2014 by Eric Niebler, Sean Parent, and Andrew Sutton in \url{http://wg21.link/n4128} (this document contains the rationale for many key design decisions). As a consequence, in October 2015, a Ranges Technical Specification was opened starting with \url{http://wg21.link/n4560}. 
+2005年，Thorsten Ottosen在\url{http://wg21.link/n1871}上提出了将range作为C++标准的第一个建议。Eric Niebler花了数年时间(得到了许多人的支持)推动这一进程，并于2014年由Eric Niebler、Sean Parent和Andrew Sutton在\url{http://wg21.link/n4128}上提出了另一项提案(该文档包含了许多关键设计决策的基本原理)。因此，2015年10月，range技术规范以\url{http://wg21.link/n4560}起点。
 
-The ranges library was finally adopted by merging the Ranges TS into the C++ standard as proposed by Eric Niebler, Casey Carter, and Christopher Di Bella in \url{http://wg21.link/p0896r4}.
+range库最终通过将range TS合并到由Eric Niebler、Casey Carter和Christopher Di Bella在\url{http://wg21.link/p0896r4}中提出的C++标准中采用。
 
-After adoption, several proposals, papers, and even defects against C++20 changed significant aspects, especially for views. See, for example, \url{http://wg21.link/p2210r2} (fixing split views), \url{http://wg21.link/p2325r3} (fixing the definition of views), \url{http://wg21.link/p2415r2} (introducing owning views for rvalue ranges), and \url{http://wg21.link/p2432r1} (fixing istream views) proposed by Barry Revzin, Tim Song, and Nicolai Josuttis.
+采用之后，针对C++20的一些建议、论文，甚至是缺陷改变了重要的方面，特别是视图方面。例如，由Barry Revzin, Tim Song和Nicolai Josuttis提出的\url{http://wg21.link/p2210r2}(修复分割视图)，\url{http://wg21.link/p2325r3}(修复视图的定义)，\url{http://wg21.link/p2415r2}(引入右值范围的拥有视图)，和\url{http://wg21.link/p2432r1}(修复istream视图)。
 
-In addition, note that at least some of the several const issues with views will probably be fixed in C++23 with \url{http://wg21.link/p2278r4}. Hopefully, vendors will provide that fix before C++23 because otherwise, C++20 code might not be compatible with C++23 here.
+此外，请注意，至少视图的几个const问题中的一些可能会在C++23中通过\url{http://wg21.link/p2278r4}修复。希望厂商能在C++23之前提供这个修复。否则，C++20的代码可能与C++23不兼容。

@@ -1,31 +1,31 @@
 
-When using views (and the ranges library in general), there are a few things that are surprising or even broken regarding constness:
+在使用视图(以及一般的ranges库)时，有一些关于常量性的事情令人惊讶，甚至是不正常的。
 
 \begin{itemize}
 \item
-For some views, it is not possible to iterate over the elements when the view is const.
+对于某些视图，当视图为const时，不可能遍历元素。
 
 \item
-Views remove the propagation of constness to elements.
+视图消除了对元素常量性的传播。
 
 \item
-Functions like cbegin() and cend(), which have the goal of ensuring that elements are const while iterating over them, are either not provided or are actually broken.
+像cbegin()和cend()这样的函数的目标是确保元素在迭代时为const，要么没有提供，要么已被破坏。
 \end{itemize}
 
-There are more or less good reasons for these problems. Some of them have to do with the nature of views and some basic design decisions that were made. I consider this all as a severe design mistake. However, others in the C++ standards committee have different opinions.
+这些问题或多或少都有充分的理由，其中一些与视图的性质和所做的一些基本设计决策有关。我认为这是一个严重的设计错误。然而，C++标准委员会中的其他人有不同的观点。
 
-There are fixes under way that at least fix the broken constness of cbegin() and cend(). Unfortunately, the C++ standards committee decided not to apply them to C++20. These will come (and change behavior) with C++23. See \url{http://wg21.link/p2278r4} for details.
+目前正在进行修复，至少修复了cbegin()和cend()的连续性。不幸的是，C++标准委员会决定不在C++20中进行应用。这些将在C++23中实现(并改变行为)，详见\url{http://wg21.link/p2278r4}。
 
-\mySubsubsection{6.5.1}{Lifetime Dependencies Between Views and Their Ranges}
+\mySubsubsection{6.5.1}{视图及其范围之间的生命周期依赖关系}
 
-It is surprisingly complicated to implement a generic function that can iterate over the elements of every type of containers and views with good performance. For example, declaring a function that shall print all elements as follows does not always work:
+实现一个可以遍历每种类型的容器和视图的元素，并具有良好性能的泛型函数是非常复杂的。例如，像下面这样声明一个打印所有元素的函数并不总是有效:
 
 \begin{cpp}
 template<typename T>
 void print(const T& coll); // OOPS: might not work for some views
 \end{cpp}
 
-Consider the following concrete example:
+考虑下面的具体例子:
 
 \filename{ranges/printconst.cpp}
 
@@ -65,7 +65,7 @@ int main()
 }
 \end{cpp}
 
-First, we declare a very trivial generic function print(), which prints all elements of a range passed as a const reference:
+首先，声明一个非常简单的泛型函数print()，打印作为const引用传递的范围的所有元素:
 
 \begin{cpp}
 void print(const auto& rg)
@@ -74,12 +74,12 @@ void print(const auto& rg)
 }
 \end{cpp}
 
-Then, we call print() for a couple of views and run into surprising behavior:
+然后，为几个视图调用print()，并遇到了令人惊讶的行为:
 
 
 \begin{itemize}
 \item
-Passing take views and a drop view to a vector works fine:
+将vector传递给take视图和drop视图的效果很好:
 
 \begin{cpp}
 print(vec | std::views::take(3)); // OK
@@ -89,7 +89,7 @@ print(lst | std::views::take(3)); // OK
 \end{cpp}
 
 \item
-Passing a drop view to a list does not compile:
+将drop视图传递给list无法编译:
 
 \begin{cpp}
 print(vec | std::views::take(3)); // OK
@@ -100,7 +100,7 @@ print(lst | std::views::drop(3)); // ERROR
 \end{cpp}
 
 \item
-However, iterating over the drop view directly works fine:
+然而，直接迭代drop视图却运行良好:
 
 \begin{cpp}
 for (const auto& elem : lst | std::views::drop(3)) { // OK
@@ -109,55 +109,55 @@ for (const auto& elem : lst | std::views::drop(3)) { // OK
 \end{cpp}
 \end{itemize}
 
-This does not mean that vectors always work fine. If, for example, we pass a filter view, we get an error for all ranges:
+所以，vector不能很好地工作。例如，若传递一个过滤器视图们会得到所有范围的错误:
 
 \begin{cpp}
 print(vec | std::views::filter(isEven)); // ERROR
 \end{cpp}
 
-\mySamllsection{const\& Does Not Work for All Views}
+\mySamllsection{const\&并不适用于所有视图}
 
-The reason for this very strange and unexpected behavior is that some views do not always support iterating over elements when the view is const. It is a consequence of the fact that iterating over the elements of these views sometimes needs the ability to modify the state of the view (e.g., due to caching). For some views (such as the filter view), it never works; for some views (such as the drop view), it only works sometimes.
+这种非常奇怪和意外的行为的原因是，当视图为const时，一些视图并不总是支持遍历元素。这是这样一个事实的结果:迭代这些视图的元素有时需要能够修改视图的状态(例如，由于缓存)。对于某些视图(如过滤器视图)永远不会工作，对于某些视图(例如drop视图)，只是有时会起作用。
 
-In fact, you cannot iterate over the elements of the following standard views if they are declared with const:
-
-\begin{itemize}
-\item
-const views that you can never iterate over:
+实际上，若用const声明了以下标准视图中的元素，则不能迭代它们:
 
 \begin{itemize}
 \item
-Filter view
-
-\item
-Drop-while view
-
-\item
-Split view
-
-\item
-IStream view
-\end{itemize}
-
-\item
-const views that you can only sometimes iterate over:
+永远不能迭代的Const视图:
 
 \begin{itemize}
 \item
-Drop view, if it refers to a range that has no random access or no size()
+Filter视图
 
 \item
-Reverse view, if it refers to a range that has different types for the begin iterator and the sentinel (end iterator)
+Drop-while视图
 
 \item
-Join view, if it refers to a range that generates values instead of references
+Split视图
 
 \item
-All views that refer to other ranges if the referred ranges themselves are not const iterable
+IStream视图
+\end{itemize}
+
+\item
+只能偶尔迭代的Const视图:
+
+\begin{itemize}
+\item
+Drop视图，若引用的范围没有随机访问或没有size()
+
+\item
+Reverse视图，若引用的范围对于开始迭代器和前哨(结束迭代器)具有不同的类型
+
+\item
+Join视图，若引用的范围生成值而不是引用，则使用该视图
+
+\item
+若引用的范围本身不是const可迭代的，则引用其他范围的所有视图
 \end{itemize}
 \end{itemize}
 
-For these views, begin() and end() as const member functions are provided only conditionally or are not provided at all. For example, for drop views, begin() for const objects is provided only if the passed ranges fulfill the requirement of a random-access range and sized range:[You might be surprised by the fact that the template parameter V is constrained to be a view. However, it may be a ref view implicitly created from a passed container that is not a view]
+对于这些视图，begin()和end()作为const成员函数只能有条件地提供，或者根本不提供。例如，对于drop视图，只有当传递的范围满足随机访问范围和大小范围的要求时，才会提供const对象的begin():[可能会对模板参数V被限制为视图这一事实感到惊讶，但它可能是一个从传递的容器中隐式创建的refview，而不是视图]。
 
 
 \begin{cpp}
@@ -173,9 +173,9 @@ namespace std::ranges {
 }
 \end{cpp}
 
-Here, we use the new feature to constrain member functions.
+这里，使用新特性来约束成员函数。
 
-This means that you cannot provide a generic function that can deal with the elements of all ranges and views if you declare the parameter to be a const reference.
+若将形参声明为const引用，则无法提供可以处理所有范围和视图元素的泛型函数。
 
 \begin{cpp}
 void print(const auto& coll); // not callable for all views
@@ -184,7 +184,7 @@ template<typename T>
 void foo(const T& coll); // not callable for all views
 \end{cpp}
 
-It does not matter whether you have constraints for the type of the range parameter:
+是否对range参数的类型有约束并不重要:
 
 \begin{cpp}
 void print(const std::ranges::input_range auto& coll); // not callable for all views
@@ -194,9 +194,9 @@ void foo(const T& coll); // not callable for all views
 \end{cpp}
 
 
-\mySamllsection{Non-const \&\& Does Work for All Views}
+\mySamllsection{非const\&\&对所有视图都有效}
 
-To also support these views in generic code, you should declare the range parameters as universal references (also called forwarding references). These are references that can refer to all expressions while retaining the fact that the referred object is not const[ In the C++ standard, universal references are called forwarding references, which is unfortunate because they do not really forward until std::forward<>() is called for them, and perfect forwarding is not always the reason to use these references (as this example demonstrates).]. For example:
+为了在泛型代码中支持这些视图，应该将范围参数声明为通用引用(也称为转发引用)。这些引用可以引用所有表达式，同时保留引用对象不是const的事实[C++标准中，通用引用称为转发引用，这很不幸，因为在std::forward<>()调用之前并不真正的转发，并且完美转发并不总是使用这些引用的原因(如本例所示)]。例如:
 
 \begin{cpp}
 void print(std::ranges::input_range auto&& coll); // can in principle pass all views
@@ -205,7 +205,7 @@ template<std::ranges::random_access_range T>
 void foo(T&& coll);
 \end{cpp}
 
-Thus, the following program works fine:
+因此，下面的程序可以正常工作:
 
 \filename{ranges/printranges.cpp}
 
@@ -245,7 +245,7 @@ int main()
 }
 \end{cpp}
 
-For the same reason, the generic maxValue() function introduced before does not always work:
+出于同样的原因，前面介绍的通用maxValue()函数并不总是有效:
 
 \begin{cpp}
 template<std::ranges::input_range Range>
@@ -261,7 +261,7 @@ auto odd = [] (auto val) {
 std::cout << maxValue(arr | std::views::filter(odd)) << '\n'; // ERROR
 \end{cpp}
 
-As written, it is better to implement the generic maxValue() function as follows:
+如前所述，最好实现泛型maxValue()函数如下:
 
 \filename{ranges/maxvalue2.hpp}
 
@@ -285,14 +285,14 @@ std::ranges::range_value_t<Range> maxValue(Range&& rg)
 }
 \end{cpp}
 
-Here, we declare parameter rg as a universal/forwarding reference:
+这里，将参数rg声明为通用/转发引用:
 
 \begin{cpp}
 template<std::ranges::input_range Range>
 std::ranges::range_value_t<Range> maxValue(Range&& rg)
 \end{cpp}
 
-That way, we ensure that the passed views are not becoming const, which means that we can also pass a filter view now:
+这样，就可以确保传递的视图不会变成const，所以现在也可以传递一个过滤视图:
 
 \filename{ranges/maxvalue2.cpp}
 
@@ -312,40 +312,40 @@ int main()
 }
 \end{cpp}
 
-The output of the program is:
+程序的输出是:
 
 \begin{shell}
 15
 \end{shell}
 
-Are you wondering now how to declare a generic function that can be called for all const and non-const ranges and views and guarantees that the elements are not modified? Well, again, there is an important lesson to learn here:
+现在想知道如何声明一个泛型函数，可以调用所有const和非const范围和视图，并保证元素不被修改?好吧，再一次，这里有一个重要的教训:
 
-\textbf{Since C++20, there is no longer a way to declare a generic function to takes all standard collection types (const and non-const containers and views) with the guarantee that the elements are not modified.}
+\textbf{C++20起，不再有一种方法可以声明一个泛型函数来接受所有标准集合类型(const和非const容器和视图)，并保证元素不被修改。}
 
-All you can do is to take the range/view and ensure in the body of your function that elements are not modified. However, it might be surprisingly complicated to do that because as we will now see:
+所能做的就是获取范围/视图，并确保在函数体中元素没有被修改。然而，这样做可能会很复杂，将看到:
 
 \begin{itemize}
 \item
-Declaring views as const does not necessarily make the elements const.
+将视图声明为const并不一定使元素成为const。
 
 \item
-Views do not have const\_iterator members.
+视图没有const\_iterator成员。
 
 \item
-Views do not provide cbegin() and cend() members (yet).
+视图目前还不提供cbegin()和cend()成员。
 
 \item
-std::ranges::cbegin() and std::cbegin() are broken for views.
+std::ranges::cbegin()和Std::cbegin()对于视图是无效的。
 
 \item
-Declaring a view element as const might have no effect.
+将视图元素声明为const可能没有效果。
 \end{itemize}
 
-\mySamllsection{Use const\& for Concurrent Iterations}
+\mySamllsection{对并发迭代使用const\&}
 
-Regarding the advice to use universal/forwarding references, there is an important restriction: you should not use them when you iterate over views concurrently.
+关于使用通用/转发引用的建议，有一个重要的限制:当同时遍历视图时不应该使用。
 
-Consider the following example:
+考虑下面的例子:
 
 \begin{cpp}
 std::list<int> lst{1, 2, 3, 4, 5, 6, 7, 8};
@@ -364,9 +364,9 @@ auto sum = std::accumulate(v.begin(), v.end(), // fatal runtime ERROR
 0L);
 \end{cpp}
 
-By using a std::jthread, we start a thread that iterates over the elements of the view v to print them. At the same time, we iterate over v to compute the sum of the element values. For standard containers, parallel iterations that only read are safe (there is a guarantee for containers, that calling begin() counts as read access). However, this guarantee does not apply to standard views. Because we might call begin() for view v concurrently, this code causes undefined behavior (a possible data race).
+通过使用std::jthread，启动了一个线程，该线程遍历视图v的元素并打印它们。同时，遍历v来计算元素值的和。对于标准容器，只进行读操作的并行迭代是安全的(对于容器来说，调用begin()可以保证作为读访问计数)。但是，此保证不适用于标准视图。因为我们可能并发地为视图v调用begin()，所以这段代码会导致未定义的行为(可能的数据竞争)。
 
-Functions that perform concurrent iterations that only read should use const view to convert possible runtime errors into compile-time errors:
+执行只读并发迭代的函数应该使用const视图，将可能的运行时错误转换为编译时错误:
 
 \begin{cpp}
 const auto v = lst | std::views::drop(2);
@@ -381,33 +381,23 @@ auto sum = std::accumulate(v.begin(), v.end(), // compile-time ERROR
 0L);
 \end{cpp}
 
-\mySamllsection{Overloading for Views}
+\mySamllsection{视图的重载}
 
-You might claim that you can simply overload a generic function for containers and views. For views, it might be enough to just add an overload that constrains the function for views and takes the parameter by value:
+读者们可能会声称可以简单地重载容器和视图的泛型函数。对于视图，可能只需要添加一个重载来约束视图的函数并按值接受参数就足够了:
 
 \begin{cpp}
 void print(const auto& rg); // for containers
 void print(std::ranges::view auto rg) // for views
 \end{cpp}
 
-However, the rules of overload resolution can become tricky when you once pass by value and once by reference. In this case, it causes ambiguities:
+然而，当一次按值传递，一次按引用传递时，重载解析规则可能会变得棘手。在这种情况下，会导致歧义:
 
 \begin{cpp}
 std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // ERROR: ambiguous
 \end{cpp}
 
-It also does not help to use a concept for the views that subsumes a concept used for the general case:
-
-\begin{cpp}
-void print(const std::ranges::range auto& rg); // for containers
-void print(std::ranges::view auto rg) // for views
-
-std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
-print(vec | std::views::take(3)); // ERROR: ambiguous
-\end{cpp}
-
-It also does not help to use a concept for the views that subsumes a concept used for the general case:
+对于包含用于一般情况的概念的视图使用概念也没有帮助:
 
 \begin{cpp}
 void print(const std::ranges::range auto& rg); // for containers
@@ -417,7 +407,7 @@ std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // ERROR: ambiguous
 \end{cpp}
 
-Instead, you have to state that the const\& overload is not for views:
+相反，必须声明const\&重载不适用于视图:
 
 \begin{cpp}
 template<std::ranges::input_range T> // for containers
@@ -430,11 +420,11 @@ std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // OK
 \end{cpp}
 
-However, remember that copying a view might create a view with different state and behavior than the source view. For this reason, it is anyway questionable whether it is good to pass all views by value.
+但请记住，复制视图可能会创建一个与源视图具有不同状态和行为的视图。由于这个原因，无论如何，按值传递所有视图都是有问题的。
 
-\mySubsubsection{6.5.2}{Views with Write Access}
+\mySubsubsection{6.5.2}{具有写访问权限的视图}
 
-Containers have deep constness. Because they have value semantics and own their elements, they propagate any constness to their elements. When a containers is const, its elements are const. As a consequence, the following code fails to compile:
+容器具有很深的稳定性，它们具有值语义并拥有自己的元素，所以可将任何常量性传播给它们的元素。当容器为const类型时，其元素也是const类型。因此，以下代码无法编译:
 
 \begin{cpp}
 template<typename T>
@@ -448,7 +438,7 @@ std::array<int, 10> coll{}; // array of 10 ints with value 0
 modifyConstRange(coll); // compile-time ERROR
 \end{cpp}
 
-This compile-time error is helpful because it helps to detect code that would otherwise be broken at runtime. For example, if you accidentally use the assignment operator instead of a comparison, the code does not compile:
+这个编译时错误很有帮助，因为有助于检测在运行时可能破坏的代码。例如，若不小心使用赋值操作符而不是比较操作符，代码将无法编译:
 
 \begin{cpp}
 template<typename T>
@@ -464,9 +454,9 @@ std::array<int, 10> coll{}; // array of 10 ints with value 0
 modifyConstRange(coll); // compile-time ERROR (thank goodness)
 \end{cpp}
 
-Knowing that elements cannot be modified also helps for optimizations (such as avoiding the need to make backups and check for changes) or to be sure that element access cannot cause undefined behavior due to data races when multiple threads are used.
+知道元素不能修改也有助于优化(例如避免备份和检查更改)，或者确保在使用多个线程时，元素访问不会因数据竞争而导致未定义的行为。
 
-With views the situation is more complicated. Views on ranges passed as lvalues have reference semantics. They refer to elements stored somewhere else. By design, these views do not propagate constness to their elements. They have shallow constness:
+有了视图来说，情况就复杂多了。作为左值传递的范围的视图具有引用语义，引用存储在其他地方的元素。按照设计，这些视图不会将常量性传播到它们的元素。他们有浅薄的忠诚;
 
 \begin{cpp}
 std::array<int, 10> coll{}; // array of 10 ints with value 0
@@ -475,28 +465,28 @@ std::ranges::take_view v{coll, 5}; // view to first five elements of coll
 modifyConstRange(v); // OK, modifies the first element of coll
 \end{cpp}
 
-That applies to almost all views on lvalues regardless of how they are created:
+这适用于几乎所有关于左值的视图，不管是如何创建的:
 
 \begin{cpp}
 modifyConstRange(coll | std::views::drop(5)); // OK, elements of coll are not const
 modifyConstRange(coll | std::views::take(5)); // OK, elements of coll are not const
 \end{cpp}
 
-As a consequence, you can use the range adaptor std::views::all() to pass a container to a generic function that takes a range as a const reference:
+因此，可以使用范围适配器std::views::all()将容器传递给接受范围作为const引用的泛型函数:
 
 \begin{cpp}
 modifyConstRange(coll); // compile-time ERROR: elements are const
 modifyConstRange(std::views::all(coll)); // OK, elements of coll are not const
 \end{cpp}
 
-Note that views on rvalues (if they are valid) usually still propagate constness:
+请注意，对右值的视图(如果它们是有效的)通常仍然传播常量:
 
 \begin{cpp}
 readConstRange(getColl() | std::views::drop(5)); // compile-time ERROR (good)
 readConstRange(getColl() | std::views::take(5)); // compile-time ERROR (good)
 \end{cpp}
 
-Also, note that it is not possible to modify the elements of a const container using a view:
+另外，请注意，不能使用视图修改const容器的元素:
 
 \begin{cpp}
 const std::array<int, 10> coll{}; // array of 10 ints with value 0
@@ -505,7 +495,7 @@ auto v = std::views::take(coll, 5); // view to first five elements of coll
 modifyConstRange(v); // compile-time ERROR (good)
 \end{cpp}
 
-Therefore, you can ensure that elements of a container cannot be modified by a function that takes a view by making the container const before the view refers to it:
+因此，通过在视图引用容器之前将容器设置为const，可以确保容器的元素不会接受该视图的函数修改:
 
 \begin{cpp}
 std::array<int, 10> coll{}; // array of 10 ints with value 0
@@ -515,23 +505,23 @@ modifyConstRange(v); // compile-time ERROR
 modifyConstRange(std::as_const(coll) | std::views::take(5)); // compile-time ERROR
 \end{cpp}
 
-The function std::as\_const() has been provided since C++17 in the header file <utility>. However, calling std::as\_const() after the view was created has no effect (except that for a few views, you are no longer able to iterate over the elements).
+函数std::as\_const()从C++17开始在头文件<utility>中提供，但在创建视图后调用std::as\_const()没有效果(除了少数视图，不再能够遍历元素)。
 
-C++23 will introduce a helper view std::ranges::as\_const\_view with the range adaptor std::views::as\_const() so that you can simply make the elements of a view const as follows (see \url{http://wg21.link/p2278r4}):
+C++23将引入一个带有范围适配器std::views::as\_const()的辅助视图std::ranges::as\_const\_view，这样就可以简单地将视图的元素设置为const，如下所示(参见\url{http://wg21.link/p2278r4}):
 
 \begin{cpp}
 std::views::as_const(v); // make elements of view v const
 \end{cpp}
 
-However, note again that you must not forget the namespace views here:
+但注意，不能忘记这里的命名空间视图:
 
 \begin{cpp}
 std::as_const(v); // OOPS: no effect on views
 \end{cpp}
 
-The functions as\_const() in the namespace std and in the namespace std::ranges both make something const but the former makes the object const while the latter makes the elements const[The members of the C++ standards committee sometimes decide in favor of features that look the same even though details differ and may become a source of trouble.]. You might wonder why views with reference semantics were not designed in a way that they propagate constness. One argument was that they internally use pointers and therefore should behave like pointers.
+命名空间std和命名空间std::ranges中的函数as\_const()都使某些东西成为const，但前者使对象成为const，而后者使元素成为const[C++标准委员会的成员有时决定支持看起来相同的特性，即使细节不同，也可能成为麻烦的来源。]您可能想知道为什么使用引用语义的视图没有被设计成传播常量的方式。一个论点是它们在内部使用指针，因此应该表现得像指针。
 
-However, then it is strange that views on rvalues do not work that way. Another argument was that the constness is worth almost nothing because it can easily be removed by copying the view to a non-const view:
+然而，奇怪的是，右值的视图不是这样工作的。另一种说法是，const几乎一文不值，它可以很容易地通过将视图复制到非const视图来删除:
 
 \begin{cpp}
 void foo(const auto& rg) // if rg would propagate constness for views on lvalues
@@ -541,29 +531,29 @@ void foo(const auto& rg) // if rg would propagate constness for views on lvalues
 }
 \end{cpp}
 
-The initialization would act kind of a const\_cast<>. However, if this is generic code for containers programmers are already used not to copy a passed collection, because it is expensive to do so. Therefore, we now have another good reason not to copy a passed range. And the effect of declaring ranges (containers and views) as const would be way more consistent. However, the design decision is done now and as a programmer you have to deal with it.
+初始化的行为类似于const\_cast<>。但若这是容器的泛型代码，开发者已经习惯不复制传递的集合，这样做的代价很高。因此，现在有了另一个不复制传递的范围的好理由，并将范围(容器和视图)声明为const的效果将更加一致。然而，现在设计决策已经完成，作为开发者，你必须处理它。
 
-\mySubsubsection{6.5.3}{Views on Ranges That Change}
+\mySubsubsection{6.5.3}{更改范围的视图}
 
-As we have learned, using const for ranges that are views is a problem for two reasons:
+正如所了解的那样，对作为视图的范围使用const是一个问题，原因有两个:
 
 \begin{itemize}
 \item
-const may disable iteration over the elements
+const可以禁用元素的迭代
 
 \item
-const might not be propagated to the elements of a view
+const可能不会传播到视图的元素
 \end{itemize}
 
-The obvious question then is how to ensure that code cannot modify the elements of a range when using a view.
+那么显而易见的问题是如何确保代码在使用视图时不能修改范围的元素。
 
-\mySamllsection{Making the Elements const When Using Them}
+\mySamllsection{使元素为const}
 
-The only easy way to ensure that elements of a view cannot be modified is to force constness on element access:
+确保视图中的元素不能被修改的唯一简单方法是，在元素访问时强制使用常量:
 
 \begin{itemize}
 \item
-Either by using const in the range-based for loop:
+在基于范围的for循环中使用const:
 
 \begin{cpp}
 for (const auto& elem : rg) {
@@ -572,7 +562,7 @@ for (const auto& elem : rg) {
 \end{cpp}
 
 \item
-Or by passing elements converted to const:
+或通过传递转换为const的元素:
 
 \begin{cpp}
 for (auto pos = rg.begin(); pos != rg.end(); ++pos) {
@@ -581,7 +571,7 @@ for (auto pos = rg.begin(); pos != rg.end(); ++pos) {
 \end{cpp}
 \end{itemize}
 
-However, here is the bad news: the designers of the views library plan to disable the effect of declaring elements const for some views such as the upcoming zip view:
+然而，这里有一个坏消息:视图库的设计者计划禁用某些视图声明元素const的效果，比如即将到来的zip视图:
 
 \begin{cpp}
 for (const auto& elem : myZipView) {
@@ -589,15 +579,15 @@ for (const auto& elem : myZipView) {
 }
 \end{cpp}
 
-Maybe we can still stop this. However, beware that making collections or their elements const may not work when using C++ standard views.
+也许我们还能阻止这一切。但请注意，使用C++标准视图时，将集合或其元素设置为const可能不起作用。
 
-\mySamllsection{const\_iterator and cbegin() Are Not Provided or Are Broken}
+\mySamllsection{const\_iterator和cbegin()未提供或无效}
 
-Unfortunately, the usual approach of making all elements of a container const does not work for views:
+不幸的是，通常将容器的所有元素都设置为const的方法不适用于视图:
 
 \begin{itemize}
 \item
-In general, views do not provide a const\_iterator to do the following:
+通常，视图不提供const\_iterator来执行以下操作:
 
 \begin{cpp}
 for (decltype(rg)::const_iterator pos = rg.begin(); // not for views
@@ -607,21 +597,21 @@ pos != range.end();
 }
 \end{cpp}
 
-Therefore, we also cannot simply convert the range as a whole:
+因此，也不能简单地将整个范围转换为:
 
 \begin{cpp}
 std::ranges::subrange<decltype(rg)::const_iterator> crg{rg}; // not for views
 \end{cpp}
 
 \item
-In general, views do not have the member functions cbegin() and cend() to do the following:
+通常，视图没有成员函数cbegin()和cend()来执行以下操作:
 
 \begin{cpp}
 callTraditionalAlgo(rg.cbegin(), rg.cend()); // not for views
 \end{cpp}
 \end{itemize}
 
-You might propose that we use the free-standing helper functions std::cbegin() and std::cend(), which have been provided since C++11 instead. They were introduced to ensure that elements are const when you iterate over them. Here, however, the situation is even worse, because std::cbegin() and std::cend() are broken for views. Their specification did not take into account types that have shallow constness (internally, they call the const member function begin() and do not add constness to the value type). Therefore, for views that do not propagate constness, these functions are simply broken[std::cbegin() and std::cend() should simply be fixed. However, so far, the C++ standards committee has rejected each proposal to fix them.]:
+有的读者可能会建议使用独立的辅助函数std::cbegin()和std::cend()，从C++11开始就提供了。引入它们是为了确保元素在迭代时是const的，但这里的情况更糟，因为std::cbegin()和std::cend()对于视图来说是无效的。其规范没有考虑到具有浅常量的类型(在内部，调用const成员函数begin()，并且不向值类型添加constness)。因此，对于不传播常量的视图，这些函数被简单地破坏了[std::cbegin()和std::cend()应该被修复，但目前为止，C++标准委员会已经拒绝了所有修正它们的提案。]
 
 \begin{cpp}
 for (auto pos = std::cbegin(range); pos != std::cend(range); ++pos) {
@@ -629,7 +619,7 @@ for (auto pos = std::cbegin(range); pos != std::cend(range); ++pos) {
 }
 \end{cpp}
 
-Note also that when using these helper functions, there are some issues with ADL. For that reason, C++20 introduces corresponding helper functions of the ranges library in the namespace std::ranges. Unfortunately, std::ranges::cbegin() and std::ranges::cend() are also broken for views in C++20 (this will be fixed in C++23, though):
+还要注意，在使用这些辅助函数时，ADL存在一些问题。因此，C++20在命名空间std::ranges中引入了range库的相应帮助函数。不幸的是，std::ranges::cbegin()和std::ranges::cend()在C++20中的视图中也被破坏了(这将在C++23中修复):
 
 \begin{cpp}
 for (auto pos = std::ranges::cbegin(rg); pos != std::ranges::cend(rg); ++pos) {
@@ -637,13 +627,13 @@ for (auto pos = std::ranges::cbegin(rg); pos != std::ranges::cend(rg); ++pos) {
 }
 \end{cpp}
 
-Thus, in C++20, we have yet another severe problem when typing to make all elements of a view const:
+因此，C++20中，当输入使视图的所有元素都为const时，还会遇到另一个严重的问题:
 
-\textbf{BE CAREFUL when using cbegin(), cend(), cdata() in generic code because these functions are not available or are broken for some views.}
+\textbf{在泛型代码中使用cbegin()，cend()，cdata()时要小心，因为这些函数在某些视图中不可用或被破坏。}
 
-I do not know what is worse: that we have this problem or that the C++ standards committee and its subgroup for the ranges library were not willing to fix this problem for C++20. For example, we could provide const\_iterator and cbegin() members in std::ranges::view\_interface<>, which serves as a base class for all views. The funny thing is that only one view provides const\_iterator support so far: std::string\_view. Ironically, that is more or less the only view where we do not need it, because in a string view, the characters are always const.
+我不知道哪个更糟:是我们有这个问题，还是C++标准委员会，及其ranges库的子小组不愿意在C++20中修复这个问题。例如，可以在std::ranges::view\_interface<>中提供const\_iterator和cbegin()成员，其作为所有视图的基类。有趣的是，到目前为止只有一个视图提供了const\_iterator支持:std::string\_view。具有讽刺意味的是，这或多或少是唯一不需要它的视图，因为在字符串视图中，字符总是const。
 
-However, there is some hope: \url{http://wg21.link/p2278} provides an approach to fix this broken constness for C++23 (unfortunately, not for std::cbegin() and std::cend(), sigh).9 With that approach, inside a generic function, you can make the elements const as follows:
+然而，还是有一些希望的:\url{http://wg21.link/p2278}提供了一种方法来修复C++23中这个损坏的常量(不幸的是，std::cbegin()和std::cend()不适用)使用这种方法，在泛型函数内部，可以将元素设为const，如下所示:
 
 \begin{cpp}
 void print(auto&& rgPassed)
@@ -653,7 +643,7 @@ void print(auto&& rgPassed)
 }
 \end{cpp}
 
-As another approach, you can do the following:
+另一种方法，可以执行以下操作:
 
 \begin{cpp}
 void print(R&& rg)
@@ -669,5 +659,5 @@ void print(R&& rg)
 }
 \end{cpp}
 
-Unfortunately, C++23 will still not provide a generic way to declare a reference parameter for both containers and views that guarantees that the elements are const inside. You cannot declare a function print() that guarantees in its signature not to modify the elements.
+不幸的是，C++23仍然没有提供一种通用的方法来声明容器和视图的引用形参，以保证内部的元素是const。不能声明在其签名中保证不修改元素的函数print()。
 

@@ -540,7 +540,7 @@ Drop-while视图，将begin()缓存为迭代器或偏移量
 
 \mySubsubsection{6.3.4}{过滤器的性能问题}
 
-The pull model also has its drawbacks. To demonstrate that, let us change the order of the two views involved (above) so that we first call transform() and then filter():
+Pull模式也有它的缺点。为了演示这一点，改变上面涉及的两个视图的顺序，以便先调用transform()，然后调用filter():
 
 \filename{ranges/transfilt.cpp}
 
@@ -573,7 +573,7 @@ int main()
 }
 \end{cpp}
 
-Now, the output of the program is as follows:
+现在，程序的输出如下所示:
 
 \begin{shell}
 *** coll | transform | filter:
@@ -597,73 +597,73 @@ trans: 9
 val: -9
 \end{shell}
 
-We have additional calls of the transform view:
+我们还调用了transform视图:
 
 \begin{itemize}
 \item
-We now call transform() for each element.
+现在对每个元素使用transform()。
 
 \item
-For elements that pass the filter, we even perform the transformation twice.
+对于通过过滤器的元素，并执行两次转换。
 \end{itemize}
 
-Calling the transformation for each element is necessary because the filter view comes afterwards and now looks at the transformed values. In this case, the negation does not impact the filter; therefore, putting it to the front looks better.
+为每个元素调用转换是必要的，因为过滤器视图在之后进行，现在需要查看转换后的值。这种情况下，取反操作不影响过滤器，所以把它放在前面会更好。
 
-However, why do we call the transformations for elements that pass the filter twice? The reason lies in the nature of a pipeline that uses the pull model and the fact that we use iterators.
+然而，为什么要对通过过滤器的元素调用两次变换呢?原因在于使用Pull模型的管道的性质，以及使用迭代器的事实。
 
 \begin{itemize}
 \item
-First, the filter needs the transformed value to check it; therefore, the leading transformation has to be performed before the filter can use the resulting value.
+首先，过滤器需要转换后的值来进行检查，必须在过滤器的结果之前执行转换。
 	
 \item
-Remember that ranges and views iterate in two steps over the elements of a range: they first compute the position/iterator (with begin() and ++), and then as a separate step, use * to get the value. This means that for each filter, we have to perform all previous transformations once to be able check the value of the element. However, if true, the filter delivers only the position of the element, not its value. Therefore, when a user of the filter needs the value, it has to perform the transformations once again.
+记住，范围和视图在范围的元素上分两步迭代:首先计算位置/迭代器(使用begin()和++)，然后作为单独的步骤，使用*来获取值。所以对于每个过滤器来说，前面所有的变换都必须执行一次，才能检查元素的值。但若设置为true，过滤器只返回元素的位置，而不返回值。因此，当使用过滤器的用户需要某个值时，就必须再次执行转换操作。
 \end{itemize}
 
-In fact, each filter adds one more call of all leading transformations on each element that pass the filter and for which the value is used afterwards.
+实际上，每个filter都会增加对每个通过过滤器的元素的所有前置变换的调用，并在之后使用这些值。
 
-Given the following pipeline of transformations t1, t2, t3 and filters f1, f2:
+给定下列转换管道t1, t2, t3和过滤器f1, f2:
 
 \begin{cpp}
 t1 | t2 | f1 | t3 | f2
 \end{cpp}
 
-we have the following behavior:
+有以下行为:
 
 \begin{itemize}
 \item
-For elements where f1 yields false, we call:
+对于f1为false的元素:
 
 \begin{cpp}
 t1 t2 f1
 \end{cpp}
 
 \item
-For elements where f1 yields true but f2 yields false, we call:
+对于f1为真而f2为假的元素:
 
 \begin{cpp}
 t1 t2 f1 t1 t2 t3 f2
 \end{cpp}
 
 \item
-For elements where f1 and f2 yield true, we call:
+对于f1和f2为真的元素:
 
 \begin{cpp}
 t1 t2 f1 t1 t2 t3 f2 t1 t2 t3
 \end{cpp}
 \end{itemize}
 
-See ranges/viewscalls.cpp for a complete example.
+查看ranges/viewscals.cpp获得一个完整的示例。
 
-If this makes you worry about the performance of pipelines, take the following into account: yes, you should avoid expensive transformations before you use a filter. However, remember that all views provide functionality that is usually optimized in such a way that only the expressions inside the transformations and filters remain. In trivial cases such as the one here, where a filter checks for a multiple of 3 and the transformation negates, the resulting difference in behavior is effectively like calling
+若担心管道的性能，可以考虑以下几点:应该在使用过滤器之前避免耗时的转换。但请记住，所有视图提供的功能通常都是以这样一种方式进行优化的，即只保留转换和过滤器中的表达式。在一些简单的情况下，例如这里的情况，过滤器检查3的倍数并且转换为负值，结果的行为差异实际上就像调用一样
 
 \begin{cpp}
 if (-x % 3 == 0) return -x; // first transformation then filter
 \end{cpp}
 
-instead of
+而非
 
 \begin{cpp}
 if (x % 3 == 0) return -x; // first filter then transformation
 \end{cpp}
 
-For more details about filters, see the section about the filter view.
+有关过滤器的更多细节，请参阅关于过滤器视图一节。

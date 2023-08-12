@@ -1,43 +1,43 @@
-As documented in this chapter, several idioms that we we can count on when using containers are broken by views. Here is a quick summary you should always take into account when using generic code for both containers and views:
+正如本章所述，在使用容器时可以依赖的一些习惯用法被视图打破了。这里有一个快速总结，当你在容器和视图中使用泛型代码时，你应该总是考虑到:
 
 \begin{itemize}
 \item
-You might not be able to iterate over the elements of a standard view when it is const.
+当标准视图为const时，可能无法遍历其元素。
 
-As a consequence, generic code for all kinds of ranges (containers and views) has to declare the parameters as universal/forwarding references.
+因此，所有类型范围(容器和视图)的泛型代码必须将参数声明为通用/转发引用。
 
-However, do not use universal/forwarding references when you have concurrent iterations. In that case, const is your friend.
-
-\item
-Standard views on lvalue ranges do not propagate constness.
-
-This means that declaring such a view as const does not declare the elements to be const.
+但是，当有并发迭代时，不要使用通用/转发引用。在这种情况下，const则很友好。
 
 \item
-Concurrent iterations over standard views might cause data races (a runtime error due to undefined behavior) even if they only read.
+左值范围的标准视图不传播常量。
+
+将这样的视图声明为const并没有将元素声明为const。
 
 \item
-Reading iterations might affect later functional behavior or even invalidate later iterations.
-
-Use standard views ad hoc.
+标准视图上的并发迭代可能导致数据争用(由于未定义行为导致的运行时错误)，即使它们只读取。
 
 \item
-Copying a view might create a view with different states and behavior than the source view.
+读取迭代可能会影响以后的功能行为，甚至使以后的迭代无效。
 
-Avoid copying standard views.
-
-\item
-cbegin() and cend() might not make elements const.
-
-This will partially be fixed with C++23 by providing cbegin() and cend() member functions and fixing std::ranges::cbegin() and std::ranges::cend(). Unfortunately, std::cbegin() and std::cend() will still be broken.
+临时使用标准视图。
 
 \item
-Type const\_iterator is usually not available.
+复制视图可能会创建一个与源视图具有不同状态和行为的视图。
+
+避免复制标准视图。
 
 \item
-For C++23, the following breakage is planned: for some standard views, declaring the elements as const might have no effect. You might be able to modify the members of a const element of a view.
+cbegin()和cend()不能使元素为const。
+
+C++23将通过提供cbegin()和cend()成员函数以及修复std::ranges::cbegin()和std::ranges::cend()来部分修复这个问题。不幸的是，std::cbegin()和std::cend()仍然会被破坏。
+
+\item
+类型const\_iterator通常不可用。
+
+\item
+对于C++23，计划进行以下破坏:对于某些标准视图，将元素声明为const可能没有影响，可能能够修改视图的const元素的成员。
 \end{itemize}
 
-This means that a standard view is not always a pure subset that restricts or deals with the elements of a range; it might provide options and operations that are not allowed for when using the range as a whole instead.
+所以标准视图并不总是一个限制或处理范围元素的纯子集，其可能提供在使用整个范围时不允许的选项和操作。
 
-As a consequence, use views ad hoc and with care and forget about any temporary constness. Honestly, you might consider avoiding standard views and using something with a safer design instead.
+因此，要特别小心地使用视图，不要考虑任何临时的常量。老实说，可以考虑避免使用标准视图，而使用具有更安全设计的视图。
