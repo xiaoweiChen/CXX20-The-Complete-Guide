@@ -1,60 +1,60 @@
 
-With the support to pass ranges as one argument and be able to process sentinels (end iterators) with a different type, new ways of calling algorithms are now available in C++20.
+由于支持将range作为一个参数传递，并且能够处理不同类型的哨兵(end迭代器)，C++20中现在提供了调用算法的新方法。
 
-However, they come with some restrictions and not all algorithms support passing ranges as a whole yet.
+然而，其有一些限制，并不是所有的算法都支持传递范围。
 
-\mySubsubsection{7.6.1}{Benefits and Restrictions for Range Algorithms}
+\mySubsubsection{7.6.1}{范围算法的优点和限制}
 
-For some algorithms, there are no range versions that allow programmers to pass ranges as a single argument yet:
+对于某些算法，还没有允许开发者将范围作为单个参数传递的版本:
 
 \begin{itemize}
 \item
-Range algorithms do not support parallel execution (introduced with C++17). There are no APIs that take range parameters as single objects and an execution policy.
+范围算法不支持并行执行(C++17引入)，没有API将范围参数作为单个对象和执行策略。
 
 \item
-There are no numeric algorithms for single-object ranges yet. To call algorithms like std::accumulate(), you still have to pass both the begin and the end of the range. C++23 will probably provide numeric range algorithms.
+目前还没有针对单对象范围的数值算法。要调用像std::accumulate()这样的算法，仍然必须传递范围的开始和结束。C++23可能会提供数值范围算法。
 \end{itemize}
 
-If there is range support for algorithms, they use concepts to find possible errors at compile time:
+若算法有范围支持，则使用概念在编译时查找可能的错误:
 
 \begin{itemize}
 \item
-Concepts for iterators and ranges ensure that you pass valid iterators and ranges.
+迭代器和范围的概念确保传递有效的迭代器和范围。
 
 \item
-Concepts for callables ensure that you pass valid helper functions.
+可调用对象的概念确保传递有效的辅助函数。
 \end{itemize}
 
-In addition, return types may differ because:
+此外，返回类型可能会有所不同，因为:
 
 \begin{itemize}
 \item
-They support and might return iterators of different types, for which special return types are defined. These types are listed in table New return types for range algorithms.
+支持并可能返回不同类型的迭代器，为这些迭代器定义了特殊的返回类型。这些类型列在“范围算法的新返回类型”表中。
 
 \item
-They might return borrowed iterators, signaling that the iterator is no valid iterator because a temporary range (rvalue) was passed.
+可能返回借来的迭代器，表明该迭代器不是有效的迭代器，因为传递了一个临时范围(右值)。
 \end{itemize}
 
 
 \begin{longtable}[c]{|l|l|l|}
-	\hline
-	\textbf{Type} &
-	\textbf{Meaning} &
-	\textbf{Members} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}std::ranges::in\_in\_result\\ std::ranges::in\_out\_result\\ std::ranges::in\_in\_out\_result\\ std::ranges::in\_out\_out\_result\\ std::ranges::in\_fun\_result\\ std::ranges::min\_max\_result\\ std::ranges::in\_found\_result\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}For the positions of two input ranges\\ For one position of an input range and one position of an output range\\ For the positions of two input ranges and one position of an output range\\ For one position of an input range and the position of two output ranges\\ For one position of an input range and a function\\ For one maximum and one minimum position/value\\ For one position of an input range and a Boolean value\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}in1, in2\\ in, out\\ in1, in2, out\\ in, out1, out2\\ in, out\\ min, max\\ in, found\end{tabular} \\ \hline
+\hline
+\textbf{类型} &
+\textbf{意义} &
+\textbf{成员} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}std::ranges::in\_in\_result\\ std::ranges::in\_out\_result\\ std::ranges::in\_in\_out\_result\\ std::ranges::in\_out\_out\_result\\ std::ranges::in\_fun\_result\\ std::ranges::min\_max\_result\\ std::ranges::in\_found\_result\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}对于两个输入范围的位置\\ 对于一个输入范围的位置和一个输出范围的位置\\ 用于两个输入范围的位置和一个输出范围的位置\\ 对于输入范围的一个位置和两个输出范围的位置\\ 对于一个输入范围和一个函数的位置\\ 对于一个最大和一个最小的位置/值\\ 对于输入范围和布尔值的一个位置\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}in1, in2\\ in, out\\ in1, in2, out\\ in, out1, out2\\ in, out\\ min, max\\ in, found\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.11. New return types for range algorithms
+表7.11 范围算法的新返回类型
 \end{center}
 
-The following program demonstrates how to use these return types:
+下面的程序演示了如何使用这些返回类型:
 
 \filename{ranges/results.cpp}
 
@@ -90,7 +90,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 processed in: 1 2 3 4 5 6 7
@@ -99,223 +99,221 @@ written out: 1 4 9 16 25 36 49
 rest of out: 8 9 10
 \end{shell}
 
-\mySubsubsection{7.6.2}{Algorithm Overview}
+\mySubsubsection{7.6.2}{算法概述}
 
-The situation of all algorithms becomes more and more complex. Some of them can be used in parallel, some not. Some of them are supported by the ranges library, some not. This section gives an overview of which algorithms are available in which form (without going into detail about what each algorithm does).
+各种算法的情况变得越来越复杂。其中有些可以并行使用，有些则不能。其中一些是ranges库支持的，而另一些则不支持。本节概述了哪些算法以哪种形式可用(不详细介绍每个算法的功能)。
 
-The last three columns have the following meaning:
+后三栏含义如下所示:
 
 \begin{itemize}
 \item
-Ranges signals whether the algorithm is supported by the range library
+Ranges表示该算法是否被范围库支持
 
 \item
-\_result signals whether and which \_result types are used (e.g., in\_out stands for in\_out\_result)
+\_result指示是否使用以及使用哪些\_result类型(例如，in\_out表示in\_out\_result)
 
 \item
-Borrowed signals whether the algorithm returns borrowed iterators
+Borrowed指示算法是否返回借来的迭代器
 \end{itemize}
 
-Table Non-modifying algorithms lists the available non-modifying standard algorithms of C++20.
+表“不可修改的算法”列出了C++20中可用的不可修改标准算法。
 
 \begin{longtable}[c]{|l|l|l|l|l|l|}
-	\hline
-	\textbf{Name}                          & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	for\_each()                & C++98 & yes & yes       & in\_fun  & yes \\ \hline
-	for\_each\_n()             & C++17 & yes & yes       & in\_fun  &     \\ \hline
-	count()                    & C++98 & yes & yes       &          &     \\ \hline
-	count\_if()                & C++98 & yes & yes       &          &     \\ \hline
-	min\_element()             & C++98 & yes & yes       & yes      &     \\ \hline
-	max\_element()             & C++98 & yes & yes       & yes      &     \\ \hline
-	minmax\_element()          & C++11 & yes & yes       & min\_max & yes \\ \hline
-	min()                      & C++20 & no  & yes(only) &          &     \\ \hline
-	max()                      & C++20 & no  & yes(only) &          &     \\ \hline
-	minmax()                   & C++20 & no  & yes(only) & min\_max &     \\ \hline
-	find()                     & C++98 & yes & yes       &          & yes \\ \hline
-	find\_if()                 & C++98 & yes & yes       &          & yes \\ \hline
-	find\_if\_not()            & C++11 & yes & yes       &          & yes \\ \hline
-	search()                   & C++98 & yes & yes       &          & yes \\ \hline
-	search\_n()                & C++98 & yes & yes       &          & yes \\ \hline
-	find\_end()                & C++98 & yes & yes       &          & yes \\ \hline
-	find\_first\_of()          & C++98 & yes & yes       &          & yes \\ \hline
-	adjacent\_find()           & C++98 & yes & yes       &          & yes \\ \hline
-	equal()                    & C++98 & yes & yes       &          & yes \\ \hline
-	is\_permutation()          & C++11 & no  & yes       &          &     \\ \hline
-	mismatch()                 & C++98 & yes & yes       & in\_in   & yes \\ \hline
-	lexicographical\_compare() & C++98 & yes & yes       &          &     \\ \hline
-	lexicographical\_compare\_three\_way() & C++20          & no                & no              &                   &                   \\ \hline
-	is\_sorted()               & C++11 & yes & yes       &          &     \\ \hline
-	is\_sorted\_until()        & C++11 & yes & yes       &          & yes \\ \hline
-	is\_partitioned()          & C++11 & yes & yes       &          &     \\ \hline
-	partition\_point()         & C++11 & no  & yes       &          &     \\ \hline
-	is\_heap()                 & C++11 & yes & yes       &          &     \\ \hline
-	is\_heap\_until()          & C++11 & yes & yes       &          & yes \\ \hline
-	all\_of()                  & C++11 & yes & yes       &          &     \\ \hline
-	any\_of()                  & C++11 & yes & yes       &          &     \\ \hline
-	none\_of()                 & C++11 & yes & yes       &          &     \\ \hline
+\hline
+\textbf{名称}                          & \textbf{启用标准} & \textbf{并行性} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+for\_each()                & C++98 & yes & yes       & in\_fun  & yes \\ \hline
+for\_each\_n()             & C++17 & yes & yes       & in\_fun  &     \\ \hline
+count()                    & C++98 & yes & yes       &          &     \\ \hline
+count\_if()                & C++98 & yes & yes       &          &     \\ \hline
+min\_element()             & C++98 & yes & yes       & yes      &     \\ \hline
+max\_element()             & C++98 & yes & yes       & yes      &     \\ \hline
+minmax\_element()          & C++11 & yes & yes       & min\_max & yes \\ \hline
+min()                      & C++20 & no  & yes(only) &          &     \\ \hline
+max()                      & C++20 & no  & yes(only) &          &     \\ \hline
+minmax()                   & C++20 & no  & yes(only) & min\_max &     \\ \hline
+find()                     & C++98 & yes & yes       &          & yes \\ \hline
+find\_if()                 & C++98 & yes & yes       &          & yes \\ \hline
+find\_if\_not()            & C++11 & yes & yes       &          & yes \\ \hline
+search()                   & C++98 & yes & yes       &          & yes \\ \hline
+search\_n()                & C++98 & yes & yes       &          & yes \\ \hline
+find\_end()                & C++98 & yes & yes       &          & yes \\ \hline
+find\_first\_of()          & C++98 & yes & yes       &          & yes \\ \hline
+adjacent\_find()           & C++98 & yes & yes       &          & yes \\ \hline
+equal()                    & C++98 & yes & yes       &          & yes \\ \hline
+is\_permutation()          & C++11 & no  & yes       &          &     \\ \hline
+mismatch()                 & C++98 & yes & yes       & in\_in   & yes \\ \hline
+lexicographical\_compare() & C++98 & yes & yes       &          &     \\ \hline
+lexicographical\_compare\_three\_way() & C++20          & no                & no              &                   &                   \\ \hline
+is\_sorted()               & C++11 & yes & yes       &          &     \\ \hline
+is\_sorted\_until()        & C++11 & yes & yes       &          & yes \\ \hline
+is\_partitioned()          & C++11 & yes & yes       &          &     \\ \hline
+partition\_point()         & C++11 & no  & yes       &          &     \\ \hline
+is\_heap()                 & C++11 & yes & yes       &          &     \\ \hline
+is\_heap\_until()          & C++11 & yes & yes       &          & yes \\ \hline
+all\_of()                  & C++11 & yes & yes       &          &     \\ \hline
+any\_of()                  & C++11 & yes & yes       &          &     \\ \hline
+none\_of()                 & C++11 & yes & yes       &          &     \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.12. Non-modifying algorithms
+表7.12 不可修改的算法
 \end{center}
 
-Note that the algorithms std::ranges::min(), std::ranges::max(), and std::ranges::minmax() have only counterparts in std that take two values or a std::initializer\_list<>.
+注意，std::ranges::min()、std::ranges::max()和std::ranges::minmax()算法在std中只有两个值或一个std::initializer\_list<>的对应项。
 
-Table Modifying algorithms lists the available modifying standard algorithms in C++20.
+表“可修改算法”列出了C++20中可用的修改标准算法。
 
 \begin{longtable}[c]{|l|l|l|l|l|l|}
-	\hline
-	\textbf{Name}              & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	for\_each()         & C++98 & yes & yes & in\_fun & yes \\ \hline
-	for\_each\_n()      & C++17 & yes & yes & in\_fun &     \\ \hline
-	copy()              & C++98 & yes & yes & in\_out & yes \\ \hline
-	copy\_if()          & C++11 & yes & yes & in\_out &     \\ \hline
-	copy\_n()           & C++11 & yes & yes & in\_out & yes \\ \hline
-	copy\_backward()    & C++11 & no  & yes & in\_out & yes \\ \hline
-	move()              & C++11 & yes & yes & in\_out & yes \\ \hline
-	move\_backward()    & C++11 & no  & yes & in\_out & yes \\ \hline
-	transform() for one range  & C++98          & yes               & yes             & in\_out           & yes               \\ \hline
-	transform() for two ranges & C++98          & yes               & yes             & in\_in\_out       & yes               \\ \hline
-	merge()             & C++98 & yes & yes &         &     \\ \hline
-	swap\_ranges()      & C++98 & yes & yes & in\_in  & yes \\ \hline
-	fill()              & C++98 & yes & yes &         & yes \\ \hline
-	fill\_n()           & C++98 & yes & yes &         &     \\ \hline
-	generate()          & C++98 & yes & yes &         & yes \\ \hline
-	generate\_n()       & C++98 & yes & yes &         &     \\ \hline
-	iota()              & C++11 & no  & no  &         &     \\ \hline
-	replace()           & C++98 & yes & yes &         & yes \\ \hline
-	replace\_if()       & C++98 & yes & yes &         & yes \\ \hline
-	replcae\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
-	replace\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
+\hline
+\textbf{名称}              & \textbf{启用标准} & \textbf{并行性} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+for\_each()         & C++98 & yes & yes & in\_fun & yes \\ \hline
+for\_each\_n()      & C++17 & yes & yes & in\_fun &     \\ \hline
+copy()              & C++98 & yes & yes & in\_out & yes \\ \hline
+copy\_if()          & C++11 & yes & yes & in\_out &     \\ \hline
+copy\_n()           & C++11 & yes & yes & in\_out & yes \\ \hline
+copy\_backward()    & C++11 & no  & yes & in\_out & yes \\ \hline
+move()              & C++11 & yes & yes & in\_out & yes \\ \hline
+move\_backward()    & C++11 & no  & yes & in\_out & yes \\ \hline
+transform() for one range  & C++98          & yes               & yes             & in\_out           & yes               \\ \hline
+transform() for two ranges & C++98          & yes               & yes             & in\_in\_out       & yes               \\ \hline
+merge()             & C++98 & yes & yes &         &     \\ \hline
+swap\_ranges()      & C++98 & yes & yes & in\_in  & yes \\ \hline
+fill()              & C++98 & yes & yes &         & yes \\ \hline
+fill\_n()           & C++98 & yes & yes &         &     \\ \hline
+generate()          & C++98 & yes & yes &         & yes \\ \hline
+generate\_n()       & C++98 & yes & yes &         &     \\ \hline
+iota()              & C++11 & no  & no  &         &     \\ \hline
+replace()           & C++98 & yes & yes &         & yes \\ \hline
+replace\_if()       & C++98 & yes & yes &         & yes \\ \hline
+replcae\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
+replace\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.13. Modifying algorithms
+表7.13 可修改算法
 \end{center}
 
-Table Removing algorithms lists the available “removing” standard algorithms in C++20. Note that algorithms never really remove elements. This still applies when they take whole ranges as single arguments. They change the order so that the elements not removed are packed to the front and return the new end.
-
-
-\begin{longtable}[c]{|l|l|l|l|l|l|}
-	\hline
-	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	remove()           & C++98 & yes & yes &         & yes \\ \hline
-	remove\_if()       & C++98 & yes & yes &         & yes \\ \hline
-	remove\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
-	remove\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
-	unique()           & C++98 & yes & yes &         & yes \\ \hline
-	unique\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
-\end{longtable}
-
-\begin{center}
-Table 7.14. Removing algorithms
-\end{center}
-
-Table Mutating algorithms lists the available mutating standard algorithms in C++20.
-
-
-
-\begin{longtable}[c]{|l|l|l|l|l|l|}
-	\hline
-	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	reverse()           & C++98 & yes & yes &           & yes \\ \hline
-	reverse\_copy()     & C++98 & yes & yes & in\_out   & yes \\ \hline
-	rotate()            & C++98 & yes & yes &           & yes \\ \hline
-	rotate\_copy()      & C++98 & yes & yes & in\_out   & yes \\ \hline
-	shift\_left()       & C++20 & yes & no  &           &     \\ \hline
-	shift\_right()      & C++20 & yes & no  &           &     \\ \hline
-	sample()            & C++17 & no  & yes &           &     \\ \hline
-	next\_permutation() & C++98 & no  & yes & in\_found & yes \\ \hline
-	prev\_permutation() & C++98 & no  & yes & in\_found & yes \\ \hline
-	shuffle()           & C++11 & no  & yes &           & yes \\ \hline
-	random\_shuffle()   & C++98 & no  & no  &           &     \\ \hline
-	partition()         & C++98 & yes & yes &           &     \\ \hline
-	stable\_partition() & C++98 & yes & yes &           &     \\ \hline
-	partition\_copy()   & C++11 & yes & yes &           &     \\ \hline
-\end{longtable}
-
-
-\begin{center}
-Table 7.15. Mutating algorithms
-\end{center}
-
-Table Sorting algorithms lists the available sorting standard algorithms in C++20.
-
-
-\begin{longtable}[c]{|l|l|l|l|l|l|}
-	\hline
-	\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	sort()                & C++98 & yes & yes &              & yes \\ \hline
-	stable\_sort()        & C++98 & yes & yes &              & yes \\ \hline
-	partial\_sort()       & C++98 & yes & yes &              & yes \\ \hline
-	partial\_sort\_copy() & C++98 & yes & yes & in\_out      & yes \\ \hline
-	nth\_element()        & C++98 & yes & yes &              & yes \\ \hline
-	partition()           & C++98 & yes & yes &              & yes \\ \hline
-	stable\_partition()   & C++98 & yes & yes &              & yes \\ \hline
-	partition\_copy()     & C++11 & yes & yes & in\_out\_out & yes \\ \hline
-	make\_heap()          & C++98 & no  & yes &              & yes \\ \hline
-	push\_heap()          & C++98 & no  & yes &              & yes \\ \hline
-	pop\_heap()           & C++98 & no  & yes &              & yes \\ \hline
-	sort\_heap()          & C++98 & no  & yes &              & yes \\ \hline
-\end{longtable}
-
-\begin{center}
-Table 7.16. Sorting algorithms
-\end{center}
-
-Table Algorithms for sorted ranges lists the available standard algorithms for sorted ranges in C++20.
-
-\begin{longtable}[c]{|l|l|l|l|l|l|}
-	\hline
-	\textbf{Name}                & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	binary\_search()    & C++98 & no  & yes &             &     \\ \hline
-	includes()          & C++98 & yes & yes &             &     \\ \hline
-	lower\_bound()      & C++98 & no  & yes &             & yes \\ \hline
-	upper\_bound()      & C++98 & no  & yes &             & yes \\ \hline
-	equal\_range()      & C++98 & no  & yes &             & yes \\ \hline
-	merge()             & C++98 & yes & yes & in\_in\_out & yes \\ \hline
-	inplace\_merge()    & C++98 & yes & yes &             & yes \\ \hline
-	set\_union()        & C++98 & yes & yes & in\_in\_out & yes \\ \hline
-	set\_intersection() & C++98 & yes & yes & in\_in\_out & yes \\ \hline
-	set\_difference()   & C++98 & yes & yes & in\_out     & yes \\ \hline
-	set\_symmetric\_difference() & C++98          & yes               & yes             & in\_in\_out       & yes               \\ \hline
-	partition\_point()  & C++11 & no  & yes &             & yes \\ \hline
-\end{longtable}
-
-\begin{center}
-Table 7.17. Algorithms for sorted ranges
-\end{center}
-
-Table Numeric algorithms lists the available numeric standard algorithms in C++20.
+表“可移除算法”列出了C++20中可用的“移除”标准算法。注意，算法从来没有真正地删除元素。当它们将整个范围作为单个参数时，这仍然适用。改变顺序，使未删除的元素被打包到前面并返回新端。
 
 
 \begin{longtable}[c]{|l|l|l|l|l|l|}
 \hline
-\textbf{Name} & \textbf{Since} & \textbf{Parallel} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\textbf{名称} & \textbf{启用标准} & \textbf{并行性} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+remove()           & C++98 & yes & yes &         & yes \\ \hline
+remove\_if()       & C++98 & yes & yes &         & yes \\ \hline
+remove\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
+remove\_copy\_if() & C++98 & yes & yes & in\_out & yes \\ \hline
+unique()           & C++98 & yes & yes &         & yes \\ \hline
+unique\_copy()     & C++98 & yes & yes & in\_out & yes \\ \hline
+\end{longtable}
+
+\begin{center}
+表7.14 可移除算法
+\end{center}
+
+表“可变异算法”列出了C++20中可用的变异标准算法。
+
+\begin{longtable}[c]{|l|l|l|l|l|l|}
+\hline
+\textbf{名称} & \textbf{启用标准} & \textbf{并行性} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+reverse()           & C++98 & yes & yes &           & yes \\ \hline
+reverse\_copy()     & C++98 & yes & yes & in\_out   & yes \\ \hline
+rotate()            & C++98 & yes & yes &           & yes \\ \hline
+rotate\_copy()      & C++98 & yes & yes & in\_out   & yes \\ \hline
+shift\_left()       & C++20 & yes & no  &           &     \\ \hline
+shift\_right()      & C++20 & yes & no  &           &     \\ \hline
+sample()            & C++17 & no  & yes &           &     \\ \hline
+next\_permutation() & C++98 & no  & yes & in\_found & yes \\ \hline
+prev\_permutation() & C++98 & no  & yes & in\_found & yes \\ \hline
+shuffle()           & C++11 & no  & yes &           & yes \\ \hline
+random\_shuffle()   & C++98 & no  & no  &           &     \\ \hline
+partition()         & C++98 & yes & yes &           &     \\ \hline
+stable\_partition() & C++98 & yes & yes &           &     \\ \hline
+partition\_copy()   & C++11 & yes & yes &           &     \\ \hline
+\end{longtable}
+
+
+\begin{center}
+表7.15 可变异算法
+\end{center}
+
+表“排序算法”列出了C++20中可用的排序标准算法。
+
+
+\begin{longtable}[c]{|l|l|l|l|l|l|}
+\hline
+\textbf{名称} & \textbf{启用标准} & \textbf{并行性} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+sort()                & C++98 & yes & yes &              & yes \\ \hline
+stable\_sort()        & C++98 & yes & yes &              & yes \\ \hline
+partial\_sort()       & C++98 & yes & yes &              & yes \\ \hline
+partial\_sort\_copy() & C++98 & yes & yes & in\_out      & yes \\ \hline
+nth\_element()        & C++98 & yes & yes &              & yes \\ \hline
+partition()           & C++98 & yes & yes &              & yes \\ \hline
+stable\_partition()   & C++98 & yes & yes &              & yes \\ \hline
+partition\_copy()     & C++11 & yes & yes & in\_out\_out & yes \\ \hline
+make\_heap()          & C++98 & no  & yes &              & yes \\ \hline
+push\_heap()          & C++98 & no  & yes &              & yes \\ \hline
+pop\_heap()           & C++98 & no  & yes &              & yes \\ \hline
+sort\_heap()          & C++98 & no  & yes &              & yes \\ \hline
+\end{longtable}
+
+\begin{center}
+表7.16 排序算法
+\end{center}
+
+表中列出了C++20中用于排序范围的可用标准算法。
+
+\begin{longtable}[c]{|l|l|l|l|l|l|}
+\hline
+\textbf{名称}                & \textbf{启用标准} & \textbf{并行性} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+binary\_search()    & C++98 & no  & yes &             &     \\ \hline
+includes()          & C++98 & yes & yes &             &     \\ \hline
+lower\_bound()      & C++98 & no  & yes &             & yes \\ \hline
+upper\_bound()      & C++98 & no  & yes &             & yes \\ \hline
+equal\_range()      & C++98 & no  & yes &             & yes \\ \hline
+merge()             & C++98 & yes & yes & in\_in\_out & yes \\ \hline
+inplace\_merge()    & C++98 & yes & yes &             & yes \\ \hline
+set\_union()        & C++98 & yes & yes & in\_in\_out & yes \\ \hline
+set\_intersection() & C++98 & yes & yes & in\_in\_out & yes \\ \hline
+set\_difference()   & C++98 & yes & yes & in\_out     & yes \\ \hline
+set\_symmetric\_difference() & C++98          & yes               & yes             & in\_in\_out       & yes               \\ \hline
+partition\_point()  & C++11 & no  & yes &             & yes \\ \hline
+\end{longtable}
+
+\begin{center}
+表7.17 可排序范围的算法
+\end{center}
+
+表“数学算法”列出了C++20中可用的数学标准算法。
+
+
+\begin{longtable}[c]{|l|l|l|l|l|l|}
+\hline
+\textbf{名称} & \textbf{启用标准} & \textbf{并行性} & \textbf{Ranges} & \textbf{\_result} & \textbf{Borrowed} \\ \hline
 \endfirsthead
 %
 \endhead
@@ -334,7 +332,7 @@ iota                         & C++11 & no  & no &  &  \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.18. Numeric algorithms
+表7.18 数学算法
 \end{center}
 
 

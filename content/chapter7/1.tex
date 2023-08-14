@@ -1,41 +1,41 @@
 
-As introduced with views and the way they are used, C++ provides several range adaptors and range factories so that you can easily create views with the best performance.
+正如视图及其使用方式所介绍的那样，C++提供了几个范围适配器和范围工厂，以便可以简单地创建具有最佳性能的视图。
 
-Several of these adaptors apply to specific view types. However, some of them might create different things depending on the characteristics of the passed ranges. For example, adaptors might just yield the passed ranges if they already have the characteristics of the result.
+其中几个适配器适用于特定的视图类型。然而，根据传递范围的特征，其中一些可能会创建不同的东西。例如，若适配器已经具有结果的特征，则可能只生成传递的范围。
 
-There are a few key range adaptors and factories that make it easy to create views or convert ranges into views with specific characteristics (independently of the content):
+有一些关键的范围适配器和工厂，可以很容易地创建视图，或将范围转换为具有特定特征(独立于内容)的视图:
 
 \begin{itemize}
 \item
-std::views::all() is the primary range adaptor for converting a passed range into a view.
+std::views::all()是将传递的范围转换为视图的主要范围适配器。
 
 \item
-std::views::counted() is the primary range factory for converting a passed begin and count/size into a view.
+std::views::counted()可将传入的begin和count/size转换为视图的主要范围工厂。
 
 \item
-std::views::common() is a range adaptor that converts a range with different types for the (begin) iterator and the sentinel (end iterator) into a view with harmonized types for begin and end.
+std::views::common()是一个范围适配器，它将(开始)迭代器和哨兵(结束迭代器)具有不同类型的范围转换为具有统一的开始和结束类型的视图。
 \end{itemize}
 
-These adaptors are described in this section.
+本节将介绍这些适配器。
 
 \mySubsubsection{7.1.1}{std::views::all()}
 
-The range adaptor std::views::all() is the adaptor for converting any range that is not a view yet into a view. That way, you guarantee that you have a cheap handle for dealing with the elements of a range.
+范围适配器std::views::all()是将任何还不是视图的范围转换为视图的适配器。这样，就有一个低成本句柄来处理范围的元素。
 
-all(rg) yields the following[C++20 originally stated that all() might yield a subrange but not an owning view. However, that was fixed after C++20 came out (see \url{http://wg21.link/p2415})]:
+all(rg)的生成以下结果[C++20最初声明all()可以产生子范围，但不能产生所属视图]。然而，在C++20发布后，这个问题已经修复了(参见\url{http://wg21.link/p2415}):
 
 \begin{itemize}
 \item
-A copy of rg if it is already a view
+若rg已经是视图，则为rg的副本
 
 \item
-Otherwise, a std::ranges::ref\_view of rg if it is an lvalue (range object with a name)
+否则，rg的std::ranges::ref\_view是一个左值(有名称的范围对象)
 
 \item
-Otherwise, a std::ranges::owning\_view of rg if it is an rvalue (unnamed temporary range object or range object marked with std::move())
+否则，若rg的std::ranges::owned\_view是右值(未命名的临时范围对象或用std::move()标记的范围对象)
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> getColl(); // function returning a tmp. container
@@ -49,15 +49,15 @@ auto v4 = std::views::all(getColl()); // owning_view<decltype(coll)>
 auto v5 = std::views::all(std::move(coll)); // owning_view<decltype(coll)>
 \end{cpp}
 
-The all() adaptor is usually used to pass a range as a lightweight object. Converting a range into a view can be useful for two reasons:
+all()适配器通常用于将范围作为轻量级对象传递。将一个范围转换成一个视图有两个原因:
 
 \begin{itemize}
 \item
-Performance:
+性能:
 
-When ranges are copied (e.g., because the parameter takes the argument by value), it is much cheaper to use a view instead. The reason for this is that moving or (if supported) copying a view is guaranteed to be cheap. Therefore, passing the range as a view makes the call cheap.
+当复制范围时(例如，因为形参按值接受实参)，使用视图要廉价得多。这样做的原因是移动或(若支持的话)复制一个视图保证是廉价的，所以将范围作为视图传递会使调用变得低成本。
 
-For example:
+例如:
 
 \begin{cpp}
 void foo(std::ranges::input_range auto coll) // NOTE: takes range by value
@@ -73,18 +73,18 @@ foo(coll); // OOPS: copies coll
 foo(std::views::all(coll)); // OK: passes coll by reference
 \end{cpp}
 
-Using all() here is a bit like using reference wrappers (created with std::ref() or std::cref()).
+这里使用all()有点像使用引用包装器(用std::ref()或std::cref()创建)。
 
-However, all() has the benefit that what is passed still supports the usual interface of ranges.
+但all()的好处是传递的内容，仍然支持通常的范围接口。
 
-Passing a container to a coroutine (a coroutine usually has to take parameters by value) may be another application of this technique.
+将容器传递给协程(协程通常必须按值接受参数)可能是这种技术的另一种应用。
 
 \item
-Supporting requirements for a view: 
+视图的支持性要求:
 
-Another reason to use all() is to meet constraints that require a view. One reason for the requirement might be to ensure that passing the argument is not expensive (which leads to the benefit above).
+使用all()的另一个原因是为了满足需要视图的约束，这个要求的一个原因可能是为了确保传递参数的代价不高(这就带来了上面提到的好处)。
 
-For example:
+例如:
 
 \begin{cpp}
 void foo(std::ranges::view auto coll) // NOTE: takes view by value
@@ -100,14 +100,14 @@ foo(coll); // ERROR
 foo(std::views::all(coll)); // OK (passes coll by reference)
 \end{cpp}
 
-Using all() might happen implicitly. The example of implicit conversions with all() is the initialization of view types with containers.
+使用all()可能隐式地发生。
+
+使用all()进行隐式转换的示例是使用容器初始化视图类型。
 \end{itemize}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Type std::views::all\_t<>}
+\mySamllsection{std::views::all\_t<>类型}
 
-C++20 also defines type std::views::all\_t<> as the type that all() yields. It follows the rules of perfect forwarding, meaning that both a value type and an rvalue reference type can be used to specify the type of an rvalue:
+C++20还定义了类型std::views::all\_t<>作为all()产生的类型，其遵循完全转发规则，若依值类型和右值引用类型都可以用来指定右值的类型:
 
 \begin{cpp}
 std::vector<int> v{0, 8, 15, 47, 11, -1, 13};
@@ -120,23 +120,23 @@ std::views::all_t<decltype(v)&> a5{std::move(v)}; // ERROR
 std::views::all_t<decltype(v)&&> a6{std::move(v)}; // owning_view<vector<int>>
 \end{cpp}
 
-Views that take a range usually use type std::views::all\_t<> to ensure that the passed range is really a view. For that reason, if you pass a range that is not a view yet, a view is implicitly created. For example, calling:
+接受范围的视图通常使用类型std::views::all\_t<>来确保传递的范围确实是一个视图。因此，若传递的范围还不是视图，则会隐式创建视图。例如，调用:
 
 \begin{cpp}
 std::views::take(coll, 3)
 \end{cpp}
 
-has the same effect as calling:
+具有与调用相同的效果:
 
 \begin{cpp}
 std::ranges::take_view{std::ranges::ref_view{coll}, 3};
 \end{cpp}
 
-The way this works is as follows (using a take view as an example):
+其工作方式如下(以视图为例):
 
 \begin{itemize}
 \item
-The view type requires that a view is passed:
+视图类型要求传递一个视图:
 
 \begin{cpp}
 namespace std::ranges {
@@ -150,7 +150,7 @@ namespace std::ranges {
 \end{cpp}
 
 \item
-A deduction guide requires that the element type of the view is of type std::views::all\_t:
+推断指南要求视图的元素类型为std::views::all\_t:
 
 \begin{cpp}
 namespace std::ranges {
@@ -161,7 +161,7 @@ namespace std::ranges {
 \end{cpp}
 
 \item
-Now when a container is passed, the range type of the view has to have type std::views::all\_t<>. Therefore, the container is implicitly converted to a ref\_view (if it is an lvalue) or an owning\_view (if it is an rvalue). The effect is as if we had called the following:
+当传递容器时，视图的范围类型必须具有std::views::all\_t<>类型，所以容器会隐式地转换为ref\_view(若是左值)或owned \_view(若是右值)。其效果就好像我们调用了下面的语句:
 
 \begin{cpp}
 std::ranges::ref_view rv{coll}; // convert to a ref_view<>
@@ -169,7 +169,7 @@ std::ranges::take_view tv(rv, 3); // and use view and count to initialize the ta
 \end{cpp}
 \end{itemize}
 
-The concept viewable\_range can be used to check whether a type can be used for all\_t<> (and therefore corresponding objects can be passed to all())[For lvalues of move-only view types, there is an issue that all() is ill-formed although viewable\_range is satisfied.]:
+概念viewable\_range可用于检查类型是否可用于all\_t<>(因此对应的对象可以传递给all())[对于仅移动视图类型的左值，尽管viewable\_range是满足的，但all()任存在格式错误的问题]:
 
 \begin{cpp}
 std::ranges::viewable_range<std::vector<int>> // true
@@ -181,19 +181,19 @@ std::ranges::viewable_range<std::queue<int>> // false
 
 \mySubsubsection{7.1.2}{std::views::counted()}
 
-The range factory std::views::counted() provides the most flexible way to create a view from a begin iterator and a count. By calling
+范围工厂std::views::counted()提供了从begin迭代器和计数创建视图的最灵活的方式。通过调用
 
 \begin{cpp}
 std::views::counted(beg, sz)
 \end{cpp}
 
-it creates a view to the first sz elements of the range starting with beg.
+它创建一个以beg开头的范围的前sz个元素的视图。
 
-It is up to the programmer to ensure that the begin and count are valid when the view is used. Otherwise, the program has undefined behavior.
+使用视图时，由开发者来确保begin和count是有效的。否则，程序具的行为未定义。
 
-The count may be 0, which means that the range is empty.
+计数可能为0，所以该范围为空。
 
-The count is stored in the view and is therefore stable. Even if new elements are inserted in the range that the view refers to, the count does not change. For example:
+计数存储在视图中，因此是稳定的。即使在视图引用的范围中插入了新元素，计数也不会改变。例如:
 
 \begin{cpp}
 std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
@@ -205,40 +205,38 @@ lst.insert(++lst.begin(), 0); // insert new second element in lst
 print(c); // 1 0 2 3 4
 \end{cpp}
 
-Note that if you want to have a view to the first num elements of a range, the take view provides a more convenient and safer way to get it:
+请注意，若想查看一个范围的前num个元素，take视图提供了一种更方便、更安全的方式来获取:
 
 \begin{cpp}
 std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
 auto v1 = std::views::take(lst, 3); // view to first three elements (if they exist)
 \end{cpp}
 
-The take view does check whether there are enough elements and yields fewer elements if there are not.
+视图检查是否有足够的元素，若没有，则产生更少的元素。
 
-By also using the drop view, you could even skip a specific number of leading elements:
+通过使用drop视图，甚至可以跳过特定数量的前置元素:
 
 \begin{cpp}
 std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
 auto v2 = std::views::drop(lst, 2) | std::views::take(3); // 3rd to 5th element (if exist)
 \end{cpp}
 
-\noindent
-\hspace*{\fill} \\ %插入空行
-\textbf{Type of counted()}
+\mySamllsection{counted()的类型}
 
-counted(beg, sz) yields different types depending on the characteristics of the range it is called for:
+counted(beg, sz)根据所调用的范围特征，会产生不同类型的结果:
 
 \begin{itemize}
 \item
-It yields a std::span if the passed begin iterator is a contiguous\_iterator (refers to elements that are stored in contiguous memory). This applies to raw pointers, raw arrays, and iterators of std::vector<> or std::array<>.
+如果传递的开始迭代器是一个contiguous\_iterator(指存储在连续内存中的元素)，则会产生一个std::span。这适用于std::vector<>或std::array<>的原始指针、原始数组和迭代器。
 
 \item
-Otherwise, it yields a std::ranges::subrange if the passed begin iterator is a random\_access\_iterator (supports jumping back and forth between elements). This applies to iterators of std::deque<>.
+否则，若传递的begin迭代器是一个random\_access\_iterator(支持在元素之间来回跳转)，就会产生std::ranges::subrange。这适用于std::deque<>的迭代器。
 
 \item
-Otherwise, it yields a std::ranges::subrange with a std::counted\_iterator as the begin and a dummy sentinel of type std::default\_sentinel\_t as the end. This means that the iterator in the subrange counts while iterating. This applies to iterators of lists, associative containers, and unordered containers (hash tables).
+否则，它将产生一个std::ranges::subrange，以std::counts\_iterator作为开始，并以std::default\_sentinel\_t类型的伪哨兵作为结束，所以子范围中的迭代器在迭代时计数。这适用于列表、关联容器和无序容器(哈希表)的迭代器。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -256,13 +254,13 @@ auto v3 = std::views::counted(lst5, 3); // view to element 5 and two more elems 
 	// std::default_sentinel_t>
 \end{cpp}
 
-Note that this code is at risk because it creates undefined behavior if there is no 5 in the collection with two elements behind it. Therefore, you should check this if you are not sure that this is the case.
+注意，这段代码有风险，因为若集合中没有5，后面有两个元素，会在创建时出现未定义的行为。因此，若不确定情况是否如此，则应该检查此选项。
 
 \mySubsubsection{7.1.3}{std::views::common()}
 
-The range adaptor std::views::common() yields a view with harmonized types for the begin iterator and the sentinel (end iterator) for the passed range. It acts like the range adaptor std::views::all(), with the additional behavior of creating a std::ranges::common\_view from the passed argument if its iterators have different types.
+范围适配器std::views::common()为传递的范围生成一个具有统一类型的视图，用于开始迭代器和哨兵(结束迭代器)。其行为类似于范围适配器std::views::all()，弱其迭代器具有不同的类型，则会从传递的参数创建std::ranges::common\_view。
 
-For example, assume we want to call a traditional algorithm algo() that requires the same type for both the begin iterator and the end iterator. We can then call it for iterators of potentially different types as follows:
+例如，假设想调用传统算法algo()，该算法要求开始迭代器和结束迭代器的类型相同。然后，可以为不同类型的迭代器进行调用，如下所示:
 
 \begin{cpp}
 template<typename BegT, typename EndT>
@@ -273,20 +271,20 @@ void callAlgo(BegT beg, EndT end)
 }
 \end{cpp}
 
-common(rg) yields
+common(rg)会生成的类型为
 
 \begin{itemize}
 \item
-A copy of rg if it is already a view with the same begin and end iterator type
+若rg已经是一个具有相同开始和结束迭代器类型的视图，则为rg的副本
 
 \item
-Otherwise, a std::ranges::ref\_view of rg if it is a range object with the same begin and end iterator type
+否则，若rg是一个具有相同开始迭代器和结束迭代器类型的范围对象，则调用rg的std::ranges::ref\_view
 
 \item
-Otherwise, a std::ranges::common\_view of rg
+否则，rg为std::ranges::common\_view类型
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 std::list<int> lst;
@@ -302,7 +300,7 @@ auto vt = std::views::take(lst, 5); // begin() and end() have different types
 auto v4 = std::views::common(vt); // std::ranges::common_view<decltype(vt)>
 \end{cpp}
 
-Note that both the constructors of a std::ranges::common\_view and the helper type std::common:iterator require that passed iterators have different types. Therefore, you should use this adaptor if you do not know whether iterator types differ.
+注意，std::ranges::common\_view的构造函数和辅助类型std::common:iterator都要求传递的迭代器具有不同的类型。因此，若不知道迭代器类型是否不同，则应该使用此适配器。
 
 
 

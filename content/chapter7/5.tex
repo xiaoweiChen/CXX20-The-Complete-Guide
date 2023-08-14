@@ -1,100 +1,100 @@
 
-This section lists all new auxiliary type functions and utilities provided by the ranges library as part of C++20.
+本节列出了C++20中ranges库提供的所有新的辅助类型函数和工具。
 
-As for the generic helper functions, several of these utilities already existed before C++20 with the same name or a slightly different name in the namespace std (and are still provided for backward compatibility). However, the range utilities usually provide better support for the specified functionality. They might fix flaws that the old versions have or use concepts to constrain their use.
+至于泛型帮助函数，在C++20之前就已经存在了一些这样的工具，其在命名空间std中具有相同的名称或略有不同的名称(并且仍然提供向后兼容性)，但范围工具通常为指定的功能提供更好的支持。他们可能会修复旧版本的缺陷，或者使用一些概念来限制旧版本的使用。
 
-\mySubsubsection{7.5.1}{Generic Types of Ranges}
+\mySubsubsection{7.5.1}{范围的泛型类型}
 
-Table Generic functions that yield the types involved when using ranges lists all generic type definitions for ranges. They are defined as alias templates.
+表“使用范围时产生所涉及类型的泛型函数”列出了范围的所有泛型类型定义，其被定义为别名模板。
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Type Function} &
-	\textbf{Meaning} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}std::ranges::iterator\_t\textless{}Rg\textgreater\\ std::ranges::sentinel\_t\textless{}Rg\textgreater\\ std::ranges::range\_value\_t\textless{}Rg\textgreater\\ std::ranges::range\_reference\_t\textless{}Rg\textgreater\\ std::ranges::range\_difference\_t\textless{}Rg\textgreater\\ std::ranges::range\_size\_t\textless{}Rg\textgreater\\ std::ranges::range\_rvalue\_reference\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_iterator\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_subrange\_t\textless{}Rg\textgreater{}\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type of an iterator that iterates over Rg (what begin() yields)\\ Type of an end iterator for Rg (what end() yields)\\ Type of the element in the range\\ Type of a reference to the element type\\ Type of the difference between two iterators\\ Type of what the size() function returns\\ Type of an rvalue reference to the element type\\ std::ranges::iterator\_t\textless{}Rg\textgreater for a borrowed range, otherwise std::ranges::dangling\\ The subrange type of the iterator type for a borrowed range, otherwise std::ranges::dangling\end{tabular} \\ \hline
+\hline
+\textbf{函数类型} &
+\textbf{意义} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}std::ranges::iterator\_t\textless{}Rg\textgreater\\ std::ranges::sentinel\_t\textless{}Rg\textgreater\\ std::ranges::range\_value\_t\textless{}Rg\textgreater\\ std::ranges::range\_reference\_t\textless{}Rg\textgreater\\ std::ranges::range\_difference\_t\textless{}Rg\textgreater\\ std::ranges::range\_size\_t\textless{}Rg\textgreater\\ std::ranges::range\_rvalue\_reference\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_iterator\_t\textless{}Rg\textgreater\\ std::ranges::borrowed\_subrange\_t\textless{}Rg\textgreater{}\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}在Rg上迭代的迭代器类型(begin()的结果)\\ Rg的end迭代器类型(end()的结果)\\ 范围内元素的类型\\ 元素类型引用的类型\\ 两个迭代器差的类型\\ size()函数返回的类型\\ 元素类型的右值引用的类型\\ 对于借来的范围为std::ranges::iterator\_t\textless{}Rg\textgreater ，否则为std::ranges::dangling\\ 借来范围的迭代器类型的子范围类型，否则为std::ranges::dangling\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.7. Generic functions that yield the types involved when using ranges
+表7.7 使用范围时产生所涉及类型的泛型函数
 \end{center}
 
-As mentioned in the introduction to ranges, the key benefit of these type functions is that they work generically for all types of ranges and views. This applies even to raw arrays.
+正如在范围介绍中提到的，这些类型函数的主要优点是它们一般适用于所有类型的范围和视图。这甚至适用于原始数组。
 
-Note that std::ranges::range\_value\_t<Rg> is just a shortcut for:
+注意，std::ranges::range\_value\_t<Rg>只是以下操作的快捷方式:
 
 \begin{cpp}
 std::iter_value_t<std::ranges::iterator_t<Rg>>
 \end{cpp}
 
-It should be preferred over Rg::value\_type.
+应该优先于Rg::value\_type。
 
-\mySubsubsection{7.5.2}{Generic Types of Iterators}
+\mySubsubsection{7.5.2}{迭代器的泛型类型}
 
-The ranges library also introduced new type traits for iterators. Note that these traits are not defined in the namespace std::ranges, but rather in the namespace std.
+ranges库还为迭代器引入了新的类型特征，这些特征不是在命名空间std::范围中定义的，而是在命名空间std中定义的。
 
-Table Generic functions that yield the types involved when using iterators lists all generic type traits for iterators. They are defined as alias templates.
+表“泛型函数在使用迭代器时产生的类型”列出了迭代器的所有泛型类型特征，其定义为别名模板。
 
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Type Function} &
-	\textbf{Meaning} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}std::iter\_value\_t\textless{}It\textgreater\\ std::iter\_reference\_t\textless{}It\textgreater\\ std::iter\_rvalue\_reference\_t\textless{}It\textgreater\\ std::iter\_common\_reference\_t\textless{}It\textgreater\\ std::iter\_difference\textless{}It\textgreater{}\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Type of the value that the iterator refers to\\ Type of a reference to the value type\\ Type of an rvalue reference to the value type\\ The common type of the reference type and a reference to the value type\\ Type of the difference between two iterators\end{tabular} \\ \hline
+\hline
+\textbf{函数类型} &
+\textbf{意义} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}std::iter\_value\_t\textless{}It\textgreater\\ std::iter\_reference\_t\textless{}It\textgreater\\ std::iter\_rvalue\_reference\_t\textless{}It\textgreater\\ std::iter\_common\_reference\_t\textless{}It\textgreater\\ std::iter\_difference\textless{}It\textgreater{}\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}迭代器引用的值的类型\\ 值类型引用的类型\\ 值类型的右值引用的类型\\ 引用类型的公共类型和对值类型的引用\\ 两个迭代器差的类型\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.8. Generic functions that yield the types involved when using iterators
+表7.8 泛型函数在使用迭代器时产生的类型 iterators
 \end{center}
 
-Note that due to better support for the new iterator categories, you should prefer these utilities over traditional iterator traits (std::iterator\_traits<>).
+注意，由于对新的迭代器类别有更好的支持，更推荐这些工具，而非传统的迭代器特征(std::iterator\_traits<>)。
 
-These functions are described in detail in the section about iterator traits.
+这些函数将在关于迭代器特性的一节中详细描述。
 
-\mySubsubsection{7.5.3}{New Functional Types}
+\mySubsubsection{7.5.3}{新函数类型}
 
-Table New functional types lists the new types that can be used as helper functions. They are defined in <functional>.
+表“新函数类型”列出了可作为辅助函数使用的新类型，在<functional>中定义。
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Type Function} &
-	\textbf{Meaning} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}std::identity\\ std::compare\_three\_way\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}A function object that returns itself\\ A function object to call the operator \textless{}=\textgreater{}\end{tabular} \\ \hline
+\hline
+\textbf{函数类型} &
+\textbf{意义} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}std::identity\\ std::compare\_three\_way\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}返回自身的函数对象\\ 调用操作符\textless{}=\textgreater{}的函数对象\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.9. New functional types
+表7.9 新函数类型
 \end{center}
 
-The function object std::identity is usually used to pass no projection where a projection can be passed. If an algorithm supports passing a projection:
+若算法支持传递投影，函数对象std::identity通常用于在可以传递投影的地方不传递投影:
 
 \begin{cpp}
 auto pos = std::ranges::find(coll, 25, // find value 25
 							[](auto x) {return x*x;}); // for squared elements
 \end{cpp}
 
-using std::identity enables programmers to pass “no projection:”
+使用std::identity允许程序员传递“无投影”:
 
 \begin{cpp}
 auto pos = std::ranges::find(coll, 25, // find value 25
 							std::identity{}); // for elements as they are
 \end{cpp}
 
-The function object is used as a default template parameter to declare an algorithm where the projection can be skipped:
+该函数对象用作默认模板形参，用于声明可以跳过投影的算法:
 
 \begin{cpp}
 template<std::ranges::input_range R,
@@ -104,30 +104,30 @@ constexpr std::ranges::borrowed_iterator_t<R>
 find(R&& r, const T& value, Proj proj = {});
 \end{cpp}
 
-The function object type std::compare\_three\_way is a new function object type for specifying that the new operator <=> shall be called/used (just like std::less or std::ranges::less stand for calling the operator <). It is described in the chapter about the operator <=>.
+函数对象类型std::compare\_three\_way是一个新的函数对象类型，用于指定调用/使用新的操作符<=>(就像std::less或std::ranges::less表示调用操作符<)。在<=>操作符的章节中进行了描述。
 
-\mySubsubsection{7.5.4}{Other New Types for Dealing with Iterators}
+\mySubsubsection{7.5.4}{处理迭代器的其他新类型}
 
-Table Other new types for iterators lists all new types for dealing with iterators. They are defined in <iterator>.
+“迭代器的其他新类型”表列出了用于处理迭代器的所有新类型，在<iterator>中定义。
 
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Type Function} &
-	\textbf{Meaning} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}std::incrementable\_traits\textless{}It\textgreater\\ std::projected\textless{}It1, It2\textgreater{}\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}A helper type to yield the difference\_type of two iterator\\ A type to formulate constraints for projections\end{tabular} \\ \hline
+\hline
+\textbf{函数类型} &
+\textbf{意义} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}std::incrementable\_traits\textless{}It\textgreater\\ std::projected\textless{}It1, It2\textgreater{}\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}产生两个迭代器的difference\_type的辅助类型\\ 为投影制定约束的类型\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.10. Other new types for iterators
+表7.10 迭代器的其他新类型
 \end{center}
 
-Note also the new iterator and sentinel types.
+还要注意新的迭代器和哨兵类型。
 
 
 

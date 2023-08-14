@@ -1,50 +1,50 @@
-Iterators have different abilities. These abilities are important because some algorithms require special iterator abilities. For example, sorting algorithms require iterators that can perform random access because otherwise, the performance would be poor. For this reason, iterators have different categories, which were extended in C++20 by a new category: contiguous iterator. The abilities of these categories are listed in table Iterator categories.
+迭代器有不同的功能，这些功能很重要，因为有些算法需要特殊的迭代器。例如，排序算法需要能够执行随机访问的迭代器，否则，性能就会很差。由于这个原因，迭代器有不同的类别，C++20中扩展了一个新的类别:连续迭代器。这些类别的功能列在表Iterator类别中。
 
 \begin{longtable}[c]{|l|l|l|}
-	\hline
-	\textbf{Iterator Category} &
-	\textbf{Ability} &
-	\textbf{Providers} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\begin{tabular}[c]{@{}l@{}}Output\\ Input\\ Forward\\ Bidirectional\\ Random-access\\ Contiguous\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}Writes forward\\ Reads forward once\\ Reads forward\\ Reads forward and backward\\ Reads with random access\\ Reads elements stored in contiguous memory\end{tabular} &
-	\begin{tabular}[c]{@{}l@{}}osteram iterator, inserter\\ istream iterator\\ std::forward\_list\textless{}\textgreater{}, unordered containers\\ list\textless{}\textgreater{}, set\textless{}\textgreater{}, multset\textless{}\textgreater{}, map\textless{}\textgreater{}, multimap\textless{}\textgreater\\ deque\textless{}\textgreater\\ array\textless{}\textgreater{}, vector\textless{}\textgreater{}, string, C-style array\end{tabular} \\ \hline
+\hline
+\textbf{迭代器类别} &
+\textbf{功能} &
+\textbf{供应者} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\begin{tabular}[c]{@{}l@{}}Output\\ Input\\ Forward\\ Bidirectional\\ Random-access\\ Contiguous\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}向前写入\\ 向前读一次\\ 向前读取\\ 向前和向后读取\\ 随机读取\\ 读取存储在连续内存中的元素\end{tabular} &
+\begin{tabular}[c]{@{}l@{}}osteram迭代器, 插入器\\ istream迭代器\\ std::forward\_list\textless{}\textgreater{},无序容器\\ list\textless{}\textgreater{}, set\textless{}\textgreater{}, multset\textless{}\textgreater{}, map\textless{}\textgreater{}, multimap\textless{}\textgreater\\ deque\textless{}\textgreater\\ array\textless{}\textgreater{}, vector\textless{}\textgreater{}, string, C风格数组\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 7.1. Iterator categories
+表7.1 迭代器类别
 \end{center}
 
-Note that significant details of the categories changed with C++20. The most important changes are:
+注意，在C++20中，类别的细节发生了变化。最重要的变化是:
 
 \begin{itemize}
 \item
-The new iterator category contiguous. For this category, a new iterator tag type is defined: std::contiguous\_iterator\_tag.
+新的迭代器类别是连续的。对于这个类别，定义了一个新的迭代器标记类型:std::contiguous\_iterator\_tag。
 
 \item
-Iterators that yield temporary objects (prvalues) can now have a stronger category than input iterators. The requirement to yield references no longer applies to forward iterators.
+产生临时对象(右值)的迭代器可以拥有比输入迭代器更强的类别，生成引用的要求不再适用于前向迭代器。
 
 \item
-Input iterators are no longer guaranteed to be copyable. You should only move them around.
+输入迭代器不再保证是可复制的，应该只可移动。
 
 \item
-Postfix increment operators of input iterators are no longer required to yield anything. For an input iterator pos, you should no longer use pos++. Use ++pos instead.
+输入迭代器的后置自增操作符不再需要产生任何结果。对于输入迭代器pos，不应再使用pos++，可使用++pos代替。
 \end{itemize}
 
-These changes are not backward compatible:
+这些更改向后不兼容:
 
 \begin{itemize}
 \item
-A check whether an iterator is a random-access iterator is no longer true for iterators of containers like std::vector or arrays. Instead, you have to check whether the iterator supports random access.
+对于std::vector或数组等容器的迭代器，不再检查迭代器是否为随机访问迭代器。所以，开发者必须检查迭代器是否支持随机访问。
 
 \item
-The assumption that the values of forward, bidirectional, or random-access iterators are references no longer always applies.
+前向迭代器、双向迭代器或随机访问迭代器的值是引用的假设不再总是适用。
 \end{itemize}
 
-For that reason, C++20 introduces a new optional iterator attribute, iterator\_concept, and defines that this attribute may be set to signal a C++20 category that differs from the traditional category. For example:
+出于这个原因，C++20引入了一个新的可选迭代器属性iterator\_concept，并定义可以设置该属性来表示一个不同于传统类别的C++20类别。例如:
 
 \begin{cpp}
 std::vector vec{1, 2, 3, 4};
@@ -58,35 +58,35 @@ decltype(pos2)::iterator_category // type std::input_iterator_tag
 decltype(pos2)::iterator_concept // type std::random_access_iterator_tag
 \end{cpp}
 
-Note that std::iterator\_traits do not provide a member iterator\_concept and that for iterators, a member iterator\_category may not always be defined.
+注意，std::iterator\_traits没有提供成员iterator\_concept，对于迭代器，成员iterator\_category可能并不总有定义。
 
-The iterator concepts and the range concepts take the new C++20 categorization into account. For code that has to deal with iterator categories, this has the following consequences since C++20:
+迭代器概念和范围概念考虑了新的C++20分类。对于必须处理迭代器类别的代码，C++20起会进行如下处理:
 
 \begin{itemize}
 \item
-Use iterator concepts and range concepts instead of std::iterator\_traits<I>::iterator\_category to check the category.
+使用迭代器概念和范围概念来检查类别，而不是std::iterator\_traits<I>::iterator\_category。
 
 \item
-Think about providing iterator\_category and/or iterator\_concept according to the hints in \url{http://wg21.link/p2259} if you implement your own iterator types.
+若实现了自己的迭代器类型，可参考\url{http://wg21.link/p2259}中的提供的iterator\_category和/或iterator\_concept。
 \end{itemize}
 
-Note also that valid C++20 input iterators may not be C++17 iterators at all (e.g., by not providing copying). For these iterators, the traditional iterator traits do not work. For this reason, since C++20:
+还要注意，有效的C++20输入迭代器可能根本不是C++17迭代器(例如，不提供复制)。对于这些迭代器，传统的迭代器特性不起作用。由于这个原因，从C++20开始:
 
 \begin{itemize}
 \item
-Use std::iter\_value\_t instead of
+使用std::iter\_value\_t
 
-iterator\_traits<>::value\_type.
-
-\item
-Use std::iter\_reference\_t
-
-instead of iterator\_traits<>::reference.
+代替iterator\_traits<>::value\_type.
 
 \item
-Use std::iter\_difference\_t
+使用std::iter\_reference\_t
 
-instead of iterator\_traits<>::difference\_type.
+代替iterator\_traits<>::reference.
+
+\item
+使用std::iter\_difference\_t
+
+代替iterator\_traits<>::difference\_type.
 \end{itemize}
 
 
