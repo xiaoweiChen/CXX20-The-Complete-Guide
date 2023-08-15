@@ -1,37 +1,37 @@
 
-Views have a common type that provides most of their member functions, which is discussed in this section.
+视图有一个公共类型，提供了视图的大多数成员函数，这将在本节中讨论。
 
-This section also discusses, why range adaptors and factories use a special namespace.
+本节还讨论为什么范围适配器和工厂使用特殊的命名空间。
 
-\mySubsubsection{8.2.1}{Base Class for Views}
+\mySubsubsection{8.2.1}{视图的基类}
 
-All standard views are derived from the class std::ranges::view\_interface<viewType>.[In the published C++20 standard, view\_interface<> was also derived from an empty base class std::ranges::view\_base. However, that was fixed with \url{http://wg21.link/lwg3549}.]
+所有标准视图都派生自类std::ranges::view\_interface<viewType>。已发布的C++20标准中，view\_interface<>也派生自一个空基类std::ranges::view\_base，但这个问题通过\url{http://wg21.link/lwg3549}解决了。]
 
-The class template std::ranges::view\_interface<> introduces several basic member functions based on the definitions of begin() and end() of a derived view type that had to be passed to this base class as a template parameter. Table Operations of std::ranges::view\_interface<> lists the API the class provides for views.
+类模板std::ranges::view\_interface<>基于派生视图类型的begin()和end()的定义引入了几个基本成员函数，这些函数必须作为模板参数传递给这个基类。std::ranges::view\_interface<>的操作表列出了类为视图提供的API。
 
 \begin{longtable}[c]{|l|l|l|}
-	\hline
-	\textbf{Operation} & \textbf{Effect}                             & \textbf{Provided if}                       \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	r.empty()          & Yields whether r is empty(begin() == end()) & At least forward iterators                 \\ \hline
-	if (r)             & true if r is not empty                      & At least forward iterators                 \\ \hline
-	r.size()           & Yields the number of elements               & Can compute the difference between and end \\ \hline
-	r.front()          & Yields the first element                    & At least forward iterators                 \\ \hline
-	r.back() & Yields the last element                            & At least bidirectional iterators and end() yields the same type as begin() \\ \hline
-	r{[}idx{]}         & Yields the n-th element                     & At least random-access iterators           \\ \hline
-	r.data() & Yields a raw pointer to the memory of the elements & Elements are in contiguous memory                                          \\ \hline
+\hline
+\textbf{操作} & \textbf{效果}                             & \textbf{是否提供}                       \\ \hline
+\endfirsthead
+%
+\endhead
+%
+r.empty()          & 返回r是否为空(begin() == end()) & 至少是前向迭代器                 \\ \hline
+if (r)             & 若r不为空，则为True                      & 至少是前向迭代器                 \\ \hline
+r.size()           & 产生元素的数目               & 是否可以计算和end之间的差值 \\ \hline
+r.front()          & 生成的第一个元素                    & 至少是前向迭代器                 \\ \hline
+r.back() & 生成的最后一个元素                            & 至少双向迭代器和end()产生与begin()相同的类型 \\ \hline
+r{[}idx{]}         & 生成的第n个元素                     & 至少是随机访问迭代器           \\ \hline
+r.data() & 生成指向元素内存的原始指针 & 元素位于连续内存中                                          \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.3. Operations of std::ranges::view\_interface<>
+表8.3 std::ranges::view\_interface<>的操作
 \end{center}
 
-The class view\_interface<> also initializes std::ranges::enable\_view<> for each type derived from it with true, which means that for these types, the concept std::ranges::view is satisfied.
+类view\_interface<>还为派生自它的每个类型初始化了std::ranges::enable\_view<>，这些类型满足std::ranges::view概念。
 
-Whenever you define your own view type, you should derive it from view\_interface<> with your own type passed as an argument. For example:
+当定义自己的视图类型时，应该从view\_interface<>派生，并将自己的类型作为参数传递。例如:
 
 \begin{cpp}
 template<typename T>
@@ -43,13 +43,13 @@ class MyView : public std::ranges::view_interface<MyView<T>> {
 };
 \end{cpp}
 
-Based on the return types of begin() and end(), your type then automatically provides the member functions listed in table Operations of std::ranges::view\_interface<> if the preconditions for their availability fit. The const versions of these member functions require that the const version of the view type is a valid range.
+基于begin()和end()的返回类型，类型自动提供std::ranges::view\_interface<>的操作表中列出的成员函数，若可用性的先决条件合适。这些成员函数的const版本要求视图类型的const版本是一个有效范围。
 
-C++23 will add the members cbegin() and cend(), which map to std::ranges::cbegin() and std::ranges::cend() (they were added with \url{http://wg21.link/p2278r4}).
+C++23将添加成员cbegin()和cend()，将其映射到std::ranges::cbegin()和std::ranges::cend()(将与\url{http://wg21.link/p2278r4}一起添加)。
 
-\mySubsubsection{8.2.2}{Why Range Adaptors/Factories Have Their Own Namespace}
+\mySubsubsection{8.2.2}{为什么范围适配器/工厂有自己的命名空间}
 
-Range adaptors and factories have their own namespace, std::ranges::views, for which the namespace alias std::views is defined:
+范围适配器和工厂有自己的命名空间std::ranges::views，为它们定义了命名空间别名std::views:
 
 \begin{cpp}
 namespace std {
@@ -57,16 +57,16 @@ namespace std {
 }
 \end{cpp}
 
-That way, we can use names for views that may be used in other namespaces (even in another standard namespace).
+这样，就可以为可能在其他命名空间(甚至在另一个标准命名空间)中使用的视图使用名称。
 
-As a consequence, you can (and have to) qualify views when using them:
+因此，可以(也必须)在使用视图时进行限定:
 
 \begin{cpp}
 std::ranges::views::reverse // full qualification
 std::views::reverse // shortcut
 \end{cpp}
 
-Usually, it is not possible to use a view without qualification. ADL does not kick in because there is no range (container or view) defined in the namespace std::views:
+通常，不加限定地使用视图是不可能的。ADL不会启动，因为在命名空间std::views中没有定义范围(容器或视图)。
 
 \begin{cpp}
 std::vector<int> v;
@@ -74,7 +74,7 @@ std::vector<int> v;
 take(v, 3) | drop(2); // ERROR: can’t find views (may find different symbol)
 \end{cpp}
 
-Even views yield an object that is not part of the namespace for views (they are in std::ranges), which means that you still have to qualify views when using them:
+即使视图也会产生不属于视图命名空间的对象(在std::ranges中)，在使用视图时仍然需要对视图进行限定:
 
 \begin{cpp}
 std::vector<int> values{ 0, 1, 2, 3, 4 };
@@ -83,13 +83,13 @@ auto v2 = take(v1, 3); // ERROR
 auto v3 = std::views::take(v1, 3); // OK
 \end{cpp}
 
-There is one important thing to note: never use a using declaration to skip the qualification of range adaptors:
+有一件重要的事情需要注意:永远不要使用using声明跳过范围适配器的限定:
 
 \begin{cpp}
 using namespace std::views; // do not do this
 \end{cpp}
 
-Taking the composers example, we would be in trouble if we just filtered out values with a local values object defined:
+以作composers为例，若只是用定义的局部值对象过滤掉值，就会遇到麻烦:
 
 \begin{cpp}
 std::vector<int> values;
@@ -103,4 +103,4 @@ for (const auto& elem : composers | values) { // OOPS: finds wrong values
 }
 \end{cpp}
 
-In this example, we would use the local vector values instead of the view. You are lucky here, because you get a compile-time error. If you are not lucky, unqualified views find different symbols, which might have the effect that you run into undefined behavior that uses or even overwrites memory of other objects.
+本例中，将使用本地向量值，而非视图。若很幸运，会得到了一个编译时错误。若不够幸运，非限定视图会找到不同的符号，这可能会导致遇到使用，甚至覆盖其他对象内存的未定义行为。

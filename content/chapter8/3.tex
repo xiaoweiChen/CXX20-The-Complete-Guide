@@ -1,26 +1,26 @@
 
-This section discusses all features of C++20 that create views that refer to existing external values (usually passed as a single range parameter, as begin iterator and a sentinel, or as a begin iterator and a count).
+本节讨论C++20中创建引用现有外部值的视图的所有特性(通常作为单个范围参数传递，作为开始迭代器和哨兵，或作为开始迭代器和计数)。
 
-\mySubsubsection{8.3.1}{Subrange}
+\mySubsubsection{8.3.1}{子范围}
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Type:}                 & std::ranges::subrange\textless{}\textgreater{} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\textbf{Content:}              & All elements from passed begin to passed end   \\ \hline
-	\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::counted()\\ std::views::reverse() on reversed subrange\end{tabular} \\ \hline
-	\textbf{Element type:}         & Value type of passed iterators                 \\ \hline
-	\textbf{Requires:}             & At least input iterators                       \\ \hline
-	\textbf{Category:}             & Same as passed                                 \\ \hline
-	\textbf{Is sized range:} & If common random-access iterators or a size hint are passed                                                \\ \hline
-	\textbf{Is common range:}      & If on common iterators                         \\ \hline
-	\textbf{Is borrowed range:}    & Always                                         \\ \hline
-	\textbf{Caches:}               & Nothing                                        \\ \hline
-	\textbf{Const iterable:}       & If passed iterators are copyable               \\ \hline
-	\textbf{Propagates constness:} & Never                                          \\ \hline
+\hline
+\textbf{Type:}                 & std::ranges::subrange\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All elements from passed begin to passed end   \\ \hline
+\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::counted()\\ std::views::reverse() on reversed subrange\end{tabular} \\ \hline
+\textbf{Element type:}         & Value type of passed iterators                 \\ \hline
+\textbf{Requires:}             & At least input iterators                       \\ \hline
+\textbf{Category:}             & Same as passed                                 \\ \hline
+\textbf{Is sized range:} & If common random-access iterators or a size hint are passed                                                \\ \hline
+\textbf{Is common range:}      & If on common iterators                         \\ \hline
+\textbf{Is borrowed range:}    & Always                                         \\ \hline
+\textbf{Caches:}               & Nothing                                        \\ \hline
+\textbf{Const iterable:}       & If passed iterators are copyable               \\ \hline
+\textbf{Propagates constness:} & Never                                          \\ \hline
 \end{longtable}
 
 The class template std::ranges::subrange<> defines a view to the elements of a range that is usually passed as a pair of begin iterator and sentinel (end iterator). However, you can also pass a single range object and indirectly, a begin iterator and a count. Internally, the view itself represents the elements by storing begin (iterator) and end (sentinel).
@@ -202,7 +202,7 @@ trait:Merkmal car:Auto smart:klug
 Note that in rare cases, std::views::reverse() might also yield a subrange. This happens when you reverse a reversed subrange. In that case, you get back the original subrange.
 
 
-\mySamllsection{Special Characteristics of Subranges}
+\mySamllsection{子范围的特殊特征}
 
 A subrange may or may not be a sized range. The way this is implemented is that a subrange has a third template parameter of the enumeration type std::ranges::subrange\_kind, which can have the values std::ranges::unsized or std::ranges::sized. That value of this template parameter can be specified or is derived from the concept std::sized\_sentinel\_for called for the iterator and sentinel type.
 
@@ -252,7 +252,7 @@ The constructors taking a szHint allow programmers to convert an unsized range i
 
 Iterators of a subrange refer to the underlying (or temporarily created) range. Therefore, a subrange is a borrowed range. However, note that iterators can still dangle when the underlying range is no longer there.
 
-\mySamllsection{Tuple-Like Interface of Subranges}
+\mySamllsection{类似元组的子范围接口}
 
 std::ranges::subrange also has a tuple-like interface to support structured bindings (introduced to C++ with C++17). Thus, you can easily initialize a begin iterator and a sentinel (end iterator) doing something like the following:
 
@@ -274,39 +274,39 @@ get<>() functions for the indexes 0 and 1
 \end{itemize}
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Operation}      & \textbf{Effect}                                                           \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	subrange r\{\}          & Creates an empty subrange                                                 \\ \hline
-	subrange r\{rg\}        & Creates a subrange with the elements of range rg                          \\ \hline
-	subrange r\{rg, szHint\}       & Creates a subrange with the elements of range rg specifying that the range has szHint elements           \\ \hline
-	subrange r\{beg, end\}  & Creates a subrange with the elements of range {[}beg, end)                \\ \hline
-	subrange r\{beg, end, szHint\} & Creates a subrange with the elements of range {[}beg, end) specifying that the range has szHint elements \\ \hline
-	r.begin()               & Yields the begin iterator                                                 \\ \hline
-	r.end()                 & Yields the sentinel (end iterator)                                        \\ \hline
-	r.empty()               & Yields whether r is empty                                                 \\ \hline
-	if (r)                  & true if r is not empty                                                    \\ \hline
-	r.size()                & Yields the number of elements(available if sized)                         \\ \hline
-	r.front()               & Yields the first element(available if forwarding)                         \\ \hline
-	r.back()                & Yields the last element (available if bidirectional and common)           \\ \hline
-	r{[}idx{]}              & Yields the n-th element (available if random access)                      \\ \hline
-	r.data()                       & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory)       \\ \hline
-	r.next()                & Yields a subrange starting with the second element                        \\ \hline
-	r.next(n)               & Yields a subrange starting with the n-th element                          \\ \hline
-	r.prev()                & Yields a subrange starting with the element before the first element      \\ \hline
-	r.prev(n)               & Yields a subrange starting with the n-th element before the first element \\ \hline
-	r.advance(dist)                & Modifies r so that it starts num elements later (starts earlier with negative num)                       \\ \hline
-	auto {[}beg, end{]} = r & initializes beg and end with begin and end/sentinel of r                  \\ \hline
+\hline
+\textbf{Operation}      & \textbf{Effect}                                                           \\ \hline
+\endfirsthead
+%
+\endhead
+%
+subrange r\{\}          & Creates an empty subrange                                                 \\ \hline
+subrange r\{rg\}        & Creates a subrange with the elements of range rg                          \\ \hline
+subrange r\{rg, szHint\}       & Creates a subrange with the elements of range rg specifying that the range has szHint elements           \\ \hline
+subrange r\{beg, end\}  & Creates a subrange with the elements of range {[}beg, end)                \\ \hline
+subrange r\{beg, end, szHint\} & Creates a subrange with the elements of range {[}beg, end) specifying that the range has szHint elements \\ \hline
+r.begin()               & Yields the begin iterator                                                 \\ \hline
+r.end()                 & Yields the sentinel (end iterator)                                        \\ \hline
+r.empty()               & Yields whether r is empty                                                 \\ \hline
+if (r)                  & true if r is not empty                                                    \\ \hline
+r.size()                & Yields the number of elements(available if sized)                         \\ \hline
+r.front()               & Yields the first element(available if forwarding)                         \\ \hline
+r.back()                & Yields the last element (available if bidirectional and common)           \\ \hline
+r{[}idx{]}              & Yields the n-th element (available if random access)                      \\ \hline
+r.data()                       & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory)       \\ \hline
+r.next()                & Yields a subrange starting with the second element                        \\ \hline
+r.next(n)               & Yields a subrange starting with the n-th element                          \\ \hline
+r.prev()                & Yields a subrange starting with the element before the first element      \\ \hline
+r.prev(n)               & Yields a subrange starting with the n-th element before the first element \\ \hline
+r.advance(dist)                & Modifies r so that it starts num elements later (starts earlier with negative num)                       \\ \hline
+auto {[}beg, end{]} = r & initializes beg and end with begin and end/sentinel of r                  \\ \hline
 \end{longtable}
 
 \begin{center}
 Table 8.4. Operations of the class std::ranges::subrange<>
 \end{center}
 
-\mySamllsection{Using Subranges to Harmonize Raw Array Types}
+\mySamllsection{使用子范围协调原始数组类型}
 
 The type of subranges depends only on the type of the iterators (and whether or not size() is provided).
 This can be used to harmonize the type of raw arrays.
@@ -325,26 +325,26 @@ std::same_as<decltype(std::ranges::subrange{a1}),
 
 Note that this works only for raw arrays. For std::array<> and other containers, iterators (may) have different types, meaning that a harmonization of the types with a subrange is at least not portable.
 
-\mySubsubsection{8.3.2}{Ref View}
+\mySubsubsection{8.3.2}{参考视图}
 
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Type:}                 & std::ranges::ref\_view\textless{}\textgreater{} \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	\textbf{Content:}              & All elements of a range   \\ \hline
-	\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::all() and all other adaptors on lvalues\end{tabular} \\ \hline
-	\textbf{Element type:}         & Same type as passed range                 \\ \hline
-	\textbf{Requires:}             & At least input range                       \\ \hline
-	\textbf{Category:}             & Same as passed                                 \\ \hline
-	\textbf{Is sized range:} & If on sized range                                                \\ \hline
-	\textbf{Is common range:}      & If on common range                         \\ \hline
-	\textbf{Is borrowed range:}    & Always                                         \\ \hline
-	\textbf{Caches:}               & Nothing                                        \\ \hline
-	\textbf{Const iterable:}       & If on const-iterable range               \\ \hline
-	\textbf{Propagates constness:} & Never                                          \\ \hline
+\hline
+\textbf{Type:}                 & std::ranges::ref\_view\textless{}\textgreater{} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\textbf{Content:}              & All elements of a range   \\ \hline
+\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::all() and all other adaptors on lvalues\end{tabular} \\ \hline
+\textbf{Element type:}         & Same type as passed range                 \\ \hline
+\textbf{Requires:}             & At least input range                       \\ \hline
+\textbf{Category:}             & Same as passed                                 \\ \hline
+\textbf{Is sized range:} & If on sized range                                                \\ \hline
+\textbf{Is common range:}      & If on common range                         \\ \hline
+\textbf{Is borrowed range:}    & Always                                         \\ \hline
+\textbf{Caches:}               & Nothing                                        \\ \hline
+\textbf{Const iterable:}       & If on const-iterable range               \\ \hline
+\textbf{Propagates constness:} & Never                                          \\ \hline
 \end{longtable}
 
 The class template std::ranges::ref\_view<> defines a view that simply refers to a range. That way, passing the view by value has an effect like passing the range by reference.
@@ -409,7 +409,7 @@ int main()
 }
 \end{cpp}
 
-\mySamllsection{Range Adaptors for Ref Views}
+\mySamllsection{参考视图的范围适配器}
 
 Ref views can also (and usually should) be created with a range factory:
 
@@ -445,12 +445,12 @@ However, using the adaptor, some optimizations might apply.
 
 For more details, see the description of std::views::all().
 
-\mySamllsection{Special Characteristics of Ref Views}
+\mySamllsection{参考视图的特点}
 
 The ref view stores a reference to the underlying range. Therefore, the ref view is a borrowed range. It can be used as long as the referred view is valid. For example, if the underlying view is a vector, a reallocation does not invalidate this view. However, note that iterators can still dangle when the underlying range is no longer there.
 
 
-\mySamllsection{Interface of Ref Views}
+\mySamllsection{参考视图的接口}
 
 Table Operations of the class std::ranges::ref\_view<> lists the API of a ref\_view.
 
@@ -458,23 +458,23 @@ Table Operations of the class std::ranges::ref\_view<> lists the API of a ref\_v
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Operation} & \textbf{Effect}                                                \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	ref\_view r\{rg\}  & Creates a ref\_view that refers to range rg                    \\ \hline
-	r.begin()          & Yields the begin iterator                                      \\ \hline
-	r.end()            & Yields the sentinel (end iterator)                             \\ \hline
-	r.empty()          & Yields whether r is empty (available if the range supports it) \\ \hline
-	if(r)              & true if r is not empty(available if empty() is defined)        \\ \hline
-	r.size() & Yields the number of elements (available if it refers to a sized range)                            \\ \hline
-	r.front()          & Yields the first element(available if forwarding)              \\ \hline
-	r.back()           & Yields the last element(available if bidirectional and common) \\ \hline
-	r{[}idx{]}         & Yields the n-th element(available if random access)            \\ \hline
-	r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-	r.base()           & Yields a reference to the range that r refers to               \\ \hline
+\hline
+\textbf{Operation} & \textbf{Effect}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+ref\_view r\{rg\}  & Creates a ref\_view that refers to range rg                    \\ \hline
+r.begin()          & Yields the begin iterator                                      \\ \hline
+r.end()            & Yields the sentinel (end iterator)                             \\ \hline
+r.empty()          & Yields whether r is empty (available if the range supports it) \\ \hline
+if(r)              & true if r is not empty(available if empty() is defined)        \\ \hline
+r.size() & Yields the number of elements (available if it refers to a sized range)                            \\ \hline
+r.front()          & Yields the first element(available if forwarding)              \\ \hline
+r.back()           & Yields the last element(available if bidirectional and common) \\ \hline
+r{[}idx{]}         & Yields the n-th element(available if random access)            \\ \hline
+r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()           & Yields a reference to the range that r refers to               \\ \hline
 \end{longtable}
 
 \begin{center}
@@ -483,7 +483,7 @@ Table 8.5. Operations of the class std::ranges::ref\_view<>
 
 Note that there is no default constructor provided for this view.
 
-\mySubsubsection{8.3.3}{Owning View}
+\mySubsubsection{8.3.3}{所属视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -558,7 +558,7 @@ foo(std::ranges::owning_view{std::move(coll)}); // OK: move coll as view
 
 Converting a range to an owning view is usually done implicitly by passing a temporary container to a range adaptor (see below).
 
-\mySamllsection{Range Adaptors for Owning Views}
+\mySamllsection{所属视图的范围适配器}
 
 Owning views can also (and usually should) be created with a range factory:
 
@@ -626,11 +626,11 @@ The way this happens is that the drop view indirectly calls all() for the passed
 For more details, see the description of std::views::all().
 
 
-\mySamllsection{Special Characteristics of Owning Views}
+\mySamllsection{所属视图的特殊特性}
 
 The owning view moves the passed range into itself. Therefore, the owning view is a borrowed range if the range it owns is a borrowed range.
 
-\mySamllsection{Interface of Owning Views}
+\mySamllsection{所属视图的接口}
 
 Table Operations of the class std::ranges::owning\_view<> lists the API of an owning\_view.
 
@@ -640,31 +640,31 @@ The default constructor is provided only if the iterator is default initializabl
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
-	\hline
-	\textbf{Operation}   & \textbf{Effect}                                                \\ \hline
-	\endfirsthead
-	%
-	\endhead
-	%
-	owning\_view r\{\}   & Creates an owning\_view that is empty                          \\ \hline
-	owning\_view r\{rg\} & Craetes an owning\_view that owns the elements of rg           \\ \hline
-	r.begin()            & Yields the begin iterator                                      \\ \hline
-	r.end()              & Yields the sentinel(end iterator)                              \\ \hline
-	r.empty()            & Yields whether r is empty(available if the range supports it)  \\ \hline
-	if(r)                & true if r is not empty (available if empty() is defined)       \\ \hline
-	r.size() & Yields the number of elements(available if it refers to a sized range)                             \\ \hline
-	r.front()            & Yields the first element(available if forwarfing)              \\ \hline
-	r.back()             & Yields the last element(available if bidirectional and common) \\ \hline
-	r{[}idx{]}           & Yields the n-th element(available if random access)            \\ \hline
-	r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-	r.base()             & Yields a reference to the range that r owns                    \\ \hline
+\hline
+\textbf{Operation}   & \textbf{Effect}                                                \\ \hline
+\endfirsthead
+%
+\endhead
+%
+owning\_view r\{\}   & Creates an owning\_view that is empty                          \\ \hline
+owning\_view r\{rg\} & Craetes an owning\_view that owns the elements of rg           \\ \hline
+r.begin()            & Yields the begin iterator                                      \\ \hline
+r.end()              & Yields the sentinel(end iterator)                              \\ \hline
+r.empty()            & Yields whether r is empty(available if the range supports it)  \\ \hline
+if(r)                & true if r is not empty (available if empty() is defined)       \\ \hline
+r.size() & Yields the number of elements(available if it refers to a sized range)                             \\ \hline
+r.front()            & Yields the first element(available if forwarfing)              \\ \hline
+r.back()             & Yields the last element(available if bidirectional and common) \\ \hline
+r{[}idx{]}           & Yields the n-th element(available if random access)            \\ \hline
+r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
+r.base()             & Yields a reference to the range that rowns                    \\ \hline
 \end{longtable}
 
 \begin{center}
 Table 8.6. Operations of the class std::ranges::owning\_view<>
 \end{center}
 
-\mySubsubsection{8.3.4}{Common View}
+\mySubsubsection{8.3.4}{通用视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -704,7 +704,7 @@ auto v2 = std::ranges::common_view{take5}; // OK
 
 The corresponding range adaptor can also deal with ranges that already are common. Therefore, it is better to use the range adaptor std::views::common() to create a common view.
 
-\mySamllsection{Range Adaptors for Common Views}
+\mySamllsection{通用视图的范围适配器}
 
 Common views can also (and usually should) be created with a range adaptor:
 
@@ -787,7 +787,7 @@ auto v2 = std::views::common(std::views::take(lst, 5)); // same type now
 std::vector<int> coll{v2.begin(), v2.end()}; // OK
 \end{cpp}
 
-\mySamllsection{Interface of Common Views}
+\mySamllsection{通用视图的接口}
 
 Table Operations of the class std::ranges::common\_view<> lists the API of a common view.
 
