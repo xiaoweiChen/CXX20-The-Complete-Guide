@@ -5,27 +5,27 @@
 
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::subrange\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::subrange\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All elements from passed begin to passed end   \\ \hline
-\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::counted()\\ std::views::reverse() on reversed subrange\end{tabular} \\ \hline
-\textbf{Element type:}         & Value type of passed iterators                 \\ \hline
-\textbf{Requires:}             & At least input iterators                       \\ \hline
-\textbf{Category:}             & Same as passed                                 \\ \hline
-\textbf{Is sized range:} & If common random-access iterators or a size hint are passed                                                \\ \hline
-\textbf{Is common range:}      & If on common iterators                         \\ \hline
-\textbf{Is borrowed range:}    & Always                                         \\ \hline
-\textbf{Caches:}               & Nothing                                        \\ \hline
-\textbf{Const iterable:}       & If passed iterators are copyable               \\ \hline
-\textbf{Propagates constness:} & Never                                          \\ \hline
+\textbf{内容:}              & 从传递开始到结束的所有元素   \\ \hline
+\textbf{工厂:}      & \begin{tabular}[c]{@{}l@{}}std::views::counted()\\ std::views::reverse()在逆子范围上\end{tabular} \\ \hline
+\textbf{元素类型:}         & 传递迭代器中值的类型               \\ \hline
+\textbf{要求:}             & 至少是输入迭代器                       \\ \hline
+\textbf{类别:}             & 和传入的一样                                 \\ \hline
+\textbf{是否为有限范围:} & 若传递的是普通随机访问迭代器或是长度提示                                                \\ \hline
+\textbf{是否为常规范围:}      & 若在通用迭代器上                         \\ \hline
+\textbf{是否为租借范围:}    & 总是                                         \\ \hline
+\textbf{缓存:}               & 无                                        \\ \hline
+\textbf{常量可迭代:}       & 若传递的迭代器可复制               \\ \hline
+\textbf{传播常量性:} & 从不                                          \\ \hline
 \end{longtable}
 
-The class template std::ranges::subrange<> defines a view to the elements of a range that is usually passed as a pair of begin iterator and sentinel (end iterator). However, you can also pass a single range object and indirectly, a begin iterator and a count. Internally, the view itself represents the elements by storing begin (iterator) and end (sentinel).
+类模板std::ranges::subrange<>定义了一个范围元素的视图，通常以开始迭代器和哨兵(结束迭代器)对的形式传递，也可以传递单个范围对象，并间接传递开始迭代器和计数。在内部，视图本身通过存储开始(迭代器)和结束(哨兵)来展示元素。
 
-The major use case of the subrange view is to convert a pair of begin iterator and sentinel (end iterator) into one object. For example:
+子范围视图的主要用例是将一对开始迭代器和哨兵(结束迭代器)转换为一个对象。例如:
 
 \begin{cpp}
 std::vector<int> coll{0, 8, 15, 47, 11, -1, 13};
@@ -35,14 +35,14 @@ std::ranges::subrange s1{std::ranges::find(coll, 15),
 print(coll); // 15 47 11
 \end{cpp}
 
-You can initialize the subrange with a special sentinel for the end value:
+你可以用结束值的特殊哨兵来初始化子范围:
 
 \begin{cpp}
 std::ranges::subrange s2{coll.begin() + 1, EndValue<-1>{}};
 print(s2); // 8 15 47 11
 \end{cpp}
 
-Both are especially helpful for converting a pair of iterators into a range/view so that, for example, range adaptors can process the elements:
+这两种方法在将一对迭代器转换为范围/视图时都特别有用，例如，这样范围适配器就可以处理元素:
 
 \begin{cpp}
 void foo(auto beg, auto end)
@@ -53,7 +53,7 @@ void foo(auto beg, auto end)
 }
 \end{cpp}
 
-Here is a complete example that demonstrates the use of a subrange:
+下面是演示子范围用法的完整示例:
 
 \filename{ranges/subrange.cpp}
 
@@ -91,21 +91,21 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 smart:klug smart:elegant smart:raffiniert
 \end{shell}
 
-After equal\_range() gives us a pair of the beginning and the end of all elements in dict that have the key "smart", we use a subrange to convert these two iterators into a view (here, a view of elements that are pairs of strings):
+equal\_range()返回了键为"smart"的dict中所有元素的开头和结尾，这里使用一个子范围将这两个迭代器转换为一个视图(这里是字符串对元素的视图):
 
 \begin{cpp}
 std::ranges::subrange(beg, end)
 \end{cpp}
 
-We then can pass the view to printPairs() to iterate over the elements and print them out.
+然后，可以将视图传递给printPairs()，遍历元素并打印出来。
 
-Note that a subrange might change its size so that elements are inserted or deleted between begin and end as long as both begin and end remain valid:
+注意，子范围可以改变它的大小，以便在begin和end都有效的情况下在begin和end之间插入或删除元素:
 
 \begin{cpp}
 std::list coll{1, 2, 3, 4, 5, 6, 7, 8};
@@ -118,31 +118,30 @@ coll.push_back(9);
 print(v2); // 1 0 2 3 4 5 6 7 8 9
 \end{cpp}
 
-\mySamllsection{Range Factories for Subranges}
+\mySamllsection{子范围的工厂}
 
-There is no range factory for initializing a subrange from a begin (iterator) and an end (sentinel). However, there is a range factory that might create a subrange from begin and a count:[C++20 originally stated that all() might also yield a subrange. However, that option was removed later when owning views were introduced (see \url{http://wg21.link/p2415})]
+没有范围工厂用于从begin(迭代器)和end(哨兵)初始化子范围。然而，有一个范围工厂可以从begin和count创建子范围:[C++20最初声明all()也可以产生子范围。当后来引入了所属视图时，这个选项被删除了(参见\url{http://wg21.link/p2415})]
 
 \begin{cpp}
 std::views::counted(beg, sz)
 \end{cpp}
 
-std::views::counted() creates a subrange with the first sz elements of the non-contiguous range, starting with the element that the iterator beg refers to (for a contiguous range, counted() creates a span view).
+std::views::counted()创建一个包含非连续范围的前sz个元素的子范围，从迭代器beg引用的元素开始(对于连续范围，counts()创建一个span视图)。
 
-When std::views::counted() creates a subrange, the subrange gets a std::counted\_iterator as the begin and a dummy sentinel of type std::default\_sentinel\_t as the end. This means that:
+当std::views::counted()创建子范围时，子范围以std::counted\_iterator作为开始，以std::default\_sentinel\_t类型的伪哨兵作为结束:
 
 \begin{cpp}
 std::views::counted(rg.begin(), 5);
 \end{cpp}
 
-is equivalent to:
-
+相当于:
 
 \begin{cpp}
 std::ranges::subrange{std::counted_iterator{rg.begin(), 5},
 	std::default_sentinel};
 \end{cpp}
 
-This has the effect that the count in this subrange remains stable even if elements are inserted or removed:
+这样做的效果是，即使插入或删除元素，该子范围内的计数仍然保持稳定:
 
 \begin{cpp}
 std::list coll{1, 2, 3, 4, 5, 6, 7, 8};
@@ -155,9 +154,9 @@ coll.push_back(9);
 print(v2); // 1 0 2 3 4 5 6 7
 \end{cpp}
 
-For more details, see the description of std::views::counted() and type std::counted\_iterator.
+有关详细信息，请参阅std::views::counted()和std::counted\_iterator类型的描述。
 
-Here is a complete example that demonstrates the use of a subrange via counted():
+下面是一个完整的示例，演示了counted()如何使用子范围:
 
 \filename{ranges/subrangecounted.cpp}
 
@@ -192,25 +191,25 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 trait:Merkmal car:Auto smart:klug smart:elegant smart:raffiniert strange:fremd
 trait:Merkmal car:Auto smart:klug
 \end{shell}
 
-Note that in rare cases, std::views::reverse() might also yield a subrange. This happens when you reverse a reversed subrange. In that case, you get back the original subrange.
+注意，在极少数情况下，std::views::reverse()也可能产生子范围。当反转一个反转的子范围时，就会发生这种情况，将会得到原始的子范围。
 
 
 \mySamllsection{子范围的特殊特征}
 
-A subrange may or may not be a sized range. The way this is implemented is that a subrange has a third template parameter of the enumeration type std::ranges::subrange\_kind, which can have the values std::ranges::unsized or std::ranges::sized. That value of this template parameter can be specified or is derived from the concept std::sized\_sentinel\_for called for the iterator and sentinel type.
+子范围可以是也可以不是一个长度范围。实现的方式是，子范围有第三个模板形参，枚举类型std::ranges::subrange\_kind，它的值可以是std::ranges::unsized或std::ranges::sized。该模板形参的值可以指定，也可以从为迭代器和哨兵类型调用的std::sized\_sentinel\_for概念派生。
 
-This has the following consequences:
+会有以下后果:
 
 \begin{itemize}
 \item
-If you pass contiguous or random-access iterators of the same type, the subrange is sized:
+若传递相同类型的连续迭代器或随机访问迭代器，则子范围的大小为:
 
 \begin{cpp}
 std::vector vec{1, 2, 3, 4, 5}; // has random access
@@ -220,7 +219,7 @@ std::cout << std::ranges::sized_range<decltype(sv)>; // true
 \end{cpp}
 
 \item
-If you pass iterators that do not support random access or that are not common, the subrange is not sized:
+若传递的迭代器不支持随机访问或不常见，则子范围不确定大小:
 
 \begin{cpp}
 std::list lst{1, 2, 3, 4, 5}; // no random access
@@ -230,7 +229,7 @@ std::cout << std::ranges::sized_range<decltype(sl)>; // false
 \end{cpp}
 
 \item
-In the latter case, you can pass a size to make a subrange a sized range:
+后一种情况下，可以传递一个长度来使子范围变成一个长度范围:
 
 \begin{cpp}
 std::list lst{1, 2, 3, 4, 5}; // no random access
@@ -239,79 +238,78 @@ std::ranges::subrange sl2{++lst.begin(), --lst.end(), lst.size()-2}; // sized
 std::cout << std::ranges::sized_range<decltype(sl2)>; // true
 \end{cpp}
 
-It is undefined behavior if you initialize the view with the wrong size or use the view after elements have been inserted or deleted between the begin and end.
+若用错误的大小初始化视图，或者在开始和结束之间插入或删除元素之后使用视图，则为未定义行为。
 \end{itemize}
 
-\mySamllsection{Interface of Subranges}
+\mySamllsection{子范围的接口}
 
-Table Operations of the class std::ranges::subrange<> lists the API of a subrange.
+“类std::ranges::subrange<>的操作表”列出了子范围的API。
 
-The default constructor is provided only if the iterator is default initializable.
+只有当迭代器是默认可初始化时，才提供默认构造函数。
 
-The constructors taking a szHint allow programmers to convert an unsized range into a sized subrange as shown above.
+使用szHint参数的构造函数，允许开发者将未设置长度的范围转换为设置长度的子范围，如上所示。
 
-Iterators of a subrange refer to the underlying (or temporarily created) range. Therefore, a subrange is a borrowed range. However, note that iterators can still dangle when the underlying range is no longer there.
+子范围的迭代器指向底层(或临时创建的)范围，所以子范围是租借范围。但请注意，当底层范围不再存在时，迭代器仍然为悬空。
 
 \mySamllsection{类似元组的子范围接口}
 
-std::ranges::subrange also has a tuple-like interface to support structured bindings (introduced to C++ with C++17). Thus, you can easily initialize a begin iterator and a sentinel (end iterator) doing something like the following:
+std::ranges::subange也有一个类似于元组的接口来支持结构化绑定(C++17中引入)，所以可以很容易地初始化一个开始迭代器和一个哨兵(结束迭代器)，方法如下:
 
 \begin{cpp}
 auto [beg, end] = std::ranges::subrange{coll};
 \end{cpp}
 
-For this, the class std::ranges::subrange provides;
+为此，提供类std::ranges::subange;
 
 \begin{itemize}
 \item
-A specialization of std::tuple\_size<>
+std::tuple\_size<>的特化
 
 \item
-Specializations of std::tuple\_element<>
+std::tuple\_element<>的特化
 
 \item
-get<>() functions for the indexes 0 and 1
+获取索引0和1的get<>()函数
 \end{itemize}
 
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}      & \textbf{Effect}                                                           \\ \hline
+\textbf{操作}      & \textbf{效果}                                                           \\ \hline
 \endfirsthead
 %
 \endhead
 %
-subrange r\{\}          & Creates an empty subrange                                                 \\ \hline
-subrange r\{rg\}        & Creates a subrange with the elements of range rg                          \\ \hline
-subrange r\{rg, szHint\}       & Creates a subrange with the elements of range rg specifying that the range has szHint elements           \\ \hline
-subrange r\{beg, end\}  & Creates a subrange with the elements of range {[}beg, end)                \\ \hline
-subrange r\{beg, end, szHint\} & Creates a subrange with the elements of range {[}beg, end) specifying that the range has szHint elements \\ \hline
-r.begin()               & Yields the begin iterator                                                 \\ \hline
-r.end()                 & Yields the sentinel (end iterator)                                        \\ \hline
-r.empty()               & Yields whether r is empty                                                 \\ \hline
-if (r)                  & true if r is not empty                                                    \\ \hline
-r.size()                & Yields the number of elements(available if sized)                         \\ \hline
-r.front()               & Yields the first element(available if forwarding)                         \\ \hline
-r.back()                & Yields the last element (available if bidirectional and common)           \\ \hline
-r{[}idx{]}              & Yields the n-th element (available if random access)                      \\ \hline
-r.data()                       & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory)       \\ \hline
-r.next()                & Yields a subrange starting with the second element                        \\ \hline
-r.next(n)               & Yields a subrange starting with the n-th element                          \\ \hline
-r.prev()                & Yields a subrange starting with the element before the first element      \\ \hline
-r.prev(n)               & Yields a subrange starting with the n-th element before the first element \\ \hline
-r.advance(dist)                & Modifies r so that it starts num elements later (starts earlier with negative num)                       \\ \hline
-auto {[}beg, end{]} = r & initializes beg and end with begin and end/sentinel of r                  \\ \hline
+subrange r\{\}          & 创建一个空子范围                                                 \\ \hline
+subrange r\{rg\}        & 使用范围rg的元素创建子范围                          \\ \hline
+subrange r\{rg, szHint\}       & 使用范围rg的元素创建子范围，指定该范围有szHint个元素           \\ \hline
+subrange r\{beg, end\}  & 使用range {[}beg, end)的元素创建子范围                \\ \hline
+subrange r\{beg, end, szHint\} & 使用range {[}beg, end)的元素创建子范围，指定该范围有szHint个元素 \\ \hline
+r.begin()               & 生成begin迭代器                                                 \\ \hline
+r.end()                 & 生成哨兵(end迭代器)                                        \\ \hline
+r.empty()               & 生成r是否为空                                                 \\ \hline
+if (r)                  & 若r不为空，则为True                                                    \\ \hline
+r.size()                & 生成元素的数量(若有长度则可用)                         \\ \hline
+r.front()               & 生成第一个元素(若转发可用)                         \\ \hline
+r.back()                & 生成最后一个元素(若为双向且通用则可用)           \\ \hline
+r{[}idx{]}              & 生成第n个元素(如果随机访问可用)                      \\ \hline
+r.data()                & 生成一个指向元素内存的原始指针(若元素在连续内存中可用)。       \\ \hline
+r.next()                & 生成从第二个元素开始的子范围                        \\ \hline
+r.next(n)               & 生成从第n个元素开始的子范围                          \\ \hline
+r.prev()                & 生成从第一个元素之前的元素开始的子范围      \\ \hline
+r.prev(n)               & 生成一个子范围，从第n个元素开始，在第一个元素之前 \\ \hline
+r.advance(dist)         & 修改r，使其稍后开始num元素(以负num开始较早)                       \\ \hline
+auto {[}beg, end{]} = r & 用begin和end/哨兵(r)初始化beg和end                  \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.4. Operations of the class std::ranges::subrange<>
+表8.4 类std::ranges::subrange<>的操作
 \end{center}
 
 \mySamllsection{使用子范围协调原始数组类型}
 
-The type of subranges depends only on the type of the iterators (and whether or not size() is provided).
-This can be used to harmonize the type of raw arrays.
+子范围的类型仅取决于迭代器的类型(以及是否提供了size())，这可以用来协调原始数组的类型。
 
-Consider the following example:
+考虑下面的例子:
 
 \begin{cpp}
 int a1[5] = { ... };
@@ -323,35 +321,35 @@ std::same_as<decltype(std::ranges::subrange{a1}),
 			 decltype(std::ranges::subrange{a2})> // true
 \end{cpp}
 
-Note that this works only for raw arrays. For std::array<> and other containers, iterators (may) have different types, meaning that a harmonization of the types with a subrange is at least not portable.
+注意，这只适用于原始数组。对于std::array<>和其他容器，迭代器(可能)具有不同的类型，所以协调的类型与子范围是不可移植的。
 
 \mySubsubsection{8.3.2}{参考视图}
 
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::ref\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::ref\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All elements of a range   \\ \hline
-\textbf{Factories:}      & \begin{tabular}[c]{@{}l@{}}std::views::all() and all other adaptors on lvalues\end{tabular} \\ \hline
-\textbf{Element type:}         & Same type as passed range                 \\ \hline
-\textbf{Requires:}             & At least input range                       \\ \hline
-\textbf{Category:}             & Same as passed                                 \\ \hline
-\textbf{Is sized range:} & If on sized range                                                \\ \hline
-\textbf{Is common range:}      & If on common range                         \\ \hline
-\textbf{Is borrowed range:}    & Always                                         \\ \hline
-\textbf{Caches:}               & Nothing                                        \\ \hline
-\textbf{Const iterable:}       & If on const-iterable range               \\ \hline
-\textbf{Propagates constness:} & Never                                          \\ \hline
+\textbf{内容:}              & 一个范围的所有元素   \\ \hline
+\textbf{工厂:}      & \begin{tabular}[c]{@{}l@{}}std::views::all() and all other adaptors on lvalues\end{tabular} \\ \hline
+\textbf{元素类型:}         & 与传入的范围类型相同                 \\ \hline
+\textbf{要求:}             & 至少为输入范围                     \\ \hline
+\textbf{类别:}             & 与传入相同                                 \\ \hline
+\textbf{是否是长度范围:} & 若是长度范围                                                \\ \hline
+\textbf{是否是常规范围:}      & 若是常规范围                         \\ \hline
+\textbf{是否是租借范围:}    & 总是                                         \\ \hline
+\textbf{缓存:}               & 无                                        \\ \hline
+\textbf{常量可迭代:}       & 若在可迭代范围内               \\ \hline
+\textbf{传播常量性:} & 从不                                          \\ \hline
 \end{longtable}
 
-The class template std::ranges::ref\_view<> defines a view that simply refers to a range. That way, passing the view by value has an effect like passing the range by reference.
+类模板std::ranges::ref\_view<>定义了一个简单引用范围的视图，通过值传递视图的效果就像通过引用传递范围一样。
 
-The effect is similar to type std::reference\_wrapper<> (introduced with C++11), which makes references to first-class objects created with std::ref() and std::cref(). However, this wrapper has the benefit that it can still be used directly as a range.
+其效果类似于std::reference\_wrapper<>类型(C++11引入)，对使用std::ref()和std::cref()创建的第一类对象进行引用，但这个包装器的好处仍然可以直接用作范围。
 
-The major use case of the ref\_view is to convert a container into a lightweight object that is cheap to copy. For example:
+ref\_view的用例是将容器转换为复制成本较低的轻量级对象。例如:
 
 \begin{cpp}
 void foo(std::ranges::input_range auto coll) // NOTE: takes range by value
@@ -367,9 +365,9 @@ foo(coll); // copies coll
 foo(std::ranges::ref_view{coll}); // pass coll by reference
 \end{cpp}
 
-Passing a container to a coroutine, which usually has to take parameters by value, may be one application of this technique.
+将容器传递给协程(通常必须按值接受参数)可能是这种技术的一种应用。
 
-Note that you can only create a ref view to an lvalue (a range that has a name):
+请注意，只能创建一个左值(一个有名字的范围)的参考视图:
 
 \begin{cpp}
 std::vector coll{0, 8, 15};
@@ -379,9 +377,9 @@ std::ranges::ref_view v2{std::move(coll)}; // ERROR
 std::ranges::ref_view v3{std::vector{0, 8, 15}}; // ERROR
 \end{cpp}
 
-For an rvalue, you have to use an owning view.
+对于右值，必须使用归属视图。
 
-Here is a complete example using a ref view:
+下面是一个使用参考视图的完整示例:
 
 \filename{ranges/refview.cpp}
 
@@ -411,17 +409,17 @@ int main()
 
 \mySamllsection{参考视图的范围适配器}
 
-Ref views can also (and usually should) be created with a range factory:
+参考视图也可以(通常应该)用range工厂创建:
 
 \begin{cpp}
 std::views::all(rg)
 \end{cpp}
 
-std::views::all() creates a ref\_view to the passed range rg provided rg is an lvalue and not a view yet (all() yields rg if it is already a view and an owning view if otherwise an rvalue is passed).
+std::views::all()创建一个ref\_view到传入的范围rg，前提是rg是左值，而非视图(若rg已经是视图，则返回rg；若传递右值，则返回归属视图)。
 
-In addition, almost all other range adaptors also create a ref view if an lvalue is passed that is not a view yet.
+此外，若传递的左值还不是视图，几乎所有其他范围适配器也会创建一个参考视图。
 
-The example program above uses this indirect way for creating a ref view with the last call of printByVal(). It passes a std::ranges::ref\_view<std::vector<std::string>{}>{}>:
+上面的示例程序使用这种间接的方式，通过最后一次调用printByVal()创建了一个参考视图。它传递一个std::ranges::ref\_view<std::vector<std::string>{}>{}>:
 
 \begin{cpp}
 std::vector<std::string> coll{"love", "of", "my", "life"};
@@ -429,61 +427,60 @@ std::vector<std::string> coll{"love", "of", "my", "life"};
 printByVal(std::views::all(coll));
 \end{cpp}
 
-Note that all other views that take a range indirectly call all() for that passed range (by using std::views::all\_t<>). For that reason, a ref view is almost always created automatically if you pass an lvalue that is not a view to one of the views. For example, calling:
+请注意，所有其他接受范围的视图都间接地为传递的范围调用all()(通过使用std::views::all\_t<>)。出于这个原因，若传递一个不是视图的左值给其中一个视图，一个参考视图总是自动创建的。例如，调用:
 
 \begin{cpp}
 std::views::take(coll, 3)
 \end{cpp}
 
-basically has the same effect as calling the following:
+基本上与调用以下代码的效果相同:
 
 \begin{cpp}
 std::ranges::take_view{std::ranges::ref_view{coll}, 3};
 \end{cpp}
 
-However, using the adaptor, some optimizations might apply.
+但使用适配器时，可能会有一些优化。
 
-For more details, see the description of std::views::all().
+详细信息请参见std::views::all()的描述。
 
 \mySamllsection{参考视图的特点}
 
-The ref view stores a reference to the underlying range. Therefore, the ref view is a borrowed range. It can be used as long as the referred view is valid. For example, if the underlying view is a vector, a reallocation does not invalidate this view. However, note that iterators can still dangle when the underlying range is no longer there.
-
+参考视图存储对基础范围的引用，所以参考视图是一个租借范围。只要引用的视图有效，就可以使用它。例如，若底层视图是一个vector，重新分配并不会使该视图失效。但请注意，当底层范围不再存在时，迭代器仍然可以悬空。
 
 \mySamllsection{参考视图的接口}
 
-Table Operations of the class std::ranges::ref\_view<> lists the API of a ref\_view.
+“类std::ranges::ref\_view<>的操作表”列出了ref\_view的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                \\ \hline
+\textbf{操作} & \textbf{效果}                                                \\ \hline
 \endfirsthead
 %
 \endhead
 %
-ref\_view r\{rg\}  & Creates a ref\_view that refers to range rg                    \\ \hline
-r.begin()          & Yields the begin iterator                                      \\ \hline
-r.end()            & Yields the sentinel (end iterator)                             \\ \hline
-r.empty()          & Yields whether r is empty (available if the range supports it) \\ \hline
-if(r)              & true if r is not empty(available if empty() is defined)        \\ \hline
-r.size() & Yields the number of elements (available if it refers to a sized range)                            \\ \hline
-r.front()          & Yields the first element(available if forwarding)              \\ \hline
-r.back()           & Yields the last element(available if bidirectional and common) \\ \hline
-r{[}idx{]}         & Yields the n-th element(available if random access)            \\ \hline
-r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-r.base()           & Yields a reference to the range that r refers to               \\ \hline
+ref\_view r\{rg\}  & 创建一个引用范围rg的ref\_view                 \\ \hline
+r.begin()          & 生成begin迭代器                                  \\ \hline
+r.end()            & 生成哨兵(end迭代器)                             \\ \hline
+r.empty()          & 生成r是否为空(若范围支持则可用) \\ \hline
+if(r)              & 若r不为空则为true(若定义了empty()则可用)        \\ \hline
+r.size() & 生成元素的数量(若引用了一个长度范围，则可用)                            \\ \hline
+r.front()          & 生成第一个元素(若转发可用)              \\ \hline
+r.back()           & 生成最后一个元素(若双向且通用则可用) \\ \hline
+r{[}idx{]}         & 生成第n个元素(若随机访问可用)            \\ \hline
+r.data() & 生成一个指向元素内存的原始指针(若元素在连续内存中可用) \\ \hline
+r.base()           & 生成对r所引用的范围的引用               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.5. Operations of the class std::ranges::ref\_view<>
+表8.5 类std::ranges::ref\_view<>的操作表
 \end{center}
 
-Note that there is no default constructor provided for this view.
+注意，没有为这个视图提供默认构造函数。
 
-\mySubsubsection{8.3.3}{所属视图}
+\mySubsubsection{8.3.3}{归属视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
