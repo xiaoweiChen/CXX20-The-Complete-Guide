@@ -1,45 +1,45 @@
 
-This section discusses all features of C++20 for creating views that generate values themselves (meaning that they do not refer to elements or values outside the view).
+本节讨论C++20中用于创建生成值的视图的所有特性(不引用视图外部的元素或值)。
 
-\mySubsubsection{8.4.1}{Iota View}
+\mySubsubsection{8.4.1}{Iota视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::iota\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::iota\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & Generator of an incrementing sequence of values  \\ \hline
-\textbf{Factory:}              & std::views::iota()                               \\ \hline
-\textbf{Element type:}         & Values                                           \\ \hline
-\textbf{Category:}        & Input to random access(depends on the type of the start value) \\ \hline
-\textbf{Is sized range:}       & If initialized with an end value                 \\ \hline
-\textbf{Is common range:} & If limited and the end has the same type as the values         \\ \hline
-\textbf{Is borrowed range:}    & Always                                           \\ \hline
-\textbf{Caches:}               & Nothing                                          \\ \hline
-\textbf{Const iterable:}       & Always                                           \\ \hline
-\textbf{Propagates constness:} & Never(but elements are not lvalues)              \\ \hline
+\textbf{内容:}              & 值递增序列的生成器  \\ \hline
+\textbf{工厂:}              & std::views::iota()                               \\ \hline
+\textbf{元素类型:}         & 值                                           \\ \hline
+\textbf{类别:}        & 随机访问的输入(取决于开始值的类型) \\ \hline
+\textbf{是否是长度范围:}       & 若用结束值初始化                 \\ \hline
+\textbf{是否是通用范围:} & 若是有限的，end和值的类型相同         \\ \hline
+\textbf{是否是租借范围:}    & 总是                                           \\ \hline
+\textbf{缓存:}               & 无                                          \\ \hline
+\textbf{常量可迭代:}       & 总是                                           \\ \hline
+\textbf{传播常量性:} & 从不(但元素不是左值)              \\ \hline
 \end{longtable}
 
-The class template std::ranges::iota\_view<> is a view that generates a sequence of values. These values may be integral, such as
+类模板std::ranges::iota\_view<>是一个生成一系列值的视图。这些值可以是整型的，例如
 
 \begin{itemize}
 \item
 1, 2, 3 ...
 
 \item
-’a’, ’b’, ’c’ ...
+‘a’, ‘b’, ‘c’ ...
 \end{itemize}
 
-or they might use the operator ++ to generate a sequence of pointers or iterators.
+也可以使用操作符++生成指针或迭代器序列。
 
-The sequence might be limited or unlimited (endless).
+这个序列可能是有限的，也可能是无限的。
 
-The major use case of the iota view is to provide a view that iterates over a sequence of values. For example:
+iota视图的主要用例是提供在一系列值上迭代的视图。例如:
 
 \begin{cpp}
 std::ranges::iota_view v1{1, 100}; // view with values: 1, 2, ... 99
@@ -48,16 +48,16 @@ for (auto val : v1) {
 }
 \end{cpp}
 
-\mySamllsection{Range Factories for Iota Views}
+\mySamllsection{iota视图的范围工厂}
 
-Iota views can also (and usually should) be created with a range factory:
+iota视图也可以(通常应该)使用范围工厂创建:
 
 \begin{cpp}
 std::views::iota(val)
 std::views::iota(val, endVal)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (auto val : std::views::iota(1, 100)) { // iterate over values 1, 2, ... 99
@@ -65,7 +65,7 @@ for (auto val : std::views::iota(1, 100)) { // iterate over values 1, 2, ... 99
 }
 \end{cpp}
 
-Here is a full example program using iota views:
+下面是一个使用iota视图的完整示例程序:
 
 \filename{ranges/iotaview.cpp}
 
@@ -113,7 +113,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 ...
@@ -124,17 +124,17 @@ a b c d e f g h i j k l m n o p q r s t u v w x y z
 0 8 15 47 11	
 \end{shell}
 
-Note that the output from ’a’ to ’z’ depends on the character set of the platform.
+请注意，从'a'到'z'的输出取决于平台的字符集。
 
-\mySamllsection{Special Characteristics of Iota Views}
+\mySamllsection{iota视图的特殊特征}
 
-Because the iterators hold the current value, the iota view is a borrowed range (the lifetime of its iterators does not depend on the view). If the iota view is limited and the end value has the same type as the begin value, the view is a common range.
+因为迭代器持有当前值，所以iota视图是租借范围(其迭代器的生命周期不依赖于视图)。若iota视图是有限的，并且结束值与开始值具有相同的类型，则该视图是一个通用范围。
 
-If the iota view is endless or the type of the end differs from the type of the begin, it is not a common range. You might have to use a common view to harmonize the types of the begin iterator and the sentinel (end iterator).
+若iota视图无限大，或者结束的类型不同于开始的类型，则它不是通用范围，可能必须使用一个通用视图来协调开始迭代器和哨兵(结束迭代器)的类型。
 
-\mySamllsection{Interface of Iota Views}
+\mySamllsection{Iota视图的接口}
 
-Table Operations of the class std::ranges::iota\_view<> lists the API of an iota view.
+“类std::ranges::iota\_view<>操作”表列出了iota视图的API。
 
 
 % Please add the following required packages to your document preamble:
@@ -147,25 +147,25 @@ Table Operations of the class std::ranges::iota\_view<> lists the API of an iota
 %
 \endhead
 %
-ioat\_view\textless{}Type\textgreater v & Creates an unlimited sequence starting with the default value of Type               \\ \hline
-iota\_view v\{begVal\}   & Creates an unlimited sequence starting with begVal                 \\ \hline
-iota\_view v\{begVal, endVal\}          & Creates a sequence starting with begVal up to the value before endVal               \\ \hline
-iota\_view v\{beg, end\} & Helper constructor to enable sub-views                             \\ \hline
-v.begin()                & Yields the begin iterator(referring to the starting value)         \\ \hline
-v.end()                                 & Yields the sentinel(end iterator), which is std::unreachable\_sentinel if unlimited \\ \hline
-v.empty()                & Yields whether v is empty                                          \\ \hline
-if (v)                   & true if v is not empty                                             \\ \hline
-v.size()                 & Yields the number of elements(available if limited and computable) \\ \hline
-v.front()                & Yields the first element                                           \\ \hline
-v.back()                 & Yields the last element(available if limited and common)           \\ \hline
-v{[}idx{]}               & Yields the n-th element                                            \\ \hline
+ioat\_view\textless{}Type\textgreater v & 创建从默认值Type开始的无限序列               \\ \hline
+iota\_view v\{begVal\}   & 创建一个以begVal开头的无限序列                 \\ \hline
+iota\_view v\{begVal, endVal\}          & 创建一个从begVal开始直到endVal之前的值的序列               \\ \hline
+iota\_view v\{beg, end\} & 启用子视图的辅助构造函数                             \\ \hline
+v.begin()                & 生成begin迭代器(指向起始值)         \\ \hline
+v.end()                  & 产生哨兵(end迭代器)，若无限制，则为std::unreachable\_sentinel \\ \hline
+v.empty()                & 表示v是否为空                                          \\ \hline
+if (v)                   & 若v不为空，则为true                                             \\ \hline
+v.size()                 & 产生元素的数量(若有限且可计算，则可用) \\ \hline
+v.front()                & 生成第一个元素                                           \\ \hline
+v.back()                 & 生成最后一个元素(若有限且通用，则可用)           \\ \hline
+v{[}idx{]}               & 产生的第n个元素                                            \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.8. Operations of the class std::ranges::iota\_view<>
+表8.8 类std::ranges::iota\_view<>操作
 \end{center}
 
-When declaring an iota view as follows:
+当声明iota视图时，如下所示:
 
 \begin{cpp}
 std::ranges::iota_view v1{1, 100}; // range with values: 1, 2, ... 99
@@ -215,7 +215,7 @@ The type of v3 is std::ranges::iota\_view<int, std::unreachable\_sentinel\_t>, m
 
 An unlimited iota view is endless. When the iterator represents the highest value and iterates to the next value, it calls the operator ++, which formally, is undefined behavior (in practice, it usually performs an overflow, so that the next value is the lowest value of the value type). If the view has an end value that never matches, it behaves the same.
 
-\mySamllsection{Using Iota Views to Iterate over Pointers and Iterators}
+\mySamllsection{使用Iota视图对指针和迭代器进行迭代}
 
 You can initialize an iota view with iterators or pointers. In that case, the iota view uses the first value as begin and the last value as end, but the elements are iterators/pointers instead of the values.
 
@@ -257,7 +257,7 @@ auto v2 = dropFirst(v1); // iota view with elems from 2 to 8
 
 In this case, the availability of the member functions size() and operator[] depends on the support for these operators in the passed range.
 
-\mySubsubsection{8.4.2}{Single View}
+\mySubsubsection{8.4.2}{单视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -296,7 +296,7 @@ for (auto val : v1) {
 
 This can be used for test cases or for cases where code has to provide a view that in a specific context, has to contain exactly one element.
 
-\mySamllsection{Range Factories for Single Views}
+\mySamllsection{单视图的范围工厂}
 
 Single views can also (and usually should) be created with a range factory:
 
@@ -358,7 +358,7 @@ ok
 42
 \end{shell}
 
-\mySamllsection{Special Characteristics of Single Views}
+\mySamllsection{单视图的特殊特性}
 
 The single view models the following concepts:
 
@@ -372,7 +372,7 @@ std::ranges::sized\_range
 
 The view is always a common range and never a borrowed range (the lifetime of its iterators does not depend on the view).
 
-\mySamllsection{Interface of Single Views}
+\mySamllsection{单视图的接口}
 
 Table Operations of the class std::ranges::single\_view<> lists the API of a single view.
 
@@ -445,7 +445,7 @@ The constructor taking a value either copies or moves this values into the view.
 
 Because begin() and end() yield the same value, the view is always a common range. Because iterators refer to the value stored in the view to be able to modify it, the single view is not a borrowed range (the lifetime of its iterators does depend on the view)
 
-\mySubsubsection{8.4.3}{Empty View}
+\mySubsubsection{8.4.3}{空视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -483,7 +483,7 @@ for (auto val : v1) {
 
 This can be used for test cases or for cases where code has to provide a view that in a specific context, can never have any elements.
 
-\mySamllsection{Range Factories for Empty Views}
+\mySamllsection{空视图的范围工厂}
 
 Empty views can also (and usually should) be created with a range factory, which which is a variable template, meaning that you declare it with a template parameter for the type but no call parameters:
 
@@ -538,7 +538,7 @@ The program has the following output:
 <empty>
 \end{shell}
 
-\mySamllsection{Special Characteristics of Empty Views}
+\mySamllsection{空视图的特殊特性}
 
 An empty view behaves roughly like an empty vector. In fact, it models the following concepts:
 
@@ -552,7 +552,7 @@ std::ranges::sized\_range
 
 Both begin() and end() simply always yield the nullptr, meaning that the range is also a common range and a borrowed range (the lifetime of its iterators does not depend on the view).
 
-\mySamllsection{Interface of Empty Views}
+\mySamllsection{空视图的接口}
 
 Table Operations of the class std::ranges::empty\_view<> lists the API of an empty view.
 
@@ -600,7 +600,7 @@ void foo(std::ranges::random_access_range auto&& rg)
 foo(std::ranges::empty_view<int>{}); // OK
 \end{cpp}
 
-\mySubsubsection{8.4.4}{IStream View}
+\mySubsubsection{8.4.4}{IStream视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -647,7 +647,7 @@ for (const auto& elem : std::ranges::istream_view<int>{myStrm}) {
 }
 \end{cpp}
 
-\mySamllsection{Range Factories for IStream Views}
+\mySamllsection{IStream视图的范围工厂}
 
 Istream views can also (and usually should) be created with a range factory. The factory passes its parameters to the std::ranges::basic\_istream\_view constructor using the character type of the passed range:
 
@@ -728,7 +728,7 @@ The istream view vs iterates over all strings read from the input string stream 
 The istream view vi iterates over all ints read from the input string stream mystream2. Its reading ends when it reaches Motorway.
 \end{itemize}
 
-\mySamllsection{IStream Views and const}
+\mySamllsection{IStream视图和const}
 
 Note that you cannot iterate over a const istream view. For example:
 
@@ -777,7 +777,7 @@ void printElems(auto&& coll) {
 }
 \end{cpp}
 
-\mySamllsection{Interface of IStream Views}
+\mySamllsection{IStream视图的接口}
 
 Table Operations of the class std::ranges::basic\_istream\_view<> lists the API of an istream view.
 
@@ -844,7 +844,7 @@ auto v6 = std::views::istream<int>(myStrm); // OK
 \end{cpp}
 \end{itemize}
 
-\mySubsubsection{8.4.5}{String View}
+\mySubsubsection{8.4.5}{字符视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -908,7 +908,7 @@ This loop has the following output:
 h e l l o
 \end{shell}
 
-\mySamllsection{Special Characteristics of String Views}
+\mySamllsection{字符视图的特殊特性}
 
 Iterators do not refer to this view. Instead, they refer to the underlying character sequence. Therefore, a string view is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
 
@@ -947,7 +947,7 @@ In addition to the usual interface of views, the type also provides the full API
 
 For more details, take a look at my book C++17 - The Complete Guide (see \url{http://www.cppstd17.com}).
 
-\mySubsubsection{8.4.6}{Span}
+\mySubsubsection{8.4.6}{span}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -1001,7 +1001,7 @@ The view has its own header file <span>.
 The view supports no conversion to bool.
 \end{itemize}
 
-\mySamllsection{Range Factories for Spans}
+\mySamllsection{span的范围工厂}
 
 There is no range factory for initializing a span from a begin (iterator) and an end (sentinel). However, there is a range factory that might create a span from begin and a count:
 
@@ -1021,7 +1021,7 @@ auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of 
 
 When std::views::counted() creates a span, the span has dynamic extent (its size can vary).
 
-\mySamllsection{Special Characteristics of Spans}
+\mySamllsection{span的特点}
 
 Iterators do not refer to a span. Instead, they refer to the underlying elements. Therefore, a span is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
 
