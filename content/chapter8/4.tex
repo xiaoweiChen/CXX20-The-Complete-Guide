@@ -1,7 +1,7 @@
 
 本节讨论C++20中用于创建生成值的视图的所有特性(不引用视图外部的元素或值)。
 
-\mySubsubsection{8.4.1}{Iota视图}
+\mySubsubsection{8.4.1}{iota视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -132,7 +132,7 @@ a b c d e f g h i j k l m n o p q r s t u v w x y z
 
 若iota视图无限大，或者结束的类型不同于开始的类型，则它不是通用范围，可能必须使用一个通用视图来协调开始迭代器和哨兵(结束迭代器)的类型。
 
-\mySamllsection{Iota视图的接口}
+\mySamllsection{iota视图的接口}
 
 “类std::ranges::iota\_view<>操作”表列出了iota视图的API。
 
@@ -158,7 +158,7 @@ if (v)                   & 若v不为空，则为true                           
 v.size()                 & 产生元素的数量(若有限且可计算，则可用) \\ \hline
 v.front()                & 生成第一个元素                                           \\ \hline
 v.back()                 & 生成最后一个元素(若有限且通用，则可用)           \\ \hline
-v{[}idx{]}               & 产生的第n个元素                                            \\ \hline
+v{[}idx{]}               & 生成的第n个元素                                            \\ \hline
 \end{longtable}
 
 \begin{center}
@@ -171,7 +171,7 @@ v{[}idx{]}               & 产生的第n个元素                               
 std::ranges::iota_view v1{1, 100}; // range with values: 1, 2, ... 99
 \end{cpp}
 
-the type of v1 is deduced as std::ranges::iota\_view<int, int>, which creates an object that provides the basic API, with begin() and end() yielding an iterator to these values. The iterators store the current value internally and increment it when the iterator is incremented:
+v1的类型由std::ranges::iota\_view<int, int>推导而出，会创建一个提供基本API的对象，并使用begin()和end()得到这些值的迭代器。迭代器在内部存储当前值，并在迭代器加1时递增当前值:
 
 \begin{cpp}
 std::ranges::iota_view v1{1, 100}; // range with values: 1, 2, ... 99
@@ -181,15 +181,15 @@ std::cout << *pos; // print current value (here, value 1)
 std::cout << *pos; // print current value (here, value 2)
 \end{cpp}
 
-Thus, the type of the values has to support the operator ++. For this reason, a value type such as bool or std::string is not possible.
+因此，值的类型必须支持自增操作符++，所以bool或std::string这样的类型就不可能了。
 
-Note that the type of this iterator is up to the implementation of iota\_view, which means that you have to use auto when using it. Alternatively, you could declare pos with std::ranges::iterator\_t<>:
+注意，此迭代器的类型取决于iota\_view的实现，所以在使用时必须使用auto。或者，可以用std::ranges::iterator\_t<>声明pos:
 
 \begin{cpp}
 std::ranges::iterator_t<decltype(v1)> pos = v1.begin();
 \end{cpp}
 
-As for ranges of iterators, the range of values is a half-open range and the end value is not included. To include the end value, you might have to increment the end :
+至于迭代器的范围，值的范围是半开范围，不包括结束值。要包含end值，需要对end加1:
 
 \begin{cpp}
 std::ranges::iota_view letters{'a', 'z'+1}; // values: ’a’, ’b’, ... ’z’
@@ -198,28 +198,28 @@ for (auto c : letters) {
 }
 \end{cpp}
 
-Note that the output of this loop depends on the character set. Only if the lower-case letters have consecutive values (as is the case with ASCII or ISO-Latin-1 or UTF-8) the view iterates over nothing else but lower-case characters. By using char8\_t, you can ensure portably that this is the case for UTF-8 characters:
+注意，这个循环的输出取决于字符集。只有当小写字母具有连续的值(如ASCII或ISO-Latin-1或UTF-8的情况)时，视图才只迭代小写字符。通过使用char8\_t，可以确保这是可移植的UTF-8字符:
 
 \begin{cpp}
 std::ranges::iota_view letters{u8'a', u8'z'+1}; // UTF-8 values from a to z
 \end{cpp}
 
-If no end value is passed, the view is unlimited and generates an endless sequence of values:
+若没有传递end值，视图将是无限的，并生成一个无限长的值序列:
 
 \begin{cpp}
 std::ranges::iota_view v2{10L}; // unlimited range with values: 10L, 11L, 12L, ...
 std::ranges::iota_view<int> v3; // unlimited range with values: 0, 1, 2, ...
 \end{cpp}
 
-The type of v3 is std::ranges::iota\_view<int, std::unreachable\_sentinel\_t>, meaning that end() yields std::unreachable\_sentinel.
+v3的类型是std::ranges::iota\_view<int, std::unreachable\_sentinel\_t>，所以end()产生std::unreachable\_sentinel。
 
-An unlimited iota view is endless. When the iterator represents the highest value and iterates to the next value, it calls the operator ++, which formally, is undefined behavior (in practice, it usually performs an overflow, so that the next value is the lowest value of the value type). If the view has an end value that never matches, it behaves the same.
+无限视图是无尽的。当迭代器表示最大值并迭代到下一个值时，调用自增操作符++，这在形式上是未定义的行为(实践中，执行通常会溢出，以便下一个值是值类型的最小值)。若视图有一个永远不匹配的结束值，其行为是一样的。
 
-\mySamllsection{使用Iota视图对指针和迭代器进行迭代}
+\mySamllsection{使用iota视图对指针和迭代器进行迭代}
 
-You can initialize an iota view with iterators or pointers. In that case, the iota view uses the first value as begin and the last value as end, but the elements are iterators/pointers instead of the values.
+可以用迭代器或指针初始化iota视图，可使用第一个值作为begin，最后一个值作为end，但是元素是迭代器/指针，而非值。
 
-You can use this to deal with iterators to all elements of a range.
+可以使用它来处理指向范围中所有元素的迭代器。
 
 \begin{cpp}
 std::list<int> coll{2, 4, 6, 8, 10, 12, 14};
@@ -230,7 +230,7 @@ for (const auto& itorElem : std::views::iota(coll.begin(), coll.end())) {
 }
 \end{cpp}
 
-You can also use this feature to initialize a container with iterators to all elements of a collection coll:
+也可以使用这个特性初始化一个带有迭代器的容器，该迭代器指向集合coll的所有元素:
 
 \begin{cpp}
 std::ranges::iota_view itors{coll.begin(), coll.end()};
@@ -238,13 +238,13 @@ std::vector<std::ranges::iterator_t<decltype(coll)>> refColl{itors.begin(),
 	itors.end()};
 \end{cpp}
 
-Note that if you skip the specification of the element type of refColl, you have to use parentheses. Otherwise, you would initialize the vector with two iterator elements:
+注意，若跳过refColl元素类型的说明，则必须使用括号。否则，可以用两个迭代器元素初始化vector:
 
 \begin{cpp}
 std::vector refColl(itors.begin(), itors.end());
 \end{cpp}
 
-The main reason that this constructor is provided is to support generic code that can create a sub-view of an iota view, like, for example, the drop view does:
+提供这个构造函数的主要原因是，为了支持创建iota视图子视图的泛型代码，比如drop视图:
 
 \begin{cpp}
 // generic function to drop the first element from a view:
@@ -255,7 +255,7 @@ std::ranges::iota_view v1{1, 9}; // iota view with elems from 1 to 8
 auto v2 = dropFirst(v1); // iota view with elems from 2 to 8
 \end{cpp}
 
-In this case, the availability of the member functions size() and operator[] depends on the support for these operators in the passed range.
+成员函数size()和operator[]的可用性取决于，传递的范围内对这些操作符的支持情况。
 
 \mySubsubsection{8.4.2}{单视图}
 
@@ -264,28 +264,28 @@ In this case, the availability of the member functions size() and operator[] dep
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::single\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::single\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & Generator of a range with a single element         \\ \hline
-\textbf{Factory:}              & std::views::single()                               \\ \hline
-\textbf{Element type:}         & Reference                                          \\ \hline
-\textbf{Category:}             & Contiguous                                         \\ \hline
-\textbf{Is sized range:}       & Always with size 1                                 \\ \hline
-\textbf{Is common range:}      & Always                                             \\ \hline
-\textbf{Is borrowed range:}    & Never                                              \\ \hline
-\textbf{Caches:}               & Nothing                                            \\ \hline
-\textbf{Const iterable:}       & Always                                             \\ \hline
-\textbf{Propagates constness:} & Always                                             \\ \hline
+\textbf{内容:}              & 只有一个元素的范围生成器         \\ \hline
+\textbf{工厂:}              & std::views::single()                               \\ \hline
+\textbf{元素类型:}         & 引用                                          \\ \hline
+\textbf{类别:}             & 连续的                                         \\ \hline
+\textbf{是否是长度范围:}       & 长度总为1                                 \\ \hline
+\textbf{是否是通用范围:}      & 总是                                             \\ \hline
+\textbf{是否是租借范围:}    & 从不                                              \\ \hline
+\textbf{缓存:}               & 无                                            \\ \hline
+\textbf{常量可迭代:}       & 总是                                             \\ \hline
+\textbf{传播常量性:} & 总是                                             \\ \hline
 \end{longtable}
 
-The class template std::ranges::single\_view<> is a view that owns one element. Unless the value type is const, you can even modify the value.
+类模板std::ranges::single\_view<>是一个拥有一个元素的视图。除非值类型是const，否则可以对值进行。
 
-The overall effect is that a single view behaves roughly like a cheap collection of one element that does not allocate any heap memory.
+总体效果是，单视图的行为大致类似于一个元素的低成本集合，不分配堆上的内存。
 
-The major use case of the single view is to call generic code to operate on a cheap view with exactly one element/value:
+单视图的主要用例是调用泛型代码来操作只有一个元素/值的视图:
 
 \begin{cpp}
 std::ranges::single_view<int> v1{42}; // single view
@@ -294,17 +294,17 @@ for (auto val : v1) {
 }
 \end{cpp}
 
-This can be used for test cases or for cases where code has to provide a view that in a specific context, has to contain exactly one element.
+这可以用于测试用例，或者用于代码必须在特定上下文中提供视图的情况，该视图必须只有一个元素。
 
 \mySamllsection{单视图的范围工厂}
 
-Single views can also (and usually should) be created with a range factory:
+单视图也可以(通常应该)通过范围工厂创建:
 
 \begin{cpp}
 std::views::single(val)
 \end{cpp}
 
-For example:
+例如：
 
 \begin{cpp}
 for (auto val : std::views::single(42)) { // iterate over the single int value 42
@@ -312,7 +312,7 @@ for (auto val : std::views::single(42)) { // iterate over the single int value 4
 }
 \end{cpp}
 
-Here is a full example program using single views:
+下面是一个使用单视图的完整示例程序:
 
 \filename{ranges/singleview.cpp}
 
@@ -347,7 +347,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 0
@@ -360,7 +360,7 @@ ok
 
 \mySamllsection{单视图的特殊特性}
 
-The single view models the following concepts:
+单视图为以下概念建模:
 
 \begin{itemize}
 \item
@@ -370,47 +370,47 @@ std::ranges::contiguous\_range
 std::ranges::sized\_range
 \end{itemize}
 
-The view is always a common range and never a borrowed range (the lifetime of its iterators does not depend on the view).
+视图始终是一个通用范围，而不是一个租借范围(其迭代器的生命周期不依赖于视图)。
 
 \mySamllsection{单视图的接口}
 
-Table Operations of the class std::ranges::single\_view<> lists the API of a single view.
+“类std::ranges::single\_view<>的操作”表列出了单视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                         \\ \hline
+\textbf{操作} & \textbf{效果}                                         \\ \hline
 \endfirsthead
 %
 \endhead
 %
-single\_view\textless{}Type\textgreater v                                    & Creates a view with one value-initialized element of type Type   \\ \hline
-single\_view v\{val\}                                                        & Creates a view with one element of value val of its type         \\ \hline
-single\_view\textless{}Type\textgreater v\{std::in\_place, arg1, arg2, ...\} & Creates a view with one element initialized with arg1, arg2, ... \\ \hline
-v.begin()          & Yields a raw pointer to the element                     \\ \hline
-v.end()            & Yields a raw pointer to the position behind the element \\ \hline
-v.empty()          & Always false                                            \\ \hline
-if(v)              & Always true                                             \\ \hline
-v.size()           & Yields 1                                                \\ \hline
-v.front()          & Yields a reference to the current value                 \\ \hline
-v.back()           & Yields a reference to the current value                 \\ \hline
-v{[}idx{]}         & Yields the current value for idx 0                      \\ \hline
-r.data()           & Yields a raw pointer to the element                     \\ \hline
+single\_view\textless{}Type\textgreater v                                    & 创建具有type类型的一个值初始化元素的视图   \\ \hline
+single\_view v\{val\}                                                        & 创建具有其类型的一个值为val的元素的视图         \\ \hline
+single\_view\textless{}Type\textgreater v\{std::in\_place, arg1, arg2, ...\} & 创建一个视图，其中一个元素初始化为arg1, arg2，… \\ \hline
+v.begin()          & 生成指向元素的原始指针                     \\ \hline
+v.end()            & 生成指向元素后面位置的原始指针 \\ \hline
+v.empty()          & 总为false                                            \\ \hline
+if(v)              & 总为true                                             \\ \hline
+v.size()           & 生成1                                                \\ \hline
+v.front()          & 生成对当前值的引用                 \\ \hline
+v.back()           & 生成对当前值的引用                 \\ \hline
+v{[}idx{]}         & 生成idx 0的当前值                      \\ \hline
+r.data()           & 产生指向元素的原始指针                     \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.9. Operations of the class std::ranges::single\_view<>
+表8.9 类std::ranges::single\_view<>的操作
 \end{center}
 
-If you call the constructor without passing an initial value, the element in the single view is valueinitialized. That means it either uses the default constructor of its Type or initializes the value with 0, false, or nullptr.
+若调用构造函数时没有传递初始值，则单视图中的元素将初始化。所以要么使用其Type的默认构造函数，要么用0、false或nullptr初始化值。
 
-To initialize a single view with objects that need multiple initializers, you have two options:
+要用需要多个初始化器的对象初始化单视图时，有两个选择:
 
 \begin{itemize}
 \item
-Passing the initialized object:
+传递初始化的对象:
 
 \begin{cpp}
 std::ranges::single_view sv1{std::complex{1,1}};
@@ -418,14 +418,14 @@ auto sv2 = std::views::single(std::complex{1,1});
 \end{cpp}
 
 \item
-Passing the initial values as arguments after an argument std::in\_place:
+在参数std::in\_place后传递初始值作为参数:
 
 \begin{cpp}
 std::ranges::single_view<std::complex<int>> sv4{std::in_place, 1, 1};
 \end{cpp}
 \end{itemize}
 
-Note that for a non-const single view, you can modify the value of the “element:”
+注意，对于非const单视图，可以修改“element”的值:
 
 \begin{cpp}
 std::ranges::single_view v2{42};
@@ -434,16 +434,16 @@ std::cout << v2.front() << '\n'; // prints 42
 std::cout << v2.front() << '\n'; // prints 43
 \end{cpp}
 
-You can prevent this by declaring the element type as const:
+可以通过将元素类型声明为const来防止这种情况:
 
 \begin{cpp}
 std::ranges::single_view<const int> v3{42};
 ++v3.front(); // ERROR
 \end{cpp}
 
-The constructor taking a value either copies or moves this values into the view. This means that the view cannot refer to the initial value (declaring the element type to be a reference does not compile).
+接受值的构造函数复制或移动该值到视图中，所以视图不能引用初始值(将元素类型声明为引用不会编译)。
 
-Because begin() and end() yield the same value, the view is always a common range. Because iterators refer to the value stored in the view to be able to modify it, the single view is not a borrowed range (the lifetime of its iterators does depend on the view)
+因为begin()和end()会生成相同的值，所以视图总是一个通用范围。因为迭代器引用存储在视图中的值，以便能对其进行修改，所以单视图不是一个租借范围(其迭代器的生命周期确实取决于视图)。
 
 \mySubsubsection{8.4.3}{空视图}
 
@@ -452,27 +452,26 @@ Because begin() and end() yield the same value, the view is always a common rang
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::empty\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::empty\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & Generator of a range wit no element               \\ \hline
-\textbf{Factory:}              & std::views::empty\textless{}\textgreater{}        \\ \hline
-\textbf{Element type:}         & Reference                                         \\ \hline
-\textbf{Category:}             & Contiguous                                        \\ \hline
-\textbf{Is sized range:}       & Always with size 0                                \\ \hline
-\textbf{Is common range:}      & Always                                            \\ \hline
-\textbf{Is borrowed range:}    & Always                                            \\ \hline
-\textbf{Caches:}               & Nothing                                           \\ \hline
-\textbf{Const iterable:}       & Always                                            \\ \hline
-\textbf{Propagates constness:} & Never                                             \\ \hline
+\textbf{内容:}              & 无元素范围的生成器               \\ \hline
+\textbf{工厂:}              & std::views::empty\textless{}\textgreater{}        \\ \hline
+\textbf{元素类型:}         & 引用                                         \\ \hline
+\textbf{类别:}             & 连续的                                        \\ \hline
+\textbf{是否是长度范围:}       & 总是0                                \\ \hline
+\textbf{是否是通用范围:}      & 总是                                            \\ \hline
+\textbf{是否是租借范围:}    & 总是                                            \\ \hline
+\textbf{缓存:}               & 无                                           \\ \hline
+\textbf{常量可迭代:}       & 总是                                            \\ \hline
+\textbf{传播常量性:} & 从不                                             \\ \hline
 \end{longtable}
 
-The class template std::ranges::empty\_view<> is a view with no elements. However, you have to specify the element type.
+类模板std::ranges::empty\_view<>是一个没有元素的视图，但必须指定元素类型。
 
-The major use case of the empty view is to call generic code with a cheap view that has no elements and for which the type system knows that it never has any elements:
-
+空视图的主要用例是调用具有低成本视图的泛型代码，该视图没有元素，并且类型系统知道它没有任何元素:
 
 \begin{cpp}
 std::ranges::empty_view<int> v1; // empty view
@@ -481,17 +480,17 @@ for (auto val : v1) {
 }
 \end{cpp}
 
-This can be used for test cases or for cases where code has to provide a view that in a specific context, can never have any elements.
+这可以用于测试用例，或者用于代码必须提供在特定上下文中，其中视图不能有元素。
 
 \mySamllsection{空视图的范围工厂}
 
-Empty views can also (and usually should) be created with a range factory, which which is a variable template, meaning that you declare it with a template parameter for the type but no call parameters:
+空视图也可以(通常应该)用范围工厂创建，其为一个变量模板，所以用类型的模板参数声明它，但没有调用参数:
 
 \begin{cpp}
 std::views::empty<type>
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (auto val : std::views::empty<int>) { // iterate over no int values
@@ -499,7 +498,7 @@ for (auto val : std::views::empty<int>) { // iterate over no int values
 }
 \end{cpp}
 
-Here is a full example program using empty views:
+下面是一个使用空视图的完整示例程序:
 
 \filename{ranges/emptyview.cpp}
 
@@ -531,7 +530,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 <empty>
@@ -540,51 +539,51 @@ The program has the following output:
 
 \mySamllsection{空视图的特殊特性}
 
-An empty view behaves roughly like an empty vector. In fact, it models the following concepts:
+空视图的行为大致类似于空vector，它模拟了以下概念:
 
 \begin{itemize}
 \item
-std::ranges::contiguous\_range (which implies std::ranges::random\_access\_range)
+std::ranges::contiguous\_range(暗示std::ranges::random\_access\_range)
 
 \item
 std::ranges::sized\_range
 \end{itemize}
 
-Both begin() and end() simply always yield the nullptr, meaning that the range is also a common range and a borrowed range (the lifetime of its iterators does not depend on the view).
+begin()和end()总是产生nullptr，所以该范围既是通用范围又是租借范围(其迭代器的生命周期不依赖于视图)。
 
 \mySamllsection{空视图的接口}
 
-Table Operations of the class std::ranges::empty\_view<> lists the API of an empty view.
+“类std::ranges::empty\_view<>的操作”表列出了空视图的API。
 
-You might wonder why an empty view provides front(), back(), and operator[] that always have undefined behavior. Calling them is always a fatal runtime error. However, remember that generic code always has to check (or know) that there are elements before calling front(), back(), or the operator [], meaning that this generic code would never call these member functions. Such code will compile even for empty views.
+读者们可能想知道为什么空视图提供front()、back()和operator[]，其行为总是未定义的，调用它们总会触发致命的运行时错误。然而，泛型代码在调用front()、back()或[]运算符之前总是必须检查(或知道)是否存在元素，所以泛型代码永远不会调用这些成员函数。即使是空视图，这样的代码也可以编译。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                       \\ \hline
+\textbf{操作} & \textbf{效果}                                                       \\ \hline
 \endfirsthead
 %
 \endhead
 %
-empty\_view\textless{}Type\textgreater v & Creates a view with no elements of type Type                          \\ \hline
-v.begin()                                & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
-v.end()            & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
-v.empty()          & Yields true                                                           \\ \hline
-if (v)             & Always false                                                          \\ \hline
-v.size()           & Yields 0                                                              \\ \hline
-v.front()          & Always undefined behavior(fatal runtime error)                        \\ \hline
-v.back()           & Always undefined behavior(fatal runtime error)                        \\ \hline
-v{[}idx{]}         & Always undefined behavior(fatal runtime error)                        \\ \hline
-r.data             & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
+empty\_view\textless{}Type\textgreater v & 创建不包含Type类型元素的视图                          \\ \hline
+v.begin()                                & 生成一个原始指针，指向用nullptr初始化的元素类型 \\ \hline
+v.end()            & 生成一个原始指针，指向用nullptr初始化的元素类型 \\ \hline
+v.empty()          & 生成true                                                           \\ \hline
+if (v)             & 总是false                                                          \\ \hline
+v.size()           & 生成0                                                              \\ \hline
+v.front()          & 总是未定义的行为(致命的运行时错误)                        \\ \hline
+v.back()           & 总是未定义的行为(致命的运行时错误)                        \\ \hline
+v{[}idx{]}         & 总是未定义的行为(致命的运行时错误)                        \\ \hline
+r.data             & 生成一个原始指针，指向用nullptr初始化的元素类型 \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.10. Operations of the class std::ranges::empty\_view<>
+表8.10 类std::ranges::empty\_view<>的操作
 \end{center}
 
-For example, you can pass an empty view to code like this and it will compile:
+例如，可以这样传递一个空视图:
 
 \begin{cpp}
 void foo(std::ranges::random_access_range auto&& rg)
@@ -600,44 +599,44 @@ void foo(std::ranges::random_access_range auto&& rg)
 foo(std::ranges::empty_view<int>{}); // OK
 \end{cpp}
 
-\mySubsubsection{8.4.4}{IStream视图}
+\mySubsubsection{8.4.4}{istream视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:} &
+\textbf{类型:} &
 \begin{tabular}[c]{@{}l@{}}std::ranges::basic\_istream\_view\textless{}\textgreater\\ std::ranges::istream\_view\textless{}\textgreater\\ std::ranges::wistream\_view\textless{}\textgreater{}\end{tabular} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & Generator of a range with elements read from a stream \\ \hline
-\textbf{Factory:}              & std::views::istream\textless{}\textgreater{}()        \\ \hline
-\textbf{Element type:}         & Reference                                             \\ \hline
-\textbf{Category:}             & Input                                                 \\ \hline
-\textbf{Is sized range:}       & Never                                                 \\ \hline
-\textbf{Is common range:}      & Never                                                 \\ \hline
-\textbf{Is borrowed range:}    & Never                                                 \\ \hline
-\textbf{Caches:}               & Nothing                                               \\ \hline
-\textbf{Const iterable:}       & Never                                                 \\ \hline
-\textbf{Propagates constness:} & --                                                    \\ \hline
+\textbf{内容:}              & 从流中读取元素的范围的生成器 \\ \hline
+\textbf{工厂:}              & std::views::istream\textless{}\textgreater{}()        \\ \hline
+\textbf{元素类型:}         & 引用                                             \\ \hline
+\textbf{类别:}             & 输入                                                 \\ \hline
+\textbf{是否是长度范围:}       & 从不                                                 \\ \hline
+\textbf{是否是通用范围:}      & 从不                                                 \\ \hline
+\textbf{是否是租借范围:}    & 从不                                                 \\ \hline
+\textbf{缓存:}               & 无                                               \\ \hline
+\textbf{常量可迭代:}       & 从不                                                 \\ \hline
+\textbf{传播常量性:} & --                                                    \\ \hline
 \end{longtable}
 
-The class template std::ranges::basic\_istream\_view<> is a view that reads elements from an input stream (such as the standard input, from a file, or from a string stream).
+类模板std::ranges::basic\_istream\_view<>是一个从输入流(如标准输入、文件或字符串流)中读取元素的视图。
 
-As usual for stream types, the type is generic for the type of the characters and provides specializations for char and wchar\_t:
+与通常的流类型一样，该类型是字符类型的泛型，并提供char和wchar\_t的特化:
 
 \begin{itemize}
 \item
-The class template std::ranges::istream\_view<> is a view that reads elements from an input stream using characters of type char.
+类模板std::ranges::istream\_view<>是一个视图，使用char类型的字符从输入流中读取元素。
 
 \item
-The class template std::ranges::wistream\_view<> is a view that reads elements from an input stream using characters of type wchar\_t.
+类模板std::ranges::wistream\_view<>是一个视图，使用wchar\_t类型的字符从输入流中读取元素。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 std::istringstream myStrm{"0 1 2 3 4"};
@@ -647,15 +646,15 @@ for (const auto& elem : std::ranges::istream_view<int>{myStrm}) {
 }
 \end{cpp}
 
-\mySamllsection{IStream视图的范围工厂}
+\mySamllsection{istream视图的范围工厂}
 
-Istream views can also (and usually should) be created with a range factory. The factory passes its parameters to the std::ranges::basic\_istream\_view constructor using the character type of the passed range:
+Istream视图也可以(通常应该)使用范围工厂创建，工厂使用传入范围的字符类型将其参数传递给std::ranges::basic\_istream\_view构造函数:
 
 \begin{cpp}
 std::views::istream<Type>(rg)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 std::istringstream myStrm{"0 1 2 3 4"};
@@ -665,21 +664,21 @@ for (const auto& elem : std::views::istream<int>(myStrm)) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 std::wistringstream mywstream{L"1.1 2.2 3.3 4.4"};
 auto vw = std::views::istream<double>(mywstream);
 \end{cpp}
 
-The initialization of vw is equivalent to both of the following initializations:
+vw的初始化相当于以下两个初始化:
 
 \begin{cpp}
 auto vw2 = std::ranges::basic_istream_view<double, wchar_t>{myStrm};
 auto vw3 = std::ranges::wistream_view<double>{myStrm};
 \end{cpp}
 
-Here is a full example program using istream views:
+下面是一个使用istream视图的完整示例程序:
 
 \filename{ranges/istreamview.cpp}
 
@@ -711,26 +710,26 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 2 4 6 8 Motorway 1977 by Tom Robinson
 2 4 6 8
 \end{shell}
 
-The program iterates twice over an string stream initialized with the string s:
+程序在用字符串s初始化的字符串流上迭代两次:
 
 \begin{itemize}
 \item
-The istream view vs iterates over all strings read from the input string stream mystream1. It prints all sub-strings of s.
+istream视图vs遍历从输入字符串流mystream1读取的所有字符串，打印s的所有子字符串。
 
 \item
-The istream view vi iterates over all ints read from the input string stream mystream2. Its reading ends when it reaches Motorway.
+istream视图vi遍历从输入字符串流mystream2中读取的所有整型数，读数结束时，到达Motorway。
 \end{itemize}
 
-\mySamllsection{IStream视图和const}
+\mySamllsection{istream视图和const}
 
-Note that you cannot iterate over a const istream view. For example:
+注意，不能迭代const istream视图。例如:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -744,9 +743,9 @@ std::istringstream myStrm{"0 1 2 3 4"};
 printElems(std::views::istream<int>(myStrm)); // ERROR
 \end{cpp}
 
-The problem is that begin() is provided only for a non-const istream view because a value is processed in two steps (begin()/++ and then operator*) and the value is stored in the view in the meantime.
+问题是begin()仅为非const istream视图提供，因为值分两步处理(begin()/++和operator*)，同时值存储在视图中。
 
-The reason for modifying the view is demonstrated by the following example of reading strings from an istream view by using a low-level way to iterate over the “elements” of the view:
+下面的例子演示了修改视图的原因，通过使用底层的方法来迭代视图的“元素”，从istream视图中读取字符串:
 
 \begin{cpp}
 std::istringstream myStrm{"stream with very-very-very-long words"};
@@ -758,7 +757,7 @@ for (auto pos = v.begin(); pos != v.end(); ++pos) {
 }
 \end{cpp}
 
-This code has the following output:
+代码有以下输出:
 
 \begin{shell}
 stream
@@ -767,9 +766,9 @@ very-very-very-long
 words
 \end{shell}
 
-When the iterator pos iterates over the view va, it reads strings from the input stream myStrm with begin() and ++. These strings have to be stored internally so that they can be used via the operator *. If we store the string in the iterator, the iterator might have to hold memory for the string and copying the iterator would have to copy this memory. However, copying an iterator should not be expensive. Therefore, the view stores the string in the view, which has the effect that the view is modified while we are iterating.
+当迭代器pos遍历视图va时，使用begin()和++从输入流myStrm中读取字符串。这些字符串必须存储在内部，以便可以通过操作符*使用它们。若将字符串存储在迭代器中，迭代器可能必须为该字符串保存内存，复制迭代器必须复制该内存，复制迭代器的代价不应该太高，所以视图将字符串存储在视图中，其效果是在我们迭代时修改视图。
 
-As a consequence, you have to use universal/forwarding references to support this view in generic code:
+因此，必须在泛型代码中使用通用/转发引用来支持此视图:
 
 \begin{cpp}
 void printElems(auto&& coll) {
@@ -777,57 +776,57 @@ void printElems(auto&& coll) {
 }
 \end{cpp}
 
-\mySamllsection{IStream视图的接口}
+\mySamllsection{istream视图的接口}
 
-Table Operations of the class std::ranges::basic\_istream\_view<> lists the API of an istream view.
+“类std::ranges::basic\_istream\_view<>的操作”表列出了istream视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                     \\ \hline
+\textbf{操作} & \textbf{效果}                                     \\ \hline
 \endfirsthead
 %
 \endhead
 %
 istream\_view\textless{}Type\textgreater v\{strm\} & Creates an istream view of type Type reading from strm \\ \hline
-v.begin()          & Reads the first value and yields tha begin iterator \\ \hline
-v.end()            & Yields std::default\_sentinel as end iterator       \\ \hline
+v.begin()          & 读取第一个值并生成begin迭代器 \\ \hline
+v.end()            & 产生std::default\_sentinel作为结束迭代器       \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.11. Operations of the class std::ranges::basic\_istream\_view<>
+表8.11 类std::ranges::basic\_istream\_view<>的操作
 \end{center}
 
-All you can do is to use iterators to read value by value until the end of the stream is reached. No other member function (like empty() or front()) is provided.
+所能做的就是使用迭代器逐值读取，直到到达流的末尾。没有提供其他成员函数(如empty()或front())。
 
-Note that the original specification of istream views in the C++20 standard had some inconsistencies with other views, which were fixed afterwards (see \url{http://wg21.link/p2432}). With this fix, we have the current behavior:
+请注意，C++20标准中istream视图的原始规范与其他视图有一些不一致，这些不一致后来修复了(参见\url{http://wg21.link/p2432})。通过这个修复，有了当前的行为:
 
 \begin{itemize}
 \item
-You can fully specify all template parameters:
+可以完全指定所有模板参数:
 
 \begin{cpp}
 std::ranges::basic_istream_view<int, char, std::char_traits<char>> v1{myStrm};
 \end{cpp}
 
 \item
-The last template parameter has a working default value, meaning that you can use:
+最后一个模板参数有一个默认值，所以可以使用:
 
 \begin{cpp}
 std::ranges::basic_istream_view<int, char> v2{myStrm}; // OK
 \end{cpp}
 
 \item
-However, you cannot skip more parameters:
+但是，不能跳过太多参数:
 
 \begin{cpp}
 std::ranges::basic_istream_view<int> v3{myStrm}; // ERROR
 \end{cpp}
 
 \item
-However, the istream views follow the usual convention that there are special types for char and wchar\_t streams without the basic\_ prefix:
+istream视图遵循通常的约定，即为没有basic\_前缀的char和wchar\_t流有特殊类型:
 
 \begin{cpp}
 std::ranges::istream_view<int> v4{myStrm}; // OK for char streams
@@ -837,7 +836,7 @@ std::ranges::wistream_view<int> v5{mywstream}; // OK for wchar_t streams
 \end{cpp}
 
 \item
-And a corresponding range factory is provided:
+并提供了相应的范围工厂:
 
 \begin{cpp}
 auto v6 = std::views::istream<int>(myStrm); // OK
@@ -851,49 +850,49 @@ auto v6 = std::views::istream<int>(myStrm); // OK
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:} &
+\textbf{类型:} &
 \begin{tabular}[c]{@{}l@{}}std::basic\_string\_view\textless{}\textgreater\\ std::string\_view\\ std::u8string\_view\\ std::u16string\_view\\ std::u32string\_view\\ std::wstring\_view\end{tabular} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All characters of a character sequence \\ \hline
-\textbf{Factory:}              & --                                     \\ \hline
-\textbf{Element type:}         & const reference                        \\ \hline
-\textbf{Category:}             & Contiguous                             \\ \hline
-\textbf{Is sized range:}       & Always                                 \\ \hline
-\textbf{Is common range:}      & Always                                 \\ \hline
-\textbf{Is borrowed range:}    & Always                                 \\ \hline
-\textbf{Caches:}               & Nothing                                \\ \hline
-\textbf{Const iterable:}       & Always                                 \\ \hline
-\textbf{Propagates constness:} & Elements are always const              \\ \hline
+\textbf{内容:}              & 字符序列中的所有字符 \\ \hline
+\textbf{工厂:}              & --                                     \\ \hline
+\textbf{元素类型:}         & const引用                       \\ \hline
+\textbf{类别:}             & 连续                             \\ \hline
+\textbf{是否是长度范围:}       & 总是                                 \\ \hline
+\textbf{是否是通用范围:}      & 总是                                 \\ \hline
+\textbf{是否是租借范围:}    & 总是                                 \\ \hline
+\textbf{缓存:}               & 无                                \\ \hline
+\textbf{常量可迭代:}       & 总是                                 \\ \hline
+\textbf{传播常量性:} & 元素总是const              \\ \hline
 \end{longtable}
 
-The class template std::basic\_string\_view<> and its specializations std::string\_view, std::u16string\_view, std::u32string\_view, and std::wstring\_view are the only view types that were already available in the C++17 standard library. However, C++20 adds the specialization for UTF-8 characters: std::u8string\_view.
+类模板std::basic\_string\_view<>，及其特化std::string\_view、std::u16string\_view、std::u32string\_view和std::wstring\_view是C++17标准库中仅有的视图类型。然而，C++20为UTF-8字符增加了特化:std::u8string\_view。
 
-String views do not follow a couple of conventions that views usually have:
+字符串视图不遵循视图具有的几个约定:
 
 \begin{itemize}
 \item
-The view is defined in the namespace std (instead of std::ranges).
+视图定义在命名空间std中(而不是std::ranges)。
 
 \item
-The view has its own header file <string\_view>.
+视图有自己的头文件<string\_view>。
 
 \item
-The view has no range adaptor/factory to create view objects.
+视图没有范围适配器/工厂来创建视图对象。
 
 \item
-The view provides only read access to the elements/characters.
+视图只提供对元素/字符的读访问。
 
 \item
-The view provides cbegin() and cend() member functions.
+视图提供了cbegin()和cend()成员函数。
 
 \item
-The view supports no conversion to bool.
+视图不支持bool转换。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 for (char c : std::string_view{"hello"}) {
@@ -902,7 +901,7 @@ for (char c : std::string_view{"hello"}) {
 std::cout << '\n';
 \end{cpp}
 
-This loop has the following output:
+这个循环有以下输出:
 
 \begin{shell}
 h e l l o
@@ -910,42 +909,42 @@ h e l l o
 
 \mySamllsection{字符视图的特殊特性}
 
-Iterators do not refer to this view. Instead, they refer to the underlying character sequence. Therefore, a string view is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
+迭代器不引用这个视图。相反，其引用底层字符序列，所以字符串视图是一个租借范围。但是，当底层字符序列不再存在时，迭代器仍然可以悬空。
 
-\mySamllsection{View-Specific Interface of String Views}
+\mySamllsection{字符串视图特定于视图的接口}
 
-Table View operations of the class std::basic\_string\_view<> lists the view-relevant parts of the API of a string view.
+“类std::basic\_string\_view<>视图的操作”表列出了字符串视图API中与视图相关的部分。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}   & \textbf{Effect}                                                       \\ \hline
+\textbf{操作}   & \textbf{效果}                                                       \\ \hline
 \endfirsthead
 %
 \endhead
 %
-string\_view sv      & Creates a string view with no elements                                \\ \hline
-string\_view sv\{s\} & Creates a string view to s                                            \\ \hline
-v.begin()            & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
-v.end()              & Yields a raw pointer to the element type initialized with the nullptr \\ \hline
-sv.empty()           & Yields whether sv is empty                                            \\ \hline
-sv.size()            & Yields the number of characters                                       \\ \hline
-sv.front()           & Yields the first character                                            \\ \hline
-sv.back()            & Yields the last character                                             \\ \hline
-sv{[}idx{]}          & Yields th n-th character                                              \\ \hline
-sv.data()            & Yields a raw pointer to the characters or nullptr                     \\ \hline
-...                  & Several other operations provided for read-only strings               \\ \hline
+string\_view sv      & 创建一个没有元素的字符串视图                                \\ \hline
+string\_view sv\{s\} & 使用s创建一个字符串视图                                            \\ \hline
+v.begin()            & 生成一个原始指针，指向用nullptr初始化的元素类型 \\ \hline
+v.end()              & 生成一个原始指针，指向用nullptr初始化的元素类型 \\ \hline
+sv.empty()           & 生成的sv是否为空                                            \\ \hline
+sv.size()            & 生成字符的数量                                       \\ \hline
+sv.front()           & 生成的第一个字符                                            \\ \hline
+sv.back()            & 生成的最后一个字符                                             \\ \hline
+sv{[}idx{]}          & 生成的第n个字符                                              \\ \hline
+sv.data()            & 产生指向字符或nullptr的原始指针                     \\ \hline
+...                  & 为只读字符串提供的其他几个操作               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.12. View operations of the class std::ranges::basic\_string\_view<>
+表8.12 类std::basic\_string\_view<>视图的操作
 \end{center}
 
-In addition to the usual interface of views, the type also provides the full API of all read-only operations of strings.
+除了通常的视图接口之外，该类型还提供了所有字符串只读操作的完整API。
 
-For more details, take a look at my book C++17 - The Complete Guide (see \url{http://www.cppstd17.com}).
+要了解更多细节，请查看我的另一本书《C++17-完整指南》(参见\url{http://www.cppstd17.com})。
 
 \mySubsubsection{8.4.6}{span}
 
@@ -954,27 +953,27 @@ For more details, take a look at my book C++17 - The Complete Guide (see \url{ht
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::span\textless{}\textgreater{}           \\ \hline
+\textbf{类型:}                 & std::span\textless{}\textgreater{}           \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All elements of a range in contiguous memory \\ \hline
-\textbf{Factory:}              & std::views::counted()                        \\ \hline
-\textbf{Element type:}         & Reference                                    \\ \hline
-\textbf{Requires:}             & Contiguous range                             \\ \hline
-\textbf{Category:}             & Contiguous                                   \\ \hline
-\textbf{Is sized range:}       & Always                                       \\ \hline
-\textbf{Is common range:}      & Always                                       \\ \hline
-\textbf{Is borrowed range:}    & Always                                       \\ \hline
-\textbf{Caches:}               & Nothing                                      \\ \hline
-\textbf{Const iterable:}       & Always                                       \\ \hline
-\textbf{Propagates constness:} & Never                                        \\ \hline
+\textbf{内容:}              & 连续存储器中一个范围的所有元素 \\ \hline
+\textbf{工厂:}              & std::views::counted()                        \\ \hline
+\textbf{元素类型:}         & 引用                                    \\ \hline
+\textbf{要求:}             & 连续的范围                             \\ \hline
+\textbf{类别:}             & 连续                                   \\ \hline
+\textbf{是否是长度范围:}       & Always                                       \\ \hline
+\textbf{是否是通用范围:}      & 总是                                       \\ \hline
+\textbf{是否是租借范围:}    & 总是                                       \\ \hline
+\textbf{缓存:}               & 无                                      \\ \hline
+\textbf{常量可迭代:}       & 总是                                       \\ \hline
+\textbf{传播常量性:} & 从不                                        \\ \hline
 \end{longtable}
 
-The class template std::span<> is a view to a sequence of elements that are stored in contiguous memory. It is described in its own chapter in detail. Here, we present only the properties of spans as a view.
+类模板std::span<>是存储在连续内存中的元素序列的视图，其在单独的章节中有详细的描述。这里，仅将span的属性作为视图呈现。
 
-The major benefit of spans is that they support referring to a subrange of n elements in the middle or at the end of the referred range. For example:
+span的主要优点是，支持在引用范围的中间或末尾引用n个元素的子范围。例如:
 
 \begin{cpp}
 std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
@@ -986,32 +985,32 @@ std::ranges::sort(std::span{vec}.subspan(1, 3));
 print(std::span{vec}.last(3));
 \end{cpp}
 
-This example is discussed later in a section of the chapter about spans.
+这个例子将在后面关于span的章节中讨论。
 
-Note that spans do not follow a couple of conventions that views usually have:
+请注意，span不遵循视图通常具有的几个约定:
 
 \begin{itemize}
 \item
-The view is defined in the namespace std instead of std::ranges.
+视图定义在命名空间std中，而不是std::ranges中。
 
 \item
-The view has its own header file <span>.
+视图有自己的头文件<span>。
 
 \item
-The view supports no conversion to bool.
+视图不支持bool转换。
 \end{itemize}
 
 \mySamllsection{span的范围工厂}
 
-There is no range factory for initializing a span from a begin (iterator) and an end (sentinel). However, there is a range factory that might create a span from begin and a count:
+没有范围工厂用于从begin(迭代器)和end(哨兵)初始化span、，但有一个range工厂可以创建一个begin和count的span:
 
 \begin{cpp}
 std::views::counted(beg, sz)
 \end{cpp}
 
-std::views::counted() creates a span of dynamic size initialized with the first sz elements of the contiguous range, starting with the iterator beg (for a non-contiguous range, counted() creates a subrange).
+std::views::counted()创建一个动态大小的跨度，从迭代器beg开始，用连续范围的前sz个元素初始化(对于非连续范围，counts()创建子范围)。
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -1019,44 +1018,44 @@ std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of vec
 \end{cpp}
 
-When std::views::counted() creates a span, the span has dynamic extent (its size can vary).
+当std::views::counted()创建一个span时，span具有动态范围(其大小可以变化)。
 
 \mySamllsection{span的特点}
 
-Iterators do not refer to a span. Instead, they refer to the underlying elements. Therefore, a span is a borrowed range. However, note that iterators can still dangle when the underlying character sequence is no longer there.
+迭代器不指向span。相反，其引用底层元素，所以跨度是一个租借范围。但请注意，当底层字符序列不再存在时，迭代器仍然可以悬空。
 
-\mySamllsection{View-Specific Interface of Spans}
+\mySamllsection{span的特定视图接口}
 
-Table View operations of the class std::span<> lists the view-relevant parts of the API of a span.
+“类std::span<>的视图操作”表列出了span的API中与视图相关的部分。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                   \\ \hline
+\textbf{操作} & \textbf{效果}                                   \\ \hline
 \endfirsthead
 %
 \endhead
 %
-span sp            & Creates a span with no elements                   \\ \hline
-span sp\{s\}       & Creates a span to s                               \\ \hline
-sp.begin()         & Yields the begin iterator                         \\ \hline
-sp.end()           & Yields the sentinel (end iterator)                \\ \hline
-sp.empty()         & Yields whether sv is empty                        \\ \hline
-sp.size()          & Yields the number of characters                   \\ \hline
-sp.front()         & Yields the first character                        \\ \hline
-sp.back()          & Yields the last character                         \\ \hline
-sp{[}idx{]}        & Yields the n-th character                         \\ \hline
-sp.data()          & Yields a raw pointer to the characters or nullptr \\ \hline
-...                & See the section about spans operations            \\ \hline
+span sp            & 创建一个没有元素的span                   \\ \hline
+span sp\{s\}       & 为s创建一个span视图                             \\ \hline
+sp.begin()         & 生成begin迭代器                         \\ \hline
+sp.end()           & 生成哨兵(end迭代器)                \\ \hline
+sp.empty()         & 生成的sv是否为空                        \\ \hline
+sp.size()          & 生成字符的数量                   \\ \hline
+sp.front()         & 生成的第一个字符                        \\ \hline
+sp.back()          & 生成的最后一个字符                         \\ \hline
+sp{[}idx{]}        & 生成的第n个字符                         \\ \hline
+sp.data()          & 生成指向字符或nullptr的原始指针 \\ \hline
+...                & 请参阅关于span操作的部分            \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.13. View operations of the class std::span<>
+表8.13 类std::span<>的视图操作
 \end{center}
 
-For more details, see the section about span operations.
+有关更多详细信息，请参阅有关span操作的部分。
 
 
 

@@ -1,36 +1,36 @@
 
 
-This section discusses all views that filter out elements of a given range or view.
+本节讨论过滤掉给定范围或视图元素的所有视图。
 
 
-\mySubsubsection{8.5.1}{Take View}
+\mySubsubsection{8.5.1}{获取视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::take\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::take\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & The first (up to) num elements of a range        \\ \hline
-\textbf{Adaptor:}              & std::views::take()                               \\ \hline
-\textbf{Element type:}         & Same type as passed range                        \\ \hline
-\textbf{Requires:}             & At least input range                             \\ \hline
-\textbf{Category:}             & Same as passed                                   \\ \hline
-\textbf{Is sized range:}       & If on a sized range                              \\ \hline
-\textbf{Is common range:}      & If on sized random-access range                  \\ \hline
-\textbf{Is borrowed range:}    & If on borrowed view or on lvalue non-view        \\ \hline
-\textbf{Caches:}               & Nothing                                          \\ \hline
-\textbf{Const iterable:}       & If on const-iterable range                       \\ \hline
-\textbf{Propagates constness:} & Only if on rvalue range                          \\ \hline
+\textbf{内容:}              & 范围的第一个(最多)num个元素        \\ \hline
+\textbf{适配器:}              & std::views::take()                               \\ \hline
+\textbf{元素类型:}         & 与传入的类型相同 range                        \\ \hline
+\textbf{要求:}             & 至少为输入范围                             \\ \hline
+\textbf{类别:}             & 和传入一样                                   \\ \hline
+\textbf{是否是长度范围:}       & 若为长度范围                              \\ \hline
+\textbf{是否是通用范围:}      &若为长度随机访问范围                  \\ \hline
+\textbf{是否是租借范围:}    & 若是租借视图或左值非视图        \\ \hline
+\textbf{缓存:}               & 无                                          \\ \hline
+\textbf{常量可迭代:}       & 若在可迭代范围内                       \\ \hline
+\textbf{传播常量性:} & 只有在右值范围内                          \\ \hline
 \end{longtable}
 
-The class template std::ranges::take\_view<> defines a view that refers to the first num elements of a passed range. If the passed range does not have enough elements, the view refers to all elements.
+类模板std::ranges::take\_view<>定义了一个引用传入范围的前num个元素的视图。若传递的范围没有足够的元素，则视图引用所有元素。
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -40,13 +40,13 @@ for (const auto& elem : std::ranges::take_view{rg, 5}) {
 }
 \end{cpp}
 
-The loop prints:
+循环会输出：
 
 \begin{shell}
 1 2 3 4 5
 \end{shell}
 
-\mySamllsection{Range Adaptors for Take Views}
+\mySamllsection{获取视图的范围适配器}
 
 Take views can also (and usually should) be created with a range adaptor:
 
@@ -136,11 +136,11 @@ The program has the following output:
 1 2 3 4 1
 \end{shell}
 
-\mySamllsection{Special Characteristics of Take Views}
+\mySamllsection{获取视图的特点}
 
 Note that a take view is common (has same type for iterator and sentinel) only if the underlying range is a sized range and a common range. To harmonize types, you might have to use a common view.
 
-\mySamllsection{Interface of Take Views}
+\mySamllsection{获取视图的接口}
 
 Table Operations of the class std::ranges::take\_view<> lists the API of a take view.
 
@@ -173,7 +173,7 @@ r.base()           & Yields a reference to the range that r refers to or owns   
 Table 8.14. Operations of the class std::ranges::take\_view<>
 \end{center}
 
-\mySubsubsection{8.5.2}{Take-While View}
+\mySubsubsection{8.5.2}{获取即时视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -216,7 +216,7 @@ The loop prints:
 1 2
 \end{shell}
 
-\mySamllsection{Range Adaptors for Take-While Views}
+\mySamllsection{获取即时视图的范围适配器}
 
 ake-while views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::take\_while\_view constructor:
 
@@ -286,7 +286,7 @@ The program has the following output:
 1 2 3
 \end{shell}
 
-\mySamllsection{Interface of Take-While Views}
+\mySamllsection{获取即时视图的接口}
 
 Table Operations of the class std::ranges::take\_while\_view<> lists the API of a take-while view.
 
@@ -318,7 +318,7 @@ r.pred()           & Yields a reference to the predicate                        
 Table 8.15. Operations of the class std::ranges::take\_while\_view<>
 \end{center}
 
-\mySubsubsection{8.5.3}{Drop View}
+\mySubsubsection{8.5.3}{丢弃视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
