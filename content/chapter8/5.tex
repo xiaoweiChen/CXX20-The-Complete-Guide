@@ -48,13 +48,13 @@ for (const auto& elem : std::ranges::take_view{rg, 5}) {
 
 \mySamllsection{获取视图的范围适配器}
 
-Take views can also (and usually should) be created with a range adaptor:
+获取视图也可以(通常应该)使用范围适配器创建:
 
 \begin{cpp}
 std::views::take(rg, n)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::take(rg, 5)) {
@@ -62,7 +62,7 @@ for (const auto& elem : std::views::take(rg, 5)) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::take(5)) {
@@ -70,17 +70,17 @@ for (const auto& elem : rg | std::views::take(5)) {
 }
 \end{cpp}
 
-Note that the adaptor might not always yield a take\_view:
+注意，适配器可能并不总是产生take\_view:
 
 \begin{itemize}
 \item
-If an empty\_view is passed, that view is just returned.
+若传递一个empty\_view，则只返回该视图。
 
 \item
-If a sized random-access range is passed, where you can just initialize a range of the same type with the begin being the begin() + num, such a range is returned (this applies to subrange, iota view, string view, and span).
+若传递了一定大小的随机访问范围，可以初始化相同类型的范围，其中begin() + num，则返回这样的范围(这适用于子范围，iota视图，字符串视图和span)。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> vec;
@@ -96,11 +96,11 @@ auto tv5 = std::views::take(std::vector<int>{}, 5); // take view of owning view 
 auto tv6 = std::views::take(std::views::iota(1,9), 5); // pure iota view
 \end{cpp}
 
-The take view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+获取视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以其只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-The iterators are the iterators of the passed range if it is a sized random-access range or a counted iterator to it and a default sentinel. Therefore, the range is common only if a sized random-access range is passed.
+迭代器是传递的范围的迭代器，若是一个有长度的随机访问范围，或者是一个对它进行计数的迭代器和一个默认的哨兵，所以只有在传递了一定长度的随机访问范围时，该范围才是通用的。
 
-Here is a full example program using take views:
+下面是使用获取视图的完整示例:
 
 \filename{ranges/takeview.cpp}
 
@@ -128,7 +128,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 1 2 3 4 1
@@ -138,11 +138,11 @@ The program has the following output:
 
 \mySamllsection{获取视图的特点}
 
-Note that a take view is common (has same type for iterator and sentinel) only if the underlying range is a sized range and a common range. To harmonize types, you might have to use a common view.
+注意，只有当底层范围是长度范围和通用范围时，获取视图才通用(迭代器和哨兵具有相同的类型)。为了协调类型，可能必须使用通用视图。
 
 \mySamllsection{获取视图的接口}
 
-Table Operations of the class std::ranges::take\_view<> lists the API of a take view.
+“类std::ranges::take\_view<>的操作”表列出了获取视图的API。
 
 
 % Please add the following required packages to your document preamble:
@@ -150,55 +150,55 @@ Table Operations of the class std::ranges::take\_view<> lists the API of a take 
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\textbf{操作} & \textbf{效果}                                                        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-take\_view r\{\}   & Creates a take\_view that refers to a default constructed range        \\ \hline
-take\_view r\{rg, num\} & Creates a take\_view that refers to the first num elements of range rg                             \\ \hline
-r.begin()          & Yields the begin iterator                                              \\ \hline
-r.end()            & Yields the sentinel (end iterator)                                     \\ \hline
-r.empty()          & Yields whether r is empty(available if the range supports it)          \\ \hline
-if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
-r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
-r.front()          & Yields the first element(available if forwarding)                      \\ \hline
-r.back()           & Yields the last element(available if bidirectional and common)         \\ \hline
-r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
-r.data()                & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
+take\_view r\{\}   & 创建一个引用默认构造范围的take\_view        \\ \hline
+take\_view r\{rg, num\} & 创建一个引用范围rg前num个元素的take\_view                             \\ \hline
+r.begin()          & 生成begin迭代器                                              \\ \hline
+r.end()            & 生成哨兵(end迭代器)                                     \\ \hline
+r.empty()          & 生成的r是否为空(若范围支持则可用)          \\ \hline
+if (r)             & 若r不为空则为true(若定义了empty()则可用)                \\ \hline
+r.size()           & 生成元素的数量(若引用了一个长度范围，则可用) \\ \hline
+r.front()          & 生成的第一个元素(若转发可用)                      \\ \hline
+r.back()           & 生成的最后一个元素(若双向且通用，则可用)         \\ \hline
+r{[}idx{]}         & 生成的第n个元素(若随机访问可用)                    \\ \hline
+r.data()           & 生成一个指向元素内存的原始指针(若元素在连续内存中可用) \\ \hline
+r.base()           & 生成对r所引用或拥有的范围的引用               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.14. Operations of the class std::ranges::take\_view<>
+表8.14 类std::ranges::take\_view<>的操
 \end{center}
 
-\mySubsubsection{8.5.2}{获取即时视图}
+\mySubsubsection{8.5.2}{获取段视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::take\_while\_view\textless{}\textgreater{}        \\ \hline
+\textbf{类型:}                 & std::ranges::take\_while\_view\textless{}\textgreater{}        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All leading elements of a range that match a predicate         \\ \hline
-\textbf{Adaptor:}           & std::views::take\_while() \\ \hline
-\textbf{Element type:}      & Same type as passed range \\ \hline
-\textbf{Requires:}          & At least input range      \\ \hline
-\textbf{Category:}          & Same as passed            \\ \hline
-\textbf{Is sized range:}    & Never                     \\ \hline
-\textbf{Is common range:}   & Never                     \\ \hline
-\textbf{Is borrowed range:} & Never                     \\ \hline
-\textbf{Caches:}            & Nothing                   \\ \hline
-\textbf{Const iterable:}       & If on const-iterable range and predicate works on const values \\ \hline
-\textbf{Propagates constness:} & Only if on rvalue range                                        \\ \hline
+\textbf{内容:}              & 范围中与谓词匹配的所有前导元素         \\ \hline
+\textbf{适配器:}           & std::views::take\_while() \\ \hline
+\textbf{元素类型:}      & 与传递的范围类型相同 \\ \hline
+\textbf{要求:}          & 至少为输入范围      \\ \hline
+\textbf{类别:}          & 和传递的一样            \\ \hline
+\textbf{是否是长度范围:}    & 从不                     \\ \hline
+\textbf{是否是通用范围:}   & 从不                     \\ \hline
+\textbf{是否是租借范围:} & 从不                     \\ \hline
+\textbf{缓存:}            & 无                   \\ \hline
+\textbf{常量可迭代:}       & 若在常量可迭代的范围和谓词适用于常量的值 \\ \hline
+\textbf{传播常量性:} & 只有在右值范围内                                        \\ \hline
 \end{longtable}
 
-The class template std::ranges::take\_while\_view<> defines a view that refers to all leading elements of a passed range that match a certain predicate. For example:
+类模板std::ranges::take\_while\_view<>定义了一个视图，该视图引用传递的范围中匹配某个谓词的所有前导元素。例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -210,21 +210,21 @@ for (const auto& elem : std::ranges::take_while_view{rg, [](auto x) {
 }
 \end{cpp}
 
-The loop prints:
+循环的输出为:
 
 \begin{shell}
 1 2
 \end{shell}
 
-\mySamllsection{获取即时视图的范围适配器}
+\mySamllsection{获取段视图的范围适配器}
 
-ake-while views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::take\_while\_view constructor:
+获取段视图也可以(通常应该)使用范围适配器创建，适配器只需将其参数传递给std::ranges::take\_while\_view构造函数:
 
 \begin{cpp}
 std::views::take_while(rg, pred)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::take_while(rg, [](auto x) {
@@ -234,7 +234,7 @@ for (const auto& elem : std::views::take_while(rg, [](auto x) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::take_while([](auto x) {
@@ -244,13 +244,13 @@ for (const auto& elem : rg | std::views::take_while([](auto x) {
 }
 \end{cpp}
 
-The passed predicate must be a callable that satisfies the concept std::predicate. This implies the concept std::regular\_invocable, which means that the predicate should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the predicate should at least be declared to take the argument by value or by const reference.
+传递的谓词必须是满足std::predicate概念的可调用对象。这暗示了std::regular\_invocable的概念，所以谓词永远不应该修改底层范围的传递值，但不修改值是语义约束，所以在编译时不能总是检查这一点。因此，至少应该将谓词声明为按值或按const引用接受实参。
 
-The take-while view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+获取段视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-The iterators are just the iterators of the passed range and a special internal sentinel type.
+迭代器只是传递的范围和一个特殊的内部哨兵类型的迭代器。
 
-Here is a full example program using take-while views:
+下面是一个使用获取段视图的完整示例:
 
 \filename{ranges/takewhileview.cpp}
 
@@ -278,7 +278,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 1 2 3 4 1
@@ -286,36 +286,36 @@ The program has the following output:
 1 2 3
 \end{shell}
 
-\mySamllsection{获取即时视图的接口}
+\mySamllsection{获取段视图的接口}
 
-Table Operations of the class std::ranges::take\_while\_view<> lists the API of a take-while view.
+“类std::ranges::take\_while\_view<>的操作”表列出了获取段视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\textbf{操作} & \textbf{效果}                                                        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-take\_while\_view r\{\}         & Creates a take\_while\_view that refers to a default constructed range                             \\ \hline
-take\_while\_view r\{rg. pred\} & Creates a take\_while\_view taht refers to the leading elements of range rg for which pred is true \\ \hline
-r.begin()          & Yields the begin iterator                                              \\ \hline
-r.end()            & Yields the sentinel(end iterator)                                      \\ \hline
-r.empty()          & Yields whether r is empty (available if the range supports it)         \\ \hline
-if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
-r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
-r.front()          & Yields the first element (available if forwarding)                     \\ \hline
-r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
-r.data()                        & Yields a raw pointer to the memory of the elements(available if elements are in contigous memory)  \\ \hline
-r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
-r.pred()           & Yields a reference to the predicate                                    \\ \hline
+take\_while\_view r\{\}         & 创建一个引用默认构造范围的take\_while\_view                             \\ \hline
+take\_while\_view r\{rg. pred\} & 创建一个take\_while\_view，引用pred为真的rg范围的前导元素 \\ \hline
+r.begin()          & 生成begin迭代器                                              \\ \hline
+r.end()            & 产生哨兵(end迭代器)                                      \\ \hline
+r.empty()          & 生成的r是否为空(若范围支持，则可用)         \\ \hline
+if (r)             & 若r不为空，则为true(若定义了empty()，则可用)                \\ \hline
+r.size()           & 生成元素的数量(若引用了一个长度范围，则可用) \\ \hline
+r.front()          & 生成第一个元素(若转发可用)                     \\ \hline
+r{[}idx{]}         & 生成第n个元素(若为随机访问，则可用)                    \\ \hline
+r.data()           & 生成指向元素内存的原始指针(若元素在连续的内存中，则可用)  \\ \hline
+r.base()           & 生成对r所引用或拥有的范围的引用               \\ \hline
+r.pred()           & 生成对谓词的引用                                    \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.15. Operations of the class std::ranges::take\_while\_view<>
+表8.15 类std::ranges::take\_while\_view<>的操作
 \end{center}
 
 \mySubsubsection{8.5.3}{丢弃视图}
@@ -325,25 +325,25 @@ Table 8.15. Operations of the class std::ranges::take\_while\_view<>
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::drop\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::drop\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All but the first num elements of a range        \\ \hline
-\textbf{Adaptor:}              & std::views::drop()                               \\ \hline
-\textbf{Element type:}         & Same type as passed range                        \\ \hline
-\textbf{Requires:}             & At least input range                             \\ \hline
-\textbf{Category:}             & Same as passed                                   \\ \hline
-\textbf{Is sized range:}       & If on a sized range                              \\ \hline
-\textbf{Is common range:}      & If on common range                               \\ \hline
-\textbf{Is borrowed range:} & If on borrowed view or on lvalue non-view                           \\ \hline
-\textbf{Caches:}            & Caches begin() if no random-access range or no sized range          \\ \hline
-\textbf{Const iterable:}    & If on const-iterable range that provides random access and is sized \\ \hline
-\textbf{Propagates constness:} & Only if on rvalue range                          \\ \hline
+\textbf{内容:}              & 除第num个元素外的所有元素      \\ \hline
+\textbf{适配器:}              & std::views::drop()                               \\ \hline
+\textbf{元素类型:}         & 与传递的范围类型相同                       \\ \hline
+\textbf{要求:}             & 至少为输入范围                             \\ \hline
+\textbf{类别:}             & 和传递的一样                                   \\ \hline
+\textbf{是否是长度范围:}       & 若在长度范围内                              \\ \hline
+\textbf{是否是通用范围:}      & 若在通用范围内                               \\ \hline
+\textbf{是否是租借范围:} & 若为租借视图或左值非视图                           \\ \hline
+\textbf{缓存:}            & 若没有随机访问范围或没有长度范围，则缓存begin()          \\ \hline
+\textbf{常量可迭代:}    & 若是一个可常量迭代范围，该范围提供随机访问并确定长度 \\ \hline
+\textbf{传播常量性:} & 只有在右值范围内                          \\ \hline
 \end{longtable}
 
-The class template std::ranges::drop\_view<> defines a view that refers to all but the first num elements of a passed range. It yields the opposite elements to the take view.
+类模板std::ranges::drop\_view<>定义了一个视图，该视图引用传递的范围中除第num个元素外的所有元素，产生与获取视图相反的元素。
 
 For example:
 
@@ -355,21 +355,21 @@ for (const auto& elem : std::ranges::drop_view{rg, 5}) {
 }
 \end{cpp}
 
-The loop prints:
+循环输出:
 
 \begin{shell}
 6 7 8 9 10 11 12 13
 \end{shell}
 
-\mySamllsection{Range Adaptors for Drop Views}
+\mySamllsection{丢弃视图的范围适配器}
 
-Drop views can also (and usually should) be created with a range adaptor:
+丢弃视图也可以(通常应该)使用范围适配器创建:
 
 \begin{cpp}
 std::views::drop(rg, n)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::drop(rg, 5)) {
@@ -377,7 +377,7 @@ for (const auto& elem : std::views::drop(rg, 5)) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::drop(5)) {
@@ -385,17 +385,17 @@ for (const auto& elem : rg | std::views::drop(5)) {
 }
 \end{cpp}
 
-Note that the adaptor might not always yield a drop\_view:
+注意，适配器可能并不总是产生drop\_view:
 
 \begin{itemize}
 \item
-If an empty view is passed, that view is just returned.
+若传递了一个空视图，则直接返回空视图。
 
 \item
-If a sized random-access range is passed, where you can just initialize a range of the same type with the begin being the begin() + num, such a range is returned (this applies to subrange, iota view, string view, and span).
+若传递了一定长度的随机访问范围，可以初始化相同类型的范围，其中begin() + num，则返回这样的范围(这适用于子范围，iota视图，字符串视图和span)。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> vec;
@@ -411,11 +411,11 @@ auto dv5 = std::views::drop(std::vector<int>{}, 5); // drop view of owing view o
 auto dv6 = std::views::drop(std::views::iota(1,10), 5); // pure iota view
 \end{cpp}
 
-The drop view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+丢弃视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-The begin iterator is initialized and cached with the first call of begin(). On a range without random access this takes linear time. Therefore, it is better to reuse a drop view than to create it again from scratch.
+begin迭代器在第一次调用begin()时初始化并缓存。在没有随机访问的范围上，这需要线性时间，所以重用丢弃视图比重新创建要好。
 
-Here is a full example program using drop views:
+下面是一个使用丢弃视图的完整示例:
 
 \filename{ranges/dropview.cpp}
 
@@ -443,7 +443,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 1 2 3 4 1
@@ -451,11 +451,11 @@ The program has the following output:
 2 3 4 1
 \end{shell}
 
-\mySamllsection{Drop Views and Caching}
+\mySamllsection{丢弃视图和缓存}
 
-For better performance (to get an amortized constant complexity), drop views cache the result of begin() in the view (unless the range is only an input range). This means that the first iteration over the elements of a drop view is more expensive than further iterations.
+为了获得更好的性能(常数复杂度)，丢弃视图会在视图中缓存begin()的结果(除非范围只是一个输入范围)。所以对丢弃视图元素的第一次迭代要比以后的迭代更慢。
 
-For this reason, it is better to initialize a drop view once and use it twice:
+出于这个原因，最好初始化一次拖放视图并使用它两次:
 
 \begin{cpp}
 // better:
@@ -464,7 +464,7 @@ check(v1);
 process(v1);
 \end{cpp}
 
-than to initialize and use it twice:
+而非初始化并使用两次:
 
 \begin{cpp}
 // worse:
@@ -472,11 +472,11 @@ check(coll | std::views::drop(5));
 process(coll | std::views::drop(5));
 \end{cpp}
 
-Note that for ranges that have random access (e.g., arrays, vectors, and deques), the cached offset for the beginning is copied with the view. Otherwise, the cached beginning is not copied.
+注意，对于具有随机访问的范围(例如，数组，向量和队列)，缓存的开始偏移量与视图一起复制。否则，不会复制缓存的起始位置。
 
-This caching may have functional consequences when the range that a filter view refers to is modified.
+当过滤器视图引用的范围被修改时，此缓存可能会产生功能性后果。
 
-For example:
+例如:
 
 \filename{ranges/dropcache.cpp}
 
@@ -525,15 +525,15 @@ int main()
 }
 \end{cpp}
 
-Note that formally, the copy of the invalid view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. This means that the view is still valid in that it still contains the range without the first two elements.
+注意，从形式上讲，将无效视图复制到vector会创建未定义的行为，因为C++标准没有指定如何进行缓存。由于vector的重新分配会使所有迭代器失效，因此缓存的迭代器将失效。然而，对于随机访问范围，视图通常缓存偏移量，而不是迭代器。所以视图仍然有效，因为它仍然包含不包含前两个元素的范围。
 
-As a rule of thumb, \textbf{do not use a drop view for which begin() has been called after the underlying range has been modified.}
+根据经验，\textbf{不要使用在底层范围被修改后调用begin()的丢弃视图。}
 
-\mySamllsection{Drop View and const}
+\mySamllsection{丢弃视图和const}
 
-Note that you cannot always iterate over a const drop view. In fact, the referenced range has to be a random-access range and a sized range.
+注意，不能总是迭代const丢弃视图。实际上，所引用的范围必须是一个随机访问范围和一定长度的范围。
 
-For example:
+例如:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -549,7 +549,7 @@ printElems(vec | std::views::drop(3)); // OK
 printElems(lst | std::views::drop(3)); // ERROR
 \end{cpp}
 
-To support this view in generic code, you have to use universal/forwarding references:
+要在泛型代码中支持这个视图，必须使用通用/转发引用:
 
 \begin{cpp}
 void printElems(auto&& coll) {
@@ -561,64 +561,64 @@ std::list lst{1, 2, 3, 4, 5};
 printElems(lst | std::views::drop(3)); // OK
 \end{cpp}
 
-\mySamllsection{Interface of Drop Views}
+\mySamllsection{丢弃视图的接口}
 
-Table Operations of the class std::ranges::drop\_view<> lists the API of a drop view.
+“类std::ranges::drop\_view<>的操作”表列出了丢弃视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\textbf{操作} & \textbf{效果}                                                        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-drop\_view r\{\}   & Creates a drop\_view that refers to a default constructed range        \\ \hline
-drop\_view r\{rg, num\} & Creates a drop\_view that refers to all but the first num elements of rnage rg                      \\ \hline
-r.begin()          & Yields the begin iterator                                              \\ \hline
-r.end()            & Yields the sentinel (end iterator)                                     \\ \hline
-r.empty()          & Yields whether r is empty (available if the range supports it)         \\ \hline
-if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
-r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
-r.front()          & Yields the first element(available if forwarfing)                      \\ \hline
-r.back()           & Yields the last element(available if bidirectional and common)         \\ \hline
-r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
-r.data()                & Yields a raw pointer to the memory of the elements (available if elements are in contiguous memory) \\ \hline
-r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
+drop\_view r\{\}   & 创建一个drop\_view，引用一个默认构造的范围        \\ \hline
+drop\_view r\{rg, num\} & 创建一个drop\_view，引用rg范围内除前num个元素外的所有元素                      \\ \hline
+r.begin()          & 生成begin迭代器                                              \\ \hline
+r.end()            & 生成哨兵(end迭代器)                                     \\ \hline
+r.empty()          & 生成的r是否为空(若范围支持，则可用)         \\ \hline
+if (r)             & 若r不为空则为true(若定义了empty()，则可用)                \\ \hline
+r.size()           & 生成元素的数量(若引用了一个大小长度范围，则可用) \\ \hline
+r.front()          & 生成的第一个元素(若转发可用)                      \\ \hline
+r.back()           & 生成的最后一个元素(若双向且通用，则可用)         \\ \hline
+r{[}idx{]}         & 生成的第n个元素(若随机访问，则可用)                    \\ \hline
+r.data()           & 生成一个指向元素内存的原始指针(若元素在连续内存中，则可用)。 \\ \hline
+r.base()           & 生成对r所引用或拥有的范围的引用               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.16. Operations of the class std::ranges::drop\_view<>
+表8.16 类std::ranges::drop\_view<>的操作
 \end{center}
 
-\mySubsubsection{8.5.4}{Drop-While View}
+\mySubsubsection{8.5.4}{丢弃段视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::drop\_while\_view\textless{}\textgreater{}        \\ \hline
+\textbf{类型:}                 & std::ranges::drop\_while\_view\textless{}\textgreater{}        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All but the leading elements of a range that match a predicate \\ \hline
-\textbf{Adaptor:}              & std::views::drop\_while()                                      \\ \hline
-\textbf{Element type:}         & Same type as passed range                                      \\ \hline
-\textbf{Requires:}             & At least input range                                           \\ \hline
-\textbf{Category:}             & Same as passed                                                 \\ \hline
-\textbf{Is sized range:}       & If common random-access range passed                           \\ \hline
-\textbf{Is common range:}      & If on common range                                             \\ \hline
-\textbf{Is borrowed range:}    & If on borrowed view or on lvalue non-view                      \\ \hline
-\textbf{Caches:}               & Always caches begin()                                          \\ \hline
-\textbf{Const iterable:}       & Never                                                          \\ \hline
-\textbf{Propagates constness:} & --(cannot call begin() if const)                               \\ \hline
+\textbf{内容:}              & 范围中除前导元素外与谓词匹配的所有元素 \\ \hline
+\textbf{适配器:}              & std::views::drop\_while()                                      \\ \hline
+\textbf{元素类型:}         & 与传递的范围类型相同                                      \\ \hline
+\textbf{要求:}             & 至少为输入范围                                           \\ \hline
+\textbf{类别:}             & 和传递的一样                                                 \\ \hline
+\textbf{是否是长度范围:}       & 若传递了普通的随机访问范围                           \\ \hline
+\textbf{是否是通用范围:}      & 若在常规范围内                                             \\ \hline
+\textbf{是否是租借范围:}    & 若是租借视图或左值非视图                      \\ \hline
+\textbf{缓存:}               & 总是缓存begin()                                          \\ \hline
+\textbf{常量可迭代:}       & Never                                                          \\ \hline
+\textbf{传播常量性:} & --(若为const，不能调用begin())                               \\ \hline
 \end{longtable}
 
-The class template std::ranges::drop\_while\_view<> defines a view that skips all leading elements of a passed range that match a certain predicate. It yields the opposite elements to the take-while view. For example:
+类模板std::ranges::drop\_while\_view<>定义了一个视图，该视图跳过与某个谓词匹配的传递范围的所有前导元素，生成了与获取段视图相反的元素。例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -630,21 +630,21 @@ for (const auto& elem : std::ranges::drop_while_view{rg, [](auto x) {
 }
 \end{cpp}
 
-The loop prints:
+循环输出为:
 
 \begin{shell}
 3 4 5 6 7 8 9 10 11 12 13
 \end{shell}
 
-\mySamllsection{Range Adaptors for Drop-While Views}
+\mySamllsection{丢弃段视图的范围适配器}
 
-Drop-while views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::drop\_while\_view constructor:
+丢弃段视图也可以(通常应该)使用范围适配器创建，适配器只需将其参数传递给std::ranges::drop\_while\_view构造函数:
 
 \begin{cpp}
 std::views::drop_while(rg, pred)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::drop_while(rg, [](auto x) {
@@ -654,7 +654,7 @@ for (const auto& elem : std::views::drop_while(rg, [](auto x) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::drop_while([](auto x) {
@@ -664,14 +664,13 @@ for (const auto& elem : rg | std::views::drop_while([](auto x) {
 }
 \end{cpp}
 
-The passed predicate must be a callable that satisfies the concept std::predicate. This implies the concept std::regular\_invocable, which means that the predicate should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the predicate should at least be declared to take the argument by value or by const reference.
+传递的谓词必须是满足std::predicate概念的可调用对象。这暗示了std::regular\_invocable的概念，谓词永远不应该修改底层范围的传递值，但不修改值是语义约束，所以在编译时不能总是检查这一点。因此，至少应该将谓词声明为按值或按const引用接受实参。
 
-The drop-while view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+丢弃段视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-The begin iterator is initialized and cached with the first call of begin(), which always takes linear time.
-Therefore, it is better to reuse a drop-while view than creating it again from scratch.
+begin迭代器在第一次调用begin()时初始化并缓存，这总是需要线性时间。因此，重用丢弃段视图比重新创建要好。
 
-Here is a full example program using drop-while views:
+下面是一个使用丢弃段视图的完整示例:
 
 \filename{ranges/dropwhileview.cpp}
 
@@ -700,7 +699,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 1 2 3 4 1
@@ -708,11 +707,11 @@ The program has the following output:
 4 1 2 3 4 1
 \end{shell}
 
-\mySamllsection{Drop-While Views and Caching}
+\mySamllsection{丢弃段视图和缓存}
 
-For better performance (to get an amortized constant complexity), drop-while views cache the result of begin() in the view (unless the range is only an input range). This means that the first iteration over the element of a drop-while view is more expensive than further iterations.
+为了获得更好的性能(常数复杂度)，丢弃段视图会在视图中缓存begin()的结果(除非该范围只是一个输入范围)。所以对丢弃段视图元素的第一次迭代，比以后的迭代代价更慢。
 
-For this reason, it is better to initialize a filter view once and use it twice:
+出于这个原因，最好初始化一个过滤器视图，然后使用它两次:
 
 \begin{cpp}
 // better:
@@ -721,7 +720,7 @@ check(v1);
 process(v1);
 \end{cpp}
 
-than to initialize and use it twice:
+而非初始化并使用它两次:
 
 \begin{cpp}
 // worse:
@@ -729,7 +728,7 @@ check(coll | std::views::drop_while(myPredicate));
 process(coll | std::views::drop_while(myPredicate));
 \end{cpp}
 
-The caching may have functional consequences when the range that a filter view refers to is modified. For example:
+当修改过滤视图引用的范围时，缓存可能会产生功能性后果。例如:
 
 \filename{ranges/dropwhilecache.cpp}
 
@@ -782,15 +781,15 @@ int main()
 }
 \end{cpp}
 
-Note that formally, the copy of the invalid view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. This means that the view is still valid in that it still contains a valid range although the begin no longer fits the predicate.
+注意，从形式上讲，将无效视图复制到vector会创建未定义的行为，因为C++标准没有指定如何进行缓存。由于vector的重新分配会使所有迭代器失效，因此缓存的迭代器将失效。然而，对于随机访问范围，视图通常缓存偏移量，而不是迭代器。因为它仍然包含一个有效范围，所以视图仍然有效，尽管开始不再适合谓词。
 
-As a rule of thumb, \textbf{do not use a drop-while view for which begin() has been called after the underlying range has been modified}.
+根据经验，\textbf{不要使用在底层范围被修改后调用begin()的丢弃段视图}。
 
-\mySamllsection{Drop-While View and const}
+\mySamllsection{丢弃段视图和const}
 
-Note that you cannot iterate over a const drop-while view.
+注意，不能迭代const丢弃段视图。
 
-For example:
+例如:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -804,9 +803,9 @@ std::vector vec{1, 2, 3, 4, 5};
 printElems(vec | std::views::drop_while( ... )); // ERROR
 \end{cpp}
 
-The problem is that begin() is provided only for a non-const drop-while view because caching the iterator modifies the view.
+问题在于，begin()仅为非const丢弃段视图提供，因为缓存迭代器会修改视图。
 
-To support this view in generic code, you have to use universal/forwarding references:
+要在泛型代码中支持这个视图，必须使用通用/转发引用:
 
 \begin{cpp}
 void printElems(auto&& coll) {
@@ -818,65 +817,65 @@ std::list lst{1, 2, 3, 4, 5};
 printElems(vec | std::views::drop_while( ... )); // OK
 \end{cpp}
 
-\mySamllsection{Interface of Drop-While Views}
+\mySamllsection{丢弃段视图的接口}
 
-Table Operations of the class std::ranges::drop\_while\_view<> lists the API of a drop-while view.
+“类std::ranges::drop\_while\_view<>的操作”表列出了丢弃段视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                         \\ \hline
+\textbf{操作} & \textbf{效果}                                                         \\ \hline
 \endfirsthead
 %
 \endhead
 %
-drop\_while\_view r\{\}         & Creates a drop\_while\_view that refers to a default constructed range                                           \\ \hline
-drop\_while\_view r\{rg, pred\} & Creates a drop\_while\_view that refers to all elements of rg except the leading elements for which pred is true \\ \hline
-r.begin()          & Yields the begin iterator                                               \\ \hline
-r.end()            & Yields the sentinel(end iterator)                                       \\ \hline
-r.empty()          & Yields whether r is empty (available if the range supports it)          \\ \hline
-if (r)             & true if r is not empty(available if empty() is defined)                 \\ \hline
-r.size()           & Yields the number of elements (available if it refers to a sized range) \\ \hline
-r.front()          & Yields the first element(available if forwarding)                       \\ \hline
-r.back()           & Yields the last element(available if bidirectional and common)          \\ \hline
-r{[}idx{]}         & Yields the n-th element(available if random access)                     \\ \hline
-r.data()                        & Yields a raw pointer to the memory of the elements (available if elements are in contiguous memory)              \\ \hline
-r.base()           & Yields a reference to the range that r refers to or owns                \\ \hline
-r.pred()           & Yields a reference to the predicate                                     \\ \hline
+drop\_while\_view r\{\}         & 创建一个drop\_while\_view，引用一个默认构造的范围                                           \\ \hline
+drop\_while\_view r\{rg, pred\} & 创建一个drop\_while\_view，引用rg的所有元素，除了pred为真的前导元素 \\ \hline
+r.begin()          & 生成begin迭代器                                               \\ \hline
+r.end()            & 生成哨兵(end迭代器)                                       \\ \hline
+r.empty()          & 生成的r是否为空(若范围支持，则可用)          \\ \hline
+if (r)             & 若r不为空，则为true(若定义了empty()，则可用)                 \\ \hline
+r.size()           & 生成元素的数量(若引用了一个长度范围，则可用) \\ \hline
+r.front()          & 生成的第一个元素(若转发可用)                       \\ \hline
+r.back()           & 生成的最后一个元素(若果双向且通用，则可用)          \\ \hline
+r{[}idx{]}         & 生成的第n个元素(若随机访问可用)                     \\ \hline
+r.data()           & 生成生一个指向元素内存的原始指针(若元素在连续内存中可用)。              \\ \hline
+r.base()           & 生成对r所引用或归属范围的引用                \\ \hline
+r.pred()           & 生成对谓词的引用                                     \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.17. Operations of the class std::ranges::drop\_while\_view<>
+表8.17 类std::ranges::drop\_while\_view<>的操作
 \end{center}
 
-\mySubsubsection{8.5.5}{Filter View}
+\mySubsubsection{8.5.5}{过滤视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::filter\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::filter\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All elements of a range that match a predicate     \\ \hline
-\textbf{Adaptor:}              & std::views::filter()                               \\ \hline
-\textbf{Element type:}         & Same type as passed range                          \\ \hline
-\textbf{Requires:}             & At least input range                               \\ \hline
-\textbf{Category:}             & Same as passed but at most bidirectional           \\ \hline
-\textbf{Is sized range:}       & Never                                              \\ \hline
-\textbf{Is common range:}      & If on common range                                 \\ \hline
-\textbf{Is borrowed range:}    & Never                                              \\ \hline
-\textbf{Caches:}               & Always caches begin()                              \\ \hline
-\textbf{Const iterable:}       & Never                                              \\ \hline
-\textbf{Propagates constness:} & -- (cannot call begin() if const)                  \\ \hline
+\textbf{内容:}              & 范围中与谓词匹配的所有元素     \\ \hline
+\textbf{适配器:}              & std::views::filter()                               \\ \hline
+\textbf{元素类型:}         & 与传递的范围类型相同                          \\ \hline
+\textbf{要求:}             & 至少为输入范围                               \\ \hline
+\textbf{类别:}             & 和传入的一样，但至多是双向的           \\ \hline
+\textbf{是否是长度范围:}       & 从不                                              \\ \hline
+\textbf{是否是通用范围:}      & 若在常规范围内                                 \\ \hline
+\textbf{是否是租借范围:}    & 从不                                              \\ \hline
+\textbf{缓存:}               & 总是缓存begin()                              \\ \hline
+\textbf{常量可迭代:}       & 从不                                              \\ \hline
+\textbf{传播常量性:} & -- (若是const，则不能使用begin())                  \\ \hline
 \end{longtable}
 
-The class template std::ranges::filter\_view<> defines a view that iterates only over those elements of the underlying range for which a certain predicate matches. That is, it filters out all elements that do not match the predicate. For example:
+类模板std::ranges::filter\_view<>定义了一个视图，该视图只迭代底层范围中与某个谓词匹配的元素。也就是说，过滤掉所有与谓词不匹配的元素。例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -888,21 +887,21 @@ for (const auto& elem : std::ranges::filter_view{rg, [](auto x) {
 }
 \end{cpp}
 
-The loop prints:
+循环输出:
 
 \begin{shell}
 1 2 4 5 7 8 10 11 13
 \end{shell}
 
-\mySamllsection{Range Adaptors for Filter Views}
+\mySamllsection{过滤视图的范围适配器}
 
-Filter views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::filter\_view constructor:
+过滤视图也可以(通常应该)使用范围适配器创建。适配器只需将其参数传递给std::ranges::filter\_view构造函数:
 
 \begin{cpp}
 std::views::filter(rg, pred)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::filter(rg, [](auto x) {
@@ -912,7 +911,7 @@ for (const auto& elem : std::views::filter(rg, [](auto x) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::filter([](auto x) {
@@ -922,28 +921,28 @@ for (const auto& elem : rg | std::views::filter([](auto x) {
 }
 \end{cpp}
 
-The passed predicate must be a callable that satisfies the concept std::predicate. This implies the concept std::regular\_invocable, which means that the predicate should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the predicate should at least be declared to take the argument by value or by const reference.
+传递的谓词必须是满足std::predicate概念的可调用对象。这表示了std::regular\_invocable的概念，这意味着谓词永远不应该修改底层范围的传递值。但不修改值是语义约束，在编译时不能总是检查这一点。因此，至少应该将谓词声明为按值或按const引用接受实参。
 
-The filter view is special and you should know when, where, and how to use it, as well as the side effects its use has. In fact, it has a significant impact on the performance of pipelines and restricts write access to elements in a sometimes surprising way.
+过滤视图是特殊的，开发者应该知道何时、何地以及如何使用它，以及使用它所产生的副作用。事实上，它对管道的性能有很大的影响，并且有时会以令人惊讶的方式限制对元素的写访问。
 
-Therefore, you should use a filter view with care:
+因此，应该小心使用过滤视图:
 
 \begin{itemize}
 \item
-In a pipeline, you should have it as early as possible.
+在管道中，应该尽可能早地获得它。
 
 \item
-Be careful with expensive transformations ahead of filters.
+在使用过滤器之前，要小心昂贵的转换。
 
 \item
-Do not use it for write access to elements when the write access breaks the predicate.
+当写访问破坏谓词时，不要将其用于对元素的写访问。
 \end{itemize}
 
-The filter view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+过滤视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-The begin iterator is initialized and usually cached with the first call of begin(), which always takes linear time. Therefore, it is better to reuse a filter view than to create it again from scratch.
+begin迭代器被初始化，通常在第一次调用begin()时进行缓存，这总是需要线性时间，所以重用过滤器视图比从头创建过滤器视图要好。
 
-Here is a full example program using filter views:
+下面是一个使用过滤器视图的完整示例:
 
 \filename{ranges/filterview.cpp}
 
@@ -972,7 +971,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 1 2 3 4 1
@@ -980,11 +979,11 @@ The program has the following output:
 1 2 3 1 2 3 1
 \end{shell}
 
-\mySamllsection{Filter Views and Caching}
+\mySamllsection{过滤视图和缓存}
 
-For better performance (to get an amortized constant complexity), filter views cache the result of begin() in the view (unless the range is only an input range). This means that the first iteration over the element of a filter view is more expensive than further iterations.
+为了获得更好的性能(常数复杂度)，过滤器视图会在视图中缓存begin()的结果(除非该范围只是一个输入范围)，所以过滤视图元素上的第一次迭代比以后的迭代更慢。
 
-For this reason, it is better to initialize a filter view once and use it twice:
+因此，最好初始化一个过滤器视图，然后使用它两次:
 
 \begin{cpp}
 // better:
@@ -993,7 +992,7 @@ check(v1);
 process(v1);
 \end{cpp}
 
-than to initialize and use it twice:
+而非初始化并使用它两次:
 
 \begin{cpp}
 // worse:
@@ -1001,10 +1000,11 @@ check(coll | std::views::drop_while(myPredicate));
 process(coll | std::views::drop_while(myPredicate));
 \end{cpp}
 
-Note that for ranges that have random access (e.g., arrays, vectors, and deques), the cached offset for the beginning is copied with the view. Otherwise, the cached beginning is not copied.
+注意，对于具有随机访问的范围(例如，数组，向量和队列)，缓存的开始偏移量与视图一起复制。否则，不复制缓存的开头。
 
-The caching may have functional consequences when the range that a filter view refers to is modified.
-For example:
+当修改过滤视图引用的范围时，缓存可能会产生功能性后果。
+
+例如:
 
 \filename{ranges/filtercache.cpp}
 
@@ -1057,15 +1057,15 @@ int main()
 }
 \end{cpp}
 
-Note that formally, the copy of the invalid view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. This means that the view is still valid in that it still contains a valid range although the begin is now the third element regardless of whether it fits the filter.
+注意，从形式上讲，将无效视图复制到vector会创建未定义的行为，因为C++标准没有指定如何进行缓存。由于vector的重新分配会使所有迭代器失效，因此缓存的迭代器将失效。但对于随机访问范围，视图通常缓存偏移量，而不是迭代器。因为它仍然包含一个有效的范围，所以视图仍然有效，尽管begin现在是第三个元素，而不管它是否适合过滤。
 
-As a rule of thumb, \textbf{do not use a filter view for which begin() has been called after the underlying range has been modified}.
+根据经验，\textbf{不要使用在底层范围被修改后调用begin()的过滤视图}。
 
-\mySamllsection{Filter Views When Modifying Elements}
+\mySamllsection{修改元素时的过滤视图}
 
-When using filter views, there is an important additional restriction on write access: you have to ensure that the modified value still fulfills the predicate passed to the filter.
+使用过滤器视图时，对写访问有一个重要的附加限制:必须确保修改后的值仍然满足传递给过滤器的谓词。
 
-To understand why this is the case, consider the following program:
+要理解为什么会出现这种情况，请考虑以下代码:
 
 \begin{cpp}
 oid printElems(const auto& coll) {
@@ -1079,9 +1079,9 @@ std::vector vec{1, 2, 3, 4, 5};
 printElems(vec | std::views::drop_while( ... )); // ERROR
 \end{cpp}
 
-The problem is that begin() is provided only for a non-const drop-while view because caching the iterator modifies the view.
+问题在于，begin()仅为非const丢弃段视图提供，因为缓存迭代器会修改视图。
 
-To support this view in generic code, you have to use universal/forwarding references:
+要在泛型代码中支持这个视图，必须使用通用/转发引用:
 
 \filename{ranges/viewswrite.cpp}
 
@@ -1126,7 +1126,7 @@ int main()
 }
 \end{cpp}
 
-We iterate twice over the even elements of a collection and increment them. A naive programmer would assume that we get the following output:
+对集合中的偶数元素迭代两次并自增，菜鸟的开发者会假设得到以下输出:
 
 \begin{shell}
 coll: 1 4 7 10 13 16 19 22 25
@@ -1134,7 +1134,7 @@ coll: 1 5 7 11 13 17 19 23 25
 coll: 1 5 7 11 13 17 19 23 25
 \end{shell}
 
-Instead, the program has the following output:
+但程序有以下输出:
 
 \begin{shell}
 coll: 1 4 7 10 13 16 19 22 25
@@ -1142,11 +1142,11 @@ coll: 1 5 7 11 13 17 19 23 25
 coll: 1 6 7 11 13 17 19 23 25
 \end{shell}
 
-With the second iteration, we increment the former first even element once again. Why?
+在第二次迭代中，再次增加前面的第一个偶数元素。为什么?
 
-The first time we use the view that ensures that we deal only with even elements it works fine. However, the view caches the position of the first element that matches the predicate so that begin() does not have to recalculate it. Therefore, when we access the value there, the filter does not apply the predicate again because it already knows that this is the first matching element. Therefore, when we iterate the second time, the filter gives back the former first element. However, for all other elements, we have to perform the check again, which means that the filter finds no more elements because they are all odd now.
+第一次使用确保只处理偶数元素的视图时，它工作得很好。但视图缓存与谓词匹配的第一个元素的位置，以便begin()不必重新计算它。当我们访问那里的值时，过滤器不会再次应用谓词，因为它已经知道这是第一个匹配元素。当我们第二次迭代时，过滤器返回前一个元素。但对于所有其他元素，必须再次执行检查，因为它们现在都是奇数，所以过滤器没有找到更多的元素。
 
-There has been some discussion about whether one-pass write access with a filter should be well-formed even if it breaks the predicate of the filter. This is because the requirement that a modification should not violate the predicate of a filter invalidates some very reasonable examples: Here is one of them:
+关于使用过滤器的一次写访问是否应该是格式良好的，即使它破坏了过滤器的谓词，也有一些讨论。因为修改不应违反过滤器谓词的要求，使一些非常合理的示例无效:下面是其中之一:
 
 \begin{cpp}
 for (auto& m : collOfMonsters | filter(isDead)) {
@@ -1154,9 +1154,9 @@ for (auto& m : collOfMonsters | filter(isDead)) {
 }
 \end{cpp}
 
-This code usually compiles and works. However, formally, we have undefined behavior again, because the predicate of the filter (“monsters have to be dead”) is broken. Any other “modification” of a (dead) monster would be possible, though (e.g., to “burning” them).
+这段代码通常可以编译并运行。但形式上，又有了未定义的行为，因为过滤器的谓词(“怪物必须是死的”)被破坏了。对(死亡)怪物的任何其他“修改”都是可能的(例如，“烧”它们)。
 
-To break the predicate, you have to use an ordinary loop instead:
+要中断谓词，必须使用普通循环:
 
 \begin{cpp}
 for (auto& m : collOfMonsters) {
@@ -1166,11 +1166,11 @@ for (auto& m : collOfMonsters) {
 }
 \end{cpp}
 
-\mySamllsection{Filter View and const}
+\mySamllsection{过滤视图和const}
 
-Note that you cannot iterate over a const filter view.
+注意，不能在const过滤视图上迭代。
 
-For example:
+例如:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -1184,9 +1184,9 @@ std::vector vec{1, 2, 3, 4, 5};
 printElems(vec | std::views::filter( ... )); // ERROR
 \end{cpp}
 
-The problem is that begin() is provided only for a non-const filter view because caching the iterator modifies the view.
+问题在于，begin()仅为非const过滤视图提供，因为缓存迭代器会修改视图。
 
-To support this view in generic code, you have to use universal/forwarding references:
+要在泛型代码中支持这个视图，必须使用通用/转发引用:
 
 \begin{cpp}
 void printElems(auto&& coll) {
@@ -1198,63 +1198,63 @@ std::list lst{1, 2, 3, 4, 5};
 printElems(vec | std::views::filter( ... )); // OK
 \end{cpp}
 
-\mySamllsection{Filter Views in Pipelines}
+\mySamllsection{管道中的过滤视图}
 
-When using a filter view in a pipeline, there are a couple of issues to consider:
+当在管道中使用过滤视图时，有几个问题需要考虑:
 
 \begin{itemize}
 \item
-In a pipeline, you should have it as early as possible.
+在管道中，应该尽可能早地获得它。
 
 \item
-Be careful especially with expensive transformations ahead of filters.
+过滤器之前要特别小心昂贵的转换。
 
 \item
-When using filters while modifying elements, ensure that after these modifications, the predicate of the filter is still satisfied. See below for details.
+当在修改元素的同时使用过滤器时，确保在这些修改之后，过滤器的谓词仍然是满足的。详情见下文。
 \end{itemize}
 
-The reason for this is that views and adaptors in front of the filter view might have to evaluate elements multiple times, once to decide whether they pass the filter and once to finally use their value.
+这样做的原因是，过滤器视图前面的视图和适配器可能必须多次评估元素，一次是决定它们是否通过过滤，一次是决定最终使用的值。
 
-Therefore, a pipeline such as the following:
+因此，像下面这样的管道:
 
 \begin{cpp}
 rg | std::views::filter(pred) | std::views::transform(func)
 \end{cpp}
 
-has a better performance than
+要比下面的方式有更好的性能比
 
 \begin{cpp}
 rg | std::views::transform(func) | std::views::filter(pred)
 \end{cpp}
 
-\mySamllsection{Interface of Filter Views}
+\mySamllsection{过滤视图的接口}
 
-Table Operations of the class std::ranges::filter\_view<> lists the API of a filter view.
+“类std::ranges::filter\_view<>的操作”表列出了过滤视图的API。
 
-Filter views never provide size(), data() or the operator [] because they are neither sized nor provide random access.
+过滤视图从不提供size()、data()或运算符[]，因其既不确定大小，也不提供随机访问。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                \\ \hline
+\textbf{操作} & \textbf{效果}                                                \\ \hline
 \endfirsthead
 %
 \endhead
 %
-filter\_view r\{\}         & Creates a filter\_view that refers to a default constructed range               \\ \hline
-filter\_view r\{rg. pred\} & Creates a filter\_view that refers to all elements or rg for which pred is true \\ \hline
-r.begin()          & Yields the begin iterator                                      \\ \hline
-r.end()            & Yields the sentinel(end iterator)                              \\ \hline
-r.empty()          & Yields whether r is empty(available if the range supports it)  \\ \hline
-if (r)             & true if r is not empty (available if empty() is defined)       \\ \hline
-r.front()          & Yields the first element(available if forwarding)              \\ \hline
-r.back()           & Yields the last element(available if bidirectional and common) \\ \hline
-r.base()           & Yields a reference to the range that r refers to ot owns       \\ \hline
-r.pred()           & Yields a reference to the predicate                            \\ \hline
+filter\_view r\{\}         & 创建一个引用默认构造范围的filter\_view               \\ \hline
+filter\_view r\{rg. pred\} & 创建一个filter\_view，它引用pred为true的所有元素或rg \\ \hline
+r.begin()          & 生成begin迭代器                                      \\ \hline
+r.end()            & 生成哨兵(end迭代器)                              \\ \hline
+r.empty()          & 生成的r是否为空(若范围支持，则可用)  \\ \hline
+if (r)             & 若r不为空，则为true(若定义了empty()，则可用)       \\ \hline
+r.front()          & 生成的第一个元素(若转发可用)              \\ \hline
+r.back()           & 生成的最后一个元素(若为双向且通用，则可用) \\ \hline
+r.base()           & 生成指向r的引用范围       \\ \hline
+r.pred()           & 生成对谓词的引用                            \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.18. Operations of the class std::ranges::filter\_view<>
+表8.18 类std::ranges::filter\_view<>的操作
 \end{center}
