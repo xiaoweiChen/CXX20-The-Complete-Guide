@@ -1,52 +1,52 @@
 
-This section discusses all views that deal with multiple ranges.
+本节讨论处理多个范围的所有视图。
 
-\mySubsubsection{8.8.1}{Split and Lazy-Split View}
+\mySubsubsection{8.8.1}{拆分和惰性拆分视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|ll|}
 \hline
-\textbf{Type:} & \multicolumn{1}{l|}{std::ranges::split\_view\textless{}\textgreater{}} & std::range::laze\_split\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:} & \multicolumn{1}{l|}{std::ranges::split\_view\textless{}\textgreater{}} & std::range::laze\_split\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & \multicolumn{2}{l|}{All elements of a range split into multiple views}                       \\ \hline
-\textbf{Adaptor:}              & \multicolumn{1}{l|}{std::views::split()}        & std::views::lazy\_split()                  \\ \hline
-\textbf{Element type:}         & \multicolumn{1}{l|}{Collection of references}   & Collection of references                   \\ \hline
-\textbf{Requires:}             & \multicolumn{1}{l|}{At least forward range}     & At least input range                       \\ \hline
-\textbf{Category:}             & \multicolumn{1}{l|}{Always forward}             & Input or forward                           \\ \hline
-\textbf{Is sized range:}       & \multicolumn{1}{l|}{Never}                      & Never                                      \\ \hline
-\textbf{Is common range:}      & \multicolumn{1}{l|}{If on common forward range} & If on common forward range                 \\ \hline
-\textbf{Is borrowed range:}    & \multicolumn{1}{l|}{Never}                      & Never                                      \\ \hline
-\textbf{Caches:}               & \multicolumn{1}{l|}{Always caches begin()}      & Caches the current value if on input range \\ \hline
-\textbf{Const iterable:}       & \multicolumn{1}{l|}{Never}                      & If on const-iterable forward range         \\ \hline
-\textbf{Propagates constness:} & \multicolumn{1}{l|}{--}                         & Never                                      \\ \hline
+\textbf{内容:}              & \multicolumn{2}{l|}{一个范围的所有元素被分割成多个视图}                       \\ \hline
+\textbf{适配器:}              & \multicolumn{1}{l|}{std::views::split()}        & std::views::lazy\_split()                  \\ \hline
+\textbf{元素类型:}         & \multicolumn{1}{l|}{集合的引用}   & 集合的引用                   \\ \hline
+\textbf{要求:}             & \multicolumn{1}{l|}{至少为前向范围}     & 至少为前向范围                       \\ \hline
+\textbf{类别:}             & \multicolumn{1}{l|}{总是前向}             & 输入或前向                           \\ \hline
+\textbf{是否是长度范围:}       & \multicolumn{1}{l|}{从不}                      & 从不                                      \\ \hline
+\textbf{是否是通用范围:}      & \multicolumn{1}{l|}{若在通用前向范围} & 若在通用前向范围                 \\ \hline
+\textbf{是否是租借范围:}    & \multicolumn{1}{l|}{从不}                      & 从不                                      \\ \hline
+\textbf{缓存:}               & \multicolumn{1}{l|}{总是缓存begin()}      & 在输入范围内，缓存当前值 \\ \hline
+\textbf{常量可迭代:}       & \multicolumn{1}{l|}{从不}                      & 若在可重复的前向范围内         \\ \hline
+\textbf{传播常量性:} & \multicolumn{1}{l|}{--}                         & 从不                                      \\ \hline
 \end{longtable}
 
-Both class templates std::ranges::split\_view<> and std::ranges::lazy\_split\_view<> define a view that refers to multiple sub-views of a range separated by a passed separator.[std::ranges::lazy\_split\_view<> was not part of the original C++20 standard but was added to C++20 afterwards with \url{http://wg21.link/p2210r2}.]
+std::ranges::split\_view<>和std::ranges::lazy\_split\_view<>两个类模板都定义了一个视图，该视图引用由分隔符分隔将范围拆分为多个子视图。[std::ranges::lazy\_split\_view<>不是原始C++20标准的一部分，但后来通过\url{http://wg21.link/p2210r2}添加到C++20中。]
 
-The difference between split\_view<> and lazy\_split\_view<> is as follows:
+split\_view<>和lazy\_split\_view<>的区别如下:
 
 \begin{itemize}
 \item
-split\_view<> cannot iterate over a const view; lazy\_split\_view<> can (if it refers to a range that is at least a forward range).
+split\_view<>不能迭代const视图;lazy\_split\_view<>可以(引用的范围至少是前向范围)。
 
 \item
-split\_view<> can only deal with ranges that have at least forward iterators (concept forward\_range has to be satisfied).
+split\_view<>只能处理至少具有前向迭代器的范围(必须满足forward\_range的概念)。
 
 \item
-split\_view<> elements are just a std::ranges::subrange of the iterator type of the referred range (keeping category of the referred range).
+split\_view<>元素只是引用范围的迭代器类型的std::ranges::subrange(保持引用范围的类别)。
 
-lazy\_split\_views<> elements are views of type std::ranges::lazy\_split\_view that are always forward ranges, meaning that even size() is not supported.
+lazy\_split\_views<>元素是std::ranges::lazy\_split\_view类型的视图，其总是前向范围，甚至不支持size()。
 
 \item
-split\_view<> has the better performance.
+split\_view<>具有更好的性能。
 \end{itemize}
 
-This means that you should usually use split\_view<> unless you cannot do that due to using an input range only or the view is used as a const range. For example:
+因为只使用输入范围或视图被用作const范围，所以应该使用split\_view<>，除非不能这样做。例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -59,25 +59,25 @@ for (const auto& sub : std::ranges::split_view{rg, 5}) {
 }
 \end{cpp}
 
-The loops print:
+循环输出:
 
 \begin{shell}
 1 2 3 4
 6 7 8 9 10 11 12 13
 \end{shell}
 
-That is, wherever we find an element with value 5 in rg, we end the previous view and start a new view.
+也就是说，只要在rg中找到值为5的元素，就结束前一个视图并开始一个新视图。
 
-\mySamllsection{Range Adaptors for Split and Lazy-Split Views}
+\mySamllsection{用于拆分和延迟拆分视图的范围适配器}
 
-Split and lazy-split views can (and usually should) also be created with range adaptors. The adaptors simply pass their parameters to the corresponding view constructor:
+拆分视图和延迟拆分视图也可以(通常应该)使用范围适配器来创建，适配器只是将它们的参数传递给相应的视图构造函数:
 
 \begin{cpp}
 std::views::split(rg, sep)
 std::views::lazy_split(rg, sep)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& sub : std::views::split(rg, 5)) {
@@ -88,7 +88,7 @@ for (const auto& sub : std::views::split(rg, 5)) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& sub : rg | std::views::split(5)) {
@@ -99,7 +99,7 @@ for (const auto& sub : rg | std::views::split(5)) {
 }
 \end{cpp}
 
-The views created might be empty. Thus, for each leading and trailing separator, and whenever two separators are behind each other, an empty view is created. For example:
+创建的视图可能是空的。对于每个前后分隔符，以及每当两个分隔符在彼此后面时，都会创建一个空视图。例如:
 
 \begin{cpp}
 std::list<int> rg{5, 5, 1, 2, 3, 4, 5, 6, 5, 5, 4, 3, 2, 1, 5, 5};
@@ -112,7 +112,7 @@ for (const auto& sub : std::ranges::split_view{rg, 5}) {
 }
 \end{cpp}
 
-Here, the output is as follows: [The original C++20 standard specified that the last separator is ignored, meaning that we would get only one empty sub-view at the end. This was fixed with \url{http://wg21.link/p2210r2}.]
+这里，输出如下:[最初的C++20标准指定最后一个分隔符可忽略，所以我们将在最后只得到一个空子视图。这是修复于\url{http://wg21.link/p2210r2}。]
 
 \begin{shell}
 subview:
@@ -125,7 +125,7 @@ subview:
 subview:
 \end{shell}
 
-Instead of a single value, you can also pass a sequence of values that serves as a separator. For example:
+除了单值之外，还可以传递一系列值作为分隔符。例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3 };
@@ -139,7 +139,7 @@ for (const auto& sub : std::views::split(rg, std::list{5, 1})) {
 }
 \end{cpp}
 
-The output of this code is
+这段代码的输出是
 
 \begin{shell}
 1 2 3 4
@@ -147,7 +147,7 @@ The output of this code is
 2 3
 \end{shell}
 
-The passed collection of elements must be a valid view and a forward\_range. Therefore, when specifying the sub-sequence in a container, you have to convert it into a view. For example:
+传递的元素集合必须是有效的视图和forward\_range，所以在容器中指定子序列时，必须将其转换为视图。例如:
 
 \begin{cpp}
 // split with specified pattern of 4 and 5:
@@ -157,7 +157,7 @@ for (const auto& sub : std::views::split(rg, std::views::all(pattern))) {
 }
 \end{cpp}
 
-You can use split views to split strings. For example:
+可以使用拆分视图来拆分字符串。例如:
 
 \begin{cpp}
 std::string str{"No problem can withstand the assault of sustained thinking"};
@@ -166,13 +166,13 @@ for (auto sub : std::views::split(str, "th"sv)) { // split by "th"
 }
 \end{cpp}
 
-Each sub-string sub is of type std::ranges::subrange<decltype(str.begin())>. Code like this will not work with a lazy-split view.
+每个子字符串sub的类型为std::ranges::subrange<decltype(str.begin())>，这样的代码将不能用于延迟拆分视图。
 
-A split or lazy-split view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+拆分或延迟拆分视图会在内部存储传入的范围(也可以像all()那样转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-Both the begin iterator and the sentinel (end iterator) are special internal helper types that are common if the passed range is common.
+begin迭代器和哨兵(end迭代器)都是特殊的内部辅助类型，若传递的范围是通用的，则是通用的。
 
-Here is a full example program using split views:
+这里是一个使用拆分视图的完整示例:
 
 \filename{ranges/splitview.cpp}
 
@@ -209,7 +209,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 [1 2 3 4 1 2 3 4 ]
@@ -218,11 +218,11 @@ The program has the following output:
 [[1 2 3 ][2 3 4 ]]
 \end{shell}
 
-\mySamllsection{Split View and const}
+\mySamllsection{拆分视图和const}
 
-Note that you cannot iterate over a const split view.
+注意，不能在const的拆分视图上迭代。
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> coll{5, 1, 5, 1, 2, 5, 5, 1, 2, 3, 5, 5, 5};
@@ -233,7 +233,7 @@ for (const auto& sub : sv) { // ERROR for const split view
 }
 \end{cpp}
 
-This is a problem especially if you pass the view to a generic function that takes the parameter as a const reference:
+这是一个问题，特别是若将视图传递给一个将参数作为const引用的泛型函数:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -242,7 +242,7 @@ void printElems(const auto& coll) {
 printElems(std::views::split(rg, 5)); // ERROR
 \end{cpp}
 
-To support this view in generic code, you have to use universal/forwarding references:
+要在泛型代码中支持这个视图，必须使用通用/转发引用:
 
 \begin{cpp}
 void printElems(auto&& coll) {
@@ -250,7 +250,7 @@ void printElems(auto&& coll) {
 }
 \end{cpp}
 
-Alternatively, you can use a lazy\_split\_view. Then, however, the sub-view elements can only be used as forward ranges, meaning that you cannot do things like calling size(), iterating backward, or sorting the elements:
+或者，可以使用lazy\_split\_view。然后，子视图元素只能用作前向范围，所以不能调用size()、向后迭代或对元素排序的事情:
 
 \begin{cpp}
 std::vector<int> coll{5, 1, 5, 1, 2, 5, 5, 1, 2, 3, 5, 5, 5};
@@ -265,66 +265,66 @@ for (const auto& sub : sv) { // OK for const lazy-split view
 }
 \end{cpp}
 
-\mySamllsection{Interface of Split and Lazy-Split Views}
+\mySamllsection{拆分和延迟拆分视图的接口}
 
-Table Operations of the classes std::ranges::split\_view<> and std::ranges::split\_view<> lists the API of a split or lazy-split view.
+“类std::ranges::split\_view<>和std::ranges::split\_view<>的操作”表列出了拆分视图或延迟拆分视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}  & \textbf{Effect}                                                 \\ \hline
+\textbf{操作}  & \textbf{效果}                                                 \\ \hline
 \endfirsthead
 %
 \endhead
 %
-split\_view r\{\} & Creates a split\_view that refers to a default constructed range                                   \\ \hline
-split\_view r\{rg\} & Creates a split\_view that refers to range rg                   \\ \hline
-r.begin()           & Yields the begin iterator                                       \\ \hline
-r.end()             & Yields the sentinel (end iterator)                              \\ \hline
-r.empty()           & Yields whether r is empty (available if the range supportes it) \\ \hline
-if (r)              & true if r is not empty(available if empty() is defined)         \\ \hline
-r.size()          & Yields the number of element(available if it refers to a sized range)                              \\ \hline
-r.front()           & Yields the first element(available if forwarding)               \\ \hline
-r.back()            & Yields the last element(available if bidirectional and common)  \\ \hline
-r{[}idx{]}          & Yields the n-th element (available if random access)            \\ \hline
-r.data()          & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-r.base()            & Yields a reference to the range that r refers to or owns        \\ \hline
+split\_view r\{\} & 创建一个split\_view，它引用一个默认构造的范围                                   \\ \hline
+split\_view r\{rg\} & 创建一个split\_view，引用范围rg                   \\ \hline
+r.begin()           & 生成begin迭代器                                       \\ \hline
+r.end()             & 生成哨兵(end迭代器)                              \\ \hline
+r.empty()           & 生成的r是否为空(若范围支持则可用) \\ \hline
+if (r)              & 若r不为空，则为true(若定义了empty()，则可用)         \\ \hline
+r.size()          & 生成元素的数量(若引用一个长度范围，则可用)                              \\ \hline
+r.front()           & 生成的第一个元素(若转发可用)               \\ \hline
+r.back()            & 生成的最后一个元素(若范围为双向且通用，则可用)  \\ \hline
+r{[}idx{]}          & 生成的第n个元素(若随机访问可用)            \\ \hline
+r.data()          & 生成一个指向元素内存的原始指针(若元素在连续内存中可用) \\ \hline
+r.base()            & 产生对r所引用或归属范围的引用        \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.22. Operations of the classes std::ranges::split\_view<> and std::ranges::split\_view<>
+表8.22 类std::ranges::split\_view<>和std::ranges::split\_view<>的操作
 \end{center}
 
-\mySubsubsection{8.8.2}{Join View}
+\mySubsubsection{8.8.2}{连接视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}           & std::ranges::join\_view\textless{}\textgreater{}                        \\ \hline
+\textbf{类型:}           & std::ranges::join\_view\textless{}\textgreater{}                        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}        & All elements of a range of multiple ranges as one view                  \\ \hline
-\textbf{Adaptor:}              & std::views::join()         \\ \hline
-\textbf{Element type:}         & Same type as passed ranges \\ \hline
-\textbf{Requires:}             & At least input range       \\ \hline
-\textbf{Category:}             & Input to bidirectional     \\ \hline
-\textbf{Is sized range:}       & Never                      \\ \hline
-\textbf{Is common range:}      & Varies                     \\ \hline
-\textbf{Is borrowed range:}    & Never                      \\ \hline
-\textbf{Caches:}               & Nothing                    \\ \hline
-\textbf{Const iterable:} & If on const-iterable range and elements are still references with const \\ \hline
-\textbf{Propagates constness:} & Only if on rvalue range    \\ \hline
+\textbf{内容:}        & 一个范围或多个范围的所有元素作为一个视图                  \\ \hline
+\textbf{适配器:}              & std::views::join()         \\ \hline
+\textbf{元素类型:}         & 与传递的范围类型相同 \\ \hline
+\textbf{要求:}             & 至少为输入范围       \\ \hline
+\textbf{类别:}             & 双向输入     \\ \hline
+\textbf{是否是长度范围:}       & 从不                      \\ \hline
+\textbf{是否是通用范围:}      & 可变                     \\ \hline
+\textbf{是否是租借范围:}    & 从不                      \\ \hline
+\textbf{缓存:}               & 无                    \\ \hline
+\textbf{常量可迭代:} & 若常量可迭代，范围和元素仍是const的引用 \\ \hline
+\textbf{传播常量性:} & 只有在右值范围内    \\ \hline
 \end{longtable}
 
-The class template std::ranges::join\_view<> defines a view that iterates over all elements of a view of multiple ranges.
+类模板std::ranges::join\_view<>定义了一个遍历多个范围视图的所有元素的视图。
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> rg1{1, 2, 3, 4};
@@ -337,21 +337,21 @@ for (const auto& elem : std::ranges::join_view{coll}) {
 }
 \end{cpp}
 
-The loops print:
+循环输出:
 
 \begin{shell}
 1 2 3 4 0 8 15 5 4 3 2 1 0
 \end{shell}
 
-\mySamllsection{Range Adaptors for Join Views}
+\mySamllsection{连接视图的范围适配器}
 
-Join views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::join\_view constructor:
+连接视图也可以(通常应该)使用范围适配器创建，适配器只是将其参数传递给std::ranges::join\_view构造函数:
 
 \begin{cpp}
 std::views::join(rg)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::join(coll)) {
@@ -359,7 +359,7 @@ for (const auto& elem : std::views::join(coll)) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : coll | std::views::join) {
@@ -367,7 +367,7 @@ for (const auto& elem : coll | std::views::join) {
 }
 \end{cpp}
 
-Here is a full example program using join views:
+下面是一个使用连接视图的完整示例:
 
 \filename{ranges/joinview.cpp}
 
@@ -392,7 +392,7 @@ int main()
 }
 \end{cpp}
 
-It uses a helper function that can print collections recursively:
+使用一个可以递归打印集合的辅助函数:
 
 \filename{ranges/printcoll.cpp}
 
@@ -423,7 +423,7 @@ void printColl(T&& obj, int level = 0)
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 [["he" "hi" "ho"] ["---" "|" "---"] ["he" "hi" "ho"]]
@@ -432,9 +432,9 @@ The program has the following output:
 [h e h i h o - - - | - - - h e h i h o]
 \end{shell}
 
-Together with type std::ranges::subrange, you can use a join view to join elements of multiple arrays.
+结合类型std::ranges::subrange，可以使用连接视图来连接多个数组的元素。
 
-For example:
+例如:
 
 \begin{cpp}
 int arr1[]{1, 2, 3, 4, 5};
@@ -447,7 +447,7 @@ for (const auto& elem : std::ranges::join_view{coll}) {
 }
 \end{cpp}
 
-Alternatively, you can declare coll as follows:
+或者，可以这样声明coll:
 
 \begin{cpp}
 std::array coll{std::ranges::subrange{arr1},
@@ -455,15 +455,15 @@ std::array coll{std::ranges::subrange{arr1},
 				std::ranges::subrange{arr3}};
 \end{cpp}
 
-The join view is the only view in C++20 that deals with ranges of ranges. Therefore, it has outer and inner iterators. And the properties of the resulting view might depend on both.
+连接视图是唯一视图在c++中20处理范围的范围，所以它有外部迭代器和内部迭代器，结果视图的属性可能依赖于两者。
 
-Note that the internal iterators do not support iterator traits. For this reason, you should prefer the utilities like std::ranges::next() over std::next(). Otherwise, code might not compile.
+注意，内部迭代器不支持迭代器特性。出于这个原因，应该更像std::ranges::next()这样的工具，而非std::next()。否则，代码可能无法编译。
 
-\mySamllsection{Join View and const}
+\mySamllsection{连接视图和const}
 
-Note that you cannot always iterate over a const join view. This happens if the ranges are not const iterable or if the inner ranges yield plain values instead of references.
+注意，不能总是迭代const连接视图。若范围不是const可迭代的，或者内部范围产生普通值而不是引用，就会发生这种情况。
 
-For the latter case, consider the following example:
+对于后一种情况，请考虑以下示例:
 
 \filename{ranges/joinconst.cpp}
 
@@ -496,55 +496,55 @@ int main()
 }
 \end{cpp}
 
-When we use join the elements of the array of three ranges, we can call printConstColl(), which takes the range as a const reference. We get the following output:
+当使用连接三个范围数组的元素时，可以调用printConstColl()，将范围作为const引用。会得到以下输出:
 
 \begin{shell}
 [[1 2 3 4] [0 8 15] [5 4 3 2 1 0]]
 [1 2 3 4 0 8 15 5 4 3 2 1 0]
 \end{shell}
 
-However, when we create we pass the whole array to a transform view that yields all inner ranges back by value, calling printConstColl() is an error.
+然而，当我们将整个数组传递给一个转换视图，该视图按值返回所有内部范围，调用printConstColl()是一个错误。
 
-Calling printColl() for the view, for which the inner ranges yield plain values, works fine. Note that this requires that printColl() uses std::ranges::next() instead of std::next(). Otherwise, even the following doe not compile:
+调用视图的printColl()，其内部范围产生普通值，工作得很好。注意，这要求printColl()使用std::ranges::next()，而非std::next()。否则，即使下面的代码也不能编译:
 
 \begin{cpp}
 printColl(coll2values | std::views::join); // ERROR if std::next() used
 \end{cpp}
 
-\mySamllsection{Special Characteristics of Join Views}
+\mySamllsection{连接视图的特殊特征}
 
-The resulting category is bidirectional if both the outer and the inner ranges are at least bidirectional and the inner ranges are common ranges. Otherwise, the resulting category is forward if both the outer and the inner ranges are at least forward ranges. Otherwise, the resulting category is input range.
+若外部范围和内部范围是双向的，并且内部范围是通用范围，则产生的类别是双向的。否则，若外部范围和内部范围至少是前向范围，则生成的类别是前向的。否则，生成的类别为输入范围。
 
-\mySamllsection{Interface of Join Views}
+\mySamllsection{连接视图的接口}
 
-Table Operations of the class std::ranges::join\_view<> lists the API of a join view.
+“类std::ranges::join\_view<>的操作”表列出了连接视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                        \\ \hline
+\textbf{操作} & \textbf{效果}                                                        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-join\_view r\{\}   & Creates a join\_view that refers to a default constructed range        \\ \hline
-join\_view r\{rg\} & Creates a join\_view that refers to range rg                           \\ \hline
-r.begin()          & Yields the begin iterator                                              \\ \hline
-r.end()            & Yields the sentinel(end iterator)                                      \\ \hline
-r.empty()          & Yields whether r is empty(available if tht range supports it)          \\ \hline
-if (r)             & true if r is not empty(available if empty() is defined)                \\ \hline
-r.size()           & Yields the number of elements(available if it refers to a sized range) \\ \hline
-r.front()          & Yields the first element(available if forwarding)                      \\ \hline
-r.back()           & Yields the last element(available if bidirectional and common)         \\ \hline
-r{[}idx{]}         & Yields the n-th element(available if random access)                    \\ \hline
-r.data() & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-r.base()           & Yields a reference to the range that r refers to or owns               \\ \hline
+join\_view r\{\}   & 创建一个引用默认构造范围的join\_view        \\ \hline
+join\_view r\{rg\} & 创建一个引用范围rg的join\_view                           \\ \hline
+r.begin()          & 生成begin迭代器                                              \\ \hline
+r.end()            & 生成哨兵(end迭代器)                                      \\ \hline
+r.empty()          & 生成的r是否为空(若该范围支持，则可用)          \\ \hline
+if (r)             & 若r不为空，则为true(若定义了empty()，则可用)                \\ \hline
+r.size()           & 生成元素的数量(若引用了一个长度范围，则可用) \\ \hline
+r.front()          & 生成的第一个元素(若转发可用)                      \\ \hline
+r.back()           & 生成的最后一个元素(若范围为双向且通用，则可用)         \\ \hline
+r{[}idx{]}         & 生成的第n个元素(若随机访问可用)                    \\ \hline
+r.data() & 生成一个指向元素内存的原始指针(若元素在连续内存中可用) \\ \hline
+r.base()           & 产生对r所引用或归属范围的引用               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.23. Operations of the class std::ranges::join\_view<>
+表8.23 类std::ranges::join\_view<>的操作
 \end{center}
 
 

@@ -1,34 +1,34 @@
 
-This section discusses all views that change the order of elements (so far, it is only one view).
+本节讨论所有改变元素顺序的视图(到目前为止，只有一个视图)。
 
-\mySubsubsection{8.7.1}{Reverse View}
+\mySubsubsection{8.7.1}{反向视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}              & std::ranges::reverse\_view\textless{}\textgreater{}                 \\ \hline
+\textbf{类型:}              & std::ranges::reverse\_view\textless{}\textgreater{}                 \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & All elements of a range in reverse order \\ \hline
-\textbf{Adaptor:}              & std::views::reverse                      \\ \hline
-\textbf{Element type:}         & Same type as passed range                \\ \hline
-\textbf{Requires:}             & At least bidirectional range             \\ \hline
-\textbf{Category:}             & Same as passed but at most random access \\ \hline
-\textbf{Is sized range:}       & If on sized range                        \\ \hline
-\textbf{Is common range:}      & Always                                   \\ \hline
-\textbf{Is borrowed range:} & If on borrowed view or on lvalue non-view                           \\ \hline
-\textbf{Caches:}            & Caches begin() unless common range or random access and sized range \\ \hline
-\textbf{Const iterable:}       & If on const-iterable common range        \\ \hline
-\textbf{Propagates constness:} & Only if on rvalue range                  \\ \hline
+\textbf{内容:}              & 一个范围内的所有元素按倒序排列 \\ \hline
+\textbf{适配器:}              & std::views::reverse                      \\ \hline
+\textbf{元素类型:}         & 与传递的范围类型相同                \\ \hline
+\textbf{要求:}             & 至少为双向范围             \\ \hline
+\textbf{类别:}             & 与传递的相同，但至多是随机访问 \\ \hline
+\textbf{是否是长度范围:}       & 若在常长度范围内                        \\ \hline
+\textbf{是否是通用范围:}      & 总是                                   \\ \hline
+\textbf{是否是租借范围:} & 若是租借视图或左值非视图                           \\ \hline
+\textbf{缓存:}            & 缓存begin()，除非通用范围或随机访问和长度范围 \\ \hline
+\textbf{常量可迭代:}       & 若在可重复的通用范围内        \\ \hline
+\textbf{传播常量性:} & 只有在右值范围内                  \\ \hline
 \end{longtable}
 
-The class template std::ranges::reverse\_view<> defines a view that iterates over the elements of the underlying range in the opposite order.
+类模板std::ranges::reverse\_view<>定义了一个以相反顺序遍历基础范围元素的视图。
 
-For example:
+例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -38,21 +38,21 @@ for (const auto& elem : std::ranges::reverse_view{rg}) {
 }
 \end{cpp}
 
-The loop prints:
+循环输出:
 
 \begin{shell}
 13 12 11 10 9 8 7 6 5 4 3 2 1
 \end{shell}
 
-\mySamllsection{Range Adaptors for Reverse Views}
+\mySamllsection{范围适配器的反向视图}
 
-Reverse views can also (and usually should) be created with a range adaptor:
+反向视图也可以(通常应该)使用范围适配器创建:
 
 \begin{cpp}
 std::views::reverse(rg)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::reverse(rg)) {
@@ -60,7 +60,7 @@ for (const auto& elem : std::views::reverse(rg)) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::reverse) {
@@ -68,21 +68,21 @@ for (const auto& elem : rg | std::views::reverse) {
 }
 \end{cpp}
 
-Note that the adaptor might not always yield a reverse\_view:
+注意，适配器可能并不总是产生reverse\_view:
 
 \begin{itemize}
 \item
-A reversed reversed range yields the original range.
+反向反转的范围会生成原始范围。
 
 \item
-If a reversed subrange is passed, the original subrange is returned with the corresponding non-reverse iterators.
+若传递反向范围，则返回原始子范围和相应的非反向迭代器。
 \end{itemize}
 
-The reverse view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+反向视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-The iterators are just reverse iterators of the passed range.
+迭代器只是传递范围的反向迭代器。
 
-Here is a full example program using reverse views:
+下面是一个使用反向视图的完整示例:
 
 \filename{ranges/reverseview.cpp}
 
@@ -110,7 +110,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 1 2 3 4
@@ -118,14 +118,15 @@ The program has the following output:
 4 3 2 1 4 3 2 1
 \end{shell}
 
-\mySamllsection{Reverse Views and Caching}
+\mySamllsection{反向视图和缓存}
 
-For better performance, reverse views cache the result of begin() in the view (unless the range is only an input range).
-Note that for ranges that have random access (e.g., arrays, vectors, and deques), the cached offset for the beginning is copied with the view. Otherwise, the cached beginning is not copied.
+为了获得更好的性能，反向视图会在视图中缓存begin()的结果(除非该范围只是一个输入范围)。
 
-The caching may have functional consequences when the range that a reverse view refers to is modified.
+注意，对于具有随机访问的范围(例如，数组，向量和队列)，缓存的开始偏移量与视图一起复制。否则，不复制缓存的开头。
 
-For example:
+当反向视图引用的范围被修改时，缓存可能会产生功能后果。
+
+例如:
 
 \filename{ranges/reversecache.cpp}
 
@@ -167,16 +168,17 @@ int main()
 }
 \end{cpp}
 
-Note that formally, the copy of the view to the vector creates undefined behavior because the C++ standard does not specify how the caching is done. Because reallocation of a vector invalidates all iterators, a cached iterator would become invalid. However, for random-access ranges, the view usually caches an offset, not the iterator. Therefore, the view is still valid for the vector.
-Note also that a reverse view on a container as a whole works fine because the end iterator is cached.
+请注意，从形式上讲，将视图复制到vector会创建未定义的行为，因为C++标准没有指定如何进行缓存。由于vector的重新分配会使所有迭代器失效，因此缓存的迭代器将失效。但对于随机访问范围，视图通常缓存偏移量，而不是迭代器。因此，对于vector，视图仍然有效。
 
-As a rule of thumb, \textbf{do not use a reverse view for which begin() has been called after the underlying range has been modified}.
+还需要注意的是，对整个容器的反向视图可以正常工作，因为结束迭代器是缓存的。
 
-\mySamllsection{Reverse View and const}
+根据经验，\textbf{在底层范围被修改后不要使用一个反向视图的begin()}。
 
-Note that you cannot always iterate over a const reverse view. In fact, the referenced range has to be a common range.
+\mySamllsection{反向视图和const}
 
-For example:
+注意，不能总是迭代const反向视图。实际上，引用的范围必须是通用范围。
+
+例如:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -197,7 +199,7 @@ printElems(vecFirstOdd); // OK
 printElems(vecFirstOdd | std::views::reverse); // ERROR
 \end{cpp}
 
-To support this view in generic code, you have to use universal/forwarding references:
+要在泛型代码中支持这个视图，必须使用通用/转发引用:
 
 \begin{cpp}
 void printElems(auto&& coll) {
@@ -215,35 +217,35 @@ printElems(vecFirstOdd | std::views::reverse); // OK
 \end{cpp}
 
 
-\mySamllsection{Interface of Reverse Views}
+\mySamllsection{反向视图的接口}
 
-Table Operations of the class std::ranges::reverse\_view<> lists the API of a reverse view.
+“类std::ranges::reverse\_view<>的操作”表列出了反向视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}    & \textbf{Effect}                                                \\ \hline
+\textbf{操作}    & \textbf{效果}                                                \\ \hline
 \endfirsthead
 %
 \endhead
 %
-reverse\_view r\{\} & Creates a reverse\_view that refers to a default constructed range                                 \\ \hline
-reverse\_view r\{rg\} & Creaets a reverse\_view that refers to range rg                \\ \hline
-r.begin()             & Yields the begin iterator                                      \\ \hline
-r.end()               & Yields the sentinel (end iterator)                             \\ \hline
-r.empty()             & Yields whether r is empty (available if the range supports it) \\ \hline
-if (r)                & true if r is not empty (available if empty() if defined)       \\ \hline
-r.size()            & Yields the number of element(available if it refers to a sized range)                              \\ \hline
-r.front()             & Yields the first element(available if forwarding)              \\ \hline
-r.back()              & Yields the last element(available if bidirectional and common) \\ \hline
-r{[}idx{]}            & Yields the n-th element(available if random access)            \\ \hline
-r.data()            & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-r.base()              & Yields a reference to the range that r refers to or owns       \\ \hline
+reverse\_view r\{\} & 创建一个指向默认构造范围的reverse\_view                                 \\ \hline
+reverse\_view r\{rg\} & 创建一个指向范围rg的reverse\_view                \\ \hline
+r.begin()             & 生成begin迭代器                                      \\ \hline
+r.end()               & 生成哨兵(end迭代器)                             \\ \hline
+r.empty()             & 生成的r是否为空(若范围支持，则可用) \\ \hline
+if (r)                & 若r不为空，则为true(若定义了empty()，则可用)       \\ \hline
+r.size()            & 生成元素的数量(若引用一个长度范围，则可用)                              \\ \hline
+r.front()             & 生成的第一个元素(若转发可用)              \\ \hline
+r.back()              & 生成的最后一个元素(若范围为双向且通用，则可用) \\ \hline
+r{[}idx{]}            & 生成的第n个元素(若随机访问可用)            \\ \hline
+r.data()            & 生成一个指向元素内存的原始指针(若元素在连续内存中可用) \\ \hline
+r.base()              & 产生对r所引用或归属范围的引用       \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.21. Operations of the class std::ranges::reverse\_view<>
+表8.21 类std::ranges::reverse\_view<>的操作
 \end{center}
 

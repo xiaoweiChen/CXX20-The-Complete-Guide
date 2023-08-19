@@ -1,33 +1,33 @@
 
 
-This section discusses all views that yield modified values of the elements they iterate over.
+本节讨论产生所遍历元素修改值的视图。
 
-\mySubsubsection{8.6.1}{Transform View}
+\mySubsubsection{8.6.1}{转换视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}                 & std::ranges::transform\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}                 & std::ranges::transform\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}              & The transformed values of all element in a range      \\ \hline
-\textbf{Adaptor:}              & std::views::transform()                               \\ \hline
-\textbf{Element type:}         & The return type from the transformation               \\ \hline
-\textbf{Requires:}             & At least input range                                  \\ \hline
-\textbf{Category:}             & Same as passed but at most random access              \\ \hline
-\textbf{Is sized range:}       & If on sized range                                     \\ \hline
-\textbf{Is common range:}      & If on common range                                    \\ \hline
-\textbf{Is borrowed range:}    & Never                                                 \\ \hline
-\textbf{Caches:}               & Nothing                                               \\ \hline
-\textbf{Const iterable:} & If on const-iterable range and transformation works on const values \\ \hline
-\textbf{Propagates constness:} & Only if on rvalue range                               \\ \hline
+\textbf{内容:}              & 范围内所有元素的转换值      \\ \hline
+\textbf{适配器:}              & std::views::transform()                               \\ \hline
+\textbf{元素类型:}         & 转换的返回类型               \\ \hline
+\textbf{要求:}             & 至少为输入范围                                  \\ \hline
+\textbf{类别:}             & 与传递的相同，但至多是随机访问              \\ \hline
+\textbf{是否是长度范围:}       & 若在长度范围内                                     \\ \hline
+\textbf{是否是通用范围:}      & 若在通用范围内                                    \\ \hline
+\textbf{是否是租借范围:}    & 从不                                                 \\ \hline
+\textbf{缓存:}               & 无                                               \\ \hline
+\textbf{常量可迭代:} & 若有常量可迭代范围和转换作用于const值，则可用 \\ \hline
+\textbf{传播常量性:} & 只有在右值范围内                               \\ \hline
 \end{longtable}
 
-The class template std::ranges::transform\_view<> defines a view that yields all elements of an underlying range after applying a passed transformation. For example:
+类模板std::ranges::transform\_view<>定义了一个视图，该视图在传递转换后生成底层范围内的所有元素。例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -40,21 +40,21 @@ for (const auto& elem : std::ranges::transform_view{rg, [](auto x) {
 }
 \end{cpp}
 
-The loop prints:
+循环输出:
 
 \begin{shell}
 1 4 9 16 25 36 49 64 81 100 121 144 169
 \end{shell}
 
-\mySamllsection{Range Adaptors for Transform Views}
+\mySamllsection{转换视图的范围适配器}
 
-Transform views can also (and usually should) be created with a range adaptor. The adaptor simply passes its parameters to the std::ranges::transform\_view constructor.
+转换视图也可以(通常应该)使用范围适配器创建，适配器只是将其参数传递给std::ranges::transform\_view构造函数。
 
 \begin{cpp}
 std::views::transform(rg, func)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::transform(rg, [](auto x) {
@@ -64,7 +64,7 @@ for (const auto& elem : std::views::transform(rg, [](auto x) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::transform([](auto x) {
@@ -74,7 +74,7 @@ for (const auto& elem : rg | std::views::transform([](auto x) {
 }
 \end{cpp}
 
-Here is a full example program using transform views:
+下面是一个使用转换视图的完整示例:
 
 \filename{ranges/transformview.cpp}
 
@@ -104,7 +104,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 1 2 3 4 1
@@ -112,11 +112,11 @@ The program has the following output:
 1 1.41421 1.73205 2 1 1.41421 1.73205 2 1
 \end{shell}
 
-The transformation must be a callable that satisfies the concept std::regular\_invocable. That implies that transformation should never modify the passed value of the underlying range. However, not modifying the value is a semantic constraint and this cannot always be checked at compile time. As a consequence, the callable should at least be declared to take the argument by value or by const reference.
+转换必须是满足std::regular\_invocable概念的可调用对象，所以转换永远不应该修改传递的基础范围的值。但不修改值是语义约束，在编译时不能总是检查这一点，所以至少应该将可调用对象声明为通过值或const引用接受实参。
 
-The transform view yields values that have the return type of the transformation. Therefore, in our example, the transform view yields elements of type double.
+转换视图产生具有转换返回类型的值，所以在示例中，转换视图产生的元素类型为double。
 
-The return type of a transformation might even be a reference. For example:
+转换的返回类型，甚至可以是引用。例如:
 
 \filename{ranges/transformref.cpp}
 
@@ -153,14 +153,14 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1/9 9/1 2/2 4/1 2/7
 2/9 9/2 3/2 4/2 3/7
 \end{shell}
 
-Note that the lambda passed to transform here as the transformation has to specify that it returns a reference:
+注意，这里传递给transform的Lambda必须返回一个引用:
 
 \begin{cpp}
 [] (std::pair<int,int>& elem) -> int& {
@@ -168,15 +168,15 @@ Note that the lambda passed to transform here as the transformation has to speci
 }
 \end{cpp}
 
-Otherwise, the lambda would return a copy of each element so that the members of these copies are incremented and the elements in coll remain unchanged.
+否则，Lambda将返回每个元素的副本，以便这些副本的成员递增，而coll中的元素保持不变。
 
-The transform view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+转换视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-\mySamllsection{Special Characteristics of Transform Views}
+\mySamllsection{转换视图的特殊特性}
 
-As usual for standard views, the transform views does not delegate constness to the elements. This means that even when the view is const the elements passed to the transforming function are not const.
+与通常的标准视图一样，转换视图不会将常量性委托给元素。所以即使视图是const，传递给转换函数的元素也不是const。
 
-For example, using the example transformref.cpp above, you can also implement the following:
+例如，使用上面的transform.cpp示例，可以完成以下实现:
 
 \begin{cpp}
 std::vector<std::pair<int,int>> coll{{1,9}, {9,1}, {2,2}, {4,1}, {2,7}};
@@ -193,81 +193,81 @@ for (auto&& member : v) {
 }
 \end{cpp}
 
-Note that a take view is only common (has same type for iterator and sentinel) if the underlying range is a sized range and a common range. To harmonize types, you might have to use a common view.
+注意，若底层范围是长度范围和通用范围，则获取视图仅是通用的(迭代器和哨兵具有相同的类型)。为了协调类型，可能必须使用通用视图。
 
-Both the begin iterator and the sentinel (end iterator) are special internal helper types.
+开始迭代器和哨兵(结束迭代器)都是特殊的内部辅助类型。
 
-\mySamllsection{Interface of Transform Views}
+\mySamllsection{转换视图的接口}
 
-Table Operations of the class std::ranges::transform\_view<> lists the API of a transform view.
+“类std::ranges::transform\_view<>的操作”表列出了转换视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                \\ \hline
+\textbf{操作} & \textbf{效果}                                                \\ \hline
 \endfirsthead
 %
 \endhead
 %
-transform\_view r\{\}         & Creates a transform\_view that refers to a default constructed range                               \\ \hline
-transform\_view r\{rg, func\} & Creates a transform\_view with the values of all elements of range rg transformed by func          \\ \hline
-r.begin()          & Yields the begin iterator                                      \\ \hline
-r.end()            & Yields the sentinel(end iterator)                              \\ \hline
-r.empty()          & Yields whether r is empty (available if the range supports it) \\ \hline
-if (r)             & true if r is not empty(available if empty() is define)         \\ \hline
-r.size()                      & Yields the number of elements (available if it refers to a sized range)                            \\ \hline
-r.front()          & Yields the first element(available if forwarding)              \\ \hline
-r.back)            & Yields the last element(available if bidirectional and common) \\ \hline
-r{[}idx{]}         & Yields the n-th element(available if random access)            \\ \hline
-r.data()                      & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-r.base()           & Yields a reference to the range that r refers to or owns       \\ \hline
+transform\_view r\{\}         & 创建一个transform\_view，它引用一个默认构造的范围                               \\ \hline
+transform\_view r\{rg, func\} & 创建一个transform\_view，用函数变换rg范围内所有元素的值          \\ \hline
+r.begin()          & 生成begin迭代器                                      \\ \hline
+r.end()            & 生成哨兵(end迭代器)                             \\ \hline
+r.empty()          & 生成的r是否为空(若范围支持，则可用) \\ \hline
+if (r)             & 若r不为空，则为true(若定义了empty()，则可用)         \\ \hline
+r.size()           & 生成元素的数量(若引用了一个长度范围，则可用)                            \\ \hline
+r.front()          & 生成的第一个元素(若转发可用)              \\ \hline
+r.back()           & 生成的最后一个元素(若迭代器为双向且通用，则可用) \\ \hline
+r{[}idx{]}         & 生成的第n个元素(若果随机访问，则可用)            \\ \hline
+r.data()           & 生成一个指向元素内存的原始指针(若元素在连续内存中可用) \\ \hline
+r.base()           & 产生对r所引用或归属范围的引用       \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.19. Operations of the class std::ranges::transform\_view<>
+表8.19 类std::ranges::transform\_view<>的操作
 \end{center}
 
-\mySubsubsection{8.6.2}{Elements View}
+\mySubsubsection{8.6.2}{元素视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Type:}              & std::ranges::elements\_view\textless{}\textgreater{}            \\ \hline
+\textbf{类型:}              & std::ranges::elements\_view\textless{}\textgreater{}            \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:}           & The n-th member/attribute of all tuple-like elements of a range \\ \hline
-\textbf{Adaptor:}           & std::views::elements\textless{}\textgreater{}                   \\ \hline
-\textbf{Element type:}         & Type of the member/attriute \\ \hline
-\textbf{Requires:}             & At least input range        \\ \hline
-\textbf{Category:}          & Same as passed but at most random access                        \\ \hline
-\textbf{Is sized range:}       & If on sized range           \\ \hline
-\textbf{Is common range:}      & If on common range          \\ \hline
-\textbf{Is borrowed range:} & If on borrowed view or on lvalue non-view                       \\ \hline
-\textbf{Caches:}               & Nothing                     \\ \hline
-\textbf{Const iterable:}       & If on const-iterable range  \\ \hline
-\textbf{Propagates constness:} & Only if on rvalue range     \\ \hline
+\textbf{内容:}           & 范围中所有类元组元素的第n个成员/属性 \\ \hline
+\textbf{适配器:}           & std::views::elements\textless{}\textgreater{}                   \\ \hline
+\textbf{元素类型:}         & 成员/属性的类型 \\ \hline
+\textbf{要求:}             & 至少为输入范围        \\ \hline
+\textbf{类别:}          & 与传递的相同，但至多是随机访问                        \\ \hline
+\textbf{是否是长度范围:}       & 若在长度范围内           \\ \hline
+\textbf{是否是通用范围:}      & 若在通用范围内          \\ \hline
+\textbf{是否是租借范围:} & 若是租借视图或左值非视图                       \\ \hline
+\textbf{缓存:}               & 无                     \\ \hline
+\textbf{常量可迭代:}       & 若在可迭代范围内  \\ \hline
+\textbf{传播常量性:} & 只有在右值范围内     \\ \hline
 \end{longtable}
 
-The class template std::ranges::elements\_view<> defines a view that selects the idx-th member/attribute/element of all elements of a passed range. The view calls get<idx>(elem) for each element and can especially be used
+类模板std::ranges::elements\_view<>定义了一个视图，该视图选择传递的范围中所有元素的第idx个成员/属性/元素。视图为每个元素调用get<idx>(elem)，并且可以使用
 
 \begin{itemize}
 \item
-To get the idx-th members of all std::tuple elements
+获取所有std::tuple元素的第idx个成员
 
 \item
-To get the idx-th alternative of all std::variant elements
+获取所有std::variant元素的第idx个成员
 
 \item
-To get the first or second member of std::pair elements (although, for elements of associative and unordered containers, it is more convenient to use the keys\_view and the values\_view)
+获取std::pair元素的第一个或第二个成员(不过，对于关联容器和无序容器的元素，使用keys\_view和values\_view更方便)
 \end{itemize}
 
-Note that for this view, class template argument deduction does not work because you have to specify the index as an argument explicitly and partial argument deduction is not supported for class templates. For this reason, you have to write the following:
+注意，对于这个视图，类模板参数推导不起作用，因为必须显式地将索引指定为参数，并且类模板不支持部分参数推导。出于这个原因，必须这样书写:
 
 \begin{cpp}
 std::vector<std::tuple<std::string, std::string, int>> rg{
@@ -281,42 +281,42 @@ for (const auto& elem
 }
 \end{cpp}
 
-The loop prints:
+循环输出:
 
 \begin{shell}
 1685 1756 1770 1810
 \end{shell}
 
-Note that you have to specify the type of the underlying range with the range adaptor all() if a range is passed that is not a view:
+请注意，若传递的范围不是视图，则必须使用范围适配器all()指定底层范围的类型:
 
 \begin{cpp}
 std::ranges::elements_view<decltype(std::views::all(rg)), 2>{rg} // OK
 \end{cpp}
 
-You can also specify the type directly using std::views::all\_t<>:
+也可以直接使用std::views::all\_t<>指定类型:
 
 \begin{cpp}
 std::ranges::elements_view<std::views::all_t<decltype(rg)&>, 2>{rg} // OK
 std::ranges::elements_view<std::views::all_t<decltype((rg))>, 2>{rg} // OK
 \end{cpp}
 
-However, details matter here. If the range is not a view yet, the parameter to all\_t<> must be an lvalue reference. Therefore, you need a \& after the type of rg or the double parentheses around rg (by rule, decltype yields an lvalue reference if an expression is passed that is an lvalue). Single parentheses without \& do not work:
+然而，这里的细节很重要。若范围还不是视图，那么all\_t<>的参数必须是左值引用。因此，需要在rg的类型后面加上\&，或者在rg周围加上双括号(根据规则，若传递的表达式是左值，则decltype会产生一个左值引用)。没有\&的单圆括号不起作用:
 
 \begin{cpp}
 std::ranges::elements_view<std::views::all_t<decltype(rg)>, 2>{rg} // ERROR
 \end{cpp}
 
-Therefore, the far easier way to declare the view is by using the corresponding range adaptor.
+因此，声明视图更简单的方法是使用相应的范围适配器。
 
-\mySamllsection{Range Adaptors for Elements Views}
+\mySamllsection{元素视图的范围适配器}
 
-Elements views can also (and usually should) be created with a range adaptor. The adaptor makes the use of the view a lot easier because you do not have to specify the type of the underlying range:
+元素视图也可以(通常应该)使用范围适配器创建。适配器使视图的使用更容易，不必指定底层范围的类型:
 
 \begin{cpp}
 std::views::elements<idx>(rg)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : std::views::elements<2>(rg)) {
@@ -324,7 +324,7 @@ for (const auto& elem : std::views::elements<2>(rg)) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::elements<2>) {
@@ -332,17 +332,17 @@ for (const auto& elem : rg | std::views::elements<2>) {
 }
 \end{cpp}
 
-Using the range adaptor, elements<idx>(rg) is always equivalent to:
+使用范围适配器，elements<idx>(rg)等价于:
 
 \begin{cpp}
 std::ranges::elements_view<std::views::all_t<decltype(rg)&>, idx>{rg}
 \end{cpp}
 
-The elements view stores the passed range internally (optionally converted to a view in the same way as with all()). Therefore, it is valid only as long as the passed range is valid (unless an rvalue was passed, meaning that internally, an owning view is used).
+元素视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
-Both the begin iterator and the sentinel (end iterator) are special internal helper types that are common if the passed range is common.
+begin迭代器和哨兵(end迭代器)都是特殊的内部辅助类型，若传递的是通用范围，则是通用的。
 
-Here is a full example program using element views:
+下面是一个使用元素视图的完整示例:
 
 \filename{ranges/elementsview.cpp}
 
@@ -378,33 +378,33 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 golden-ratio euler-constant e pi
 0.577216 1.61803 2.71828 3.14159
 \end{shell}
 
-Note that you should not sort the elements of coll as follows:
+请注意，不应该按以下方式对coll的元素进行排序:
 
 \begin{cpp}
 std::ranges::sort(coll | std::views::elements<2>); // OOPS
 \end{cpp}
 
-This will sort only the values of the elements, not the elements as whole, and will lead to the following output:
+这将只对元素的值进行排序，而不是对整个元素进行排序，并将出现以下输出:
 
 \begin{shell}
 pi e golden-ratio euler-constant
 0.577216 1.61803 2.71828 3.14159
 \end{shell}
 
-\mySamllsection{Elements Views for Other Tuple-Like Types}
+\mySamllsection{其他类元组类型的元素视图}
 
-To be able to use this view for user-defined types, you need to specify a tuple-like API for them. However, with the current specification, it is not really due to a problem in the design of tuple-like APIs in general and the way the corresponding concepts are defined. Therefore, strictly speaking, you can use the class std::ranges::elements\_view or the adaptor std::views::elements<> only for std::pair<> and std::tuple<>.
+为了能够将此视图用于用户定义的类型，需要为它们指定一个类似元组的API。但就目前的规范而言，这实际上并不是因为一般的类元组api的设计和相应概念的定义方式存在问题。严格地说，只能对std::pair<>和std::tuple<>使用std::ranges::elements\_view类或适配器std::views::elements<>。
 
-However, if you ensure that the tuple-like API is defined before header <ranges> is included, it works.
+但若确保在包含头文件<ranges>之前定义了类似元组的API，就可以工作。
 
-For example:
+例如:
 
 \filename{ranges/elementsviewhack.cpp}
 
@@ -449,7 +449,7 @@ namespace std {
 } // namespace std
 \end{cpp}
 
-If you use it as follows:
+可以这样使用:
 
 \filename{ranges/elementsviewhack.cpp}
 
@@ -478,7 +478,7 @@ int main()
 }
 \end{cpp}
 
-you have the following output:
+输出如下:
 
 \begin{shell}
 coll:
@@ -494,84 +494,84 @@ coll:
 - truth
 \end{shell}
 
-\mySamllsection{Interface of Elements Views}
+\mySamllsection{元素视图的接口}
 
-Table Operations of the class std::ranges::elements\_view<> lists the API of an elements view.
+“类std::ranges::elements\_view<>的操作”表列出了元素视图的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}     & \textbf{Effect}                                                \\ \hline
+\textbf{操作}     & \textbf{效果}                                                \\ \hline
 \endfirsthead
 %
 \endhead
 %
-elements\_view r\{\} & Creates an elements\_view that refers to a default constructed range                               \\ \hline
-elements\_view r\{rg\} & Creates an elements\_view that refers to range rg              \\ \hline
-r.begin()              & Yields the begin iterator                                      \\ \hline
-r.end()                & Yields the sentinel (end iterator)                             \\ \hline
-r.empty()              & Yields whether r is empty (available if the range supports it) \\ \hline
-if (r)                 & true if r is not empty(availabel if empty() is defined)        \\ \hline
-r.size()             & Yields the number of elements(available if it refers to a sized range)                             \\ \hline
-r.front()              & Yields the first element(available if forwarding)              \\ \hline
-r.back()               & Yields the last element(available if bidirectional and common) \\ \hline
-r{[}idx{]}             & Yields the n-th element(available if random access)            \\ \hline
-r.data()             & Yields a raw pointer to the memory of the elements(available if elements are in contiguous memory) \\ \hline
-r.base()               & Yields a reference to the range that r refers to or owns       \\ \hline
+elements\_view r\{\} & 创建一个elements\_view，它引用一个默认构造的范围                               \\ \hline
+elements\_view r\{rg\} & 创建一个引用范围rg的elements\_view              \\ \hline
+r.begin()              & 生成begin迭代器                                      \\ \hline
+r.end()                & 生成哨兵(end迭代器)                             \\ \hline
+r.empty()              & 生成的r是否为空(若范围支持，则可用) \\ \hline
+if (r)                 & 若r不为空，则为true(若定义了empty()，则可用)        \\ \hline
+r.size()             & 生成元素的数量(若引用了一个长度范围，则可用)                             \\ \hline
+r.front()              & 生成的第一个元素(若转发可用)              \\ \hline
+r.back()               & 生成的最后一个元素(若迭代器为双向且通用，则可用) \\ \hline
+r{[}idx{]}             & 生成的第n个元素(若随机访问可用)            \\ \hline
+r.data()             & 生成一个指向元素内存的原始指针(若元素在连续内存中可用)。 \\ \hline
+r.base()               & 生成对r所引用或归属范围的引用       \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 8.20. Operations of the class std::ranges::elements\_view<>
+表8.20 类std::ranges::elements\_view<>的操作
 \end{center}
 
 	
-\mySubsubsection{8.6.3}{Keys and Values View}
+\mySubsubsection{8.6.3}{键和值的视图}
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|ll|}
 \hline
-\textbf{Type:}    & \multicolumn{1}{l|}{std::ranges::keys\_view\textless{}\textgreater{}} & std::ranges::values\_view\textless{}\textgreater{} \\ \hline
+\textbf{类型:}    & \multicolumn{1}{l|}{std::ranges::keys\_view\textless{}\textgreater{}} & std::ranges::values\_view\textless{}\textgreater{} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\textbf{Content:} & \multicolumn{2}{l|}{The first/second member or attribute of all tuple-like elements of a range}                            \\ \hline
-\textbf{Adaptor:}              & \multicolumn{1}{l|}{std::views::keys}           & std::views::values         \\ \hline
-\textbf{Element type:}         & \multicolumn{1}{l|}{Type of the first member}   & Type of the second member  \\ \hline
-\textbf{Requires:}             & \multicolumn{1}{l|}{At least input range}       & At least input range       \\ \hline
-\textbf{Category:}             & \multicolumn{2}{l|}{Same as passed but at most random access}                \\ \hline
-\textbf{Is sized range:}       & \multicolumn{1}{l|}{If on sized range}          & If on sized range          \\ \hline
-\textbf{Is common range:}      & \multicolumn{1}{l|}{If on common range}         & If on common range         \\ \hline
-\textbf{Is borrowed range:}    & \multicolumn{2}{l|}{If on borrowed view or on lvalue non-view}               \\ \hline
-\textbf{Caches:}               & \multicolumn{1}{l|}{Nothing}                    & Nothing                    \\ \hline
-\textbf{Const iterable:}       & \multicolumn{1}{l|}{If on const-iterable range} & If on const-iterable range \\ \hline
-\textbf{Propagates constness:} & \multicolumn{1}{l|}{Only if on rvalue range}    & Only if on rvalue range    \\ \hline
+\textbf{内容:} & \multicolumn{2}{l|}{范围中所有类元组元素的第一个/第二个成员或属性}                            \\ \hline
+\textbf{适配器:}              & \multicolumn{1}{l|}{std::views::keys}           & std::views::values         \\ \hline
+\textbf{元素类型:}         & \multicolumn{1}{l|}{第一个成员的类型}   & 第二个成员的类型  \\ \hline
+\textbf{要求:}             & \multicolumn{1}{l|}{至少为输入范围}       & 至少为输入范围       \\ \hline
+\textbf{类别:}             & \multicolumn{2}{l|}{与传递的相同，但至多是随机访问}                \\ \hline
+\textbf{是否是长度范围:}       & \multicolumn{1}{l|}{若在长度范围内}          & 若在长度范围内          \\ \hline
+\textbf{是否是通用范围:}      & \multicolumn{1}{l|}{若在通用范围内}         & 若在通用范围内         \\ \hline
+\textbf{是否是租借范围:}    & \multicolumn{2}{l|}{若为租借视图或左值非视图}               \\ \hline
+\textbf{缓存:}               & \multicolumn{1}{l|}{无}                    & Nothing                    \\ \hline
+\textbf{常量可迭代:}       & \multicolumn{1}{l|}{若在可迭代范围内} & 若在可迭代范围内 \\ \hline
+\textbf{传播常量性:} & \multicolumn{1}{l|}{只有在右值范围内}    & 只有在右值范围内    \\ \hline
 \end{longtable}
 
-The class template std::ranges::keys\_view<> defines a view that selects the first member/attribute/element from the elements of a passed range. It is nothing but a shortcut for using the elements view with the index 0. That is, it calls get<0>(elem) for each element.
+类模板std::ranges::keys\_view<>定义了一个视图，该视图从传递的范围的元素中选择第一个成员/属性/元素。它只是使用索引为0的元素视图的快捷方式，为每个元素调用get<0>(elem)。
 
-The class template std::ranges::values\_view<> defines a view that selects the second member/attribute/element from the elements of a passed range. It is nothing but a shortcut for using the elements view with the index 1. That is, it calls get<1>(elem) for each element.
+类模板std::ranges::values\_view<>定义了一个视图，该视图从传递的范围的元素中选择第二个成员/属性/元素。它只是使用索引为1的元素视图的快捷方式，为每个元素调用get<1>(elem)。
 
-These views can especially be used:
+这些视图可以这样使用:
 
 \begin{itemize}
 \item
-To get the member first/second of std::pair elements, which is especially useful for selecting the key/value of the elements of a map, unordered\_map, multimap, and unordered\_multimap
+获取std::pair元素的第一/第二成员，这对于选择map、unordered\_map、multimap和unordered\_multimap的元素的键/值特别有用
 
 \item
-To get the first/second member of std::tuple elements
+获取std::元组元素的第一/第二个成员
 
 \item
-To get the first/second alternative of std::variant elements
+获取std::variant元素的第一/第二个的选项
 \end{itemize}
 
-However, for the last two applications, it is probably more readable to use the elements\_view directly with the index 0.
+但对于最后两个应用程序，直接使用索引为0的elements\_view元素可能更具可读性。
 
-Note that class template argument deduction does not work yet for these views.7 For this reason, you have to specify the template parameters explicitly. For example:
+注意，类模板参数推导对这些视图还不起作用出于这个原因，必须显式地指定模板参数。例如:
 
 \begin{cpp}
 std::map<std::string, int> rg{
@@ -584,22 +584,22 @@ for (const auto& e : std::ranges::keys_view<decltype(std::views::all(rg))>{rg}) 
 }
 \end{cpp}
 
-The loop prints:
+循环输出:
 
 \begin{shell}
 Bach Beethoven Chopin Mozart Tchaikovsky Vivaldi
 \end{shell}
 
-\mySamllsection{Range Adaptors for Keys/Values Views}
+\mySamllsection{键/值视图的范围适配器}
 
-Keys and values views can also (and usually should) be created with a range adaptor: The adaptor makes the use of the view a lot easier because you do not have to specify the type of the underlying range:
+键和值视图也可以(通常应该)使用范围适配器创建:适配器使视图的使用更容易，不必指定底层范围的类型:
 
 \begin{cpp}
 std::views::keys(rg)
 std::views::values(rg)
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::keys) {
@@ -607,7 +607,7 @@ for (const auto& elem : rg | std::views::keys) {
 }
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 for (const auto& elem : rg | std::views::values) {
@@ -615,9 +615,9 @@ for (const auto& elem : rg | std::views::values) {
 }
 \end{cpp}
 
-All other aspects match those of elements views.
+所有其他方面都与元素视图相匹配。
 
-Here is a full example program using keys and values views:
+下面是一个使用键和值视图的完整示例:
 
 \filename{ranges/keysvaluesview.cpp}
 
@@ -654,7 +654,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 euler-constant golden-ratio e pi
