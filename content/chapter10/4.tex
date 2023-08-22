@@ -1,20 +1,22 @@
-If L is specified for a format, the locale-specific notation is used:
+若为格式指定了L，则使用特定于语言环境的表示法:
 
 \begin{itemize}
 \item 
-For bool, the locale strings on std::numpunct::truename and std::numpunct::falsename are used.
+对于bool，使用std::numpunct::truename和std::numpunct::falsename上的区域设置字符串。
 
 \item 
-For integral values, the locale-dependent thousands separator character is used.
+对于整数值，使用依赖于语言环境的千位分隔符。
 
 \item 
-For floating-point values, the locale-dependent decimal point and thousands separator characters are used.
+对于浮点值，使用依赖于语言环境的小数点和千位分隔字符。
 
 \item 
-For several notations of types in the chrono library (durations, timepoints, etc), their locale-specific formats are used.
+对于chrono库中的几种类型表示法(持续时间、时间点等)，使用特定于语言环境的格式。
 \end{itemize}
 
-To activate the locale-specific notation, you also have to pass a locale to std::format(). For example:
+要激活特定于语言环境的表示法，还必须向std::format()传递一个语言环境。
+
+例如:
 
 \begin{cpp}
 // initialize a locale for “German in Germany”:
@@ -28,18 +30,18 @@ std::locale locG{"de_DE"};
 std::format(locG, "{0} {0:L}", 1000.7) // yields 1000.7 1.000,7
 \end{cpp}
 
-See format/formatgerman.cpp for a complete example.
+参见format/formatgerman.cpp获得完整的示例。
 
-Note that the locale is used only if you use the locale specifier L. Without this, the default locale "C" is used, which uses the American formatting.
+注意，只有在使用语言环境说明符L时才会使用语言环境，否则将使用默认的语言环境“C”，它使用美式格式。
 
-Alternatively, you can set the global locale and use the L specifier:
+或者，可以设置全局语言环境，并使用L说明符:
 
 \begin{cpp}
 std::locale::global(locG); // set German locale globally
 std::format("{0} {0:L}", 1000.7) // yields 1000.7 1.000,7
 \end{cpp}
 
-You might have to create your own locale (usually based on an existing locale with modified facets). For example:
+可能需要创建自己的区域设置(通常基于带有修改facet的现有区域设置)。例如:
 
 \filename{format/formatbool.cpp}
 
@@ -74,13 +76,13 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 false falsch
 \end{shell}
 
-To print values with wide-character strings (which is an issue especially with Visual C++), both the format string and the arguments have to be wide-character strings. For example:
+要用宽字符串打印值(这是Visual C++的一个问题)，格式字符串和参数都必须是宽字符串。例如:
 
 \begin{cpp}
 std::wstring city = L"K\u00F6ln"; // K¨oln
@@ -89,7 +91,7 @@ std::wstring ws2 = std::format(L"{}", city); // OK: ws2 is std::wstring
 std::wcout << ws2 << '\n'; // OK
 \end{cpp}
 
-Strings of types char8\_t (UTF-8 characters), char16\_t, and char32\_t are not supported, yet.
+目前不支持char8\_t (UTF-8字符)、char16\_t和char32\_t类型的字符串。
 
 
 

@@ -1,29 +1,29 @@
-Ideally, C++ compilers should detect bugs at compile time rather than at runtime. Because string literals are known at compile time, C++ can check for format violations when string literals are used as format strings and does so in std::format() [The requirement to check format strings at compile time was proposed with \url{http://wg21.link/p2216r3} and accepted as a fix against C++20 after C++20 was standardized.]:
+理想情况下，C++编译器应该在编译时。而非在运行时检测bug。因为字符串字面值在编译时已知，所以当字符串字面值被用作格式字符串时，C++可以检查格式违规，并且在std::format()中这样做[编译时检查格式字符串的要求是通过\url{http://wg21.link/p2216r3}提出的，并在C++20标准化后被接受为针对C++20的修复]:
 
 \begin{cpp}
 std::format("{:d}", 42) // OK
 std::format("{:s}", 42) // compile-time ERROR
 \end{cpp}
 
-If you pass a format string that has already been initialized or computed, the formatting library handles format errors as follows:
+若传递的格式字符串已经初始化或计算过，格式化库会按如下方式处理格式错误:
 
 \begin{itemize}
 \item
-std::format(), std::format\_to(), and format\_to\_n() take only format strings known at compile time:
+std::format()，std::format\_to()和format\_to\_n()只接受编译时已知的格式字符串:
 
 \begin{itemize}
 \item
-String literals
+字符串字面值
 
 \item
-constexpr character pointers
+constexpr字符指针
 
 \item
-Compile-time strings that can be converted to a compile-time string view
+可以转换为编译时字符串视图的编译时字符串
 \end{itemize}
 
 \item
-To use format strings computed at runtime, use
+要使用在运行时计算的格式字符串，请使用
 
 \begin{itemize}
 \item
@@ -34,10 +34,10 @@ std::vformat\_to()
 \end{itemize}
 
 \item
-For std::formatted\_size(), you can only use format strings known at compile time.
+对于std::格式化\_size()，只能使用编译时已知的格式字符串。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 const char* fmt1 = "{:d}"; // runtime format string
@@ -48,18 +48,18 @@ constexpr const char* fmt2 = "{:d}"; // compile-time format string
 std::format(fmt2, 42); // OK
 \end{cpp}
 
-Using fmt1 does not compile because the passed argument is not a compile-time string and std::format() is used. However, using fmt1 with std::vformat() works fine (but you have to convert all arguments with std::make\_format\_args()). Using fmt2 does compile when you pass it to std::format() because it is initialized as a compile-time string.
+使用fmt1不会编译，因为传递的参数不是编译时字符串，并且使用了std::format()。然而，使用fmt1与std::vformat()工作良好(但您必须转换所有参数与std::make\_format\_args())。将fmt2传递给std::format()时，使用fmt2不会编译，因为其可初始化为编译时字符串。
 
-If you want to use multiple arguments with std::vformat(), you have to pass them all to one call of std::make\_format\_args():
+若想在std::vformat()中使用多个参数，必须将它们全部传递给std::make\_format\_args()的一次调用:
 
 \begin{cpp}
 const char* fmt3 = "{} {}";
 std::vformat(fmt3, std::make_format_args(x, y))
 \end{cpp}
 
-If a format failure is detected at runtime, an exception of type std::format\_error is thrown. This new standard exception type is derived from std::runtime\_error and offers the usual API of standard exceptions to initialize the exception with a string for the error message you get by calling what().
+若在运行时检测到格式化失败，则抛出类型为std::format\_error的异常。这个新的标准异常类型派生自std::runtime\_error，并提供了标准异常的常用API，可以使用调用what()获得的错误消息的字符串初始化异常。
 
-For example:
+例如:
 
 \begin{cpp}
 try {

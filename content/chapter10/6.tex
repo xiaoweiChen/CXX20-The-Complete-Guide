@@ -1,19 +1,19 @@
 
-The formatting library can define formatting for user-defined types. What you need is a formatter, which is pretty straightforward to implement.
+格式化库可以为用户定义的类型定义格式化。需要定义一个格式化器，也很容易实现。
 
-\mySubsubsection{10.6.1}{Basic Formatter API}
+\mySubsubsection{10.6.1}{基本格式器的API}
 
-A formatter is a specialization of the class template std::formatter<> for your type(s). Inside the formatter, two member functions have to be defined:
+格式器是类型的类模板std::formatter<>的特化。在格式化程序内部，必须定义两个成员函数:
 
 \begin{itemize}
 \item
-parse() to implement how to parse the format string specifiers for your type
+parse()实现如何解析类型的格式字符串说明符
 
 \item
-format() to perform the actual formatting for an object/value of your type
+format()为自定义类型的对象/值执行实际格式化
 \end{itemize}
 
-Let us look at a first minimal example (we will improve it step by step) that specifies how to format an object/value that has a fixed value. Assume the type is defined like this (see format/always40.hpp):
+来看一下第一个最小的例子(我们将逐步改进它)，指定了如何格式化具有固定值的对象/值。假设类型是这样定义的(见format/always40.hpp):
 
 \begin{cpp}
 class Always40 {
@@ -24,7 +24,7 @@ class Always40 {
 };
 \end{cpp}
 
-For this type, we can define a first formatter (which we should definitely improve) as follows:
+对于这种类型，可以定义第一个格式化器(应该改进)如下:
 
 \filename{format/formatalways40.hpp}
 
@@ -48,7 +48,7 @@ struct std::formatter<Always40>
 };
 \end{cpp}
 
-This is already good enough so that the following works:
+这已经足够好，可以进行如下工作:
 
 \begin{cpp}
 Always40 val;
@@ -56,14 +56,14 @@ std::cout << std::format("Value: {}\n", val);
 std::cout << std::format("Twice: {0} {0}\n", val);
 \end{cpp}
 
-The output would be:
+输出为:
 
 \begin{shell}
 Value: 40
 Twice: 40 40
 \end{shell}
 
-We define the formatter as a specialization of type std::formatter<> for our type Always40:
+我们将格式化器定义为类型std::formatter<>的特化，用于类型Always40:
 
 \begin{cpp}
 template<>
@@ -73,12 +73,12 @@ struct std::formatter<Always40>
 };
 \end{cpp}
 
-Because we only have public members, we use struct instead of class.
+因为只有public成员，所以使用struct，而非class。
 
 
-\mySamllsection{Parsing the Format String}
+\mySamllsection{解析格式字符串}
 
-In parse(), we implement the function to parse the format string:
+在parse()中，我们实现了解析格式字符串的函数:
 
 \begin{cpp}
 // parse the format string for this type:
@@ -87,41 +87,41 @@ constexpr auto parse(std::format_parse_context& ctx) {
 }
 \end{cpp}
 
-The function takes a std::format\_parse\_context, which provides an API to iterate over the remaining characters of the passed format string. ctx.begin() points to the first character of the format specifier for the value to be parsed or the \} if there is no specifier:
+该函数接受一个std::format\_parse\_context，提供了一个API来遍历传递的格式字符串的剩余字符。Ctx.begin()指向要解析的值的格式说明符的第一个字符，若没有说明符，则指向\}:
 
 \begin{itemize}
 \item
-If the format string is "Value: \{:7.2f\}"
-ctx.begin() points to: "7.2f\}"
+若格式字符串为 "Value: \{:7.2f\}"
+ctx.begin()指向: "7.2f\}"
 
 \item
-If the format string is "Twice: \{0\} \{0\}"
-ctx.begin() points to: "\} \{0\}"
-when called for the first time
+若格式字符串为 "Twice: \{0\} \{0\}"
+ctx.begin()指向: "\} \{0\}"
+第一次调用时
 
 \item
-If the format string is "\{\}\verb|\|n"
-ctx.begin() points to: "\}\verb|\|n"
+若格式字符串为 "\{\}\verb|\|n"
+ctx.begin()指向: "\}\verb|\|n"
 \end{itemize}
 
-There is also a ctx.end(), which points to the end of the whole format string. This means that the opening \{ was already parsed and you have to parse all characters until the corresponding closing \}.
+还有一个ctx.end()，它指向整个格式字符串的末尾。开始的\{已经解析过了，所以必须解析所有的字符，直到对应的结束的\}。
 
-For the format string "Val: \{1:\_>20\}cm \verb|\|n", ctx.begin() is the position of the \_ and ctx.end() is the end of the whole format string after the \verb|\|n. The task of parse() is to parse the specified format of the passed argument, which means that you have to parse only the characters \_>20, and then return the position of the end of the format specifier which is the trailing \} behind the character 0.
+对于格式字符串"Val: \{1:\_>20\}cm \verb|\|n"，ctx.begin()是\_的位置，ctx.end()是\verb|\|n之后整个格式字符串的末尾。parse()的任务是解析传递的参数的指定格式，所以必须解析字符\_>20，然后返回格式说明符末尾的位置，即字符0后面的末尾\}。
 
-In our implementation, we do not support any format specifier yet. Therefore, we simply return the position of the first character we get, which will work only if the next character really is the \} (dealing with character before the closing \} is the first thing we have to improve). Calling std::format() with any specified format character will not work:
+我们的实现中，还不支持任何格式说明符，所以可以简单地返回得到的第一个字符的位置，只有当下一个字符确实是\}时才会起作用(在结束\}之前处理字符是必须改进的第一件事)。使用任何指定的格式字符调用std::format()将不起作用:
 
 \begin{cpp}
 Always40 val;
 std::format("'{:7}", val) // ERROR
 \end{cpp}
 
-Note that the parse() member function should be constexpr to support compile-time computing of the format string. This means that the code has to accept all restrictions of constexpr functions (which were relaxed with C++20).
+注意，parse()成员函数应该是constexpr，以支持格式字符串的编译时计算，并且代码必须接受constexpr函数的所有限制(C++20放宽了这些限制)。
 
-However, you can see how this API allows programmers to parse whatever format we have specified for their types. This is used, for example, to support formatted output of the chrono library. Of course, we should follow the conventions of the standard specifiers to avoid programmer confusion.
+但可以看到这个API如何允许程序员解析我们为其类型指定的任何格式。例如，用于支持chrono库的格式化输出。当然，我们应该遵循标准说明符的约定，以避免混淆。
 
-\mySamllsection{Performing the Formatting}
+\mySamllsection{执行格式化}
 
-In format(), we implement the function to format the passed value:
+在format()中，实现了格式化传递值的函数:
 
 \begin{cpp}
 // format by always writing its value:
@@ -130,36 +130,36 @@ auto format(const Always40& value, std::format_context& ctx) const {
 }
 \end{cpp}
 
-The function takes two parameters:
+该函数接受两个形参:
 
 \begin{itemize}
 \item
-Our value passed as an argument to std::format() (or similar functions)
+作为参数传递给std::format()(或类似函数)的值。
 
 \item
-A std::format\_context, which provides the API to write the resulting characters of the formatting (according to the parsed format)
+一个std::format\_context，提供API来编写格式化的结果字符(根据已解析的格式)
 \end{itemize}
 
-The most important function of the format context is out(), which yields an object you can pass to std::format\_to() to write the actual characters of the formatting. The function has to return the new position for further output, which is returned by std::format\_to().
+format上下文最重要的函数是out()，它会产生一个对象，可以将其传递给std::format\_to()来编写格式化的实际字符。该函数必须返回新的位置以获得进一步的输出，该输出由std::format\_to()返回。
 
-Note that the format() member function of a formatter should be const. According to the original C++20 standard, that was not required (see \url{http://wg21.link/lwg3636} for details).
+注意，格式化器的format()成员函数应该是const。根据最初的C++20标准，这是不需要的(参见\url{http://wg21.link/lwg3636}了解详细信息)。
 
-\mySubsubsection{10.6.2}{Improved Parsing}
+\mySubsubsection{10.6.2}{改进解析}
 
-Let us improve the example we saw previously. First, we should ensure that the parser deals with the format specifiers in a better way:
+改进一下前面看到的例子。首先，应该确保解析器，以更好的方式处理格式说明符:
 
 \begin{itemize}
 \item
-We should take care of all characters up to the closing \}.
+应该处理到结尾\}之前的所有字符。
 
 \item
-We should throw an exception when illegal formatting arguments are specified.
+当指定非法格式化参数时，应该抛出异常。
 
 \item
-We should deal with valid formatting arguments (such as a specified field width).
+应该处理有效的格式化参数(比如：指定的字段的宽度)。
 \end{itemize}
 
-Let us look at all of these topics by looking at an improved version of the previous formatter (this time dealing with a type that always has the value 41):
+来看看对前一个格式化器的改进版本(这次处理的类型值总是为41):
 
 \filename{format/formatalways41.hpp}
 
@@ -191,7 +191,7 @@ public:
 };
 \end{cpp}
 
-Our formatter now has a member to store the specified field width:
+格式化器现在有了一个成员来存储指定字段的宽度:
 
 \begin{cpp}
 template<>
@@ -202,9 +202,9 @@ class std::formatter<Always41>
 };
 \end{cpp}
 
-The field width is initialized with 0, but can be specified by the format string.
+字段的宽度初始化为0，但可以通过格式字符串指定。
 
-The parser now has a loop that processes all characters up to the trailing \}:
+解析器现在有一个循环，处理所有字符，直到结尾的\}:
 
 \begin{cpp}
 constexpr auto parse(std::format_parse_context& ctx) {
@@ -217,15 +217,15 @@ constexpr auto parse(std::format_parse_context& ctx) {
 }
 \end{cpp}
 
-Note that the loop has to check for both whether there is still a character and whether it is the trailing \}, because the programmer calling std::format() might have forgotten the trailing \}.
+注意，循环必须检查是否还有一个字符，以及它是否是末尾的\}，因为调用std::format()的开发者可能忘记了末尾的\}。
 
-Inside the loop, we multiply the current width with the integral value of the digit character:
+在循环中，将当前宽度乘以数字字符的整数值:
 
 \begin{cpp}
 width = width * 10 + *pos - '0'; // new digit for the width
 \end{cpp}
 
-If the character is not a digit, we throw a std::format exception initialized with std::format():
+若字符不是数字，std::format()初始化抛出std::format异常:
 
 \begin{cpp}
 if (*pos < '0' || *pos > '9') {
@@ -233,11 +233,11 @@ if (*pos < '0' || *pos > '9') {
 }
 \end{cpp}
 
-Note that we cannot use std::isdigit() here because it is not a function we could call at compile time.
+注意，这里不能使用std::isdigit()，其不是一个可以在编译时调用的函数。
 
-You can test the formatter as follows: format/always41.cpp 
+可以测试这样的格式化器:format/always.cpp
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 41
@@ -247,46 +247,48 @@ With width: ’      41’
 Format Error: invalid format ’f’
 \end{shell}
 
-The value is right-aligned because this is the default alignment for integral values.
+该值是右对齐的，这是整数值的默认对齐方式。
 
-\mySubsubsection{10.6.3}{Using Standard Formatters for User-Defined Formatters}
+\mySubsubsection{10.6.3}{使用标准格式化程序用于自定义格式器}
 
-We can still improve the formatter implemented above:
-
-\begin{itemize}
-\item
-We can allow alignment specifiers.
-
-\item
-We can support fill characters.
-\end{itemize}
-
-Fortunately, we do not have to implement the complete parsing ourselves. Instead, we can use the standard formatters to benefit from the format specifiers they support. Actually, there are two approaches for doing that:
+我们仍然可以改进上面实现的格式化器:
 
 \begin{itemize}
 \item
-You can delegate the works to a local standard formatter.
+可以使用对齐说明符。
 
 \item
-You can inherit from a standard formatter.
+可以支持填充字符。
 \end{itemize}
 
-\mySamllsection{Delegating Formatting to Standard Formatters}
+幸运的是，我们不必自己实现完整的解析。相反，可以使用标准格式化器，从它们支持的格式说明符中获益。
 
-To delegate formatting to standard formatters, you have to
+实际上，有两种方法:
 
 \begin{itemize}
 \item
-Declare a local standard formatter
+可以将工作委托给本地标准格式化器。
 
 \item
-Let the parse() function delegate the work to the standard formatter
-
-\item
-Let the format() function delegate the work to the standard formatter
+可以从标准格式化器继承。
 \end{itemize}
 
-In general, this should look as follows:
+\mySamllsection{将格式化委托给标准格式化器}
+
+要将格式化委托给标准格式化器，必须
+
+\begin{itemize}
+\item
+声明一个本地标准格式化器
+
+\item
+将parse()函数将工作委托给标准格式化器
+
+\item
+将format()函数将工作委托给标准格式化器
+\end{itemize}
+
+一般来说，应该如下所示:
 
 \filename{format/formatalways42ok.hpp}
 
@@ -313,9 +315,9 @@ struct std::formatter<Always42>
 };
 \end{cpp}
 
-As usual, we declare a specialization of std::formatter<> for type Always42. However, this time, we use a local standard formatter for type int that does the work. We delegate both the parsing and the formatting to it. In fact, we extract the value from our type with getValue() and use the standard int formatter to do the rest of the formatting.
+像往常一样，我们为Always42类型声明std::formatter<>的特化。但这一次，使用int类型的本地标准格式化程序来完成这项工作，将解析和格式化都委托给它。实际上，我们使用getValue()从类型中提取值，并使用标准int格式化器完成其余的格式化工作。
 
-We can test the formatter with the following program:
+可以用下面的程序测试格式化器:
 
 \filename{format/always42.cpp}
 
@@ -340,7 +342,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 42
@@ -350,21 +352,21 @@ With width: ’     42’
 With all:   ’..42...’
 \end{shell}
 
-Note that the value is still right-aligned by default because that is the default alignment for int.
+注意，默认情况下，该值仍然是右对齐的，这是int的默认对齐方式。
 
-Note also that in practice, you might need some modifications for this code, which is discussed later in detail:
+实践中，可能需要对这段代码进行一些修改，稍后将详细讨论:
 
 \begin{itemize}
 \item
-Declaring format() as const might not compile unless the formatter is declared as mutable.
+将format()声明为const可能无法编译，除非将格式化器声明为mutable。
 
 \item
-Declaring parse() as constexpr might not compile.
+将parse()声明为constexpr可能无法编译。
 \end{itemize}
 
-\mySamllsection{Inheriting From Standard Formatters}
+\mySamllsection{继承标准格式器}
 
-Usually, it is even enough to derive from a standard formatter so that the formatter member and its parse() function are implicitly available:
+通常，可以从标准格式化器派生，以便格式化器成员及其parse()函数隐式可用:
 
 \filename{format/formatalways42inherit.hpp}
 
@@ -384,26 +386,26 @@ struct std::formatter<Always42> : std::formatter<int>
 };
 \end{cpp}
 
-However, note that in practice, you might also need some modifications for this code:
+但请注意，在实践中，可能还需要对这段代码进行一些修改:
 
 \begin{itemize}
 \item
-Declaring format() as const might not compile.
+将format()声明为const可能无法编译。
 \end{itemize}
 
-\mySamllsection{Using Standard Formatters in Practice}
+\mySamllsection{在实践中使用标准格式化器}
 
-In practice, there are some issues with what was standardized with C++20 so that afterwards some things had to be clarified:
+在实践中，C++20的标准化存在一些问题，之后必须澄清一些事情:
 
 \begin{itemize}
 \item
-C++20 as originally standardized did not require that the format() member function of a formatter should be const (see \url{http://wg21.link/lwg3636} for details). To support implementations of the C++ standard library that do not declare format() as a const member function, you have to either declare it as a non-const function or declare the local formatter as mutable.
+最初标准化的C++20并不要求格式化器的format()成员函数必须是const(参见\url{http://wg21.link/lwg3636}了解详细信息)。为了支持不将format()声明为const成员函数的C++标准库实现，必须将其声明为非const函数或将本地格式化器声明为mutable。
 
 \item
-Existing implementations might not yet support compile-time parsing with a parse() member function that is constexpr because compile-time parsing was added after C++20 was standardized (see \url{http: //wg21.link/p2216r3}). In that case, we cannot delegate compile-time parsing to a standard formatter.
+现有的实现可能还不支持parse()成员函数为constexpr的编译时解析，因为编译时解析是在C++20标准化之后添加的(参见\url{http: //wg21.link/p2216r3})。这种情况下，不能将编译时解析委托给标准格式化器。
 \end{itemize}
 
-As a consequence, in practice, the formatter for type Always42 might have to look as follows:
+在实践中，类型Always42的格式化程序可能必须如下所示:
 
 \filename{format/formatalways42.hpp}
 
@@ -436,23 +438,23 @@ struct std::formatter<Always42>
 };
 \end{cpp}
 
-As you can see, the code
+如您所见，
 
 \begin{itemize}
 \item
-Declares parse() only with constexpr if the corresponding fix was adopted
+若采用了相应的修复，则仅使用constexpr声明parse()
 
 \item
-Might declare the local formatter with mutable so that the const format() member function can call a standard format() function that is not const
+可以使用mutable声明本地格式化器，以便const format()成员函数可以调用非const的标准format()函数
 \end{itemize}
 
-For both, the implementation uses a feature test macro that signals that compile-time parsing is supported (expecting that its adoptions also make the format() member functions of the standard formatters const ).
+对于两者，实现都使用了一个特性测试宏，该宏表示支持编译时解析(期望采用也使标准格式化器的format()成员函数为const)。
 
-\mySubsubsection{10.6.4}{Using Standard Formatters for Strings}
+\mySubsubsection{10.6.4}{为字符串使用标准格式化器}
 
-If you have more complicated types to format, one common approach is to create a string and then use the standard formatter for strings (std::string or std::string\_view if only string literals are used).
+若要格式化更复杂的类型，一种常见的方法是创建一个字符串，然后使用字符串的标准格式化程序(若只使用字符串字面值，则使用std::string或std::string\_view)。
 
-For example, we can define an enumeration type and a formatter for it as follows:
+例如，可以定义枚举类型和格式化器，如下所示:
 
 \filename{format/color.hpp}
 
@@ -490,9 +492,9 @@ struct std::formatter<Color> : public std::formatter<std::string>
 };
 \end{cpp}
 
-By inheriting the formatter from the formatter for strings, we inherit its parse() functions, which means that we support all format specifiers strings have. In the format() function, we then perform the mapping to a string and then let the standard formatter do the rest of the formatting.
+通过从字符串格式化器继承格式化器，继承了它的parse()函数，所以支持字符串具有的所有格式说明符。在format()函数中，执行到字符串的映射，然后让标准格式化器完成其余的格式化工作。
 
-We can use the formatter as follows:
+可以这样使用格式化器:
 
 \filename{format/color.cpp}
 
@@ -512,7 +514,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 Color _____red has value 00
@@ -521,7 +523,7 @@ Color ____blue has value 02
 Color _Color13 has value 13
 \end{shell}
 
-This approach usually works fine if you do not introduce your own format specifiers. If only string literals are used as possible values, you could even use the formatter for std::string\_view instead.
+若不引入自定义的格式说明符，这种方法通常可以很好地工作。若只使用字符串字面值作为可能的值，甚至可以使用std::string\_view的格式化器。
 
 
 

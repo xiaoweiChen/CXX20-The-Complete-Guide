@@ -1,41 +1,41 @@
 
-This section describes the syntax of formatting in detail.
+本节来详细介绍格式化的语法。
 
-\mySubsubsection{10.3.1}{General Format of Format Strings}
+\mySubsubsection{10.3.1}{格式字符串的通用格式}
 
-The general way to specify the formatting of arguments is to pass a format string that can have replacement fields specified by \{...\} and characters. All other characters are printed as they are. To print the characters \{ and \}, use \{\{ and \}\}.
+指定参数格式的一般方法是传递一个格式字符串，该字符串可以具有由\{…指定的替换字段。\}和字符。所有其他字符按原样打印。要打印字符\{和\}，请使用\{\{和\}\}。
 
-For example:
+例如:
 
 \begin{cpp}
 std::format("With format {{}}: {}", 42); // yields "With format {}: 42"
 \end{cpp}
 
-The replacement fields may have an index to specify the argument and a format specifier after a colon:
+替换字段可以有一个索引来指定参数，并在冒号后面有一个格式说明符:
 
 \begin{itemize}
 \item 
 \{\}
 
-Use the next argument with its default formatting
+使用带有默认格式的下一个参数
 
 \item 
 \{n\}
 
-Use the n-th argument (first argument has index 0) with its default formatting
+使用默认格式的第n个参数(第一个参数索引为0)
 
 \item 
 \{:fmt\}
 
-Use the next argument formatted according to fmt
+使用根据fmt格式化的下一个参数
 
 \item 
 \{n:fmt\}
 
-Use the n-th argument formatted according to fmt
+使用根据fmt格式化的第n个参数
 \end{itemize}
 
-You can either have none of the arguments specified by an index or all of them:
+可以不使用索引指定的任何参数，也可以使用全部参数:
 
 \begin{cpp}
 std::format("{}: {}", key, value); // OK
@@ -43,21 +43,21 @@ std::format("{1}: {0}", value, key); // OK
 std::format("{}: {} or {0}", value, key); // ERROR
 \end{cpp}
 
-Additional arguments are ignored.
+将忽略其他参数。
 
-The syntax of the format specifier depends on the type of the passed argument.
+格式说明符的语法取决于所传递参数的类型。
 
 \begin{itemize}
 \item 
-For arithmetic types, strings, and raw pointers, a standard format has been defined by the formatting library itself.
+对于算术类型、字符串和原始指针，格式化库本身已经定义了标准格式。
 
 \item 
-In addition, C++20 specifies a standard formatting of chrono types (durations, timepoints, and calendrical types).
+此外，C++20还指定了时间类型(持续时间、时间点和日历类型)的标准格式。
 \end{itemize}
 
-\mySubsubsection{10.3.2}{Standard Format Specifiers}
+\mySubsubsection{10.3.2}{标准格式说明符}
 
-Standard format specifiers have the following format (each specifier is optional):
+标准格式说明符有以下格式(每个说明符都是可选的):
 
 \begin{shell}
 fill align sign # 0 width .prec L type
@@ -65,76 +65,78 @@ fill align sign # 0 width .prec L type
 
 \begin{itemize}
 \item 
-fill is the character to fill the value up to width (default: space). It can only be specified if align is also specified.
+fill是将值填充到宽度(默认:空格)的字符。它只能在同时指定align时指定。
 
 \item 
-align is
+align为
 
 \begin{itemize}
 \item 
-< left-aligned
+< 左对齐
 
 \item 
-> right-aligned
+> 右对齐
 
 \item 
-\^{} centered
+\^{} 居中
 \end{itemize}
 
-The default alignment depends on the type.
+默认对齐方式取决于类型。
 
 \item 
-sign is
+sign为
 
 \begin{itemize}
 \item 
-- only the negative sign for negative values (default)
+- 只有负值的负号(默认)
 
 \item 
-+ positive or negative sign
++ 正号或负号
 
 \item 
-space negative sign or space
+space 负号或空格
 \end{itemize}
 
 \item 
-\# switches to an alternative form of some notations:
+\# 切换到某些符号的替代形式:
 
 \begin{itemize}
 \item 
-It writes a prefix such as 0b, 0, and 0x for the binary, octal, and hexadecimal notation of integral values.
+为整数值的二进制、八进制和十六进制表示法写入0b、0和0x这样的前缀。
 
 \item 
-It forces the floating-point notation to always write a dot.
+强制浮点表示法总是写一个点。
 \end{itemize}
 
 \item 
-0 in front of width pads arithmetic values with zeros.
+宽度前的0用零填充算术值。
 
 \item 
-width specifies a minimum field width.
+width 指定最小字段宽度。
 
 \item 
-prec after a dot specifies the precision:
+点后的prec指定精度:
 
 \begin{itemize}
 \item 
-For floating-point types, it specifies how many digits are printed after the dot or in total (depending on the notation).
+对于浮点类型，指定在点后面或总共打印多少位数字(取决于表示法)。
 
 \item 
-For string types, it specifies the maximum number of characters processed from the string.
+对于字符串类型，指定从字符串处理的最大字符数。
 \end{itemize}
 
 \item 
-L activates locale-dependent formatting (this may impact the format of arithmetic types and bool)
+L 激活依赖格式(这可能会影响算术类型和bool)的格式
 
 \item 
-type specifies the general notation of the formatting. This allows you to print characters as integral values (or vice versa) or choose the general notation of floating-point values.
+type 指定格式化的通用表示法，将字符打印为整数值(反之亦然)或选择浮点值的通用表示法。
 \end{itemize}
 
-\mySubsubsection{10.3.3}{Width, Precision, and Fill Characters}
+\mySubsubsection{10.3.3}{宽度、精度和填充字符}
 
-For all values printed, a positive integral value after the colon (without a leading dot) specifies a minimal field width for the output of the value as a whole (including sign etc.). It can be used together with a specification of the alignment: For example:
+对于所有打印的值，冒号后面的正整数值(不带前导点)指定了整个值输出的最小字段宽度(包括符号等)。它可以与对齐规范一起使用:
+
+例如:
 
 \begin{cpp}
 std::format("{:7}", 42);     // yields "           42"
@@ -143,7 +145,7 @@ std::format("{:^7}", "hi");  // yields "      hi     "
 std::format("{:>7}", "hi");  // yields "           hi"
 \end{cpp}
 
-You can also specify padding zeros and a fill character. The padding 0 can be used only for arithmetic types (except char and bool) and is ignored if an alignment is specified:
+还可以指定填充零和填充字符。填充0只能用于算术类型(char和bool除外)，若果指定了对齐方式，则忽略填充0:
 
 \begin{cpp}
 std::format("{:07}", 42);    // yields "0000042"
@@ -151,7 +153,7 @@ std::format("{:^07}", 42);   // yields "  42   "
 std::format("{:>07}", -1);   // yields "     -1"
 \end{cpp}
 
-A padding 0 is different from the general fill character that can be specified immediately after the colon (in front of the alignment):
+填充0不同于一般的填充字符，可以在冒号之后立即指定(在对齐的前面):
 
 \begin{cpp}
 std::format("{:^07}", 42);   // yields "  42   "
@@ -160,11 +162,11 @@ std::format("{:07}", "hi");  // invalid (padding 0 not allowed for strings)
 std::format("{:0<7}", "hi"); // yields "hi00000"
 \end{cpp}
 
-The precision is used for floating-point types and strings:
+精度用于浮点类型和字符串:
 
 \begin{itemize}
 \item 
-For floating-point types, you can specify a different precision than the usual default 6:
+对于浮点类型，可以指定一个精度(默认值为6):
 
 \begin{cpp}
 std::format("{}", 0.12345678);         // yields "0.12345678"
@@ -173,10 +175,10 @@ std::format("{:10.5}", 0.12345678);    // yields "   0.12346"
 std::format("{:^10.5}", 0.12345678);   // yields " 0.12346  "
 \end{cpp}
 
-Note that depending on the floating-point notation, the precision might apply to the value as a whole or to the digits after the dot.
+请注意，根据浮点表示法的不同，精度可能适用于整个值，也可能适用于点之后的数字。
 
 \item 
-For strings, you can use it to specify a maximum number of characters:
+对于字符串，可以用来指定最大字符数:
 
 \begin{cpp}
 std::format("{}", "counterproductive");            // yields "counterproductive"
@@ -187,7 +189,7 @@ std::format("{:^20.7}", "counterproductive");      // yields "        counter   
 \end{cpp}
 \end{itemize}
 
-Note that width and precision can be parameters themselves. For example, the following code:
+注意，宽度和精度本身可以作为参数:
 
 \begin{cpp}
 int width = 10;
@@ -197,7 +199,7 @@ for (double val : {1.0, 12.345678, -777.7}) {
 }
 \end{cpp}
 
-has the following output:
+输出如下:
 
 \begin{shell}
     +1.00
@@ -205,127 +207,127 @@ has the following output:
   -777.70
 \end{shell}
 
-Here, we specify at runtime that we have a minimum field width of 10 with two digits after the dot (using the fixed notation).
+这里，在运行时指定最小字段宽度为10，点后面有两个数字(使用固定的表示法)。
 
-\mySubsubsection{10.3.4}{Format/Type Specifiers}
+\mySubsubsection{10.3.4}{格式/类型说明符}
 
-By specifying a format or type specifier, you can force various notations for integral types, floating-point types, and raw pointers.
+通过指定格式或类型说明符，可以强制为整型、浮点型和原始指针使用不同的符号。
 
-\mySamllsection{Specifiers for Integral Types}
+\mySamllsection{整型的说明符}
 
-Table Formatting Options for integral types lists the possible formatting type options for integral types (including bool and char).[ According to \url{http://wg21.link/lwg3648}, the support for specifier c for bool is probably an error and will be removed.]
+整型的表格式化选项列出了整型(包括bool和char)可能的格式化类型选项。[根据\url{http://wg21.link/lwg3648}，对bool的说明符c的支持可能是一个错误，将被删除。]
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|l|l|l|}
 \hline
-\textbf{Spec.} & \textbf{42} & \textbf{'@'} & \textbf{true}       & \textbf{Meaning}                 \\ \hline
+\textbf{格式} & \textbf{42} & \textbf{'@'} & \textbf{true}       & \textbf{意义}                 \\ \hline
 \endfirsthead
 %
 \endhead
 %
-none           & 42          & @            & true                & Default format                   \\ \hline
-d              & 42          & 64           & 1                   & Decimal notation                 \\ \hline
-b/B            & 101010      & 1000000      & 1                   & Binary notation                  \\ \hline
-\#b            & 0b101010    & 0b1000000    & 0b1                 & Binary notation with prefix      \\ \hline
-\#B            & 0B101010    & 0B1000000    & 0B1                 & Binary notation with prefix      \\ \hline
-o              & 52          & 100          & 1                   & Octal notation                   \\ \hline
-x              & 2a          & 40           & 1                   & Hexadecimal notation             \\ \hline
-X              & 2A          & 40           & 1                   & Hexadecimal notation             \\ \hline
-\#x            & 0x2a        & 0x40         & 0x1                 & Hexadecimal notation with prefix \\ \hline
-\#X            & 0X2A        & 0X40         & 0X1                 & Hexadecimal notation with prefix \\ \hline
-c              & *           & @            & '\textbackslash{}1' & As character with the value      \\ \hline
-s              & invalid     & invalid      & true                & bool as string                   \\ \hline
+none           & 42          & @            & true                & 默认 format                   \\ \hline
+d              & 42          & 64           & 1                   & 十进制 notation                 \\ \hline
+b/B            & 101010      & 1000000      & 1                   & 二进制 notation                  \\ \hline
+\#b            & 0b101010    & 0b1000000    & 0b1                 & 带前缀的二进制表示法      \\ \hline
+\#B            & 0B101010    & 0B1000000    & 0B1                 & 带前缀的二进制表示法      \\ \hline
+o              & 52          & 100          & 1                   & 八进制表示法                   \\ \hline
+x              & 2a          & 40           & 1                   & 十六进制表示法             \\ \hline
+X              & 2A          & 40           & 1                   & 十六进制表示法             \\ \hline
+\#x            & 0x2a        & 0x40         & 0x1                 & 带前缀的十六进制表示法 \\ \hline
+\#X            & 0X2A        & 0X40         & 0X1                 & 带前缀的十六进制表示法 \\ \hline
+c              & *           & @            & '\textbackslash{}1' & 作为值的字符      \\ \hline
+s              & 非法     & 非法      & true                & 布尔值作为字符串                   \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 10.1. Formatting options for integral types
+表10.1 整型的格式化选项
 \end{center}
 
-For example:
+例如:
 
 \begin{cpp}
 std::cout << std::format("{:#b} {:#b} {:#b}\n", 42, '@', true);
 \end{cpp}
 
-will print:
+输出:
 
 \begin{shell}
 0b101010 0b1000000 0b1
 \end{shell}
 
-Note the following:
+注意事项如下:
 
 \begin{itemize}
 \item 
-The default notations are:
+默认的符号是:
 
 \begin{itemize}
 \item 
-d (decimal) for integer types
+d (十进制)的整数类型
 
 \item 
-c (as character) for character types
+c (作为字符)用于字符类型
 
 \item 
-s (as string) for type bool
+s (作为字符串)用于bool类型
 \end{itemize}
 
 \item 
-If L is specified after the notation, the locale-dependent character sequence for Boolean values and the locale-dependent thousands separator and decimal point characters for arithmetic values are used.
+若在表示法之后指定L，则使用与语言环境相关的布尔值字符序列，和与语言环境相关的千位分隔符和小数点字符来表示算术值。
 \end{itemize}
 
-\mySamllsection{Specifiers for Floating-Point Types}
+\mySamllsection{浮点类型的说明符}
 
-Table Formatting options for floating-point types lists the possible formatting type options for floating-point types.
+表浮点类型的格式化选项，列出了浮点类型可能的格式化类型选项。
 
-For example:
+例如:
 
 \begin{cpp}
 std::cout << std::format("{0} {0:#} {0:#g} {0:e}\n", -1.0);
 \end{cpp}
 
-will print:
+输出:
 
 \begin{shell}
 -1 -1. -1.00000 -1.000000e+00
 \end{shell}
 
-Note that passing the integer -1 instead would be a formatting error.
+注意，传递整数-1会导致格式错误。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|l|l|l|}
 \hline
-\textbf{Spec.} & \textbf{-1.0} & \textbf{0.0009765625} & \textbf{1785856.0} & \textbf{Meaning}                                         \\ \hline
+\textbf{格式} & \textbf{-1.0} & \textbf{0.0009765625} & \textbf{1785856.0} & \textbf{意义}                                         \\ \hline
 \endfirsthead
 %
 \endhead
 %
-none           & -1            & 0.0009765625          & 1.785856e+06       & Default format                                           \\ \hline
-\#             & -1.           & 0.0009765628          & 1.785856e+06       & Forces decimal point                                     \\ \hline
-f/F            & -1.000000     & 0.000977              & 1785856.000000     & Fixed notation(default precision after dot: 6)           \\ \hline
-g              & -1            & 0.000976562           & 1.78586e+06        & Fixed or exponential notation(default full precision: 6) \\ \hline
-G              & -1            & 0.000976562           & 1.78586E+06        & Fixed or exponential notation(default full precision: 6  \\ \hline
-\#g            & -1.00000      & 0.000976562           & 1.78586e+06        & Fixed or exponential notation(forced dot and zeros)      \\ \hline
-\#G            & -1.00000      & 0.000976562           & 1.78586E+06        & Fixed or exponential notation(forced dot and zeros)      \\ \hline
-e              & -1.00000e00   & 9.765625e-04          & 1.7858560e+06      & Exponential notation(default percision after dot: 6)     \\ \hline
-E              & -1.00000E00   & 9.765625E-04          & 1.7858560E+06      & Exponential notation(default percision after dot: 6)     \\ \hline
-a              & -1p+0         & 1p-10                 & 1.b4p+20           & Hexadec. floating-point notation                         \\ \hline
-A              & -1P+0         & 1P-10                 & 1.B4P+20           & Hexadec. floating-point notation                         \\ \hline
-\#a            & -1.p+0        & 1.p-10                & 1.b4p+20           & Hexadec. floating-point notation                         \\ \hline
-\#A            & -1.P+0        & 1.P-10                & 1.B4P+20           & Hexadec. floating-point notation                         \\ \hline
+none           & -1            & 0.0009765625          & 1.785856e+06       & 默认格式                                           \\ \hline
+\#             & -1.           & 0.0009765628          & 1.785856e+06       & 强制十进制小数点                                     \\ \hline
+f/F            & -1.000000     & 0.000977              & 1785856.000000     & 固定小数点位置(默认点后精度:6)           \\ \hline
+g              & -1            & 0.000976562           & 1.78586e+06        & 固定或指数表示法(默认全精度:6) \\ \hline
+G              & -1            & 0.000976562           & 1.78586E+06        & 固定或指数表示法(默认全精度:6)  \\ \hline
+\#g            & -1.00000      & 0.000976562           & 1.78586e+06        & 固定或指数符号(强制点和零)      \\ \hline
+\#G            & -1.00000      & 0.000976562           & 1.78586E+06        & 固定或指数符号(强制点和零)      \\ \hline
+e              & -1.00000e00   & 9.765625e-04          & 1.7858560e+06      & 指数表示法(默认点后精度:6)     \\ \hline
+E              & -1.00000E00   & 9.765625E-04          & 1.7858560E+06      & 指数表示法(默认点后精度:6)     \\ \hline
+a              & -1p+0         & 1p-10                 & 1.b4p+20           & 十六进制。浮点表示法                         \\ \hline
+A              & -1P+0         & 1P-10                 & 1.B4P+20           & 十六进制。浮点表示法                         \\ \hline
+\#a            & -1.p+0        & 1.p-10                & 1.b4p+20           & 十六进制。浮点表示法                         \\ \hline
+\#A            & -1.P+0        & 1.P-10                & 1.B4P+20           & 十六进制。浮点表示法                         \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 10.2. Formatting options for floating-point types
+表10.2 浮点类型的格式化选项
 \end{center}
 
-\mySamllsection{Specifiers for Strings}
+\mySamllsection{字符串的说明符}
 
-For string types, the default format specifier is s. However, you do not have to provide this specifier, because it is default. Note also that for strings, you can specify a certain precision, which is interpreted as the maximum number of characters used:
+对于字符串类型，默认的格式说明符是s。因为它是默认的，所以不必提供此说明符。请注意，对于字符串，可以指定一定的精度，这将解释为使用的最大字符数:
 
 \begin{cpp}
 std::format("{}", "counter"); // yields "counter"
@@ -334,44 +336,44 @@ std::format("{:.5}", "counter"); // yields "count"
 std::format("{:.5}", "hi"); // yields "hi"
 \end{cpp}
 
-Note that only the standard string types of the character types char and wchar\_t are supported. There is no support for strings and sequences of the types u8string and char8\_t, u16string and char16\_t, or u32string and char32\_t. In fact, the C++ standard library provides formatters for the following types:
+注意，只支持字符类型char和wchar\_t的标准字符串类型。不支持类型为u8string和char8\_t、u16string和char16\_t或u32string和char32\_t的字符串和序列。实际上，C++标准库为以下类型提供了格式化器:
 
 \begin{itemize}
 \item 
-char* and const char*
+char* 和 const char*
 
 \item 
-const char[n] (string literals)
+const char[n] (字符串字面值)
 
 \item 
-std::string and std::basic\_string<char, traits, allocator>
+std::string 和 std::basic\_string<char, traits, allocator>
 
 \item 
-std::string\_view and std::basic\_string\_view<char, traits>
+std::string\_view 和 std::basic\_string\_view<char, traits>
 
 \item 
-wchar\_t* and const wchar\_t*
+wchar\_t* 和 const wchar\_t*
 
 \item 
-const wchar\_t[n] (wide string literals)
+const wchar\_t[n] (宽字符串字面值)
 
 \item 
-std::wstring and std::basic\_string<wchar\_t, traits, allocator>
+std::wstring 和 std::basic\_string<wchar\_t, traits, allocator>
 
 \item 
-std::wstring\_view and std::basic\_string\_view<wchar\_t, traits>
+std::wstring\_view 和 std::basic\_string\_view<wchar\_t, traits>
 \end{itemize}
 
-Note that the format string and arguments for them must have the same character type:
+注意，其格式字符串和参数必须具有相同的字符类型:
 
 \begin{cpp}
 auto ws1 = std::format("{}", L"K\u00F6ln"); // compile-time ERROR
 std::wstring ws2 = std::format(L"{}", L"K\u00F6ln"); // OK
 \end{cpp}
 
-\mySamllsection{Specifiers for Pointers}
+\mySamllsection{指针的说明符}
 
-For pointer types, the default format specifier is p, which usually writes the address in hexadecimal notation with the prefix 0x. On platforms that have no type uintptr\_t the format is implementation-defined:
+对于指针类型，默认的格式说明符是p，通常以十六进制表示法写地址，前缀为0x。在没有uintptr\_t类型的平台上，格式由实现定义:
 
 \begin{cpp}
 void* ptr = ... ;
@@ -379,17 +381,17 @@ std::format("{}", ptr) // usually yields a value such as 0x7ff688ee64
 std::format("{:p}", ptr) // usually yields a value such as 0x7ff688ee64
 \end{cpp}
 
-Note that only the following pointer types are supported:
+请注意，只支持以下指针类型:
 
 \begin{itemize}
 \item 
-void* and const void*
+void* 和 const void*
 
 \item 
- std::nullptr\_t
+std::nullptr\_t
 \end{itemize}
 
-Thus, you can either pass nullptr or a raw pointer, which you have to cast to type (const) void*:
+可以传递nullptr或原始指针，所以将其强制转换为类型(const) void*:
 
 \begin{cpp}
 int i = 42;

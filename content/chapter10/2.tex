@@ -1,23 +1,23 @@
 
-One reason to still use sprintf() was that it has a significantly better performance than using output string streams or std::to\_string(). The formatting library was designed with the goal of doing this better. It should format at least as fast as sprintf() or even faster.
+仍然使用sprintf()的一个原因是，其性能明显优于使用输出字符串流或std::to\_string()。格式化库的设计就是为了更好地完成这一任务，其格式化速度至少应该和sprintf()一样快，甚至更快。
 
-Current (draft) implementations show that an equal or even better performance is possible. Rough measurements show that
+目前的(草案)实现表明，相同甚至更好的性能是可能的。粗略的测量表明
 
 \begin{itemize}
 \item 
-std::format() should be as fast as or even better than sprintf()
+std::format()应该和sprintf()一样快，甚至更好。
 
 \item 
-std::format\_to() and std::format\_to\_n() should be even better
+std::format\_to()和std::format\_to\_n()应该更好
 \end{itemize}
 
-The fact that compilers can usually check format strings at compile time does help a lot. It helps to avoid mistakes with formatting as well as to get a significantly better performance.
+编译器通常可以在编译时检查格式字符串，这确实有很大帮助。有助于避免格式化错误，并获得更好的性能。
 
-However, the performance ultimately depends on the quality of the implementation of the formatting libraries on your specific platform.[For example, while writing this book, for Visual C++, the option /utf-8 improves the formatting performance significantly.] Therefore, you should measure the performance yourself. The program format/formatperf.cpp might give you some hints abut the situation on your platform.
+性能最终取决于特定平台上格式化库的实现质量。例如，在编写本书时，对于Visual C++，/utf-8选项显著提高了格式化性能，开发者应该自己确定性能。程序format/formatperf10.cpp可能会给您一些关于相关平台情况的提示。
 
-\mySubsubsection{10.2.1}{Using std::vformat() and vformat\_to()}
+\mySubsubsection{10.2.1}{使用std::vformat()和vformat\_to()}
 
-To support this goal, an important fix was adopted for the formatting library after C++20 was standardized (see \url{http://wg21.link/p2216r3}). With this fix, the functions std::format(), std::format\_to(), and std::format\_to\_n() require that the format string is a compile-time value. You have to pass a string literal or a constexpr string. For example:
+为了支持这一目标，C++20标准化之后，对格式化库进行了一个重要的修复(参见\url{http://wg21.link/p2216r3})。通过此修复，函数std::format()、std::format\_to()和std::format\_to\_n()要求格式字符串是编译时值，所以必须传递一个字符串字面值或constexpr字符串。例如:
 
 \begin{cpp}
 const char* fmt1 = "{}\n"; // runtime format string
@@ -27,7 +27,7 @@ constexpr const char* fmt2 = "{}\n"; // compile-time format string
 std::cout << std::format(fmt2, 42); // OK
 \end{cpp}
 
-As a consequence, invalid format specifications become compile-time errors:
+因此，无效的格式规范成为编译时错误:
 
 \begin{cpp}
 std::cout << std::format("{:7.2f}\n", 42); // compile-time ERROR: invalid format
@@ -36,14 +36,14 @@ constexpr const char* fmt2 = "{:7.2f}\n"; // compile-time format string
 std::cout << std::format(fmt2, 42); // compile-time ERROR: invalid format
 \end{cpp}
 
-Of course, applications sometimes have to compute formatting details at runtime (such as computing the best width according to the passed values). In that case, you have to use std::vformat() or std::vformat\_to() and pass all arguments with std::make\_format\_args() to these functions:
+当然，应用程序有时必须在运行时计算格式细节(例如根据传递的值计算最佳宽度)，必须使用std::vformat()或std::vformat\_to()，并使用std::make\_format\_args()将所有参数传递给这些函数:
 
 \begin{cpp}
 const char* fmt3 = "{} {}\n"; // runtime format
 std::cout << std::vformat(fmt3, std::make_format_args(42, 1.7)); // OK
 \end{cpp}
 
-If a runtime format string is used and the formatting is not valid for the passed argument, the call throws a runtime error of type std::format\_error:
+若使用了运行时格式字符串，并且所传递的参数的格式无效，则调用会抛出std::format\_error类型的运行时错误:
 
 \begin{cpp}
 const char* fmt4 = "{:7.2f}\n";
