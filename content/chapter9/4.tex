@@ -1,15 +1,15 @@
 
-This section describes the types and operations of spans in detail.
+本节详细介绍span的类型和操作。
 
-\mySubsubsection{9.4.1}{Span Operations and Member Types Overview}
+\mySubsubsection{9.4.1}{span的操作和成员类型概述}
 
-Table Span operations lists all operations that are provided for spans.
+表“Span的操作”列出了为Span提供的所有操作。
 
-It is worth noting all the operations that are not supported:
+值得注意的是所有不支持的操作:
 
 \begin{itemize}
 \item
-Comparisons (not even ==)
+比较(不包括==)
 
 \item
 swap()
@@ -24,59 +24,59 @@ swap()
 at()
 
 \item
-I/O operators
+I/O操作符
 
 \item
 cbegin(), cend(), crbegin(), crend()
 
 \item
-Hashing
+哈希
 
 \item
-Tuple-like API for structured bindings
+用于结构化绑定的类元组API
 \end{itemize}
 
-That is, spans are neither containers (in the traditional C++ STL sense) nor regular types.
+也就是说，span既不是容器(在传统的C++ STL意义上)，也不是常规类型。
 
-Regarding static members and member types, spans provide the usual members of containers (except const\_iterator) plus two special ones: element\_type and extent (see table Static and type members of spans).
+关于静态成员和成员类型，span提供了容器的常用成员(const\_iterator除外)以及两个特殊成员:element\_type和extent(参见表span的static和type成员)。
 
-Note that std::value\_type is not the specified element type (as the value\_type for std::array and several other types usually is). It is the element type with const and volatile removed.
+注意，std::value\_type不是指定的元素类型(std::array和其他几个类型的value\_type通常是)。它是去掉了const和volatile的元素类型。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                      \\ \hline
+\textbf{操作} & \textbf{效果}                                                      \\ \hline
 \endfirsthead
 %
 \endhead
 %
-constructors       & Creates or copies a span                                             \\ \hline
-destructor         & Destorys a span                                                      \\ \hline
-=                  & Assignes a new sequence of values                                    \\ \hline
-empty()            & Returns whether the span is empty                                    \\ \hline
-size()             & Returns the bumber of elements                                       \\ \hline
-size\_bytes()      & Returns the size of memory used for all elements                     \\ \hline
-{[}{]}             & Accesses an element                                                  \\ \hline
-front(),back()     & Accesses the first or last element                                   \\ \hline
-begin(), end()     & Provides iterator support (no const\_iterator support)               \\ \hline
-rbegin(), rend()   & Provides constant reverse iterator support                           \\ \hline
-first(n)           & Returns a sub-span with dynamic extent of the first n elements       \\ \hline
-first\textless{}n\textgreater{}()         & Returns a sub-span with fixed extent of the first n elements            \\ \hline
-last(n)            & Returns a sub-span with dynamic extent of the last n elements        \\ \hline
-last\textless{}n\textgreater{}()          & Returns a sub-span with fixed extent of the last n elements             \\ \hline
-subspan(offs)                             & Returns a sub-span with dynamic extent skipping the first offs elements \\ \hline
-subspan(offs, n)   & Returns a sub-span with dynamic extent of n after offs elements      \\ \hline
-subspan\textless{}offs\textgreater{}()    & Returns a sub-span with same extent skipping the first offs elements    \\ \hline
-subspan\textless{}offs, n\textgreater{}() & Returns a sub-span with fixed extent of n after offs elements           \\ \hline
-data()             & Returns a raw pointer to the elements                                \\ \hline
-as\_bytes()        & Returns the memory of the elements as a span of read-only std::bytes \\ \hline
-as\_writeable\_bytes()                    & Returns the memory of the elements as a span of writable std::bytes     \\ \hline
+构造函数       & 创建或复制一个span                                             \\ \hline
+析构函数         & 销毁一个span                                                      \\ \hline
+=                  & 分配一个新的值序列                                    \\ \hline
+empty()            & 返回span是否为空                                    \\ \hline
+size()             & 返回元素的个数                                       \\ \hline
+size\_bytes()      & 返回所有元素所使用的内存大小                     \\ \hline
+{[}{]}             & 访问元素                                                  \\ \hline
+front(),back()     & 访问第一个或最后一个元素                                   \\ \hline
+begin(), end()     & 提供迭代器支持(不支持const\_iterator)               \\ \hline
+rbegin(), rend()   & 提供常量反向迭代器支持                           \\ \hline
+first(n)           & 返回具有前n个元素动态范围的子span       \\ \hline
+first\textless{}n\textgreater{}()         & 返回前n个元素的固定范围的子span            \\ \hline
+last(n)            & 返回最后n个元素的动态范围的子span        \\ \hline
+last\textless{}n\textgreater{}()          & 返回最后n个元素的固定范围的子span             \\ \hline
+subspan(offs)                             & 返回一个跳过第一个off元素的动态范围的子span \\ \hline
+subspan(offs, n)   & 在off元素之后返回一个动态范围为n的子跨度      \\ \hline
+subspan\textless{}offs\textgreater{}()    & 跳过第一个off元素，返回具有相同范围的子span    \\ \hline
+subspan\textless{}offs, n\textgreater{}() & 在off元素之后返回一个固定范围为n的子跨度           \\ \hline
+data()             & 返回指向元素的原始指针                                \\ \hline
+as\_bytes()        & 以只读std::bytes的跨度返回元素的内存 \\ \hline
+as\_writeable\_bytes()                    & 以可写std::bytes的跨度返回元素的内存     \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 9.1. Span operations
+表9.1 span的操作
 \end{center}
 
 % Please add the following required packages to your document preamble:
@@ -84,31 +84,31 @@ Table 9.1. Span operations
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Member} & \textbf{Effect}                      \\ \hline
+\textbf{成员} & \textbf{效果}                      \\ \hline
 \endfirsthead
 %
 \endhead
 %
-extent            & Number of elements or std::dynamic\_extent if size varies              \\ \hline
-size\_type      & Type of extent (always std::size\_t) \\ \hline
-difference\_type  & Difference type for pointers to element(always std::differernce\_type) \\ \hline
-element\_type   & Specified type of the elements       \\ \hline
-pointer         & Type of a pointer to the elements    \\ \hline
-const\_pointer    & Type of a pointer for read-only access to the elements                 \\ \hline
-reference       & Type of a reference to the elements  \\ \hline
-const\_reference  & Type of a reference for read-only access to the elements               \\ \hline
-iterator        & Type of an iterator to the elements  \\ \hline
-reverse\_iterator & Type of a reverse iterator to the elements                             \\ \hline
-value\_type       & Type of elements withoiut const or volatile                            \\ \hline
+extent            & 若大小不同，则表示元素数或std::dynamic\_extent              \\ \hline
+size\_type      & 范围类型(总是std::size\_t) \\ \hline
+difference\_type  & 指向元素指针的不同类型(总是std::difference\_type) \\ \hline
+element\_type   & 指定的元素类型       \\ \hline
+pointer         & 指向元素的指针类型    \\ \hline
+const\_pointer    & 用于对元素进行只读访问的指针类型                 \\ \hline
+reference       & 元素引用的类型  \\ \hline
+const\_reference  & 对元素进行只读访问的引用类型               \\ \hline
+iterator        & 元素迭代器的类型  \\ \hline
+reverse\_iterator & 元素的反向迭代器类型                             \\ \hline
+value\_type       & 不带const或volatile的元素类型                            \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 9.2. Static and type members of spans
+表9.2 span的静态和类型成员
 \end{center}
 
-\mySubsubsection{9.4.2}{Constructors}
+\mySubsubsection{9.4.2}{构造函数}
 
-For spans, the default constructor is provided only if it has a dynamic extent or the extent is 0:
+对于span，只有当它具有动态区段或范围为0时，才提供默认构造函数:
 
 \begin{cpp}
 std::span<int> sp0a; // OK
@@ -116,11 +116,11 @@ std::span<int, 0> sp0b; // OK
 std::span<int, 5> sp0c; // compile-time ERROR
 \end{cpp}
 
-If this initialization is valid, size() is 0 and data() is nullptr.
+若此初始化有效，则size()为0,data()为nullptr。
 
-In principle, you can initialize a span for an array, a beginning with a sentinel (end iterator), and a beginning with a size. The latter is used by the view std::views::counted(beg, sz) if beg points to elements in contiguous memory. Class template argument deduction is also supported.
+原则上，可以初始化数组的span，以哨兵(end迭代器)开始的span和以size开始的span。若beg指向连续内存中的元素，视图std::views::counted(beg, sz)会使用后者，还支持类模板参数推导。
 
-This means that when initializing the span with a raw array or std::array<>, a span with a fixed extent is deduced (unless only the element type is specified):
+当使用原始数组或std::array<>初始化span时，将推导出具有固定范围的span(除非指定了元素类型):
 
 \begin{cpp}
 int a[10] {};
@@ -133,7 +133,7 @@ std::span sp1d{arr.begin() + 5, 5}; // std::span<int>
 auto sp1e = std::views::counted(arr.data() + 5, 5); // std::span<int>
 \end{cpp}
 
-When initializing the span with a std::vector<>, a span with a dynamic extent is deduced unless a size is specified explicitly:
+当使用std::vector<>初始化span时，除非显式指定了span的大小，否则将推导出具有动态区段的span:
 
 \begin{cpp}
 std::vector vec{1, 2, 3, 4, 5};
@@ -147,7 +147,7 @@ std::span sp2f{vec.begin() + 2, 2}; // std::span<int>
 auto sp2g = std::views::counted(vec.data() + 2, 2); // std::span<int>
 \end{cpp}
 
-If you initialize a span from an rvalue (temporary object), the elements have to be const:
+若是使用右值(临时对象)初始化span，则元素必须为const:
 
 \begin{cpp}
 std::span sp3a{getArrayOfInt()}; // ERROR: rvalue and not const
@@ -160,7 +160,7 @@ std::span<int> sp3f{getVectorOfInt()}; // ERROR: rvalue and not const
 std::span<const int> sp3g{getVectorOfInt()}; // OK
 \end{cpp}
 
-Initializing a span with a returned temporary collection can result in a fatal runtime error. For example, you should never use a range-based for loop to iterate over a span that is initialized directly:
+使用返回的临时集合初始化span可能会导致致命的运行时错误。例如，永远不应该使用基于范围的for循环来迭代(直接初始化的)span:
 
 \begin{cpp}
 for (auto elem : std::span{getCollOfConst()}) ... // fatal runtime error
@@ -170,15 +170,15 @@ for (auto elem : std::span{getCollOfConst()}.last(2)) ... // fatal runtime error
 for (auto elem : std::span<const Type>{getColl()}) ... // fatal runtime error
 \end{cpp}
 
-The problem is that the range-based for loop causes undefined behavior when iterating over a reference returned for a temporary object because the temporary object is destroyed before the loop starts to iterate internally. This is a bug that the C++ standards committee has not been willing to fix for years now (see \url{http://wg21.link/p2012}).
+问题在于，在迭代为临时对象返回的引用时，基于范围的for循环会导致未定义的行为，因为临时对象在循环开始内部迭代之前被销毁。这是一个C++标准委员会多年来一直不愿意修复的bug(参见\url{http://wg21.link/p2012})。
 
-As a workaround, you can use the new range-based for loop with initialization:
+作为一种解决方案，可以使用初始化的新的基于范围的for循环:
 
 \begin{cpp}
 for (auto&& coll = getCollOfConst(); auto elem : std::span{coll}) ... // OK
 \end{cpp}
 
-Regardless of whether you initialize a span with an iterator and a length or with two iterators that define a valid range, the iterators have to refer to elements in contiguous memory (satisfy the concept std::contiguous\_iterator):
+无论用一个迭代器和一个长度初始化span，还是用两个定义有效范围的迭代器初始化span，迭代器都必须指向连续内存中的元素(满足std::consecuous\_iterator的概念):
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -192,7 +192,7 @@ std::list<int> lst{ ... };
 std::span<int> sp6f{lst.begin(), lst.end()}; // compile-time ERROR
 \end{cpp}
 
-If the span has a fixed extent, it must match the number of elements in the passed range. In general, compilers cannot check this at compile time:
+如果span具有固定的区段，则必须匹配所传递范围中的元素数量。一般来说，编译器不能在编译时检查:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -207,7 +207,7 @@ std::span<int, 8> sp7g{vec.begin(), 5}; // runtime ERROR (undefined behavior)
 std::span<int, 5> sp7h{vec.begin()}; // compile-time ERROR
 \end{cpp}
 
-You can also create and initialize a span directly with a raw array or a std::array. In that case, some runtime errors due to an invalid number of elements become a compile-time error:
+也可以使用原始数组或std::array直接创建和初始化span，由于元素数量不合法而导致的一些运行时错误将成为编译时错误:
 
 \begin{cpp}
 int raw[10];
@@ -220,11 +220,11 @@ std::span<int, 5> sp8d{arr}; // compile-time ERROR
 std::span<int, 5> sp8e{arr.data(), 5}; // OK
 \end{cpp}
 
-That is: either you pass a container with sequential elements as a whole, or you pass two arguments to specify the initial range of elements. In any case, the number of elements must match a specified fixed extent.
+也就是说:要么传递一个整体上包含顺序元素的容器，要么传递两个参数来指定元素的初始范围。在任何情况下，元素的数量必须匹配指定的固定范围。
 
-\mySamllsection{Construction with Implicit Conversions}
+\mySamllsection{带隐式转换的构造}
 
-Spans have to have the element type of the elements of the sequence they refer to. Conversions (even implicit standard conversions) are not supported. However, additional qualifiers such as const are allowed. This also applies to copy constructors:
+span必须具有它们引用的序列元素的元素类型。不支持转换(甚至是隐式的标准转换)，但允许使用const等其他限定符，这也适用于复制构造函数:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -235,22 +235,22 @@ std::span<int> sp9c{sp9a}; // compile-time ERROR: removing constness
 std::span<const long> sp9d{sp9a}; // compile-time ERROR: different element type
 \end{cpp}
 
-To allow containers to refer to the elements of user-defined containers, these containers have to signal that they or their iterators require that all elements are in contiguous memory. For that, they have to fulfill the concept contiguous\_iterator.
+为了允许容器引用用户定义容器的元素，这些容器必须发出信号，表明其迭代器要求所有元素都位于连续内存中，其必须满足continuous\_iterator的概念。
 
-The constructors also allow the following type conversions between spans:
+构造函数还允许在span之间进行以下类型转换:
 
 \begin{itemize}
 \item
-Spans with a fixed extent convert to spans with the same fixed extent and additional qualifiers.
+具有固定区段的span将转换为具有相同的固定区段和附加限定符的span。
 
 \item
-Spans with a fixed extent convert to spans with dynamic extent.
+具有固定区段的span转换为具有动态区段的span。
 
 \item
-Spans with a dynamic extent convert to spans with a fixed extent, provided the current extent fits.
+若当前区段适合，则具有动态区段的span将转换为具有固定区段的span。
 \end{itemize}
 
-Using a conditional explicit, only the constructors of spans with fixed extent are explicit. In that case, copy initialization (using a =) is not possible if the initial value has to be converted:
+使用条件显式时，只有固定范围的span的构造函数是显式的。若必须转换初始值，则无法进行复制初始化(使用a =):
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -261,7 +261,7 @@ std::span<int, 5> spanFix{vec.begin(), 5}; // OK
 std::span<int, 5> spanFix2 = {vec.begin(), 5}; // ERROR
 \end{cpp}
 
-As a consequence, conversions are only implicitly supported when converting to a span with a dynamic or the same fixed extent:
+因此，只有在转换为具有动态或相同固定范围的span时，才隐式支持转换:
 
 \begin{cpp}
 void fooDyn(std::span<int>);
@@ -280,9 +280,9 @@ spanFix = spanFix; // OK
 spanFix = spanDyn; // ERROR
 \end{cpp}
 
-\mySubsubsection{9.4.3}{Operations for Sub-Spans}
+\mySubsubsection{9.4.3}{子span的操作}
 
-The member functions that create a sub-span can create spans with dynamic or fixed extent. Passing a size as a call parameter usually yields a span with dynamic extent. Passing a size as a template parameter usually yields a span with fixed extent. This is at least always the case for the member functions first() and last():
+创建子span的成员函数可以创建动态或固定区段的span，将大小作为调用参数传递通常会产生具有动态区段的span。将大小作为模板参数传递通常会产生具有固定范围的span，成员函数first()和last()至少总是这样:
 
 \begin{cpp}
 std::vector vec{1.1, 2.2, 3.3, 4.4, 5.5};
@@ -302,7 +302,7 @@ auto sp7 = spFix.first<2>(); // first 2 elems with fixed extent
 auto sp8 = spFix.last<2>(); // last 2 elems with fixed extent
 \end{cpp}
 
-However, for subspan(), the result may sometimes be surprising. Passing call parameters always yields spans with dynamic extent:
+然而，对于subspan()，结果有时可能令人惊讶。传递调用参数总是会产生具有动态区段的span:
 
 \begin{cpp}
 std::vector vec{1.1, 2.2, 3.3, 4.4, 5.5};
@@ -320,7 +320,7 @@ auto s5 = spFix.subspan(2, 2); // 3rd to 4th elem with dynamic extent
 auto s6 = spFix.subspan(2, std::dynamic_extent); // 3rd to last with dynamic extent
 \end{cpp}
 
-However, when passing template parameters, the result might be different than what you expect:
+然而，当传递模板参数时，结果可能与期望不同:
 
 \begin{cpp}
 std::vector vec{1.1, 2.2, 3.3, 4.4, 5.5};

@@ -1,7 +1,7 @@
-To deal with ranges, C++20 introduced a couple of view types. Usually, these view types do not store elements in their own memory; they refer to elements stored in other ranges or views. The std::span<> class template is one of these views.
+为了处理范围，C++20引入了两个视图类型，这些视图类型不会在自己的内存中存储元素，只引用存储在其他范围或视图中的元素。std::span<>类模板就是这种视图之一。
 
-Historically, however, spans are a generalization of string views, which were introduced in C++17. Spans refer to arbitrary arrays of any element type. Being just a combination of a raw pointer and a size, they provide the usual interface of collections for reading and writing elements that are stored in contiguous memory.
+历史上看，span是C++17中引入的字符串视图的泛化。span指的是任何元素类型的数组，作为原始指针和大小的组合，提供了通常的集合接口，用于读取和写入存储在连续内存中的元素。
 
-By requiring that spans can refer only to elements in contiguous memory, the iterators can just be raw pointers, which makes them cheap. It also means that the collection provides random access (so that you can jump to any position of the range), which means that you can use this view to sort elements or you can use operations that yield a subsequence of n elements located in the middle or at the end of the underlying range.
+通过要求span只能引用连续内存中的元素，迭代器可以是原始指针，这使得其很廉价。并且，该集合提供随机访问(以便跳转到范围内的任何位置)，因此可以使用此视图对元素进行排序，或者可以使用生成位于底层范围中间或末尾的n个元素的子序列的操作。
 
-Using a span is cheap and fast (you should always pass it by value). However, it is also potentially dangerous because, in the same way as for raw pointers, it is up to the programmer to ensure that the referred element sequence is still valid when using a span. In addition, the fact that a span supports write access can introduce situations where const correctness is broken (or at least does not work in the way you might expect).
+使用span既廉价又快速(您应该始终按值传递它)，但也有潜在的危险。与原始指针一样，在使用span时，需要由开发者来确保引用的元素序列的有效性。此外，span支持写访问的情况，可能会破坏const的正确性(或者不能按期望的方式工作)。

@@ -1,11 +1,11 @@
 
-Let us look at some first examples of using spans. First, however, we have to discuss how the number of elements in a span can be specified.
+来看一些使用跨度的第一个例子。首先，我们必须讨论如何指定span中的元素数量。
 
-\mySubsubsection{9.1.1}{Fixed and Dynamic Extent}
+\mySubsubsection{9.1.1}{固定和动态区段}
 
-When you declare a span, you can choose between a specified fixed number of elements or leave the number of elements open so that the number of elements the span refers to can change.
+声明span时，可以在指定的固定数量的元素之间进行选择，也可以不设置元素数量，这样span引用的元素数量就可以改变。
 
-A span with a specified fix number of elements is called a span with fixed extent. It is declared by specifying the element type and the size as template parameters or by initializing it either with an array (raw array or std::array<>) with an iterator and a size:
+具有指定固定数量元素的span称为具有固定区段的span，可以通过指定元素类型和大小作为模板参数来声明，或者通过带有迭代器和大小的数组(raw array或std::array<>)来初始化:
 
 \begin{cpp}
 int a5[5] = {1, 2, 3, 4, 5};
@@ -20,9 +20,9 @@ std::span<int, 4> sp5{vec.data(), 4}; // span with fixed extent of 4 elements
 std::span sp6 = sp1; // span with fixed extent of 5 elements
 \end{cpp}
 
-For such a span, the member function size() always yields the size specified as part of the type. The default constructor cannot be called here (unless the extent is 0).
+对于这样的span，成员函数size()总是产生作为类型的一部分指定的大小。这里不能调用默认构造函数(除非区段为0)。
 
-A span where the number of elements is not stable over its lifetime is called a span with dynamic extent. The number of elements depends on the sequence of elements the span refers to and might change due to the assignment of a new underlying range (there is no other way to change the number of elements). For example:
+元素数量在其生命周期内不稳定的sapn称为具有动态区段的span。元素的数量取决于span所引用的元素的顺序，并且可能由于分配了一个新的基础范围而改变(没有其他方法可以改变元素的数量)。例如:
 
 \begin{cpp}
 int a5[5] = {1, 2, 3, 4, 5};
@@ -37,13 +37,13 @@ std::span sp5{arr5.data(), 3}; // span with dynamic extent (initially 3 elements
 std::span sp6{a5+1, 3}; // span with dynamic extent (initially 3 elements)
 \end{cpp}
 
-Note that it is up to the programmer to ensure that the span refers to a valid range that has enough elements.
+注意，需要由开发者保证span指向一个具有足够元素的有效范围。
 
-For both cases, let us look at complete examples.
+对于这两种情况，让我们看一下完整的例子。
 
-\mySubsubsection{9.1.2}{Example Using a Span with a Dynamic Extent}
+\mySubsubsection{9.1.2}{使用实例使用带动态区段的span}
 
-Here is a first example using a span with dynamic extent:
+下面是第一个使用动态区段span的例子:
 
 \filename{lib/spandyn.cpp}
 
@@ -105,7 +105,7 @@ int main()
 }
 \end{cpp}
 
-The output of the program is as follows:
+程序输出如下:
 
 \begin{shell}
 first 3:              "New York" "Tokyo" "Rio"
@@ -116,11 +116,11 @@ last 5: "New York" "Rio" "Sydney" "Tokyo" "Cairo"
 last 4: "Rio" "Sydney" "Tokyo" "Cairo"
 \end{shell}
 
-Let us go through the example step by step.
+让我们一步一步地来分析这个例子。
 
-\mySamllsection{Declaring a Span}
+\mySamllsection{声明span}
 
-In main(), we first initialize a span of three constant strings with the first three elements of a vector:
+在main()中，首先用vector的前三个元素初始化了一个由三个常量字符串组成的span:
 
 \begin{cpp}
 std::vector<std::string> vec{"New York", "Rio", "Tokyo", "Berlin", "Sydney"};
@@ -128,20 +128,20 @@ std::vector<std::string> vec{"New York", "Rio", "Tokyo", "Berlin", "Sydney"};
 std::span<const std::string> sp{vec.data(), 3};
 \end{cpp}
 
-For initialization, we pass the beginning of the sequence and the number of elements. In this case, we refer to the first three elements of vec.
+初始化时，传递序列的开头和元素的数目。本例中，引用vec的前三个元素。
 
-There are a lot of things to note about this declaration:
+关于这个声明，有很多事情需要注意:
 
 \begin{itemize}
 \item
-It is up to the programmer to ensure that the number of elements matches the extent of the span and that the elements are valid. If the vector does not have enough elements, the behavior is undefined:
+由开发者来确保元素的数量与跨度的范围相匹配，并且元素是有效的。若vector没有足够的元素，则行为未定义:
 
 \begin{cpp}
 std::span<const std::string> sp{vec.begin(), 10}; // undefined behavior
 \end{cpp}
 
 \item
-By specifying that the elements are const std::string, we cannot modify them via the span. Note that declaring the span itself as const does not provide read-only access to the referenced elements (as usual for views, const is not propagated):
+指定元素为const std::string时，就不能通过span来修改它们了。注意，将span本身声明为const并不提供对引用元素的只读访问(通常对于视图，const不会传播):
 
 \begin{cpp}
 std::span<const std::string> sp1{vec.begin(), 3}; // elements cannot be modified
@@ -149,7 +149,7 @@ const std::span<std::string> sp2{vec.begin(), 3}; // elements can be modified
 \end{cpp}
 
 \item
-Using a different element type for the span than for the referenced elements looks makes it look like you can use any type for a span that converts to the underlying element type. However, that is not true. You can only add qualifiers such as const:
+为span使用不同于引用元素的元素类型，看起来就像可以为转换为基础元素类型的span使用的类型一样。然而，事实并非如此，只能添加const这样的限定符:
 
 \begin{cpp}
 std::vector<int> vec{ ... };
@@ -157,15 +157,15 @@ std::span<long> sp{vec.data(), 3}; // ERROR
 \end{cpp}
 \end{itemize}
 
-\mySamllsection{Passing and Printing a Span}
+\mySamllsection{传递和输出span}
 
-Next, we print the span, passing it to a generic print function:
+接下来，输出span，并将其传递给一个通用的print函数:
 
 \begin{cpp}
 printSpan(sp);
 \end{cpp}
 
-The print function can deal with any span (as long as an output operator is defined for the elements):
+print函数可以处理任何span(只要为元素定义了输出操作符):
 
 \begin{cpp}
 template<typename T, std::size_t Sz>
@@ -178,13 +178,13 @@ void printSpan(std::span<T, Sz> sp)
 }
 \end{cpp}
 
-You might be surprised that the function template printSpan<>() can be called even though it has a nontype template parameter for the size of the span. It works because a std::span<T> is a shortcut for a span that has the pseudo size std::dynamic\_extent:
+读者们可能会感到惊讶，可以调用函数模板printSpan<>()，即使其有一个非类型模板参数表示span的大小。其之所以有效，是因为std::span<T>是快捷方式——具有伪长度std::dynamic\_extent的span:
 
 \begin{cpp}
 std::span<int> sp; // equivalent to std::span<int, std::dynamic_extent>
 \end{cpp}
 
-In fact, the class template std::span<> is declared as follows:
+实际上，类模板std::span<>是这样声明的:
 
 \begin{cpp}
 namespace std {
@@ -195,7 +195,7 @@ namespace std {
 }
 \end{cpp}
 
-This allows programmers to provide generic code like printSpan<>() that works for both spans with fixed extent and spans with dynamic extent. When calling printSpan<>() with a span with a fixed extent, the extent is passed as a template parameter:
+这允许开发者提供像printSpan<>()这样的通用代码，其既适用于固定范围的跨度，也适用于动态区段的span。当使用具有固定区段的span调用printSpan<>()时，区段可作为模板参数传递:
 
 \begin{cpp}
 std::span<int, 5> sp{ ... };
@@ -203,27 +203,27 @@ std::span<int, 5> sp{ ... };
 printSpan(sp); // calls printSpan<int, 5>(sp)
 \end{cpp}
 
-As you can see, the span is passed by value. That is the recommended way to pass spans because they are cheap to copy because internally, a span is just a pointer and a size.
+span是按值传递的。这是传递span的推荐方法，因为复制它们的成本很低，并在内部，span只是一个指针和一个长度信息。
 
-Inside the print function, we use a range-based for loop to iterate over the elements of the span. This is possible because a span provides iterator support with begin() and end().
+print函数内部，使用基于范围的for循环遍历span的元素。因为span提供了begin()和end()的迭代器支持，所以这是可能的。
 
-However, beware: regardless of we pass the span by value or by const reference, inside the function we can still modify the elements as long as they are not declared to be const. That is why declaring the elements of the span to be const usually makes sense.
+但要注意:无论通过值传递还是通过const引用传递span，只要没有将元素声明为const，在函数内部仍可以修改元素。这就是为什么将span的元素声明为const是有意义的。
 
-\mySamllsection{Dealing with Reference Semantics}
+\mySamllsection{处理引用语义}
 
-Next, we sort the elements that the span refers to (we use the new std::ranges::sort() here, which takes the container as a whole):
+接下来，对容器所引用的元素进行排序(这里使用新的std::ranges::sort()，将容器作为一个整体):
 
 \begin{cpp}
 std::ranges::sort(vec);
 \end{cpp}
 
-Because the span has reference semantics, this sorting also affects the elements of the span, with the result that the span now refers to different values.
+由于span具有引用语义，因此这种排序也会影响span的元素，其结果是span现在引用不同的值。
 
-If we did not have a span of const elements, we would also be able to call sort() passing the span.
+若没有const元素的span，也可以调用sort()传递span。
 
-Reference semantics means that you have to be careful when using a span, which demonstrates the next statements in the example. Here, we insert a new element into the vector that holds the elements the span refers to. Due to the reference semantics of a span, this is something we have to be very careful about, because if the vector allocates new memory, it invalidates all iterators and pointers to its elements. Therefore, a reallocation also invalidates a span that refers to the elements of the vector. The span refers to elements that are no longer there.
+引用语义在使用span时必须非常小心，在下个示例中就会看到相关语句。这里，我们将一个新元素插入vector中，该vector中保存了跨度所引用的元素。由于span的引用语义，必须非常小心，若vector分配新的内存，会使所有迭代器和指向其元素的指针无效。因此，重新分配也会使引用vector元素的span失效。span指向的是不再存在的元素。
 
-For this reason, we double check the capacity (maximum number of elements for which memory is allocated) before and after the insertion. If the capacity changes, we reinitialize the span to refer to the first three elements in the new memory:
+出于这个原因，需要在插入前后都要仔细检查容量(分配内存的最大元素数量)。若容量发生变化，则重新初始化span，使其指向新内存中的前三个元素:
 
 \begin{cpp}
 auto oldCapa = vec.capacity();
@@ -233,11 +233,11 @@ if (oldCapa != vec.capacity()) {
 }
 \end{cpp}
 
-We can only perform this reinitialization because the span itself is not const.
+只能执行这种重新初始化，因为span本身不为const。
 
-\mySamllsection{Assigning a Container to a Span}
+\mySamllsection{将容器分配给span}
 
-Next, we assign the vector as a whole to the span and print it out:
+接下来，我们将vector作为一个整体赋值给span，并将其进行输出:
 
 \begin{cpp}
 std::span<const std::string> sp{vec.begin(), 3};
@@ -245,20 +245,20 @@ std::span<const std::string> sp{vec.begin(), 3};
 sp = vec;
 \end{cpp}
 
-Here, you can see that an assignment to the span with dynamic extent can change the number of elements. Spans can take any type of container or range that hold the elements in contiguous memory, provided the container yields access to the elements with the member function data().
+这里，可以看到对具有动态区段span的赋值可以改变元素的数量。只要容器允许使用成员函数data()访问这些元素，则span可以使用任何类型的容器或范围来保存连续内存中的元素。
 
-However, due to the limitations of template type deduction, you cannot pass such a container to a function that expects a span. You have to specify explicitly that you want to convert a vector to a span:
+但由于模板类型推导的限制，不能将这样的容器传递给期望使用span的函数。必须明确指定要将vector转换为span:
 
 \begin{cpp}
 printSpan(vec); // ERROR: template type deduction doesn’t work here
 printSpan(std::span{vec}); // OK
 \end{cpp}
 
-\mySamllsection{Assigning a Different Subsequence}
+\mySamllsection{分配不同的子序列}
 
-In general, the assignment operator of a span allows us to assign another sequence of elements.
+通常，span的赋值操作符接受另一个元素序列。
 
-The example uses this to later refer to the last three elements in the vector:
+下面的示例使用这种方式来引用vector中的最后三个元素:
 
 \begin{cpp}
 std::span<const std::string> sp{vec.data(), 3};
@@ -267,9 +267,9 @@ std::span<const std::string> sp{vec.data(), 3};
 sp = std::span{vec.end()-5, vec.end()};
 \end{cpp}
 
-Here, you can also see that we can specify the referenced sequence with two iterators defining the beginning and the end of the sequence as a half-open range (the value at the beginning included, the value at the end excluded). The requirement is that the concept std::sized\_sentinel\_for is satisfied for the beginning and end so that the constructor can compute the difference.
+这里，还可以看到，可以使用两个迭代器指定引用的序列，将序列的开始和结束定义为半开范围(包括开始的值，不包括结束的值)。要求满足std::size\_sentinel\_for的概念，以便构造函数可以计算差值。
 
-However, as the following statement demonstrates, the last n elements can also be assigned using the member functions of spans:
+如下面的语句所示，最后n个元素也可以使用span的成员函数来赋值:
 
 \begin{cpp}
 std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
@@ -279,9 +279,9 @@ std::span<const std::string> sp{vec.data(), 3};
 sp = std::span{vec}.last(4);
 \end{cpp}
 
-Spans are the only views that provide a way to yield a sequence of elements in the middle or at the end of a range.
+span是唯一提供在范围中间或末尾生成元素序列的视图。
 
-As long as the element type fits, you can pass any sequence of elements of any other type. For example:
+只要元素类型合适，就可以传递任何其他类型的元素序列。例如:
 
 \begin{cpp}
 std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
@@ -291,7 +291,7 @@ std::array<std::string, 3> arr{"Tick", "Trick", "Track"};
 sp = arr; // OK
 \end{cpp}
 
-However, note that spans do not support implicit type conversions for the element types (except adding const). For example, the following code does not compile:
+但请注意，span不支持元素类型的隐式类型转换(除了添加const)。例如，无法编译以下代码:
 
 \begin{cpp}
 std::span<const std::string> sp{vec.begin(), 3};
@@ -300,17 +300,17 @@ std::array arr{"Tick", "Trick", "Track"}; // deduces std::array<const char*, 3>
 sp = arr; // ERROR: different element types
 \end{cpp}
 
-\mySubsubsection{9.1.3}{Example Using a Span with Non-const Elements}
+\mySubsubsection{9.1.3}{使用具有非const元素的实例}
 
-When initializing spans, we can use class template argument deduction so that the type of the elements (and the extent) is deduced:
+初始化span时，可以使用类模板实参推导，从而推导出元素的类型(和范围):
 
 \begin{cpp}
 std::span sp{vec.begin(), 3}; // deduces: std::span<std::string>
 \end{cpp}
 
-The span then declares the type of the elements to have the element type of the underlying range, which means that you can even modify the value of the underlying range provided the underlying range does not declare its elements as const.
+然后，span会声明元素的类型，使其具有基础范围的元素类型，甚至可以修改基础范围的值，前提是基础范围没有将其元素声明为const。
 
-This feature can be used to allow spans to modify elements of a range in one statement. For example, you can sort a subset of the elements, as the following example demonstrates:
+此特性可用于允许span在一个语句中修改范围的元素。例如，可以对元素的一个子集进行排序，如下所示:
 
 \filename{lib/spanview.cpp}
 
@@ -344,9 +344,9 @@ int main()
 }
 \end{cpp}
 
-Here, we create temporary spans to sort a subset of the elements in the vector vec and print the last three elements of the vector.
+这里，创建临时span来对vector vec中的元素子集进行排序，并打印vector的最后三个元素。
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 "New York" "Tokyo" "Rio" "Berlin" "Sydney"
@@ -354,7 +354,7 @@ The program has the following output:
 "Rio" "Tokyo" "Sydney"
 \end{shell}
 
-Spans are views. To deal with the first n elements of a range, you can also use the range factory std::views::counted(), which creates a span with dynamic extent if called for an iterator to a range with elements in contiguous memory:
+span是视图。要处理一个范围的前n个元素，也可以使用范围工厂std::views:: counts()，若对一个连续内存中有元素的范围进行迭代器使用，会创建一个具有动态区段的span:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -362,9 +362,9 @@ std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of vec
 \end{cpp}
 
-\mySubsubsection{9.1.4}{Example Using a Span with Fixed Extent}
+\mySubsubsection{9.1.4}{使用实例使用固定区段的span}
 
-As a first example of a span with a fixed extent, let us convert the previous example but declare the span with a fixed extent:
+作为具有固定区段的span的第一个示例，让我们转换前面的示例，声明具有固定区段的span:
 
 \filename{lib/spanfix.cpp}
 
@@ -421,7 +421,7 @@ int main()
 }
 \end{cpp}
 
-The output of the program is as follows:
+程序输出如下所示:
 
 \begin{shell}
 first 3:              "New York" "Tokyo" "Rio"
@@ -431,11 +431,11 @@ last 3: "Sydney" "Tokyo" "Cairo"
 last 3: "Sydney" "Tokyo" "Cairo"
 \end{shell}
 
-Again, let us go through the remarkable parts of the program example step by step.
+让我们一步一步地回顾程序示例中值得注意的部分。
 
-\mySamllsection{Declaring a Span}
+\mySamllsection{声明span}
 
-This time, we first initialize a span of three constant strings with fixed extent:
+这一次，首先初始化一个由三个固定长度的常量字符串组成的span:
 
 \begin{cpp}
 std::vector<std::string> vec{"New York", "Rio", "Tokyo", "Berlin", "Sydney"};
@@ -443,20 +443,19 @@ std::vector<std::string> vec{"New York", "Rio", "Tokyo", "Berlin", "Sydney"};
 std::span<const std::string, 3> sp3{vec.data(), 3};
 \end{cpp}
 
-For the fixed extent, we specify both the type of the elements and the size.
-Again, it is up to the programmer to ensure that the number of elements matches the extent of the span.
+对于固定区段，可指定元素的类型和大小。同样，需要由开发者来保证元素的数量与span的区段相匹配。
 
-If the count passed as the second argument does not match the extent, the behavior is undefined.
+若作为第二个参数传递的计数与范围不匹配，则行为未定义。
 
 \begin{cpp}
 std::span<const std::string, 3> sp3{vec.begin(), 4}; // undefined behavior
 \end{cpp}
 
-\mySamllsection{Assigning a Different Subsequence}
+\mySamllsection{分配不同的子序列}
 
-For spans with fixed extent, you can only assign new underlying ranges with the same number of elements.
+对于具有固定区段的span，只能分配具有相同数量元素的新范围。
 
-Therefore, this time, we assign only spans with three elements:
+因此，这一次，只赋值具有三个元素的span:
 
 \begin{cpp}
 std::span<const std::string, 3> sp3{vec.data(), 3};
@@ -464,7 +463,7 @@ std::span<const std::string, 3> sp3{vec.data(), 3};
 sp3 = std::span<const std::string, 3>{vec.end()-3, vec.end()};
 \end{cpp}
 
-Note that the following would no longer compile:
+注意，以下代码将不可编译:
 
 \begin{cpp}
 std::span<const std::string, 3> sp3{vec.data(), 3};
@@ -472,7 +471,7 @@ std::span<const std::string, 3> sp3{vec.data(), 3};
 sp3 = std::span{vec}.last(3); // ERROR
 \end{cpp}
 
-The reason for this is that the expression on the right hand side of the assignment creates a span with dynamic extent. However, by using last() with a syntax that specifies the number of elements as template parameters, we get a span with the corresponding fixed extent:
+这样做的原因是，赋值右侧的表达式创建了一个具有动态区段的span。但通过使用last()和指定元素数量作为模板参数的语法，则得到一个具有相应固定区段的span:
 
 \begin{cpp}
 std::span<const std::string, 3> sp3{vec.data(), 3};
@@ -480,7 +479,7 @@ std::span<const std::string, 3> sp3{vec.data(), 3};
 sp3 = std::span{vec}.last<3>(); // OK
 \end{cpp}
 
-We can still use class template argument deduction to assign the elements of an array or even assign it directly:
+仍可以使用类模板实参推导来为数组元素赋值，甚至可以直接赋值:
 
 \begin{cpp}
 std::span<const std::string, 3> sp3{vec.data(), 3};
@@ -490,11 +489,11 @@ sp3 = std::span{arr}; // OK
 sp3 = arr; // OK
 \end{cpp}
 
-\mySubsubsection{9.1.5}{Fixed vs. Dynamic Extent}
+\mySubsubsection{9.1.5}{固定与动态区段}
 
-Both fixed and dynamic extent have their benefits.
+固定和动态区段各有好处。
 
-Specifying a fixed size enables compilers to detect size violations at runtime or even at compile time. For example, you cannot assign a std::array<> with the wrong number of elements to a span with a fixed extent:
+指定固定的大小使编译器能够在运行时，甚至在编译时检测长度是否违规。例如，不能将元素数目错误的std::array<>赋值给区段固定的span:
 
 \begin{cpp}
 std::vector vec{1, 2, 3};
@@ -505,9 +504,9 @@ sp3 = arr; // compile-time ERROR
 sp = arr; // OK
 \end{cpp}
 
-Spans with a fixed extent also need less memory because they do not need to have a member for the actual size (the size is part of the type).
+具有固定区段的span还需要更少的内存，它们不需要具有实际大小的成员(大小是类型的一部分)。
 
-Using spans with dynamic extent provides more flexibility:
+使用动态span提供了更大的灵活性:
 
 \begin{cpp}
 std::span<int> sp; // OK

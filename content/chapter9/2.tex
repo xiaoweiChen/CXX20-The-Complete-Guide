@@ -1,6 +1,6 @@
-Spans refer to a sequence of external values. They therefore have the usual problems that types with reference semantics have. It is up to the programmer to ensure that the sequence a span refers to is valid.
+span指的是外部值的序列，所以具有具有引用语义的类型所具有的常见问题。需要由开发者来保证span引用的序列的有效性。
 
-Errors happen pretty fast. For example, if a function getData() returns a collection of ints by value (e.g., as vector, std::array, or raw array), the following statements create fatal runtime errors:
+错误发生得很快。例如，若函数getData()按值返回一个整数集合(例如，作为vector, std::array或raw array)，则以下语句会创建致命的运行时错误:
 
 \begin{cpp}
 std::span<int, 3> first3{getData()}; // ERROR: reference to temporary object
@@ -10,20 +10,20 @@ std::span sp{getData().begin(), 3}; // ERROR: reference to temporary object
 sp = getData(); // ERROR: reference to temporary object
 \end{cpp}
 
-This can look a little bit more subtle, such as using the range-based for loop:
+这可能看起来更微妙，例如：使用基于范围的for循环:
 
 \begin{cpp}
 // for the last 3 returned elements:
 for (auto s : std::span{arrayOfConst()}.last(3)) // fatal runtime ERROR
 \end{cpp}
 
-This code causes undefined behavior because due to a bug in the range-based for loop, iterating over a reference to a temporary object uses the values when they are already destroyed (see \url{http://wg21.link/p2012} for details).
+这段代码会导致未定义的行为，因为基于范围的for循环中存在一个bug，在对临时对象的引用上进行迭代时会使用已经销毁的值(详细信息请参阅\url{http://wg21.link/p2012})。
 
-Compilers could detect these problems with special “lifetime checks” for standard types, which is currently being implemented for major compilers. However, that can detect only simple lifetime dependencies like the one between a span and the object it is initialized with.
+编译器可以通过对标准类型的特殊“生命周期检查”来检测这些问题，目前主要的编译器都实现了，但只能检测简单的生存期依赖关系，比如：span和初始化的对象之间的依赖关系。
 
-In addition, you have to ensure that the referenced sequence of elements remains valid. This can be a problem if other parts of the program end the lifetime of a referred sequence while the span is still in use.
+此外，必须确保所引用的元素序列保持有效。若程序的其他部分在引用序列的生命周期结束时仍在使用该span，则可能会出现问题。
 
-If we refer into objects (such as into a vector), this validity issue can even happen while the vector is still alive. Consider:
+若引用对象(比如指向一个vector)，这个有效性问题甚至可能在vector仍然存在的时候发生:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8};
@@ -34,9 +34,9 @@ vec.push_back(9); // might reallocate memory
 std::cout << sp[0]; // fatal runtime ERROR (referenced array no longer valid)
 \end{cpp}
 
-As a workaround, you have to reinitialize the span with the original vector.
+作为一种变通方法，必须用原始vector重新初始化跨度。
 
-In general, using spans is as dangerous as using raw pointers and other view types. Use them with care.
+一般来说，使用span与使用原始指针和其他视图类型一样危险，小心使用。
 
 
 

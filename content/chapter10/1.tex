@@ -1,9 +1,9 @@
 
-Before we go into details, let us look at some motivating examples.
+在了解细节之前，让我们看一些例子。
 
-\mySubsubsection{10.1.1}{Using std::format()}
+\mySubsubsection{10.1.1}{使用std::format()}
 
-The basic function of the formatting library for application programmers is std::format(). It allows them to combine a formatting string to be filled with values of passed arguments according to the formatting specified inside a pair of braces. A simple example is to use the values of each passed argument:
+用于应用程序程序员的格式化库的基本功能是std::format()，其允许它们根据一对大括号内指定的格式，将要用传入参数的值填充的格式化字符串组合在一起。一个简单的例子是使用每个传入参数的值:
 
 \begin{cpp}
 #include <format>
@@ -13,27 +13,27 @@ std::string str{"hello"};
 std::cout << std::format("String '{}' has {} chars\n", str, str.size());
 \end{cpp}
 
-The function std::format(), defined in <format>, takes a format string (a string literal, string, or string view known at compile time) in which {...} stands for the value of the next argument (here, using the default formatting of its type). It yields a std::string, for which it allocates memory.
+在头文件<format>中定义的函数std::format()接受一个格式字符串(在编译时已知的字符串字面值、字符串或字符串视图)，其中\{…\}表示下一个参数的值(这里使用其类型的默认格式)。它产生一个std::string，并为其分配内存。
 
-The output of this first example is as follows:
+第一个示例的输出如下:
 
 \begin{shell}
 String ’hello’ has 5 chars
 \end{shell}
 
-An optional integral value right after the opening braces specifies the index of the argument so that you can process the arguments in different order or use them multiple times. For example:
+右大括号后面的可选整数值指定参数的索引，以便可以以不同的顺序处理参数或多次使用:
 
 \begin{cpp}
 std::cout << std::format("{1} is the size of string '{0}'\n", str, str.size());
 \end{cpp}
 
-has the following output:
+输出如下:
 
 \begin{shell}
 5 is the size of string ’hello’
 \end{shell}
 
-Note that you do not have to explicitly specify the type of the argument. This means that you can easily use std::format() in generic code. Consider the following example:
+注意，不必显式指定参数的类型,可以很容易地在泛型代码中使用std::format()。考虑下面的例子:
 
 \begin{cpp}
 void print2(const auto& arg1, const auto& arg2)
@@ -42,35 +42,35 @@ void print2(const auto& arg1, const auto& arg2)
 }
 \end{cpp}
 
-If you call this function as follows:
+若按如下方式调用此函数:
 
 \begin{cpp}
 print2(7.7, true);
 print2("character:", '?');
 \end{cpp}
 
-it has the following output:
+输出如下:
 
 \begin{shell}
 args: 7.7 and true
 args: character: and ?
 \end{shell}
 
-The formatting even works for user-defined types if formatted output is supported. Formatted output of the chrono library is one example. A call such as the following
+若支持格式化输出，格式化甚至可以用于用户定义类型。chrono库的格式化输出就是一个例子：
 
 \begin{cpp}
 print2(std::chrono::system_clock::now(), std::chrono::seconds{13});
 \end{cpp}
 
-might have the following output:
+可能有以下输出:
 
 \begin{shell}
 args: 2022-06-19 08:46:45.3881410 and 13s
 \end{shell}
 
-For your own types you need a formatter, which is described later.
+对于自定义类型，需要一个格式化器，稍后将对此进行描述。
 
-Inside the placeholder for formatting after a colon, you can specify details of the formatting of the passed argument. For example, you can define a field width:
+在冒号后面格式化的占位符中，可以指定所传递参数格式化的详细信息。例如，定义一个字段宽度:
 
 \begin{cpp}
 std::format("{:7}", 42) // yields " 42"
@@ -79,9 +79,9 @@ std::format("{:7}", 'x') // yields "x "
 std::format("{:7}", true) // yields "true "
 \end{cpp}
 
-Note that the different types have different default alignments. Note also that for a bool, the values false and true are printed instead of 0 and 1 as for iostream output with the operator <{}<.
+注意，不同的类型有不同的默认对齐方式。对于bool类型，输出值false和true，而不是像使用<{}<操作符的iostream输出那样输出0和1。
 
-You can also specify the alignment explicitly (< for left, \^{} for center, and > for right) and specify a fill character:
+也可以显式地指定对齐方式(<为左，\^{}为中，>为右)并指定一个填充字符:
 
 \begin{cpp}
 std::format("{:*<7}", 42) // yields "42*****"
@@ -89,30 +89,30 @@ std::format("{:*>7}", 42) // yields "*****42"
 std::format("{:*^7}", 42) // yields "**42***"
 \end{cpp}
 
-Several additional formatting specifications are possible to force a specific notation, a specific precision (or limit strings to a certain size), fill characters, or a positive sign:
+一些额外的格式化规范可以强制使用特定的表示法、特定的精度(或将字符串限制为一定的大小)、填充字符或正号:
 
 \begin{cpp}
 std::format("{:7.2f} Euro", 42.0) // yields " 42.00 Euro"
 std::format("{:7.4}", "corner") // yields "corn "
 \end{cpp}
 
-By using the position of the argument, we can print a value in multiple forms. For example:
+通过使用实参的位置，可以以多种形式打印值。例如:
 
 \begin{cpp}
 std::cout << std::format("'{0}' has value {0:02X} {0:+4d} {0:03o}\n", '?');
 std::cout << std::format("'{0}' has value {0:02X} {0:+4d} {0:03o}\n", 'y');
 \end{cpp}
 
-print the hexadecimal, decimal, and octal value of ’?’ and ’y’ using the actual character set, which might look as follows:
+输出'?'的十六进制、十进制和八进制值和'y'使用实际的字符集，可能如下输出:
 
 \begin{shell}
 ’?’ has value 3F +63 077
 ’y’ has value 79 +121 171
 \end{shell}
 
-\mySubsubsection{10.1.2}{Using std::format\_to\_n()}
+\mySubsubsection{10.1.2}{使用std::format\_to\_n()}
 
-The implementation of std::format() has a pretty good performance when compared with other ways of formatting. However, memory has to be allocated for the resulting string. To save time, you can use std::format\_to\_n(), which writes to a preallocated array of characters. You have to specify both the buffer to write to and its size. For example:
+与其他格式化方式相比，std::format()的实现具有相当好的性能，但必须为结果字符串分配内存。为了节省时间，可以使用std::format\_to\_n()，将写入预分配的字符数组。还必须指定要写入的缓冲区及其大小:
 
 \begin{cpp}
 char buffer[64];
@@ -122,7 +122,7 @@ auto ret = std::format_to_n(buffer, std::size(buffer) - 1,
 *(ret.out) = '\0';
 \end{cpp}
 
-or:
+或:
 
 \begin{cpp}
 std::array<char, 64> buffer;
@@ -132,26 +132,26 @@ auto ret = std::format_to_n(buffer.begin(), buffer.size() - 1,
 *(ret.out) = '\0'; // write trailing null terminator
 \end{cpp}
 
-Note that std::format\_to\_n() does not write a trailing null terminator. However, the return value holds all information to deal with this. It is a data structure of type std::format\_to\_n\_result that has two members:
+注意，std::format\_to\_n()不会写入尾随的空结束符，但返回值保存了处理此问题的所有信息。它是一个std::format\_to\_n\_result类型的数据结构，有两个成员:
 
 \begin{itemize}
 \item 
-out for the position of the first character not written
+out对于第一个未写字符的位置
 
 \item 
-size for the number of characters that would have been written without truncating them to the passed size.
+size在不将其截断为传递的大小的情况下将写入的字符数。
 \end{itemize}
 
-For that reason, we store a null terminator at the end, where ret.out points to. Note that we only pass buffer.size()-1 to std::format\_to\_n() to ensure we have memory for the trailing null terminator:
+因此，在ret.out指向的末尾存储一个空终止符。注意，我们只将buffer.size()-1传递给std::format\_to\_n()，以确保为末尾的空结束符提供内存:
 
 \begin{cpp}
 auto ret = std::format_to_n(buffer.begin(), buffer.size() - 1, ... );
 *(ret.out) = '\0';
 \end{cpp}
 
-Alternatively, we can initialize the buffer with {} to ensure that all characters are initialized with the null terminator.
+或者，可以用\{\}初始化缓冲区，以确保所有字符都用空终止符初始化。
 
-It is not an error if the size does not fit for the value. In that case, the written value is simply cut. For example:
+若大小不适合该值，则不是错误，写入的值会删除。例如:
 
 \begin{cpp}
 std::array<char, 5> mem{};
@@ -159,22 +159,22 @@ std::format_to_n(mem.data(), mem.size()-1, "{}", 123456.78);
 std::cout << mem.data() << '\n';
 \end{cpp}
 
-has the following output:
+输出如下:
 
 \begin{shell}
 1234
 \end{shell}
 
-\mySubsubsection{10.1.3}{Using std::format\_to()}
+\mySubsubsection{10.1.3}{使用std::format\_to()}
 
-The formatting library also provides std::format\_to(), which writes an unlimited number of characters for formatted output. Using this function for limited memory is a risk because if the value needs too much memory, you have undefined behavior. However, by using an output stream buffer iterator, you can safely use it to write directly to a stream:
+格式化库还提供了std::format\_to()，为格式化的输出写入无限数量的字符。在有限的内存中使用这个函数是有风险的，因为如果值需要太多的内存，就会有未定义的行为。然而，通过使用输出流缓冲区迭代器，也可以安全地使用它直接写入流:
 
 \begin{cpp}
 std::format_to(std::ostreambuf_iterator<char>{std::cout},
 				"String '{}' has {} chars\n", str, str.size());
 \end{cpp}
 
-In general, std::format\_to() takes any output iterator for characters. For example, you can also use a back inserter to append the characters to a string:
+通常，std::format\_to()接受任意字符的输出迭代器。例如，也可以使用反插入器将字符追加到字符串中:
 
 \begin{cpp}
 std::string s;
@@ -182,17 +182,17 @@ std::format_to(std::back_inserter(s),
 				"String '{}' has {} chars\n", str, str.size());
 \end{cpp}
 
-The helper function std::back\_inserter() creates an object that calls push\_back() for each character. Note that the implementation of std::format\_to() can recognize that back insert iterators are passed and write multiple characters for certain containers at once so that we still have good performance.
+辅助函数std::back\_inserter()创建一个对象，为每个字符调用push\_back()。注意，std::format\_to()的实现可以识别传递的回插入迭代器，并一次为某些容器写入多个字符，这样仍然具有良好的性能。
 
-\mySubsubsection{10.1.4}{Using std::formatted\_size()}
+\mySubsubsection{10.1.4}{使用std::formatted\_size()}
 
-To know in advance how many characters would be written by a formatted output (without writing any), you can use std::formatted\_size(). For example:
+要提前知道格式化输出将写入多少字符(不写入任何字符)，可以使用std::formatted\_size()。例如:
 
 \begin{cpp}
 auto sz = std::formatted_size("String '{}' has {} chars\n", str, str.size());
 \end{cpp}
 
-That would allow you to reserve enough memory or double check that the reserved memory fits.
+这将允许保留足够的内存，或再次检查所保留的内存是否足够。
 
 
 

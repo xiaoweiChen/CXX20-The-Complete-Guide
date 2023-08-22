@@ -1,67 +1,67 @@
 
-Designing a type that refers to a sequence of elements is not easy. A lot of aspects and trade-offs have to be thought out and decided on:
+设计一个引用元素序列的类型并不容易。需要权衡很多方面，从而做出决定:
 
 \begin{itemize}
 \item
-Performance versus safety
+性能与安全
 
 \item
-const correctness
+const的正确性
 
 \item
-Possible implicit and explicit type conversions
+可能的隐式和显式类型转换
 
 \item
-Requirements for the supported types
+支持类型的要求
 
 \item
-Supported APIs
+支持的API
 \end{itemize}
 
-Let me first clarify what a span not is:
+先澄清一下span不是什么:
 
 \begin{itemize}
 \item
-A span is not a container. It might have several aspects of a container (e.g., the ability to iterate over elements with begin() and end()), but there are already several issues due to its reference semantics:
+span不是容器。它可能具有容器的几个特点(例如，使用begin()和end()迭代元素的能力)，但由于其引用语义已经存在几个问题:
 
 \begin{itemize}
 \item
-Should elements also be const if the span is const?
+若span是const，那么元素也应该是const的吗?
 
 \item
-What does an assignment do: assign a new sequence or assign new values to the referenced elements?
+赋值的作用是什么:给引用的元素分配一个新的序列或者赋一个新的值?
 
 \item
-Should we provide swap() and what does it do?
+应该提供swap()吗?它能做什么?
 \end{itemize}
 
 \item
-A span is not a pointer (with a size). It does not make sense to provide the operators * and ->.
+span不是指针(有大小)，提供操作符*和->没有意义。
 \end{itemize}
 
-Type std::span is a very specific reference to a sequence of elements. And it is important to understand these specific aspects to use this type correctly.
+std::span类型是对元素序列的一个非常特定的引用。要正确使用这种类型，有必要具体了解一下。
 
-There is a very helpful blog post by Barry Revzin about this that I strongly recommend you to read: \url{http://brevzin.github.io/c++/2018/12/03/span-best-span/}.
+Barry Revzin有一篇非常有用的博客文章，我强烈建议大家去阅读:\url{http://brevzin.github.io/c++/2018/12/03/span-best-span/}。
 
-Note that C++20 provides also other ways for dealing with references to (sub-)sequences, such as subranges. They also work for sequences that are not stored in contiguous memory. By using the range factory std::views::counted(), you can let the compiler decide, which type is best for a range defined by a beginning and a size.
+请注意，C++20还提供了其他方法来处理对(子)序列的引用，例如：子序列。也适用于不存储在连续内存中的序列，使用范围工厂std::views::counted()，可以让编译器决定哪种类型最适合由开始和大小定义的范围。
 
-\mySubsubsection{9.3.1}{Lifetime Dependencies of Spans}
+\mySubsubsection{9.3.1}{span生命周期的依赖性}
 
-Due to their reference semantics you can only iterate over spans while the underlying sequence of values exists. However, the iterators are not bound to the lifetime of the spans they are created from.
+由于引用语义，只能在存在底层值序列的情况下遍历span，但迭代器并不与创建他们的span绑定生命周期。
 
-Iterators of spans do not refer to the span that they are created from. Instead, they refer to the underlying range directly. Therefore, a span is a borrowed range. This means that you can use the iterators even when the span no longer exists (the sequence of elements still has to exist, of course). However, note that iterators can still dangle when the underlying range is no longer there.
+span的迭代器不引用创建它们的span。相反，它们直接引用基础范围，所以span是一个租借范围。因此，即使span不再存在(当然，元素序列仍然必须存在)，也可以使用迭代器。但请注意，当底层范围不再存在时，迭代器仍可悬空。
 
-\mySubsubsection{9.3.2}{Performance of Spans}
+\mySubsubsection{9.3.2}{span的性能}
 
-Spans are designed with best performance as a goal. Internally, they use just a raw pointer to the sequence of elements. However, raw pointers expect elements to be stored sequentially in one chunk of memory (otherwise raw pointers could to compute the position of elements when they jump back and forth). For this reason, spans require that the elements are stored in contiguous memory.
+span的设计以最佳性能为目标。在内部，仅使用指向元素序列的原始指针，但原始指针希望元素按顺序存储在一个内存块中(否则，原始指针可以在元素来回跳转时计算元素的位置)。所以，span要求元素存储在连续内存中。
 
-With this requirement, spans can provide the best performance of all types of views. Spans do not need any allocation and do not come with any indirection. The only overhead on using a span is the overhead of constructing it. Spans check whether a referred sequence has its elements in contiguous memory using concepts at compile time. When a sequence is initialized or a new sequence is assigned, iterators have to satisfy the concept std::contiguous\_iterator and containers or ranges have to satisfy the two concepts std::ranges::contiguous\_range and std::ranges::sized\_range.
+有了这个要求，span可以为所有类型的视图提供最佳性能。span不需要任何内存分配，也不附带任何间接内容，使用span的唯一开销是构造。编译时使用概念检查引用序列是否在连续内存中有其元素，初始化序列或赋值新序列时，迭代器必须满足std::consecuous\_iterator概念，容器或范围必须满足std::ranges::consecuous\_range和std::ranges::sized\_range两个概念。
 
-Because spans are just a pointer and a size internally, it is very cheap to copy them. For this reason, you should prefer passing spans by value instead of passing them by const reference (which, however, is a problem for generic functions dealing with both containers and views).
+因为span在内部只是一个指针和一个大小，所以复制成本非常低。出于这个原因，应该更倾向于按值传递span，而非通过const引用传递(然而，对于处理容器和视图的泛型函数来说，这是一个问题)。
 
-\mySamllsection{Type Erasure}
+\mySamllsection{类型擦除}
 
-The fact that spans perform element access with raw pointers to the memory means that a span type erases the information of where the elements are stored. A span to the elements of a vector has the same type as a span to the elements of an array (provided they have the same extent):
+span使用指向内存的原始指针执行元素访问，span类型会擦除元素存储位置的信息。指向vector元素的span操作与指向数组元素的span操作具有相同的类型(前提是它们具有相同的区段):
 
 \begin{cpp}
 std::array arr{1, 2, 3, 4, 5};
@@ -72,7 +72,7 @@ std::span<int> arrSpanDyn{arr};
 std::same_as<decltype(arrSpanDyn), decltype(vecSpanDyn)> // true
 \end{cpp}
 
-However, note that class template argument deduction for spans deduces a fixed extent from arrays and a dynamic extent from vectors. That means:
+但请注意，span的类模板参数推导从数组推导出固定区段，从vector推导出动态区段:
 
 \begin{cpp}
 std::array arr{1, 2, 3, 4, 5};
@@ -85,17 +85,17 @@ std::same_as<decltype(arrSpan), decltype(vecSpan)> // false
 std::same_as<decltype(arrSpan), decltype(vecSpan5)> // true
 \end{cpp}
 
-\mySamllsection{Spans vs. Subranges}
+\mySamllsection{span与子范围}
 
-The requirement for contiguous storage of the elements is the major difference to subranges, which are also introduced with C++20. Internally, subranges still use iterators and can therefore refer to all types of containers and ranges. However, that may lead to significantly more overhead.
+对元素连续存储的要求是与子范围的主要区别，子范围也是C++20引入的。在内部，子范围仍然使用迭代器，因此可以引用所有类型的容器和范围，但这可能会导致更多的开销。
 
-In addition, spans do not require iterator support for the type they refer to. You can pass any type that provides a data() member for access to a sequence of elements.
+此外，span不需要对其引用的类型支持迭代器，可以传递任何提供data()成员以访问元素序列的类型。
 
-\mySubsubsection{9.3.3}{const Correctness of Spans}
+\mySubsubsection{9.3.3}{span的const正确性}
 
-Spans are views that have reference semantics. In that sense, they behave like pointers: if a span is const, it does not automatically mean that the elements the span refers to are const.
+span是具有引用语义的视图。从这个意义上讲，其行为就像指针:若span是const，并不意味着该span所引用的元素也是const。
 
-This means that you have write access to the elements of a const span (provided the elements are not const):
+并且，可以对const span的元素进行写访问(前提是这些元素不是const):
 
 \begin{cpp}
 std::array a1{1, 2, 3, 4, 5, 6,7 ,8, 9, 10};
@@ -111,7 +111,7 @@ sp1 = a2; // ERROR
 sp2 = a2; // OK
 \end{cpp}
 
-Note that as long as the elements of a std::span<> are not declared to be const, a couple of operations provide write access to the elements even for const spans where you might not expect it (following the rules for ordinary containers):
+注意，只要std::span<>的元素没有声明为const，即使对于const span，也会有一些操作提供对这些元素的写访问(遵循普通容器的规则):
 
 \begin{itemize}
 \item
@@ -130,9 +130,9 @@ std::cbegin(), std::cend(), std::crbegin(), std::crend()
 std::ranges::cbegin(), std::ranges::cend(), std::ranges::crbegin(), std::ranges::crend()
 \end{itemize}
 
-Yes, all the c* functions that were designed to ensure that the elements are const are broken by std::span.
+是的，所有设计用来确保元素为const的c*函数，都可被std::span替代。
 
-For example:
+例如
 
 \begin{cpp}
 template<typename T>
@@ -154,9 +154,9 @@ modifyElemsOfConstColl(arr); // ERROR: elements are const
 modifyElemsOfConstColl(std::span{arr}); // OOPS: compiles and modifies elements of a1
 \end{cpp}
 
-The problem here is not that std::span is broken; the problem is that functions like std::cbegin() and std::ranges::cbegin() are currently broken for collections with reference semantics (such as views).
+这里的问题不在于std::span被破坏了;问题是，像std::cbegin()和std::ranges::cbegin()这样的函数破坏了具有引用语义的集合(例如视图)。
 
-To ensure that a function only takes sequences where you cannot modify the elements that way, you can require that begin() for a const container returns an iterator to const elements:
+为了确保函数只接受不能以这种方式修改元素的序列，可以要求const容器的begin()返回一个指向const元素的迭代器:
 
 \begin{cpp}
 template<typename T>
@@ -167,20 +167,20 @@ requires std::is_const_v<std::remove_reference_t<decltype(*coll.begin())>>
 }
 \end{cpp}
 
-The fact that even std::cbegin() and std::ranges::cbegin() provide write access is something under discussion after standardizing C++20. The whole point of providing cbegin() and cend() is to ensure that elements cannot be modified when iterating over them. Originally, spans did provide members for types const\_iterator, cbegin(), and cend() to ensure that you could not modify elements. However, at the last minute before C++20 was finished, it turned out that std::cbegin() still iterates over mutable elements (and std::ranges::cbegin() has the same problem). However, instead of fixing std::cbegin() and std::ranges::cbegin(), the members for const iterators in spans were removed (see \url{http://wg21.link/lwg3320}), which made the problem even worse because in C++20 there is now no easy way to do a read-only iteration over a span unless the elements are const. It appears that std::ranges::cbegin() will be fixed with C++23 (see \url{http://wg21.link/p2278}). However, std::cbegin() will still be broken (sigh).
+std::cbegin()和std::ranges::cbegin()提供写访问，这是标准化C++20之后讨论的问题。提供cbegin()和cend()的全部意义在于确保元素在迭代时不能被修改。最初，span确实为const\_iterator、cbegin()和cend()类型提供了成员，以确保不能修改元素。但在C++20完成之前的最后一刻，std::cbegin()仍然迭代可变元素(std::ranges::cbegin()也有同样的问题)。然而，不是修复std::cbegin()和std::ranges::cbegin()，而是删除了span中const迭代器的成员(参见\url{http://wg21.link/lwg3320})，这使得问题更加严重，因为在C++20中，现在没有简单的方法对span进行只读迭代，除非元素是const。看起来std::ranges::cbegin()将在C++23中修复(参见\url{http://wg21.link/p2278})，但std::cbegin()仍然会被破坏(叹气)。
 
-\mySubsubsection{9.3.4}{Using Spans as Parameters in Generic Code}
+\mySubsubsection{9.3.4}{在泛型代码中使用span作为参数}
 
-As written, you can implement a generic function just for all spans with the following declaration:
+如前所述，可以通过以下声明实现所有span的泛型函数:
 
 \begin{cpp}
 template<typename T, std::size_t Sz>
 void printSpan(std::span<T, Sz> sp);
 \end{cpp}
 
-This even works for spans with dynamic extent, because they just use the special value std::dynamic\_extent as size.
+这甚至适用于具有动态范围的span，因为其只使用特殊值std::dynamic\_extent作为大小。
 
-Therefore, in the implementation, you can deal with the difference between fixed and dynamic extent as follows:
+，在实现中，可以按以下方式处理固定与动态区段的区别:
 
 \filename{lib/spanprint.hpp}
 
@@ -210,7 +210,7 @@ void printSpan(std::span<T, Sz> sp)
 #endif // SPANPRINT_HPP
 \end{cpp}
 
-You might also consider declaring the element type to be const:
+还可以考虑将元素类型声明为const:
 
 \begin{cpp}
 printSpan(vec); // ERROR: template type deduction doesn’t work
@@ -218,9 +218,9 @@ printSpan(std::span{vec}); // OK
 printSpan<int, std::dynamic_extent>(vec); // OK (provided it is a vector of ints)
 \end{cpp}
 
-For this reason, std::span<> should not be used as a vocabulary type for generic functions that deal with sequences of elements stored in contiguous memory.
+因此，不应将std::span<>用作处理存储在连续内存中元素序列泛型函数的词汇表类型。
 
-For performance reasons, you might do something like this:
+出于性能原因，可能会这样做:
 
 \begin{cpp}
 template<typename E>
@@ -239,11 +239,11 @@ void print(const T& t) {
 }
 \end{cpp}
 
-\mySamllsection{Using Spans as Ranges and Views}
+\mySamllsection{使用span作为范围和视图}
 
-Because spans are views, they satisfy the concept std::ranges::view[The original C++20 standard did require that views have to have a default constructor, which is not the case for fixed spans. However, that requirement was removed later with \url{http://wg21.link/P2325R3}.]. This means that spans can be used in all algorithms and functions for ranges and views. In the chapter that discusses the details of all views, we list the view-specific properties of spans.
+因为span是视图，所以满足std::ranges::view[最初的C++20标准确实要求视图必须有一个默认构造函数，而固定的span则不是这样。然而，这一要求后来被删除了\url{http://wg21.link/P2325R3}。]所以跨度可以用于范围和视图的所有算法和函数中。在讨论所有视图细节的那一章中，列出了span的特定于视图的属性。
 
-One property of spans is that they are borrowed ranges, meaning that the lifetime of iterators does not depend on the lifetime of the span. For that reason, we can use a temporary span as a range in algorithms that yield iterators to it:
+span的一个属性是它们是租借范围，所以迭代器的生命周期不依赖于span。因此，可以在生成迭代器的算法中使用临时span作为范围:
 
 \begin{cpp}
 std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
@@ -251,7 +251,7 @@ auto pos1 = std::ranges::find(std::span{coll.data(), 3}, 42); // OK
 std::cout << *pos1 << '\n';
 \end{cpp}
 
-However, note that it is an error if the span refers to a temporary object. The following code compiles even though an iterator to a destroyed temporary object is returned:
+但请注意，若span是引用的临时对象，则会出现错误。即使返回被销毁的临时对象的迭代器，以下代码也可以编译:
 
 \begin{cpp}
 auto pos2 = std::ranges::find(std::span{getData().data(), 3}, 42);
