@@ -1,9 +1,9 @@
 
-Before we go into details, let us look at some motivating examples.
+在了解细节之前，让我们看一些例子。
 
-\mySubsubsection{11.1.1}{Scheduling a Meeting on the 5th of Every Month}
+\mySubsubsection{11.1.1}{每月5号安排一次会议}
 
-Consider a program where we want to to iterate over all months in a year to schedule a meeting on the 5th of every month. The program can be written as follows:
+考虑这样一个程序，希望迭代一年中的所有月份，以便在每个月的5号安排一次会议:
 
 \filename{lib/chrono1.cpp}
 
@@ -29,7 +29,7 @@ int main()
 }
 \end{cpp}
 
-The program has an output like the following:
+程序的输出如下所示:
 
 \begin{shell}
 2021-01-05:
@@ -49,59 +49,59 @@ The program has an output like the following:
  We meet on Sunday 12/05/21 at 18:30
 \end{shell}
 
-Let us go through this program step by step.
+让我们一步一步地完成这个程序。
 
-\mySamllsection{Namespace Declarations}
+\mySamllsection{声明命名空间}
 
-We start with the namespace and using declarations to make the use of the chrono library a little more convenient:
+从命名空间开始，并使用声明使chrono库的使用更方便:
 
 \begin{itemize}
 \item 
-First we introduce chr:: as a shortcut for the standard namespace of the chrono library std::chrono:
+首先，我们引入chr::作为chrono库的标准命名空间std::chrono的快捷方式:
 
 \begin{cpp}
 namespace chr = std::chrono; // shortcut for std::chrono
 \end{cpp}
 
-To make examples more readable, from time to time I will use just chr:: instead of std::chrono::.
+为了使示例更具可读性，只使用chr::，而非std::chrono::。
 
 \item
-Then, we ensure that we can use literal suffixes such as s, min, h, and y (the latter is new since C++20).
+然后，需要确保可以使用字面后缀，如s、min、h和y (y是C++20添加的新特性，其他由C++14添加)。
 
 \begin{cpp}
 using namespace std::literals; // for min, h, y suffixes
 \end{cpp}
 \end{itemize}
 
-To avoid any qualification, you could use a using declaration instead:
+为了避免限定，可以使用using声明:
 
 \begin{cpp}
 using namespace std::chrono; // skip chrono namespace qualification
 \end{cpp}
 
-As usual, you should limit the scope of such a using declaration to avoid unwanted side effects.
+应该尽量避免使用这种using声明的作用域，以避免不必要的副作用。
 
-\mySamllsection{Calendrical Type year\_month\_day}
+\mySamllsection{日历类型year\_month\_day}
 
 \begin{cpp}
 chr::year_month_day first = 2021y / 1 / 5;
 \end{cpp}
 
-Data flow starts with the initialization of the start date first of type std::chrono::year\_month\_day:
+数据流首先初始化开始日期，类型为std::chrono::year\_month\_day:
 
-The type year\_month\_day is a calendrical type that provides attributes for all three fields of a date so that it is easy to deal with the year, the month, and the day of a particular date.
+year\_month\_day是一个日历类型，为日期的所有三个字段提供属性，以便于处理特定日期的年、月和日。
 
-Because we want to iterate over all fifth days of each month, we initialize the object with January 5, 2021, using operator / to combine a year with a value for the month and a value for the day as follows:
+因为我们想遍历每个月的所有第五天，所以用2021年1月5日初始化对象，使用运算符/将年与月和日的值组合在一起，如下所示:
 
 \begin{itemize}
 \item 
-First, we create the year as an object of the type std::chrono::year. Here, we use the new standard literal \textbf{y}:
+首先，将年份创建为std::chrono::year类型的对象。这里，使用新的标准字面符\textbf{y}:
 
 \begin{cpp}
 2021y
 \end{cpp}
 
-To have this literal available, we have to provide one of the following using declarations:
+要使这个字面符可用，必须提供以下using声明之一:
 
 \begin{cpp}
 using std::literals; // enable all standard literals
@@ -110,39 +110,38 @@ using namespace std::chrono; // enable all standard chrono literals
 using namespace std; // enable all standard literals
 \end{cpp}
 
-Without these literals we would need something like the following:
+若没有这些字面符，则可使用以下等价的方式:
 
 \begin{cpp}
 std::chrono::year{2021}
 \end{cpp}
 
 \item
-Then, we use operator / to combine the std::chrono::year with an integral value, which creates an object of type std::chrono::year\_month.
+然后，使用操作符/将std::chrono::year与整型值组合，创建一个std::chrono::year\_month类型的对象。
 
-Because the first operand is a year, it is clear that the second operand must be a month. You cannot specify a day here.
-specify a day here.
+因为第一个操作数是年，所以很明显第二个操作数必须是月，不能在这里指定日期。
 
 \item
-Finally, we use operator / again to combine the std::chrono::year\_month object with an integral value to create a std::chrono::year\_month\_day.
+最后，再次使用操作符/将std::chrono::year\_month对象与整数值组合，以创建std::chrono::year\_month\_day。
 \end{itemize}
 
-This initialization for calendrical types is type-safe and requires only the specification the type of the first operand.
+日历类型的初始化是类型安全的，只需要指定第一个操作数的类型。
 
-Because the operator already yields the right type, we could also declare first with auto. Without the namespace declarations, we would have to write:
+因为操作符已经产生了正确的类型，所以也可以先用auto声明。若没有命名空间声明，则需要这样写:
 
 \begin{cpp}
 auto first = std::chrono::year{2021} / 1 / 5;
 \end{cpp}
 
-With the chrono literals available, we could simply write:
+有了时间字面值，就简单了:
 
 \begin{cpp}
 auto first = 2021y/1/5;
 \end{cpp}
 
-\mySamllsection{Other Ways to Initialize Calendrical Types}
+\mySamllsection{初始化日历类型的其他方法}
 
-There are other ways to initialize a calendrical type like year\_month\_day:
+还有其他方法可以初始化日历类型，如year\_month\_day:
 
 \begin{cpp}
 auto d1 = std::chrono::years{2021}/1/5; // January 5, 2021
@@ -150,9 +149,9 @@ auto d2 = std::chrono:month{1}/5/2021; // January 5, 2021
 auto d3 = std::chrono:day{5}/1/2021; // January 5, 2021
 \end{cpp}
 
-That is, the type of the first argument for operator / specifies how to interpret the other arguments.
+也就是说，操作符/的第一个参数的类型指定了如何解释其他参数。
 
-With the chrono literals available, we could simply write:
+有了时间字面符，可以简单地写为:
 
 \begin{cpp}
 using namespace std::literals;
@@ -160,24 +159,24 @@ auto d4 = 2021y/1/5; // January 5, 2021
 auto d5 = 5/1/2021; // January 5, 2021
 \end{cpp}
 
-There is no standard suffix for a month, but we have predefined standard objects:
+没有月的标准后缀，但可以有预定义的标准对象:
 
 \begin{cpp}
 auto d6 = std::chrono::January / 5 / 2021; // January 5, 2021
 \end{cpp}
 
-With the corresponding using declaration, we could even write just the following:
+有了相应的using声明，可以这样写:
 
 \begin{cpp}
 using namespace std::chrono;
 auto d6 = January/5/2021; // January 5, 2021
 \end{cpp}
 
-In all cases, we initialize an object of type std::chrono::year\_month\_day.
+所有情况下，都会初始化std::chrono::year\_month\_day类型的对象。
 
-\mySamllsection{New Duration Types}
+\mySamllsection{新持续时间类型}
 
-In our example, we then call a loop to iterate over all months of the year:
+在我们的例子中，使用一个循环来迭代一年中的所有月份:
 
 \begin{cpp}
 for (auto d = first; d.year() == first.year(); d += chr::months{1}) {
@@ -185,115 +184,115 @@ for (auto d = first; d.year() == first.year(); d += chr::months{1}) {
 }
 \end{cpp}
 
-The type std::chrono::months is a new duration type that represents a month. You can use it for all calendrical types to deal with the specific month of a date, such as adding one month as we have done here:
+std::chrono::months是一个新的持续时间类型，表示一个月。可以将它用于所有日历类型来处理日期的特定月份，例如像在这里添加一个月那样:
 
 \begin{cpp}
 std::chrono::year_month_day d = ... ;
 d += chr::months{1}; // add one month
 \end{cpp}
 
-However, note that when we use it for ordinary durations and timepoints, the type months represents the average duration of a month, which is 30.436875 days. Therefore, with ordinary timepoints, you should use months and years with care.
+但注意，当将其用于普通持续时间和时间点时，类型months表示一个月的平均持续时间，即30.436875天。因此，对于普通的时间点，应该小心使用月和年。
 
-\mySamllsection{Output Operators for All Chrono Types}
+\mySamllsection{所有Chrono类型的输出操作符}
 
-Inside the loop, we print the current date:
+在循环中，输出当前日期:
 
 \begin{cpp}
 std::cout << d << '\n';
 \end{cpp}
 
-Since C++20, there is an output operator defined for more or less all possible chrono types.
+C++20起，为几乎所有可能的chrono类型定义了一个输出操作符。
 
 \begin{cpp}
 std::chrono::year_month_day d = ... ;
 std::cout << "d: " << d << '\n';
 \end{cpp}
 
-This makes it easy to just print any chrono value. However, the output does not always fit specific needs. For type year\_month\_day, the output format is what we as programmers would expect for such a type: year-month-day. For example:
+这使得输出任何计时值变得很容易，但输出并不总是适合特定的需要。对于类型year\_month\_day，输出格式是我们作为开发者所期望的类型:year-month-day。例如:
 
 \begin{shell}
 2021-01-05
 \end{shell}
 
-The other default output formats usually use a slash as the separator, which is documented here.
+其他默认输出格式通常使用斜杠作为分隔符，这里有详细说明。
 
-For user-defined output, the chrono library also supports the new library for formatted output. We use that later to print out the timepoint tp:
+对于用户定义的输出，chrono库还支持用于格式化输出的新库。稍后会使用它来输出时间点tp:
 
 \begin{cpp}
 std::cout << std::format("We meet on {:%D at %R}\n", tp);
 \end{cpp}
 
-Formatting specifiers such as \%A for the weekday, \%D for the date, and \%R for the time (hour and minute) correspond with the specifiers for the C function strftime() and the POSIX date command, so that the output might, for example, look as follows:
+格式化说明符，例如\%A表示工作日，\%D表示日期，\%R表示时间(小时和分钟)，与C函数strftime()和POSIX date命令的说明符对应，因此输出可能如下所示:
 
 \begin{shell}
 We meet on 10/05/21 at 18:30
 \end{shell}
 
-Locale-specific output is also supported. The details of formatted output for chrono types is described later in detail.
+还支持特定于语言环境的输出。稍后将详细描述chrono类型的格式化输出的细节。
 
-\mySamllsection{Combining Dates and Times}
+\mySamllsection{合并日期和时间}
 
-To initialize tp, we combine the days of the loop with a specific time of the day:
+为了初始化tp，将循环的天数与一天中的特定时间结合起来:
 
 \begin{cpp}
 auto tp{sys_days{d} + 18h + 30min};
 \end{cpp}
 
-To combine dates and times we have to use timepoints and durations. A calendrical type such as std::chrono::year\_month\_day is not a timepoint. Therefore, we first convert the year\_month\_day value to a time\_point<> object:
+为了组合日期和时间，必须使用时间点和持续时间。像std::chrono::year\_month\_day这样的日历类型不是时间点，所以首先将year\_month\_day值转换为time\_point<>对象:
 
 \begin{cpp}
 std::chrono::year_month_day d = ... ;
 std::chrono::sys_days{d} // convert to a time_point
 \end{cpp}
 
-The type std::chrono::sys\_days is a new shortcut for system timepoints with the granularity of days. It is equivalent to: std::chrono::time\_point<std::chrono::system\_clock, std::chrono::days>.
+类型std::chrono::sys\_days是以天为粒度的系统时间点的新快捷方式，相当于:std::chrono::time\_point<std::chrono::system\_clock, std::chrono::days>。
 
-By adding some durations (18 hours and 30 minutes), we compute a new value, which—as usual in the chrono library—has a type with a granularity that is good enough for the result of the computation. Because we combine days with hours and minutes, the resulting type is a system timepoint with the granularity of minutes. However, we do not have to know the type. Just using auto works fine.
+通过添加一些持续时间(18小时和30分钟)，可以计算一个新值，该值(在chrono库中通常如此)具有一个粒度足以满足计算结果的类型。我们将天与小时和分钟结合起来，所以结果类型是一个以分钟为粒度的系统时间点，但不必知道类型，只要使用auto就好。
 
-To specify the type of tp more explicitly, we could also declare it as follows:
+为了更明确地指定tp的类型，还可以这样声明:
 
 \begin{itemize}
 \item 
-As system timepoint without specifying its granularity:
+作为系统时间点，但不指定其粒度:
 
 \begin{cpp}
 chr::sys_time tp{chr::sys_days{d} + 18h + 30min};
 \end{cpp}
 
-Thanks to class template argument deduction, the template parameter for the granularity is deduced.
+通过类模板参数推导，可以推导出粒度的模板参数。
 
 \item
-As system timepoint with a specified granularity:
+作为具有指定粒度的系统时间点:
 
 \begin{cpp}
 chr::sys_time<chr::minutes> tp{chr::sys_days{d} + 18h + 30min};
 \end{cpp}
 
-In this case, the initial value must not be more fine grained than the specified type or you have to use rounding functions.
+在这种情况下，初始值不能比指定类型更细粒度，否则必须使用舍入函数。
 
 \item
-As system timepoint convenient type for seconds as granularity:
+作为系统时间点，方便以秒为粒度的类型:
 
 \begin{cpp}
 chr::sys_seconds tp{chr::sys_days{d} + 18h + 30min};
 \end{cpp}
 
-Again, the initial value must not be more fine grained than the specified type or you have to use rounding functions.
+同样，初始值不能比指定类型更细粒度，否则必须使用舍入函数。
 \end{itemize}
 
-In all these cases, the default output operator prints the timepoint according to the specified format as described above. For example:
+默认输出操作符根据上述指定的格式输出时间点。例如:
 
 \begin{shell}
 We meet on 10/05/21 at 18:30
 \end{shell}
 
-Note that when dealing with system time, by default the output is UTC.
+注意，在处理系统时间时，默认输出是UTC。
 
-A more fine-grained timepoint would also use whatever is necessary to output the exact value (such as milliseconds). See later.
+更细粒度的时间点还可以使用输出精确值所需的任何参数(例如毫秒)。。
 
-\mySubsubsection{11.1.2}{Scheduling a Meeting on the Last Day of Every Month}
+\mySubsubsection{11.1.2}{把会议安排在每个月的最后一天}
 
-Let us modify the first example program by iterating over the last days of each month. The way you can do that is as follows:
+通过迭代每个月的最后几天来修改第一个示例程序，可以这样做:
 
 \filename{lib/chrono2.cpp}
 
@@ -319,15 +318,15 @@ int main()
 }
 \end{cpp}
 
-All we modified was the initialization of first. We declare it with type auto and initialize it with std::chrono::last as day:
+只修改了first的初始化。用auto类型声明，用std::chrono::last as day初始化它:
 
 \begin{cpp}
 auto first = 2021y / 1 / chr::last;
 \end{cpp}
 
-The type std::chrono::last not only represents the last day of a month, it also has the effect that first has a different type: std::chrono::year\_month\_day\_last. The effect is that by adding one month, the day of the date gets adjusted. In fact, the type just always holds the last day. The conversion to the numerical day happens when we output the date and specify a corresponding output format.
+类型std::chrono::last不仅表示一个月的最后一天，还表示first具有不同的类型:std::chrono::year\_month\_day\_last。通过增加一个月，日期的日期得到了调整。实际上，该类型总是保存最后一天。当输出日期并指定相应的输出格式时，就会发生向数字日期的转换。
 
-As a result, the output changes to the following:
+结果，输出为以下内容:
 
 \begin{shell}
 2021/Jan/last:
@@ -347,13 +346,13 @@ As a result, the output changes to the following:
  We meet on Friday 12/31/21 at 18:30
 \end{shell}
 
-As you can see, the default output format of year\_month\_day\_last uses last and slashes instead of dashes as a separator (only year\_month\_day uses hyphens in its default output format). For example:
+year\_month\_day\_last的默认输出格式使用last和斜杠，而非减号作为分隔符(只有year\_month\_day在其默认输出格式中使用连字符)。例如:
 
 \begin{shell}
 2021/Jan/last
 \end{shell}
 
-You could still declare first as std::chrono::year\_month\_day:
+仍然可以将first声明为std::chrono::year\_month\_day:
 
 \begin{cpp}
 // for each last days of all months of 2021:
@@ -368,7 +367,7 @@ for (auto d = first; d.year() == first.year(); d += chr::months{1}) {
 }
 \end{cpp}
 
-However, this would cause the following output:
+但这会有以下输出:
 
 \begin{shell}
 2021-01-31:
@@ -384,9 +383,9 @@ However, this would cause the following output:
 ...
 \end{shell}
 
-Because the type of first stores the numeric value of the day, initialized with the last day of January, we iterate over the 31st day of each month. If such a day does not exist, the default output format prints that this is an invalid date, while std::format() even performs a bad computation.
+因为first类型存储的是日期的数值，初始化为1月的最后一天，所以可以迭代每个月的第31天。若这样的日期不存在，则默认输出格式打印为无效日期，而std::format()甚至执行错误的计算。
 
-A way to deal with such situations is to check whether a date is valid and implement what to do then. For example:
+处理这种情况的一种方法是检查日期是否有效，然后执行要做的事情。例如:
 
 \filename{lib/chrono3.cpp}
 
@@ -419,7 +418,7 @@ int main()
 }
 \end{cpp}
 
-By using the member function ok(), we adjust an invalid date to take the first day of the next month. We get the following output:
+通过使用成员函数ok()，将无效日期调整为下个月的第一天。可以得到以下输出:
 
 \begin{shell}
 2021-01-31:
@@ -439,9 +438,9 @@ By using the member function ok(), we adjust an invalid date to take the first d
  We meet on Friday 12/31/21 at 18:30
 \end{shell}
 
-\mySubsubsection{11.1.3}{Scheduling a Meeting Every First Monday}
+\mySubsubsection{11.1.3}{每一个第一个星期一安排会议}
 
-In a similar way, we can schedule a meeting on each first Monday of a month:
+类似地，可以在每个月的第一个星期一安排一次会议:
 
 \filename{lib/chrono4.cpp}
 
@@ -467,9 +466,9 @@ int main()
 }
 \end{cpp}
 
-Again, first has a special type, std::chrono::year\_month\_weekday, which represents a weekday in a month of a year: 
+同样，first有一个特殊类型std::chrono::year\_month\_weekday，表示一年中一个月中的工作日:
 
-The default output format signals that with a specific format. However, the formatted output works fine:
+默认输出格式表示使用特定格式，但格式化的输出工作良好
 
 \begin{shell}
 2021/Jan/Mon[1]
@@ -489,57 +488,57 @@ The default output format signals that with a specific format. However, the form
  We meet on Monday 12/06/21 at 18:30
 \end{shell}
 
-\mySamllsection{Calendrical Types for Weekdays}
+\mySamllsection{工作日的日历类型}
 
-This time, we initialize first as an object of the calendrical type std::chrono::year\_month\_weekday and initialize it with the first Monday of January of 2021:
+这一次，首先初始化为一个日历类型std::chrono::year\_month\_weekday的对象，并将其初始化为2021年1月的第一个星期一:
 
 \begin{shell}
 auto first = 2021y / 1 / chr::Monday[1];
 \end{shell}
 
-Again, we use operator/ to combine different date fields. However, this time, types for weekdays come into play:
+同样，使用操作符/来组合不同的日期字段，但这一次，工作日的类型就要发挥作用了:
 
 \begin{itemize}
 \item 
-First, we call 2021y / 1 to combine a std::chrono::year with an integral value to create a std::chrono::year\_month.
+首先，调用2021y / 1，将std::chrono::year与整型值结合，创建std::chrono::year\_month。
 
 \item 
-Then, we call operator[] for std::chrono::Monday, which is a standard object of type std::chrono::weekday, to create an object of type std::chrono::weekday\_indexed representing the nth weekday.
+然后，调用std::chrono::Monday(std::chrono::weekday类型的标准对象)的操作符[]来创建一个std::chrono::weekday\_indexed类型的对象，表示第n个工作日。
 
 \item
-Finally, operator/ is used to combine the std::chrono::year\_month with the object of type std::chrono::weekday\_indexed, which creates a std::chrono::year\_month\_weekday object.
+最后，操作符/用于将std::chrono::year\_month与std::chrono::weekday\_indexed类型的对象组合在一起，从而创建一个std::chrono::year\_month\_weekday对象。
 \end{itemize}
 
-Therefore, a fully specified declaration would look as follows:
+因此，完整的声明如下所示:
 
 \begin{cpp}
 std::chrono::year_month_weekday first = 2021y / 1 / std::chrono::Monday[1];
 \end{cpp}
 
-Again, note that the default output format of year\_month\_weekday uses slashes instead of dashes as a separator (only year\_month\_day uses hyphens in its default output format). For example:
+再次注意，year\_month\_weekday的默认输出格式使用斜杠而不是破折号作为分隔符(只有year\_month\_day在其默认输出格式中使用连字符)。例如:
 
 \begin{shell}
 2021/Jan/Mon[1]
 \end{shell}
 
-\mySubsubsection{11.1.4}{Using Different Timezones}
+\mySubsubsection{11.1.4}{不同的时区}
 
-Let us modify the first example program to bring timezones into play. In fact, we want the program to iterate over all first Mondays of each month in a year and schedule a meeting in different timezones.
+让我们修改第一个示例程序，以使时区发挥作用。实际上，我们希望程序迭代一年中每个月的所有第一个星期一，并在不同的时区安排会议。
 
-For this we need the following modifications:
+为此需要做以下修改:
 
 \begin{itemize}
 \item 
-Iterate over all months of the current year
+迭代当前年份的所有月份
 
 \item 
-Schedule the meeting at 18:30 our local time
+会议安排在当地时间18:30
 
 \item 
-Print the meeting time using other timezones
+使用其他时区输出会议时间
 \end{itemize}
 
-The program can now be written as follows:
+现在可以这样编写程序:
 
 \filename{lib/chronotz.cpp}
 
@@ -584,7 +583,7 @@ int main()
 }
 \end{cpp}
 
-Starting the program in Europe in 2021 results in the following output:
+该计划将于2021年在欧洲启动，结果如下:
 
 \begin{shell}
 today: 2021-03-29
@@ -631,48 +630,48 @@ today: 2021-03-29
     Pacific: 2021-12-06 09:30:00 PST
 \end{shell}
 
-Look at the output for October and November: in Los Angeles, the meeting is now scheduled at different times although the same timezone PDT is used. That happens because the source for the meeting time (central Europe) changed from summer to winter/standard time.
+看看10月和11月的输出:在洛杉矶，会议现在安排在不同的时间，尽管使用了相同的时区PDT。这是因为会议时间的来源(中欧)从夏季改为冬季/标准时间。
 
-Again, let us go through the modifications of this program step by step.
+再一次，让我们一步步地了解一下这个程序的修改。
 
-\mySamllsection{Dealing with Today}
+\mySamllsection{应对今天}
 
-The first new statement is the initialization of today as an object of type year\_month\_day:
+第一个新语句是将today初始化为year\_month\_day类型的对象:
 
 \begin{cpp}
 auto localNow = chr::current_zone()->to_local(chr::system_clock::now());
 chr::year_month_day today = chr::floor<chr::days>(localNow);
 \end{cpp}
 
-Support for std::chrono::system\_clock::now() has already been provided since C++11 and yields a std::chrono::time\_point<> with the granularity of the system clock. This system clock uses UTC (since C++20, the system\_clock is guaranteed to use Unix time, which is based on UTC). Therefore, we first have to adjust the current UTC time and date to the time and date of the current/local timezone, which current\_zone()->to\_local() does. Otherwise, our local date might not fit the UTC date (because we have already passed midnight but UTC has not, or the other way around).
+从C++11开始就提供了对std::chrono::system\_clock::now()的支持，会产生一个具有系统时钟粒度的std::chrono::time\_point<>。这个系统时钟使用UTC(从C++20开始，system\_clock保证使用Unix时间，基于UTC)。所以首先必须将当前的UTC时间和日期调整为当前/本地时区的时间和日期，current\_zone()->to\_local()就是这样做的。否则，本地日期可能与UTC日期不匹配(因为已经过了午夜，而UTC还没有过，或者相反)。
 
-Using localNow directly to initialize a year\_month\_day value does not compile, because we would “narrow” the value (lose the hours, minutes, seconds, and subseconds parts of the value). By using a convenience function such as floor() (available since C++17), we round the value down according to our requested granularity.
+直接使用localNow初始化year\_month\_day值不会编译，因为我们会“窄化”值(丢失值的小时、分钟、秒和次秒部分)。通过使用floor()这样的方便函数(C++17起可用)，可以根据所要求的粒度将值向下舍入。
 
-If you need the current date according to UTC, the following would be enough:
+若需要根据UTC的当前日期，以下内容就足够了:
 
 \begin{cpp}
 chr::year_month_day today = chr::floor<chr::days>(chr::system_clock::now());
 \end{cpp}
 
-\mySamllsection{Local Dates and Times}
+\mySamllsection{本地日期及时间}
 
-Again, we combine the days we iterate over with a specific time of day. However, this time, we convert each day to type std::chrono::local\_days first:
+同样，将迭代的天数与一天中的特定时间结合起来。但这一次，首先会将每一天转换为类型std::chrono::local\_days:
 
 \begin{cpp}
 auto tp{chr::local_days{d} + 18h + 30min};
 \end{cpp}
 
-The type std::chrono::local\_days is a shortcut of time\_point<local\_t, days>. Here, the pseudo clock std::chrono::local\_t is used, which means that we have a local timepoint, a timepoint with no associated timezone (not even UTC) yet.
+std::chrono::local\_days是time\_point<local\_t, days>的快捷方式。这里使用了伪时钟std::chrono::local\_t，所以有一个本地时间点，这个时间点还没有关联时区(甚至还没有UTC)。
 
-The next statement combines the local timepoint with the current timezone so that we get a time-zone specific point of time of type std::chrono::zoned\_time<>:
+下一个语句将本地时间点与当前时区结合起来，这样就得到了一个特定于时区的时间点，类型为std::chrono::zoned\_time<>:
 
 \begin{cpp}
 chr::zoned_time timeLocal{chr::current_zone(), tp}; // local time
 \end{cpp}
 
-Note that a timepoint is already associated with the system clock, which means that it already associates the time with UTC. Combining such a timepoint with a different timezone converts the time to a specific timezone.
+注意，时间点已经与系统时钟相关联，则已经将时间与UTC相关联。将这样的时间点与不同的时区组合将时间转换为特定的时区。
 
-The default output operators demonstrate the difference between a timepoint and a zoned time:
+默认输出操作符演示了时间点和分区时间之间的差异:
 
 \begin{cpp}
 auto tpLocal{chr::local_days{d} + 18h + 30min}; // local timepoint
@@ -682,26 +681,26 @@ chr::zoned_time timeLocal{chr::current_zone(), tpLocal}; // apply to local timez
 std::cout << "zonedtime: " << timeLocal << '\n';
 \end{cpp}
 
-This code outputs, for example:
+这段代码可能的输出:
 
 \begin{shell}
 timepoint: 2021-01-04 18:30:00
 zonedtime: 2021-01-04 18:30:00 CET
 \end{shell}
 
-You see that the timepoint is printed without a timezone while the zoned time has a timezone. However, both outputs print the same time because we apply a local timepoint to our local timezone.
+可以看到，打印的时间点没有时区，而经过时区处理的时间有时区。但两个输出输出的时间相同，因为我们将本地时间点使用的是本地时区。
 
-In fact, the difference between timepoints and zoned times is as follows:
+事实上，时间点和分区时间的区别如下:
 
 \begin{itemize}
 \item 
-A timepoint may be associated with a defined epoch. It may define a unique point in time; however, it might also be associated with an undefined or pseudo epoch, for which the meaning is not clear yet until we combine it with a timezone.
+一个时间点可能与一个已定义的纪元相关联，可以定义一个独特的时间点，但它也可能与一个未定义的或伪纪元相关联，直到我们将其与时区结合起来，其含义才清楚。
 
 \item 
-A zoned time is always associated with a timezone so that the epoch finally has a defined meaning. It always represents a unique point in time.
+分区时间总是与时区相关联，以便epoch最终具有已定义的含义。epoch总是代表一个唯一的时间点。
 \end{itemize}
 
-Look what happens when we use std::chrono::sys\_days instead of std::chrono::local\_days:
+当使用std::chrono::sys\_days，而非std::chrono::local\_days时会发生什么:
 
 \begin{cpp}
 auto tpSys{chr::sys_days{d} + 18h + 30min}; // system timepoint
@@ -711,16 +710,16 @@ chr::zoned_time timeSys{chr::current_zone(), tpSys}; // convert to local timezon
 std::cout << "zonedtime: " << timeSys << '\n';
 \end{cpp}
 
-Here we use a system timepoint, which has an associated timezone UTC. While a local timepoint is applied to a timezone, as system timepoint is converted to a timezone. Therefore, when we run the program in a timezone with one hour difference we get the following output:
+这里使用一个系统时间点，有一个相关联的时区UTC。当本地时间点应用于时区时，将系统时间点转换为时区。所以当在一个时差一小时的时区运行程序时，可得到以下输出:
 
 \begin{shell}
 timepoint: 2021-01-04 18:30:00
 zonedtime: 2021-01-04 19:30:00 CET
 \end{shell}
 
-\mySamllsection{Using Other Timezones}
+\mySamllsection{使用其他时区}
 
-Finally, we print the timepoint using different timezones, one for the Ukraine (the nation Russia waged a war on) passing Kiev and one for the Pacific timezone in North America passing Los Angeles:
+最后，使用不同的时区打印时间点，一个用于乌克兰经过基辅，另一个用于北美太平洋时区经过洛杉矶:
 
 \begin{cpp}
 chr::zoned_time timeUkraine{"Europe/Kiev", timeLocal}; // Ukraine time
@@ -729,9 +728,9 @@ std::cout << " Ukraine: " << timeUkraine << '\n';
 std::cout << " Pacific: " << timeUSWest << '\n';
 \end{cpp}
 
-To specify a timezone, we have to use the official timezone names of the IANA timezone database, which is usually based on cities that represent the timezones. Timezone abbreviations such as PST may change over the year or apply to different timezones.
+要指定时区，必须使用IANA时区数据库的官方时区名称，该名称通常基于代表时区的城市。时区缩写(如PST)可能会在一年中发生变化，或者适用于不同的时区。
 
-Using the default output operator of these objects adds the corresponding timezone abbreviation, whether it is in “winter time:”
+使用这些对象的默认输出操作符添加相应的时区缩写，无论它在“冬令时”:
 
 \begin{shell}
 local:   2021-01-04 18:30:00 CET
@@ -739,7 +738,7 @@ Ukraine: 2021-01-04 19:30:00 EET
 Pacific: 2021-01-04 09:30:00 PST
 \end{shell}
 
-or whether it is in “summer time:”
+或者在“夏令时”:
 
 \begin{shell}
 local:   2021-07-05 18:30:00 CEST
@@ -747,7 +746,7 @@ Ukraine: 2021-07-05 19:30:00 EEST
 Pacific: 2021-07-05 09:30:00 PDT
 \end{shell}
 
-Sometimes, some timezones are in summer time while others are not. For example, at the beginning of November we have daylight/summer time in the US but not in the Ukraine:
+有时候，有些时区是夏令时，而有些则不是。例如，在11月初，美国有夏令时，但在乌克兰没有。
 
 \begin{shell}
 local:   2021-11-01 18:30:00 CET
@@ -755,11 +754,11 @@ Ukraine: 2021-11-01 19:30:00 EET
 Pacific: 2021-11-01 10:30:00 PDT
 \end{shell}
 
-\mySamllsection{When Timezones Are Not Supported}
+\mySamllsection{不支持相应时区时}
 
-C++ can exist and be useful on small systems, even on a toaster. In that case, the availability of the IANA timezone database would cost far too much resources. Therefore, it is not required that the timezone database exists.
+C++可以在小型系统上存在并发挥作用，甚至可以在烤面包机上，IANA时区数据库的可用性将花费太多的资源，所以不需要存在时区数据库。
 
-All timezone-specific calls throw an exception, if the timezone database is not supported. For this reason, you should catch exceptions when using timezones in a portable C++ program:
+若不支持时区数据库，则所有特定于时区的调用都会抛出异常，所以在可移植的C++程序中使用时区时，应该可以捕捉到异常:
 
 \begin{cpp}
 try {
@@ -772,10 +771,9 @@ catch (const std::exception& e) {
 }
 \end{cpp}
 
-Note that for Visual C++, this also applies to older Windows systems, because the required OS support does not exist before Windows 10.
-In addition, platforms may support the timezone API without using all of the IANA timezone database.
+请注意，对于Visual C++，这也适用于较旧的Windows系统，所需的操作系统支持不能低于Windows 10。此外，平台可以在不使用所有IANA时区数据库的情况下，支持时区API。
 
-For example, with a German Windows 11 installation, I get output such as GMT-8 and GMT-7 instead of PST and PDT.
+例如，在德语版本的Windows 11安装中，我得到的输出是GMT-8和GMT-7，而不是PST和PDT。
 
 
 

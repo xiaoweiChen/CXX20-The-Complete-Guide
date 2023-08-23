@@ -1,20 +1,20 @@
 
-C++20 provides new support for directly outputting and parsing almost all chrono types.
+C++20提供了对几乎所有计时类型的直接输出和解析的新支持。
 
-\mySubsubsection{11.4.1}{Default Output Formats}
+\mySubsubsection{11.4.1}{默认输出格式}
 
-For more or less all chrono types, the standard output operator has been defined since C++20. If useful, it not only prints the value but also uses an appropriate format and the unit. Locale-dependent formatting is possible.
+对于几乎所有的chrono类型，标准输出操作符从C++20开始定义。若有用，不仅输出值，而且使用适当的格式和单位。并且，依赖于地区的格式化也是可能的。
 
-All calendrical types print out the value as listed with the output formats of calendrical types.
+所有日历类型都会输出出带有日历类型输出格式的值。
 
-All duration types print out the value with the unit type as listed in table Output units for durations. This fits any literal operator if provided.
+所有时间段类型都以单位类型输出值，如表中时间段的输出单位所示，这适用于任何字面符操作符。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Unit}                          & \textbf{Output Suffix} \\ \hline
+\textbf{单位}                          & \textbf{输出后缀} \\ \hline
 \endfirsthead
 %
 \endhead
@@ -44,10 +44,10 @@ ratio\textless{}num, den\textgreater{} & {[}num/den{]}s         \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 11.8. Output units for durations
+表11.8 时间段的输出单位
 \end{center}
 
-For all standard timepoint types, an output operator prints date and optionally time in the following format:
+对于所有标准时间点类型，输出操作符以以下格式输出日期和时间(可选):
 
 \begin{itemize}
 \item 
