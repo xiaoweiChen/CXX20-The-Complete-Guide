@@ -59,7 +59,7 @@ Consider the following program:
 
 int main()
 {
-	std::uint8_t i8 = 0b0000’1101;
+	std::uint8_t i8 = 0b0000'1101;
 	std::cout
 		<< std::format("{0:08b} {0:3}\n", i8) // 00001101
 		<< std::format("{0:08b} {0:3}\n", std::rotl(i8, 2)) // 00110100
@@ -184,7 +184,7 @@ C++20 provides a new cast operation for changing the type of a sequence of bits.
 For example:
 
 \begin{cpp}
-std::uint8_t b8 = 0b0000’1101;
+std::uint8_t b8 = 0b0000'1101;
 
 auto bc = std::bit_cast<char>(b8); // OK
 auto by = std::bit_cast<std::byte>(b8); // OK
