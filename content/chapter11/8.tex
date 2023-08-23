@@ -1,17 +1,17 @@
-In addition to what I have described so far, the new chrono library adds the following features:
+除了我到目前为止所描述的，新的chrono库还增加了以下特性:
 
 
 \begin{itemize}
 \item 
-To check whether a type is a clock, a new type trait std::chrono::is\_clock<> is provided together with its corresponding variable template std::chrono::is\_clock\_v<>. For example:
+为了检查一个类型是否为时钟，提供了一个新的类型trait std::chrono::is\_clock<>及其相应的变量模板std::chrono::is\_clock\_v<>。例如:
 
 \begin{cpp}
 std::chrono::is_clock_v<std::chrono::system_clock> // true
 std::chrono::is_clock_v<std::chrono::local_t> // false
 \end{cpp}
 
-The pseudo clock local\_t yields false here because it does not provide the member function now().
+伪时钟local\_t在这里产生false，它不提供成员函数now()。
 
 \item 
-For durations and timepoints, operator<=> is defined.
+对于时间段和时间点，定义了操作符<=>。
 \end{itemize}

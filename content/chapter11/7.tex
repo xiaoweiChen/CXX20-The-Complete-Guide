@@ -1,48 +1,49 @@
 
-C++20 now supports a couple of clocks. This section discusses the differences between them and how to use special clocks.
+C++20现在支持两个时钟，本节讨论它们之间的区别以及如何使用特殊时钟。
 
-\mySubsubsection{11.7.1}{Clocks with a Specified Epoch}
+\mySubsubsection{11.7.1}{具有指定Epoch的时钟}
 
-C++20 now provides the following clocks associated with an epoch (so that they define a unique point in time):
+C++20现在提供了以下与epoch相关联的时钟(以便定义唯一的时间点):
 
 \begin{itemize}
 \item 
-The system clock is the clock of your operating system. Since C++20 it is specified to be Unix Time[ For details about Unix time see, for example, \url{http://en.wikipedia.org/wiki/Unix_time}.], which counts time since the epoch January 1, 1970 00:00:00 UTC.
+系统时钟是操作系统的时钟。从C++20开始，它被指定为Unix Time[有关Unix时间的详细信息，例如，\url{http://en.wikipedia.org/wiki/Unix_time}.]，计算从UTC时间1970年1月1日00:00:00开始的时间。
 
-Leap seconds are handled such that some seconds might take a little bit longer. Therefore, you never have hours with 61 seconds and all years with 365 days have the same number of 31,536,000 seconds.
-
-\item
-The UTC clock is the clock that represents the Coordinated Universal Time, popularly known as GMT (Greenwich Mean Time), or Zulu time. Local time differs from UTC by the UTC offset of your timezone.
-
-It uses the same epoch as the system clock (January 1, 1970 00:00:00 UTC).
-Leap seconds are handled such that some minutes might have 61 seconds. For example, there is a timepoint 1972-06-30 23:59:60 because a leap second was added to the last minute of June 1972.
-
-Therefore, years with 365 days might sometimes have 31,536,001 or even 31,536,002 seconds.
+闰秒的处理方式使得某些秒可能会花费更长的时间，所以永远不会有61秒的小时，而所有365天的年都有相同的31,536,000秒。
 
 \item
-The GPS clock uses the time of the Global Positioning System, which is the atomic time scale implemented by the atomic clocks in the GPS ground control stations and satellites. GPS time starts with the epoch of January 6, 1980 00:00:00 UTC.
+UTC时钟是代表协调世界时的时钟，通常被称为GMT(格林威治标准时间)或祖鲁时间。本地时间与UTC的差异在于您所在时区的UTC偏移量。
 
-Each minute has 60 seconds, but GPS takes leap seconds into account by switching to the next hour earlier. As a result, GPS is more and more seconds ahead of UTC (or more and more seconds behind before 1980). For example, the timepoint 2021-01-01 00:00:00 UTC is represented as a GPS timepoint as 2021-01-01 00:00:18 GPS. In 2021, while writing this book, GPS timepoints are 18 seconds ahead.
+它使用与系统时钟相同的历元(1970年1月1日00:00:00 UTC)。
 
-All GPS years with 365 days (the difference between midnight of a GPS date and midnight of the GPS date one year later) have the same number of 31,536,000 seconds but might be one or two seconds shorter than the “real” year.
+闰秒的处理使得某些分钟可能有61秒。例如，有一个时间点1972-06-30 23:59:60，因为在1972年6月的最后一分钟增加了一个闰秒。
+
+因此，365天的年份有时可能有31,536,001，甚至31,536,002秒。
 
 \item
-The TAI clock uses International Atomic Time, which is the international atomic time scale based on a continuous counting of the SI second. TAI time starts with the epoch of January 1, 1958 00:00:00 UTC.
+GPS时钟使用的是全球定位系统的时间，是GPS地面控制站和卫星上的原子钟实现的原子时标。GPS时间从1980年1月6日00:00:00 UTC的epoch开始。
 
-As is the case for GPS time, each minute has 60 seconds, and leap seconds are taken into account by switching to the next hour earlier. As a result, TAI is more and more seconds ahead of UTC, but always has a constant offset of 19 seconds to GPS. For example, the timepoint 2021-01-01 00:00:00 UTC is represented as a TAI timepoint as 2021-01-01 00:00:37 TAI. In 2021, while writing this book, TAI timepoints are 37 seconds ahead.
+每分钟有60秒，但GPS通过提前切换到下一个小时来考虑闰秒，所以GPS比UTC快越来越多的秒(或者在1980年之前比UTC慢越来越多的秒)。例如，时间点“20121-01-01 00:00:00 UTC”表示为GPS时间点“20121-01-01 00:00:18 GPS”。在2021年，当我写这本书的时候，GPS时间点领先了18秒。
+
+所有具有365天的GPS年(GPS日期的午夜与一年后GPS日期的午夜之间的差值)都有相同的31,536,000秒，但可能比“真正的”年短一到两秒。
+
+\item
+TAI时钟使用国际原子时，这是基于SI秒连续计数的国际原子时标。TAI时间从UTC时间1958年1月1日00:00:00开始。
+
+就像GPS时间一样，每分钟有60秒，而闰秒会通过提前切换到下一个小时来考虑，所以TAI比UTC快越来越多的秒，但与GPS总是有19秒的恒定偏移。例如，时间点“2021-01-01 00:00:00 UTC”表示为TAI时间点“2021-01-01 00:00:37 TAI”。在2021年，当我写这本书的时候，TAI的时间点提前了37秒。
 \end{itemize}
 
-\mySubsubsection{11.7.2}{The Pseudo Clock local\_t}
+\mySubsubsection{11.7.2}{伪时钟local\_t}
 
-As already introduced, there is a special clock of type std::chrono::local\_t. This clock allows us to specify local timepoints, which have no timezone (not even UTC) yet. Its epoch is interpreted as “local time,” which means you have to combine it with a timezone to know which point in time it represents.
+如前所述，有一个类型为std::chrono::local\_t的特殊时钟。这个时钟允许我们指定没有时区(甚至还没有UTC)的本地时间点。其epoch解释为“本地时间”，所以必须将它与时区结合起来才能知道它代表的是哪个时间点。
 
-local\_t is a “pseudo clock” because it does not fulfill all requirements of clocks. In fact, it does not provide a member function now():
+Local \_t是一个“伪时钟”，因为它不满足时钟的所有要求。事实上，它现在没有提供成员函数now():
 
 \begin{cpp}
 auto now1 = std::chrono::local_t::now(); // ERROR: now() not provided
 \end{cpp}
 
-Instead, you need a system clock timepoint and a timezone. You can then convert the timepoint to a local timepoint using a timezone such as the current timezone or UTC:
+相反，若需要一个系统时钟时间点和一个时区，可以使用时区(如当前时区或UTC)将时间点转换为本地时间点:
 
 \begin{cpp}
 auto sysNow = chr::system_clock::now(); // NOW as UTC timepoint
@@ -53,31 +54,31 @@ chr::local_time now3
 	= chr::locate_zone("Asia/Tokyo")->to_local(sysNow); // NOW as Tokyo timepoint
 \end{cpp}
 
-Another way to get the same result is to call get\_local\_time() for a zoned time (a timepoint with associated timezone):
+另一种获得相同结果的方法是调用get\_local\_time()来获取分区时间(具有关联时区的时间点):
 
 \begin{cpp}
 chr::local_time now4 = chr::zoned_time{chr::current_zone(),
 										sysNow}.get_local_time();
 \end{cpp}
 
-A different approach is to parse a string into a local timepoint:
+另一种方法是将字符串解析为本地时间点:
 
 \begin{cpp}
 chr::local_seconds tp; // time_point<local_t, seconds>
 std::istringstream{"2021-1-1 18:30"} >> chr::parse(std::string{"%F %R"}, tp);
 \end{cpp}
 
-Remember the subtle differences between local timepoints compared to other timepoints:
+记住本地时间点与其他时间点之间的细微差别:
 
 \begin{itemize}
 \item 
-A system/UTC/GPS/TAI timepoint represents a specific point in time. Applying it to a timezone will convert the time value it represents.
+一个系统/UTC/GPS/TAI时间点表示一个特定的时间点，将应用于时区将转换它所表示的时间值。
 
 \item 
-A local timepoint represents a local time. Its global point in time becomes clear once it is combined with a timezone.
+本地时间点表示本地时间。当与时区结合，其全局时间点就会变得清晰。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 auto now = chr::current_zone()->to_local(chr::system_clock::now());
@@ -87,7 +88,7 @@ std::cout << "Sydney: " << chr::zoned_time("Australia/Sydney", now) << '\n';
 std::cout << "Cairo: " << chr::zoned_time("Africa/Cairo", now) << '\n';
 \end{cpp}
 
-This applies the local time of now to three different timezones:
+这将当前的本地时间应用于三个不同的时区:
 
 \begin{shell}
 2021-04-14 08:59:31.640004000
@@ -96,7 +97,7 @@ Sydney: 2021-04-14 08:59:31.640004000 AEST
 Cairo:  2021-04-14 08:59:31.640004000 EET
 \end{shell}
 
-Note that you cannot use conversion specifiers for the timezone when using a local timepoint:
+请注意，当使用本地时间点时，不能对时区使用转换说明符:
 
 \begin{cpp}
 chr::local_seconds tp; // time_point<local_t, seconds>
@@ -106,11 +107,11 @@ std::cout << std::format("{:%F %T}\n", tp); // OK
 \end{cpp}
 
 
-\mySubsubsection{11.7.3}{Dealing with Leap Seconds}
+\mySubsubsection{11.7.3}{处理闰秒}
 
-The previous discussion of clocks with a specified epoch already introduced basic aspects of dealing with leap seconds.
+前面对具有指定epoch的时钟的讨论已经介绍了处理闰秒的基本方式。
 
-To make the handling of leap seconds more clear, let us iterate over timepoints of a leap second using different clocks:
+为了更清楚地处理闰秒，让我们使用不同的时钟迭代闰秒的时间点:
 
 \filename{lib/chronoclocks.cpp}
 
@@ -136,7 +137,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 2016-12-31 23:59:59.000 SYS 2016-12-31 23:59:59.000 UTC 2017-01-01 00:00:16.000 GPS 2017-01-01 00:00:35.000 TAI
@@ -154,50 +155,50 @@ The program has the following output:
 2017-01-01 00:00:00.400 SYS 2017-01-01 00:00:00.400 UTC 2017-01-01 00:00:18.400 GPS 2017-01-01 00:00:37.400 TAI
 \end{shell}
 
-The leap second we look at here is the last leap second we had when this book was written (we do not know in advance when leap seconds will happen in the future). We print the timepoint with the corresponding timezone (for system timepoints, we print SYS instead of its default timezone UTC). You can observe the following:
+在这里看到的闰秒是写这本书时的最后一个闰秒(事先不知道闰秒在未来什么时候会发生)，输出带有相应时区的时间点(对于系统时间点，这里输出的是SYS，而非其默认时区UTC)。可以观察到以下几点:
 
 \begin{itemize}
 \item 
-During the leap second:
+闰秒时:
 
 \begin{itemize}
 \item 
-The UTC time uses the value 60 as seconds.
+UTC时间的秒可到60。
 
 \item 
-The system clock uses the last representable value of sys\_time prior to the insertion of the leap second. That behavior is guaranteed by the C++ standard.
+系统时钟使用在插入闰秒之前最后一个可表示的sys\_time值，行为由C++标准保证。
 \end{itemize}
 
 \item 
-Before the leap second:
+闰秒前:
 
 \begin{itemize}
 \item 
-The GPS time is 17 seconds ahead of the UTC time.
+GPS时间比UTC时间快17秒。
 
 \item 
-The TAI time is 36 seconds ahead of the UTC time (as always, 19 seconds ahead of the GPS time).
+TAI时间比UTC时间早36秒(一如既往，比GPS时间早19秒)。
 \end{itemize}
 
 \item 
-After the leap second:
+闰秒后:
 
 \begin{itemize}
 \item 
-The GPS time is 18 seconds ahead of the UTC time.
+GPS时间比UTC时间快18秒。
 
 \item 
-The TAI time is 37 seconds ahead of the UTC time (still 19 seconds ahead of the GPS time).
+TAI时间比UTC时间早37秒(仍比GPS时间早19秒)。
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{11.7.4}{Conversions between Clocks}
+\mySubsubsection{11.7.4}{时钟之间的转换}
 
-You can convert timepoint between clocks provided such a conversion makes sense. For this purpose, the chrono library provides a clock\_cast<>. It is defined in a way that you can only convert between the timepoints of clocks that have a specified stable epoch (sys\_time<>, utc\_time<>, gps\_time<>, tai\_time<>) and filesystem timepoints.
+可以在时钟之间转换时间点，前提是这种转换有意义。为此，chrono库提供了一个时钟\_cast<>，其定义方式是，只能在具有指定稳定epoch (sys\_time<>、utc\_time<>、gps\_time<>、tai\_time<>)的时钟时间点和文件系统时间点之间进行转换。
 
-The cast needs the destination clock and you can optionally pass a different duration.
+强制转换需要目标时钟，可以选择传递不同的时间段。
 
-The following program creates the output of a UTC leap second to a couple of other clocks:
+下面的程序创建一个UTC闰秒到其他几个时钟的输出:
 
 \filename{lib/chronoconv.cpp}
 
@@ -229,7 +230,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 utc_time: 2015-06-30 23:59:60.0000000 UTC
@@ -239,41 +240,41 @@ tai_time: 2015-07-01 00:00:35.0000000 TAI
 file_time: 2015-06-30 23:59:59.9999999 UTC
 \end{shell}
 
-Note that for all of these clocks, we have pseudo timezones for formatted output.
+注意，对于所有这些时钟，都为格式化的输出提供了伪时区。
 
-The rules of conversions are as follows:
+转换规则如下:
 
 \begin{itemize}
 \item 
-Any conversion from a local timepoint adds just the epoch. The time value remains the same.
+从本地时间点进行的任何转换都只添加epoch，时间值保持不变。
 
 \item 
-Conversions between UTC, GPS, and TAI timepoints add or subtract the necessary offsets.
+UTC, GPS和TAI时间点之间的转换增加或减少必要的偏移量。
 
 \item 
-Conversions between UTC and system time do not change the time value except that for the timepoint of a UTC leap second, the last timepoint ahead is used as the system time.
+UTC和系统时间之间的转换不改变时间值，但对于UTC闰秒的时间点，使用前面的最后一个时间点作为系统时间。
 \end{itemize}
 
-Conversions from local timepoints to other clocks are also supported. However, for conversions to local timepoints, you have to use to\_local() (after converting to a system timepoint).
+还支持从本地时间点到其他时钟的转换，大门要转换为本地时间点，必须使用to\_local()(在转换为系统时间点之后)。
 
-Conversions to or from timepoints of the steady\_clock are not supported.
+不支持与steady\_clock的时间点之间的转换。
 
-\mySamllsection{Clock Conversions Internally}
+\mySamllsection{内部时钟的转换}
 
-Under the hood, clock\_cast<> is a “two-hub spoke and wheel system.”10 The two hubs are system\_clock and utc\_clock. Every convertible clock has to convert to and from one of these hubs (but not both). The conversions to the hubs are done with the to\_sys() or to\_utc() static member functions of the clocks. For conversions from the hubs, from\_sys() or from\_utc() are provided. clock\_cast<> strings these member functions together to convert from any clock to any other clock.
+在内部，clock\_cast<>是一个“双轮毂辐条和车轮系统”。这两个中心是system\_clock和utc\_clock。每个可转换时钟都必须转换到这些中心中的一个(但不是两个)。到中心的转换是通过时钟的to\_sys()或to\_utc()静态成员函数完成的。对于来自中心的转换，提供了from\_sys()或from\_utc()。clock\_cast<>将这些成员函数串在一起，用于从任意时钟转换为任意其他时钟的数据。
 
-Clocks that cannot deal with leap seconds should convert to/from system\_clock. For example, utc\_clock and local\_t provide to\_sys().
+不能处理闰秒的时钟应该转换为/从system\_clock。例如，utc\_clock和local\_t提供给to\_sys()。
 
-Clocks that can deal with leap seconds in some way (which does not necessarily mean that they have a leap second value) should convert to/from utc\_clock. This applies to gps\_clock and tai\_clock, because even though GPS and TAI do not have leap seconds, they have unique, bidirectional mappings to UTC leap seconds.
+可以以某种方式处理闰秒的时钟(这并不一定说明其具有闰秒值)应该转换为/从utc\_clock。这适用于gps\_clock和tai\_clock，即使gps和tai没有闰秒，也有唯一到UTC闰秒的双向映射。
 
-For the file\_clock, it is implementation-specific whether conversions to/from system\_clock or utc\_clock are provided.
+对于file\_clock，是否提供与system\_clock或utc\_clock之间的转换取决于具体实现。
 
 
-\mySubsubsection{11.7.5}{Dealing with the File Clock}
+\mySubsubsection{11.7.5}{处理文件时钟}
 
-The clock std::chrono::file\_clock is the clock the filesystem library uses for timepoints of filesystem entries (files, directories, etc.). It is an implementation-specific clock type that reflects the resolution and range of time values of the filesystem.
+时钟std::chrono::file\_clock是文件系统库用于文件系统(文件、目录等)的时间点的时钟，是一种特定于实现的时钟类型，反映文件系统时间值的分辨率和范围。
 
-For example, you can use the file clock to update the time of last access to a file as follows:
+例如，可以使用文件时钟来更新最后访问文件的时间，如下所示:
 
 \begin{cpp}
 // touch file with path p (update last write access to file):
@@ -281,7 +282,7 @@ std::filesystem::last_write_time(p,
 								 std::chrono::file_clock::now());
 \end{cpp}
 
-You were also able to use the clock of filesystem entries in C++17 by using the type
+还可以通过使用类型来使用C++17中文件系统时钟
 
 \begin{cpp}
 std::filesystem::file_time_type:
@@ -289,7 +290,7 @@ std::filesystem::file_time_type:
 									std::filesystem::file_time_type::clock::now());
 \end{cpp}
 
-Since C++20, the filesystem type name file\_time\_type is defined as follows:
+从C++20开始，文件系统类型名称file\_time\_type定义如下:
 
 \begin{cpp}
 namespace std::filesystem {
@@ -297,9 +298,9 @@ namespace std::filesystem {
 }
 \end{cpp}
 
-In C++17, you could only use an unspecified trivial-clock.
+C++17中，只能使用未指定的普通时钟。
 
-For timepoints of the filesystem, the type file\_time is also defined now:
+对于文件系统的时间点，现在也定义了类型file\_time:
 
 \begin{cpp}
 namespace std::chrono {
@@ -308,9 +309,9 @@ namespace std::chrono {
 }
 \end{cpp}
 
-A type like file\_seconds (as the other clocks have) is not defined.
+没有定义像file\_seconds这样的类型(就像其他时钟一样)。
 
-The new definition of the file\_time type now allows programmers to portably convert filesystem timepoints to system timepoints. For example, you can print the time when a passed file was accessed last as follows:
+file\_time类型的新定义现在允许开发者可移植地将文件系统时间点转换为系统时间点。例如，可以输出最后一次访问传入文件的时间:
 
 \begin{cpp}
 void printFileAccess(const std::filesystem::path& p)
@@ -326,7 +327,7 @@ void printFileAccess(const std::filesystem::path& p)
 }
 \end{cpp}
 
-This code might output:
+这段代码可能的输出:
 
 \begin{shell}
 "chronoclocks.cpp":
@@ -334,19 +335,19 @@ This code might output:
  It is 18s old
 \end{shell}
 
-If you were to use the default output operator of timepoints, which prints subseconds according to the granularity of the file clock:
+若要使用默认的时间点输出操作符，其会根据文件时钟的粒度输出亚秒:
 
 \begin{cpp}
 std::cout << " Last write access: " << diffSecs << '\n';
 \end{cpp}
 
-the output might be as follows:
+输出可能如下所示:
 
 \begin{shell}
 Last write access: 2021-07-12 16:50:08.3680536
 \end{shell}
 
-To deal with the file access time as system or local time, you have to use a clock\_cast<>() (which, internally, might call the static file\_clock member functions to\_sys() or to\_utc()). For example:
+要将文件访问时间作为系统时间或本地时间处理，必须使用clock\_cast<>()(内部可能会将静态file\_clock成员函数调用to\_sys()或to\_utc())。例如:
 
 \begin{cpp}
 auto tpFile = std::filesystem::last_write_time(p);

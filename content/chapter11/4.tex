@@ -23,7 +23,7 @@ atto                                   & as                     \\ \hline
 femto                                  & fs                     \\ \hline
 pico                                   & ps                     \\ \hline
 nano                                   & ns                     \\ \hline
-micro                                  & μs or us               \\ \hline
+micro                                  & μs 或 us               \\ \hline
 milli                                  & ms                     \\ \hline
 centi                                  & cs                     \\ \hline
 deci                                   & ds                     \\ \hline
@@ -51,17 +51,17 @@ ratio\textless{}num, den\textgreater{} & {[}num/den{]}s         \\ \hline
 
 \begin{itemize}
 \item 
-year-month-day for an integral granularity unit implicitly convertible to days
+用于可隐式转换为天数的积分粒度单位的“年-月-日”
 
 \item 
-year-month-day hour:minutes:seconds for an integral granularity unit equal to or less than days
+年-月-日\ 时:分:秒，表示小于等于天的整数粒度单位
 \end{itemize}
 
-If the type of the timepoint value (member rep) has a floating-point type, no output operator is defined.[This is a gap that will hopefully be fixed with C++23.]
+若时间点值(成员rep)的类型为浮点类型，则不定义输出操作符。[这个漏洞有望在C++23中修复。]
 
-For the time part, the output operator of type hh\_mm\_ss is used. This corresponds with the \%F \%T conversion specifier for formatted output.
+对于时间部分，使用类型为hh\_mm\_ss的输出运算符，这对应于格式化输出的\%F \%T转换说明符。
 
-For example:
+例如:
 
 \begin{cpp}
 auto tpSys = std::chrono::system_clock::now();
@@ -88,26 +88,26 @@ auto tpStd = std::chrono::steady_clock::now();
 std::cout << "tpStd: " << tpStd; // ERROR: no output operator defined
 \end{cpp}
 
-The zoned\_time<> type outputs like the timepoint type extended with the abbreviated timezone name. The following timezone abbreviations are used for the standard clocks:
+zoned\_time<>类型输出类似于timepoint类型，扩展为缩写的时区名称。以下时区缩写用于标准时钟:
 
 \begin{itemize}
 \item 
-UTC for sys\_clock, utc\_clock, and file\_clock
+UTC有sys\_clock, utc\_clock和file\_clock
 
 \item 
-TAI for tai\_clock
+TAI有ai\_clock
 
 \item 
-GPS for gps\_clock
+GPS有gps\_clock
 \end{itemize}
 
-Finally, note that sys\_info and local\_info have output operators with an undefined format. They should only be used for debugging purposes.
+最后，注意sys\_info和local\_info具有未定义格式的输出操作符，应该只用于调试。
 
-\mySubsubsection{11.4.2}{Formatted Output}
+\mySubsubsection{11.4.2}{格式化输出}
 
-Chrono supports the new library for formatted output. That means you can use date/time types for arguments of std::format() and std::format\_to().
+Chrono支持格式化输出的新库，所以可以对std::format()和std::format\_to()的参数使用日期/时间类型。
 
-For example:
+例如:
 
 \begin{cpp}
 auto t0 = std::chrono::system_clock::now();
@@ -117,26 +117,26 @@ auto t1 = std::chrono::system_clock::now();
 std::cout << std::format("From {} to {}\nit took {}\n", t0, t1, t1-t0);
 \end{cpp}
 
-This would use the default output formats of the date/time types. For example, we might have the following output:
+这将使用日期/时间类型的默认输出格式。例如，可能有以下输出:
 
 \begin{shell}
 From 2021-04-03 15:21:33.197859000 to 2021-04-03 15:21:34.686544000
 it took 1488685000ns
 \end{shell}
 
-From 2021-04-03 15:21:33.197859000 to 2021-04-03 15:21:34.686544000 it took 1488685000ns
+从20121-04-03 15:21:33.197859000到20121-04-03 15:21:34.686544000，耗时1488685000ns
 
 \begin{cpp}
 std::cout << std::format("From {:%T} to {:%T} it took {:%S}s\n", t0, t1, t1-t0);
 \end{cpp}
 
-This might have the following output then:
+这可能会有以下输出:
 
 \begin{shell}
 From 15:21:34.686544000 to 15:21:34.686544000 it took 01.488685000s
 \end{shell}
 
-The format specifiers for chrono types are part of the syntax for standard format specifiers (each specifier is optional):
+chrono类型的格式说明符是标准格式说明符语法的一部分(每个说明符都可选):
 
 \begin{shell}
 fill align width .prec L spec
@@ -144,18 +144,18 @@ fill align width .prec L spec
 
 \begin{itemize}
 \item 
-fill, align, with, and prec mean the same as for standard format specifiers.
+fill, align, with 和 prec 表示与标准格式说明符相同。
 
 \item 
-spec specifies the general notation of the formatting, starting with \%.
+spec 指定格式化的通用符号，以\%开头。
 
 \item 
-L also as usual turns on locale-dependent formatting for specifiers that support it.
+L 与往常一样，还为支持它的说明符打开语言环境相关的格式。
 \end{itemize}
 
-Table Conversion specifiers for chrono types lists all conversion specifiers for formatted output of date/time types with an example based on Sunday, June 9, 2019 17:33:16 and 850 milliseconds.
+表“计时类型的转换”说明符列出了日期/时间类型格式化输出的所有转换说明符，示例基于Sunday, June 9, 2019 17:33:16和850毫秒。
 
-Without using a specific conversion specifier, the default output operator is used, which marks invalid dates. When using specific conversion specifiers, this is not the case:
+若不使用特定的转换说明符，则使用默认输出操作符，该操作符标记无效日期。当使用特定的转换说明符时，情况并非如此:
 
 \begin{cpp}
 std::chrono::year_month_day ymd{2021y/2/31}; // February 31, 2021
@@ -164,27 +164,27 @@ std::cout << std::format("{:%F}", ymd); // 2021-02-31
 std::cout << std::format("{:%Y-%m-%d}", ymd); // 2021-02-31
 \end{cpp}
 
-If the date/time value type does not provide the necessary information for a conversion specifier, a std::format\_error exception is thrown. For example, an exception is thrown when:
+若日期/时间值类型没有为转换说明符提供必要的信息，则抛出std::format\_error异常:
 
 \begin{itemize}
 \item 
-A year specifier is used for a month\_day
+年份指定符用于month\_day
 
 \item 
-A weekday specifier is used for a duration
+工作日指定符用于指定时间段
 
 \item 
-A month or weekday name should be printed and the value is not valid
+输出月份或工作日名称，并且该值无效
 
 \item 
-A timezone specifier is used for a local timepoint
+时区说明符用于本地时间点
 \end{itemize}
 
-In addition, note the following about conversion specifiers:
+此外，请注意以下关于转换说明符的事项:
 
 \begin{itemize}
 \item 
-A negative duration or hh\_mm\_ss value print the minus sign in front of the whole value. For example:
+负值时间段或hh\_mm\_ss值在整个值前面打印负号。例如:
 
 \begin{cpp}
 std::cout << std::format("{:%H:%M:%S}", -10000s); // outputs: -02:46:40
@@ -195,111 +195,112 @@ std::cout << std::format("{:%H:%M:%S}", -10000s); // outputs: -02:46:40
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|lll|}
 \hline
-\multicolumn{1}{|l|}{\textbf{Spec.}} & \multicolumn{1}{l|}{\textbf{Example}}  & \textbf{Meaning}                                                \\ \hline
+\multicolumn{1}{|l|}{\textbf{Spec.}} & \multicolumn{1}{l|}{\textbf{例子}}  & \textbf{含义}                                                \\ \hline
 \endfirsthead
 %
 \endhead
 %
-\multicolumn{1}{|l|}{\%c} & \multicolumn{1}{l|}{Sun Jun  9 17:33:16 2019} & Standard or locale's date and time representation               \\ \hline
-\multicolumn{3}{|l|}{\textbf{Dates}}                                                                                                            \\ \hline
-\multicolumn{1}{|l|}{\%x}            & \multicolumn{1}{l|}{06/09/19}          & Standard or locale's date representation                        \\ \hline
-\multicolumn{1}{|l|}{\%F}            & \multicolumn{1}{l|}{2019-06-09}        & year-month-day with four and two digits                         \\ \hline
-\multicolumn{1}{|l|}{\%D}            & \multicolumn{1}{l|}{06/09/19}          & month/day/year with two digits                                  \\ \hline
-\multicolumn{1}{|l|}{\%e}            & \multicolumn{1}{l|}{9}                 & Day with leading space if signle digit                          \\ \hline
-\multicolumn{1}{|l|}{\%d}            & \multicolumn{1}{l|}{09}                & Day as two digit                                                \\ \hline
-\multicolumn{1}{|l|}{\%b}            & \multicolumn{1}{l|}{Jun}               & Standard or locale's abbreviated month name                     \\ \hline
+\multicolumn{1}{|l|}{\%c} & \multicolumn{1}{l|}{Sun Jun  9 17:33:16 2019} & 表示标准或地区的日期和时间              \\ \hline
+\multicolumn{3}{|l|}{\textbf{日期：}}                                                                                                            \\ \hline
+\multicolumn{1}{|l|}{\%x}            & \multicolumn{1}{l|}{06/09/19}          & 表示标准或地区的日期                        \\ \hline
+\multicolumn{1}{|l|}{\%F}            & \multicolumn{1}{l|}{2019-06-09}        & 年-月-日，四位和两位数字                         \\ \hline
+\multicolumn{1}{|l|}{\%D}            & \multicolumn{1}{l|}{06/09/19}          & 两位数的月/日/年                                  \\ \hline
+\multicolumn{1}{|l|}{\%e}            & \multicolumn{1}{l|}{9}                 & 个位数时，以空格开头的日期                          \\ \hline
+\multicolumn{1}{|l|}{\%d}            & \multicolumn{1}{l|}{09}                & 两位数的日期                                                \\ \hline
+\multicolumn{1}{|l|}{\%b}            & \multicolumn{1}{l|}{Jun}               & 标准或地区的缩写月名                     \\ \hline
 \multicolumn{1}{|l|}{\%h}            & \multicolumn{1}{l|}{Jun}               & 同上                                                              \\ \hline
-\multicolumn{1}{|l|}{\%B}            & \multicolumn{1}{l|}{June}              & Standard or locale's month name                                 \\ \hline
-\multicolumn{1}{|l|}{\%m}            & \multicolumn{1}{l|}{06}                & Month with two digits                                           \\ \hline
-\multicolumn{1}{|l|}{\%Y}            & \multicolumn{1}{l|}{2019}              & Year with four digits                                           \\ \hline
-\multicolumn{1}{|l|}{\%y}            & \multicolumn{1}{l|}{19}                & Year without century as two digits                              \\ \hline
-\multicolumn{1}{|l|}{\%G}            & \multicolumn{1}{l|}{2019}              & ISO-week-based year as four digits (week according to \%V)      \\ \hline
-\multicolumn{1}{|l|}{\%g}            & \multicolumn{1}{l|}{19}                & ISO-week-based year as two digits (week according to \%V)       \\ \hline
-\multicolumn{1}{|l|}{\%C}            & \multicolumn{1}{l|}{20}                & Century as two digits                                           \\ \hline
-\multicolumn{3}{|l|}{\textbf{Weekdays and weeks:}}                                                                                              \\ \hline
-\multicolumn{1}{|l|}{\%a}            & \multicolumn{1}{l|}{Sun}               & Standard or locale's abbreviated weekday name                   \\ \hline
-\multicolumn{1}{|l|}{\%A}            & \multicolumn{1}{l|}{Sunday}            & Standard or locale's weekday name                               \\ \hline
-\multicolumn{1}{|l|}{\%w}            & \multicolumn{1}{l|}{0}                 & Weekday as decimal number (Sunday as 0 until Saturday as 6)     \\ \hline
-\multicolumn{1}{|l|}{\%u}            & \multicolumn{1}{l|}{7}                 & Weekday as decimal number (Monday as 1 suntil Sunday as 7)      \\ \hline
-\multicolumn{1}{|l|}{\%W}            & \multicolumn{1}{l|}{22}                & Week of the year (00 ... 53 , week 01 starts with first Monday) \\ \hline
-\multicolumn{1}{|l|}{\%U}            & \multicolumn{1}{l|}{23}                & Week of the year (00 ... 53, week 01 starts with first Sunday)  \\ \hline
-\multicolumn{1}{|l|}{\%V}            & \multicolumn{1}{l|}{23}                & ISO week of the year (01 ... 53, week 01 has Jan. 4th)          \\ \hline
-\multicolumn{3}{|l|}{\textbf{Times:}}                                                                                                           \\ \hline
-\multicolumn{1}{|l|}{\%X}            & \multicolumn{1}{l|}{17:33:16}          & Standard or locale's time representation                        \\ \hline
-\multicolumn{1}{|l|}{\%r}            & \multicolumn{1}{l|}{05:33:16 PM}       & Standard or locale's 12-hour clock time                         \\ \hline
-\multicolumn{1}{|l|}{\%T} & \multicolumn{1}{l|}{17:33:16.850}             & hour:minutes:seconds(locale-dependent subseconds as needed)     \\ \hline
-\multicolumn{1}{|l|}{\%R}            & \multicolumn{1}{l|}{17:33}             & hour:minutes with two digits each                               \\ \hline
-\multicolumn{1}{|l|}{\%H}            & \multicolumn{1}{l|}{17}                & 24-hour clock hour as two digits                                \\ \hline
-\multicolumn{1}{|l|}{\%I}            & \multicolumn{1}{l|}{05}                & 12-hour clock hour as two digits                                \\ \hline
-\multicolumn{1}{|l|}{\%p}            & \multicolumn{1}{l|}{PM}                & AM or PM according to the 12-hour clock                         \\ \hline
-\multicolumn{1}{|l|}{\%M}            & \multicolumn{1}{l|}{33}                & Minute with two digits                                          \\ \hline
-\multicolumn{1}{|l|}{\%S} & \multicolumn{1}{l|}{16.850}                   & Seconds as decimal number (local-specific subseconds as needed) \\ \hline
-\multicolumn{3}{|l|}{\textbf{Other:}}                                                                                                           \\ \hline
-\multicolumn{1}{|l|}{\%Z}            & \multicolumn{1}{l|}{CEST}              & Timezone abbreviation (may also be UTC, TAI, or GPS)            \\ \hline
-\multicolumn{1}{|l|}{\%z}            & \multicolumn{1}{l|}{+0200}             & Offset(hours and minutes) from UTC (\%Ez or \%Oz for +02:00)    \\ \hline
-\multicolumn{1}{|l|}{\%j}            & \multicolumn{1}{l|}{160}               & Day of the year with three digits (Jan. 1st is 001)             \\ \hline
-\multicolumn{1}{|l|}{\%q}            & \multicolumn{1}{l|}{ms}                & Unit suffix according to the time's duration                    \\ \hline
-\multicolumn{1}{|l|}{\%Q}            & \multicolumn{1}{l|}{6196850}           & Value according to the time's duration                          \\ \hline
-\multicolumn{1}{|l|}{\%n}            & \multicolumn{1}{l|}{\textbackslash{}n} & Newline character                                               \\ \hline
-\multicolumn{1}{|l|}{\%t}            & \multicolumn{1}{l|}{\textbackslash{}t} & Tabulator character                                             \\ \hline
-\multicolumn{1}{|l|}{\%\%}           & \multicolumn{1}{l|}{\%}                & \% character                                                    \\ \hline
+\multicolumn{1}{|l|}{\%B}            & \multicolumn{1}{l|}{June}              & 标准或地区的月份名称                                 \\ \hline
+\multicolumn{1}{|l|}{\%m}            & \multicolumn{1}{l|}{06}                & 两位数的月份                                           \\ \hline
+\multicolumn{1}{|l|}{\%Y}            & \multicolumn{1}{l|}{2019}              & 四位数的年份                                           \\ \hline
+\multicolumn{1}{|l|}{\%y}            & \multicolumn{1}{l|}{19}                & 两位数的年份，不显示世纪                              \\ \hline
+\multicolumn{1}{|l|}{\%G}            & \multicolumn{1}{l|}{2019}              & ISO以周为基础的年份为四位数字(按\%V表示周)      \\ \hline
+\multicolumn{1}{|l|}{\%g}            & \multicolumn{1}{l|}{19}                & iso以周为基础的年份为两位数字(按\%V表示周)     \\ \hline
+\multicolumn{1}{|l|}{\%C}            & \multicolumn{1}{l|}{20}                & 两位数的世纪                                           \\ \hline
+\multicolumn{3}{|l|}{\textbf{工作日和周:}}                                                                                              \\ \hline
+\multicolumn{1}{|l|}{\%a}            & \multicolumn{1}{l|}{Sun}               & 标准或地区的工作日名称缩写                  \\ \hline
+\multicolumn{1}{|l|}{\%A}            & \multicolumn{1}{l|}{Sunday}            & 标准或地区的工作日名称                               \\ \hline
+\multicolumn{1}{|l|}{\%w}            & \multicolumn{1}{l|}{0}                 & 工作日为十进制数(星期日为0，星期六为6)     \\ \hline
+\multicolumn{1}{|l|}{\%u}            & \multicolumn{1}{l|}{7}                 & 工作日为十进制数(星期一为1，星期天为7)      \\ \hline
+\multicolumn{1}{|l|}{\%W}            & \multicolumn{1}{l|}{22}                & 一年中的第几周(00…(第01周从第一个星期一开始) \\ \hline
+\multicolumn{1}{|l|}{\%U}            & \multicolumn{1}{l|}{23}                & 一年中的第几周(00…(第01周从第一个星期日开始)  \\ \hline
+\multicolumn{1}{|l|}{\%V}            & \multicolumn{1}{l|}{23}                & 一年中的ISO星期(01…53、第一周为1月4日)         \\ \hline
+\multicolumn{3}{|l|}{\textbf{时间:}}                                                                                                           \\ \hline
+\multicolumn{1}{|l|}{\%X}            & \multicolumn{1}{l|}{17:33:16}          & 表示标准或地区的时间                        \\ \hline
+\multicolumn{1}{|l|}{\%r}            & \multicolumn{1}{l|}{05:33:16 PM}       & 标准或当地的12小时时钟时间                         \\ \hline
+\multicolumn{1}{|l|}{\%T} & \multicolumn{1}{l|}{17:33:16.850}             & 时:分:秒(根据需要依赖于区域设置的亚秒)     \\ \hline
+\multicolumn{1}{|l|}{\%R}            & \multicolumn{1}{l|}{17:33}             & 时:分，两位数                               \\ \hline
+\multicolumn{1}{|l|}{\%H}            & \multicolumn{1}{l|}{17}                & 24小时时钟，时间为两位数                                \\ \hline
+\multicolumn{1}{|l|}{\%I}            & \multicolumn{1}{l|}{05}                & 12小时时钟，时间为两位数                                \\ \hline
+\multicolumn{1}{|l|}{\%p}            & \multicolumn{1}{l|}{PM}                &按照12小时制是AM还是PM                         \\ \hline
+\multicolumn{1}{|l|}{\%M}            & \multicolumn{1}{l|}{33}                & 分钟，两位数表示                                          \\ \hline
+\multicolumn{1}{|l|}{\%S} & \multicolumn{1}{l|}{16.850}                   & 秒为十进制数(根据需要特定于本地的亚秒) \\ \hline
+\multicolumn{3}{|l|}{\textbf{其他:}}                                                                                                           \\ \hline
+\multicolumn{1}{|l|}{\%Z}            & \multicolumn{1}{l|}{CEST}              & 时区缩写(也可以是UTC、TAI或GPS)           \\ \hline
+\multicolumn{1}{|l|}{\%z}            & \multicolumn{1}{l|}{+0200}             & 与UTC(+02:00时\%Ez或\%Oz)的偏移(时和分))    \\ \hline
+\multicolumn{1}{|l|}{\%j}            & \multicolumn{1}{l|}{160}               & 三位数年份中的第几天(1月1日是001)             \\ \hline
+\multicolumn{1}{|l|}{\%q}            & \multicolumn{1}{l|}{ms}                & 时间段的后缀单位                    \\ \hline
+\multicolumn{1}{|l|}{\%Q}            & \multicolumn{1}{l|}{6196850}           & 时间段的具体值                          \\ \hline
+\multicolumn{1}{|l|}{\%n}            & \multicolumn{1}{l|}{\textbackslash{}n} & 换行符                                               \\ \hline
+\multicolumn{1}{|l|}{\%t}            & \multicolumn{1}{l|}{\textbackslash{}t} & 制表符                                             \\ \hline
+\multicolumn{1}{|l|}{\%\%}           & \multicolumn{1}{l|}{\%}                & \% 字符                                                    \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 11.9. Conversion specifiers for chrono types
+表11.9 计时类型的转换说明符
 \end{center}
 
 \item 
-Different week number and year formats might result in different output values.
-For example, Sunday, January 1, 2023 yields:
+不同的周数和年份格式可能导致不同的输出值。
+
+例如，2023年1月1日，星期天，的结果如下:
 
 \begin{itemize}
 \item 
-Week 00 with \%W (week before first Monday)
+第00周， \%W (第一个星期一之前的第一周)
 
 \item 
-Week 01 with \%U (week with first Monday)
+第01周， \%U(第一个星期一的周)
 
 \item 
-Week 52 with \%V (ISO week: week before Monday of week 01, which has January 4th)
+第52周， \%V(ISO周:第01周周一之前的一周，即1月4日)
 \end{itemize}
 
-Because the ISO week might be the last week of the previous year, the ISO year, which is the year of that week, may be one less:
+因为ISO周可能是上一年的最后一周，所以ISO年，也就是那一周所在的年份，可能会少一个:
 
 \begin{itemize}
 \item 
-Year 2023 with \%Y
+Year 2023 ，\%Y
 
 \item 
-Year 23 with \%y
+Year 23 ， \%y
 
 \item 
-Year 2022 with \%G (ISO year of the ISO week \%V, which is the last week of the previous month)
+Year 2022 ， \%G (ISO年的ISO周\%V，即前一个月的最后一周)
 
 \item 
-Year 22 with \%g (ISO year of the ISO week \%V, which is the last week of the previous month)
+Year 22 ， \%g (ISO年的ISO周\%V，即前一个月的最后一周)
 \end{itemize}
 
 \item 
-The following timezone abbreviations are used for the standard clocks:
+以下时区缩写用于标准时钟:
 
 \begin{itemize}
 \item 
-UTC for sys\_clock, utc\_clock, and file\_clock
+UTC有sys\_clock, utc\_clock和 file\_clock
 
 \item 
-TAI for tai\_clock
+TAI 有tai\_clock
 
 \item 
-GPS for gps\_clock
+GPS 有gps\_clock
 \end{itemize}
 \end{itemize}
 
-All conversion specifiers except \%q and \%Q can also be used for formatted parsing.
+除了\%q和\%Q之外，的所有转换说明符也可用于格式化解析。
 
-\mySubsubsection{11.4.3}{Locale-Dependent Output}
+\mySubsubsection{11.4.3}{依赖于本地环境的输出}
 
-The default output operator for the various types uses a locale-dependent format if the output stream is imbued by a locale that has its own format. For example:
+若输出流是由具有自己格式的区域设置注入的，则各种类型的默认输出操作符使用与区域设置相关的格式。例如:
 
 \begin{cpp}
 using namespace std::literals;
@@ -316,17 +317,17 @@ std::cout.imbue(locG); // switch to German locale
 std::cout << dur << '\n'; // 42,2ms
 \end{cpp}
 
-Formatted output with std::format() is handled as usual: [This behavior was specified as a bug fix to C++20 with \url{http://wg21.link/p2372}, which means that the original wording of C++20 does not specify this behavior.]
+使用std::format()格式化的输出像往常一样处理:[此行为指定为C++20的一个错误修复，使用\url{http://wg21.link/p2372}，从而C++20的原始措辞没有指定此行为。]
 
 \begin{itemize}
 \item 
-By default, formatted output uses the locale-independent "C" locale.
+默认情况下，格式化输出使用独立于语言环境的“C”语言环境。
 
 \item 
-By specifying L, you can switch to a locale-dependent output specified via a locale parameter or as a global locale
+通过指定L，可以切换到通过locale参数，或作为全局locale指定的依赖于locale的输出
 \end{itemize}
 
-This means that to use a locale-dependent notation, you have to use the L specifier and either pass the locale as the first argument to std::format() or set the global locale before calling it. For example:
+则要使用依赖于语言环境的表示法，必须使用L说明符，并将语言环境作为第一个参数传递给std::format()，或者在调用之前设置全局语言环境。例如:
 
 \begin{cpp}
 using namespace std::literals;
@@ -346,31 +347,31 @@ std::locale::global(locG); // set German locale globally
 std::string s4 = std::format("{:L%S}", dur); // "00,042s" (localized)
 \end{cpp}
 
-In several cases, you can even use an alternative locale’s representation according to strftime() and ISO 8601:2004, which you can specify with a leading O or E in front of the conversion specifier:
+某些情况下，甚至可以根据strftime()和ISO 8601:2004使用另一种语言环境的表示，可以在转换说明符前面使用前导O或E来指定:
 
 \begin{itemize}
 \item 
-E can be used as the locale’s alternate representations in front of c, C, x, X, y, Y, and z
+E可以用作区域设置在c，C，x，X，y，Y和z前面的替代表示
 
 \item 
-O can be used as the locale’s alternate numeric symbols in front of d, e, H, I, m, M, S, u, U V, w, W, y, and z
+O可以用作区域设置前面的替代数字符号d, e, H, I, m, M, S, u, U V, w, W, y和z
 \end{itemize}
 
-\mySubsubsection{11.4.4}{Formatted Input}
+\mySubsubsection{11.4.4}{格式化输入}
 
-The chrono library also supports formatted input. You have two options:
+chrono库还支持格式化输入。这里有两个选择:
 
 \begin{itemize}
 \item 
-A free-standing function std::chrono::from\_stream() is provided by certain date/time types to read in a specific value according to a passed format string.
+特定日期/时间类型提供了一个独立的函数std::chrono::from\_stream()，用于根据传入的格式字符串读取特定的值。
 
 \item 
-A manipulator std::chrono::parse() allows us to use from\_stream() as part of a bigger parsing with the input operator >{}>.
+操纵符std::chrono::parse()允们使用from\_stream()作为带有>{}>输入操作符解析的一部分。
 \end{itemize}
 
-\mySamllsection{Using from\_stream()}
+\mySamllsection{使用from\_stream()}
 
-The following code demonstrates how to use from\_stream() by parsing a full timepoint:
+下面的代码演示了如何使用from\_stream()解析完整的时间点:
 
 \begin{cpp}
 std::chrono::sys_seconds tp;
@@ -385,13 +386,13 @@ else {
 }
 \end{cpp}
 
-The code generates the following output:
+代码会有以下输出:
 
 \begin{shell}
 tp: 2021-02-28 17:30:00
 \end{shell}
 
-As another example, you can parse a year\_month from a sequence of characters specifying the full month name and the year, among other things, as follows:
+另一个例子，可以从指定完整月份名称和年份的字符序列中解析year\_month，以及其他内容:
 
 \begin{cpp}
 std::chrono::year_month m;
@@ -402,61 +403,61 @@ if (sstrm) {
 }
 \end{cpp}
 
-The format string accepts all conversion specifiers of formatted output except \%q and \%Q with improved flexibility. For example:
+格式字符串接受除\%q和\%Q以外的格式化输出的所有转换说明符，从而提高了灵活性。例如:
 
 \begin{itemize}
 \item 
-\%d stands for one or two characters to specify the day and with \%4d, you can specify that even up to four characters are parsed.
+\%d表示一个或两个字符来指定日期，使用\%4d，您可以指定最多解析四个字符。
 
 \item 
-\%n stands for exactly one whitespace character.
+\%n只表示一个空白字符。
 
 \item 
-\%t stands for zero or one whitespace character.
+\%t表示零或一个空白字符。
 
 \item 
-A whitespace character such as a space represents an arbitrary number of whitespaces (including zero whitespaces).
+像空格这样的空白字符，可以表示任意数量的空白(包括零空白)。
 \end{itemize}
 
-from\_stream() is provided for the following types:
+from\_stream()可用于下列类型:
 
 \begin{itemize}
 \item 
-A duration<> of any type
+任何duration<>类型
 
 \item 
-A sys\_time<>, utc\_time<>, gps\_time<>, tai\_time<>, local\_time<>, or file\_time<> of any duration
+任何sys\_time<>, utc\_time<>, gps\_time<>, tai\_time<>, local\_time<>或file\_time<>类型
 
 \item 
-A day, a month, or a year
+day, month或year类型
 
 \item 
-A year\_month, a month\_day, or a year\_month\_day
+year\_month, month\_day, 或year\_month\_day类型
 
 \item 
-A weekday
+weekday类型
 \end{itemize}
 
-The format has to be a C string of type const char*. It must match the characters in the input stream and the value to parse. The parsing fails if:
+格式必须是const char*类型的C字符串，必须匹配输入流中的字符和要解析的值。若出现以下情况，解析失败:
 
 \begin{itemize}
 \item 
-The input sequence of characters does not match the required format
+输入的字符序列与所需的格式不匹配
 
 \item 
-The format does not provide enough information for the value
+该格式没有为值提供足够的信息
 
 \item 
-The parsed date is not valid
+解析的日期无效
 \end{itemize}
 
-In that case, the failbit of the stream is set, which you can test with by calling fail() or using the stream as a Boolean value.
+在这种情况下，设置了流的failbit，可以通过调用fail()或使用流作为布尔值进行测试。
 
-\mySamllsection{A Generic Function for Parsing Dates/Times}
+\mySamllsection{解析日期/时间的通用函数}
 
-In practice, dates and times are rarely hard-coded. However, when testing code, you often need an easy way to specify a date/time value.
+实际上，日期和时间很少硬编码。然而，在测试代码时，通常需要一种简单的方法来指定日期/时间值。
 
-Here is a little helper function I used to test the examples in this book:
+下面是我用来测试本书示例的一个小辅助函数:
 
 \filename{lib/chronoparse.hpp}
 
@@ -501,7 +502,7 @@ auto parseDateTime(const std::string& s)
 }
 \end{cpp}
 
-You can use parseDateTime() as follows:
+可以这样使用parseDateTime():
 
 \filename{lib/chronoparse.cpp}
 
@@ -525,7 +526,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 2021-01-01 00:00:00 UTC
@@ -534,31 +535,31 @@ The program has the following output:
 2021-01-01 18:30:00 GPS
 \end{shell}
 
-Note that for a local timepoint, you cannot use \%Z to print its timezone (doing so would raise an exception).
+注意，对于本地时间点，不能使用\%Z来输出其时区(这样做会引发异常)。
 
-\mySamllsection{Using the parse() Manipulator}
+\mySamllsection{使用parse()操纵符}
 
-Instead of calling from\_stream()
+等价from\_stream()的方式
 
 \begin{cpp}
 std::chrono::from_stream(sstrm, "%F %T", tp);
 \end{cpp}
 
-you could also call:
+也可以这样:
 
 \begin{cpp}
 sstrm >> std::chrono::parse("%F %T", tp);
 \end{cpp}
 
-Please note that the original C++20 standard does not formally allow you to pass the format directly as a string literal, which means that you have to call
+请注意，最初的C++20标准没有直接作为字符串字面值传递格式，所以必须使用
 
 \begin{cpp}
 sstrm >> std::chrono::parse(std::string{"%F %T"}, tp);
 \end{cpp}
 
-However, this should be fixed with \url{http://wg21.link/lwg3554}.
+然而，这应该通过\url{http://wg21.link/lwg3554}来解决。
 
-std::chrono::parse() is an I/O stream manipulator. It allows you to parse multiple values inside one statement reading from an input stream. In addition, thanks to move semantics, you can even pass a temporary input stream. For example:
+std::chrono::parse()是一个I/O流操纵符，允许在从输入流读取的一条语句中解析多个值。此外，由于move语义，甚至可以传递一个临时输入流。例如:
 
 \begin{cpp}
 chr::sys_days tp;
@@ -571,17 +572,17 @@ std::istringstream{"12/24/21 18:00"} >> chr::parse("%D", tp)
 std::cout << tp << " at " << h << ' ' << m << '\n';
 \end{cpp}
 
-This code outputs:
+这段代码输出为:
 
 \begin{shell}
 2021-12-24 at 18h 0min
 \end{shell}
 
-Again, note that you might have to explicitly convert the string literals "\%D", " \%H", and ":\%M" to strings.
+再次注意，您能必须显式地将字符串字面量“\%D”、“\%H”和“:\%M”转换为字符串。
 
-\mySamllsection{Parsing Timezones}
+\mySamllsection{解析时区}
 
-Parsing timezones is a little tricky because timezone abbreviations are not unique: To help here, from\_stream() has the following formats:
+解析时区有点棘手，因为时区缩写不是唯一的:为了完成功能，from\_stream()具有以下格式:
 
 \begin{shell}
 istream from_stream(istream, format, value)
@@ -589,13 +590,13 @@ istream from_stream(istream, format, value, abbrevPtr)
 istream from_stream(istream, format, value, abbrevPtr, offsetPtr)
 \end{shell}
 
-As you can see, you can optionally pass the address of a std::string to store a parsed timezone abbreviation into the string and the address of a std::chrono::minutes object to store a parsed timezone offset into that string. In both cases nullptr can be passed.
+您可以选择传递std::string的地址以将解析后的时区缩写存储到字符串中，也可以传递std::chrono::minutes对象的地址以将解析后的时区偏移存储到该字符串中。在这两种情况下都可以传递nullptr。
 
-However, you still have to be careful:
+然而，仍然要小心:
 
 \begin{itemize}
 \item 
-The following works:
+以下代码可以工作:
 
 \begin{cpp}
 chr::sys_seconds tp;
@@ -604,10 +605,10 @@ chr::from_stream(sstrm, "%F %R %Z", tp);
 std::cout << std::format("{:%F %R %Z}\n", tp); // 2021-04-13 12:00 UTC
 \end{cpp}
 
-However, it works only because system timepoints use UTC anyway.
+然而，工作原因只是因为系统时间点使用的是UTC。
 
 \item
-The following does not work because it ignores the timezone:
+下面的命令不起作用，因为忽略了时区:
 
 \begin{cpp}
 chr::sys_seconds tp;
@@ -616,10 +617,10 @@ chr::from_stream(sstrm, "%F %R %Z", tp);
 std::cout << std::format("{:%F %R %Z}", tp); // 2021-04-13 12:00 UTC
 \end{cpp}
 
-\%Z is used to parse MST but there is no parameter to store the value.
+\%Z用于解析MST，但没有参数来存储该值。
 
 \item
-The following seems to work:
+下面的方法似乎行得通:
 
 \begin{cpp}
 chr::sys_seconds tp;
@@ -630,7 +631,7 @@ std::cout << tp << '\n'; // 2021-04-13 12:00
 std::cout << tzAbbrev << '\n'; // MST
 \end{cpp}
 
-However, if you compute the zoned time, you see that you are converting a UTC time to a different timezone:
+然而，若计算时区时间，会看到正在将UTC时间转换为不同的时区:
 
 \begin{cpp}
 chr::zoned_time zt{tzAbbrev, tp}; // OK: MST exists
@@ -638,7 +639,7 @@ std::cout << zt << '\n'; // 2021-04-13 05:00:00 MST
 \end{cpp}
 
 \item
-The following really does seem to work:
+下面的方法似乎确实有效:
 
 \begin{cpp}
 chr::local_seconds tp; // local time
@@ -651,10 +652,10 @@ chr::zoned_time zt{tzAbbrev, tp}; // OK: MST exists
 std::cout << zt << '\n'; // 2021-04-13 12:00:00 MST
 \end{cpp}
 
-However, we were lucky that MST is one of the few abbreviations available as a deprecated entry in the timezone database. The moment you use this code with CEST or CST, it throws an exception when initializing the zoned\_time.
+然而，MST是时区数据库中为数不多的不推荐使用的缩写之一。当将此代码与CEST或CST一起使用时，会在初始化zoned\_time时抛出异常。
 
 \item
-Therefore, either use only tzAbbrev instead of zoned\_time and \%Z:
+因此，要么只使用tzAbbrev，而非zoned\_time和\%Z:
 
 \begin{cpp}
 chr::local_seconds tp; // local time
@@ -664,10 +665,10 @@ chr::from_stream(sstrm, "%F %R %Z", tp, &tzAbbrev);
 std::cout << std::format("{:%F %R} {}", tp, tzAbbrev); // 2021-04-13 12:00 CST
 \end{cpp}
 
-or you have to deal with code to map a timezone abbreviation to a timezone.
+或必须处理将时区缩写映射到时区的代码。
 \end{itemize}
 
-Note that \%Z cannot parse the pseudo timezones GPS and TAI.
+注意，\%Z不能解析伪时区GPS和TAI。
 
 
 

@@ -1,137 +1,136 @@
 
 
-In large countries or for international communication, it is not enough to say “let us meet at noon” because we have different timezones. The new chrono library supports this fact by having an API to deal with the different timezones we have on Earth, including dealing with standard (“winter”) and daylight saving (“summer”) time.
+大国或国际交流中，仅仅说“中午见面吧”是不够的，因为我们有不同的时区。新的chrono库支持这一事实，它有一个API来处理地球上不同的时区，包括处理标准时间(“冬季”)和夏令时(“夏季”)。
 
-\mySubsubsection{11.6.1}{Characteristics of Timezones}
+\mySubsubsection{11.6.1}{时区的特点}
 
-Dealing with timezones is a little tricky because it is a topic that can become pretty complex. For example, you have to take the following into account:
+处理时区有点棘手，因为这是一个非常复杂的主题。例如，必须考虑以下几点:
 
 \begin{itemize}
 \item 
-imezone differences are not necessarily multiples of hours. In fact, we also have differences of 30 or even 15/45 minutes. For example, a significant part of Australia (the Northern Territory and South Australia with Adelaide) has the standard timezone of UTC+9:30 and Nepal has the timezone of UTC+5:45.
-Two timezones may also have 0 minutes difference (such as timezones in North and South America).
+时区差异不一定是数小时。事实上，也有30分钟甚至15/45分钟的差异。例如，澳大利亚的很大一部分(北领地和南澳大利亚与阿德莱德)的标准时区是UTC+9:30，尼泊尔的时区是UTC+5:45。两个时区也可能相差0分钟(例如：北美和南美的时区)。
 
 \item 
-Timezone abbreviations might refer to different timezones. For example, CST might stand for Central Standard Time (the standard timezone of Chicago, Mexico City, and Costa Rica) or China Standard Time (the international name of the timezone of Beijing and Shanghai), or Cuba Standard Time (the standard timezone of Havana).
+时区缩写可能指不同的时区。例如，CST可能代表中央标准时间(芝加哥、墨西哥城和哥斯达黎加的标准时区)或中国标准时间(北京和上海时区的国际名称)，或古巴标准时间(哈瓦那的标准时区)。
 
 \item 
-Timezones change. This can happen, for example, when countries decide to change their zone(s) or when daylight saving time starts. As a consequence, you might have to take multiple updates per year into account when dealing with timezones.
+时区变化。例如，当国家决定改变他们的时区或夏令时开始时，这种情况就会发生，所以在处理时区时，可能不得不考虑每年的多次更新。
 \end{itemize}
 
-\mySubsubsection{11.6.2}{The IANA Timezone Database}
+\mySubsubsection{11.6.2}{IANA时区数据库}
 
-To deal with timezones, the C++ standard library uses the IANA timezone database, which is available at \url{http://www.iana.org/time-zones}. Note again that the timezone database might not be available on all platforms.
+为了处理时区，C++标准库使用IANA时区数据库，该数据库可在\url{http://www.iana.org/time-zones}上获得。再次注意，时区数据库可能不是在所有平台上都可用。
 
-The key entry for the timezone database is a timezone name, which is usually
+时区数据库的关键项是时区名称，通常是
 
 \begin{itemize}
 \item 
-A city in a certain area or country representing the timezone.
+代表时区的某一地区或国家的城市。
 
-For example: America/Chicago, Asia/Hong\_Kong, Europe/Berlin, Pacific/Honolulu
+例如: America/Chicago, Asia/Hong\_Kong, Europe/Berlin, Pacific/Honolulu
 
 \item 
-A GMT entry with the negated offset from UTC time.
+UTC时间的负偏移GMT。
 
-For example: Etc/GMT, Etc/GMT+6, which stands for UTC-6, or Etc/GMT-8, which stands for UTC+8 
+例如: Etc/GMT或Etc/GMT+6表示UTC-6, 或Etc/GMT-8表示UTC+8 
 
-Yes, the UTC timezone offsets are intentionally inverted as GMT entries; you cannot search for something like UTC+6 or UTC+5:45.
+是的，UTC时区偏移量有意地反转为GMT，不能搜索像UTC+6或UTC+5:45这样的东西。
 \end{itemize}
 
-A few additional canonical and alias names are supported (e.g., UTC or GMT) and also some deprecated entries are available (e.g., PST8PDT, US/Hawaii, Canada/Central, or just Japan). However, you cannot search for a single timezone abbreviation entry such as CST or PST. We will discuss later how to deal with timezone abbreviations.
+支持一些额外的规范和别名(例如，UTC或GMT)，也可以使用一些已弃用的时区(例如，PST8PDT、US/Hawaii、Canada/Central或仅日本)。但是，不能搜索单个时区缩写项，如CST或PST。我们将在后面讨论如何处理时区缩写。
 
-See also \url{http://en.wikipedia.org/wiki/List_of_tz_database_time_zones} for a list of timezone names.
+另请参见\url{http://en.wikipedia.org/wiki/List_of_tz_database_time_zones}获取时区名称列表。
 
-\mySamllsection{Accessing the Timezone Database}
+\mySamllsection{访问时区数据库}
 
-The IANA timezone database has multiple updates each year to ensure that it is up to date when timezones change so that programs can react accordingly.
+IANA时区数据库每年都会进行多次更新，以确保在时区更改时数据库是最新的，以便程序能够做出相应的反应。
 
-The way systems handle the timezone database is implementation-specific. The operating systems have to decide how to provide the necessary data and how to keep it up to date. An update of the timezone database is usually done as part of an operating system update. Such updates generally require a reboot of the machine, and so no C++ application runs during an update.
+系统处理时区数据库的方式是特定于实现的，操作系统必须决定如何提供必要的数据以及如何使其保持最新。时区数据库的更新通常作为操作系统更新的一部分进行，此类更新通常需要重新启动计算机，因此在更新期间不会运行C++应用程序。
 
-The C++20 standard provides low-level support to this database, which is used by high-level functions dealing with timezones:
-
-\begin{itemize}
-\item 
-std::chrono::get\_tzdb\_list() yields a reference to the timezone database, which is a singleton of type std::chrono::tzdb\_list.
-
-It is a list of timezone database entries to be able to support multiple versions of them in parallel.
-
-\item 
-std::chrono::get\_tzdb() yields a reference to the current timezone database entry of type std::chrono::tzdb. This type has multiple members such as the following:
+C++20标准提供了对该数据库的低级支持，用于处理时区的高级函数:
 
 \begin{itemize}
 \item 
-version, a string for the version of the database entry
+std::chrono::get\_tzdb\_list()产生对时区数据库的引用，该数据库是std::chrono::tzdb\_list类型的单例。
+
+它是一个时区数据库列表，能够并行支持多个版本的时区数据库。
 
 \item 
-zones, a vector of timezone information of type std::chrono::time\_zone
+std::chrono::get\_tzdb()产生对Std::chrono::tzdb类型的当前时区数据库的引用。该类型有以下多个成员:
+
+\begin{itemize}
+\item 
+version, 数据库版本的字符串
+
+\item 
+zones, 一个类型为std::chrono::time\_zone的时区信息向量
 \end{itemize}
 
-Standard functions that deal with timezones (e.g., std::chrono::current\_zone() or the constructors of type std::chrono::zoned\_time) internally use these calls.
+处理时区的标准函数(例如std::chrono::current\_zone()或std::chrono::zoned\_time类型的构造函数)在内部使用这些调用。
 
-For example, std::chrono::current\_zone() is a shortcut for:
+例如，std::chrono::current\_zone()是以下方式的快捷方式:
 
 \begin{cpp}
 std::chrono::get_tzdb().current_zone()
 \end{cpp}
 \end{itemize}
 
-When platforms do not provide the timezone database, these functions will throw an exception of type std::runtime\_error.
+当平台不提供时区数据库时，这些函数将抛出std::runtime\_error类型的异常。
 
-For systems that support updating the IANA timezone database without a reboot std::chrono::reload\_tzdb() is provided. An update does not delete memory from the old database because the application may still have (time\_zone) pointers into it. Instead, the new database is atomically pushed onto the front of the timezone database list.
+对于支持更新IANA时区数据库而不需要重新启动的系统，提供了std::chrono::reload\_tzdb()。更新不会从旧数据库中删除内存，应用可能仍然有指向它的(time\_zone)指针。相反，新数据库被自动推到时区数据库列表的前面。
 
-You can check the current version of your timezone database with the string member version of the type tzdb returned by get\_tzdb(). For example:
+可以使用get\_tzdb()返回的tzdb类型的字符串成员版本来检查时区数据库的当前版本。例如:
 
 \begin{cpp}
 std::cout << "tzdb version: " << chr::get_tzdb().version << '\n';
 \end{cpp}
 
-Usually, the output is a year and an ascending alphabetic character for the update of that year (e.g., "2021b"). remote\_version() provides the version of the latest available timezone database, which you can use to decide whether to call reload\_tzdb().
+通常，输出是年份和该年份更新的升序字母字符(例如，“2021b”)。remote\_version()提供最新可用时区数据库的版本，可以使用它来决定是否调用reload\_tzdb()。
 
-If a long-running program is using the chrono timezone database but never calls reload\_tzdb(), that program will not be aware of any updates of the database. It will continue to use whatever version of the database existed when the program first accessed it.
+若一个长时间运行的程序正在使用chrono时区数据库，但从不调用reload\_tzdb()，那么该程序将不会意识到数据库的任何更新，其将继续使用程序第一次访问数据库时存在的任何版本的数据库。
 
-See \url{http://github.com/HowardHinnant/date/wiki/Examples-and-Recipes#tzdb_manage} for more details and examples about reloading the IANA timezone database for long-running programs.
+有关为长时间运行的程序重新加载IANA时区数据库的详细信息和示例，请参阅\url{http://github.com/HowardHinnant/date/wiki/Examples-and-Recipes#tzdb_manage}。
 
-\mySubsubsection{11.6.3}{Using Timezones}
+\mySubsubsection{11.6.3}{使用时区}
 
-To deal with timezones, two types play a basic role:
-
-\begin{itemize}
-\item 
-std::chrono::time\_zone, a type that represents a specific timezone.
-
-\item 
-std::chrono::zoned\_time, a type that represents a specific point of time associated with a specific timezone.
-\end{itemize}
-
-Let us look at them in detail.
-
-\mySamllsection{Type time\_zone}
-
-All possible timezone values are predefined by the IANA timezone database. Therefore, you cannot create a time\_zone object by just declaring it. The values come from the timezone database and what you are usually dealing with is are pointers to these objects:
+要处理时区，要使用两种类型:
 
 \begin{itemize}
 \item 
-std::chrono::current\_zone() yields a pointer to the current timezone.
+std::chrono::time\_zone,表示特定时区的类型。
 
 \item 
-std::chrono::locate\_zone(name) yields a pointer to the timezone name.
+std::chrono::zoned\_time, 表示与特定时区相关联的特定时间点的类型。
+\end{itemize}
 
-\item 
-The timezone database returned by std::chrono::get\_tzdb() has non-pointer collections with all timezone entries:
+详细地了解一下。
+
+\mySamllsection{time\_zone类型}
+
+所有可能的时区值都由IANA时区数据库预定义，所以不能仅仅通过声明time\_zone对象来创建。这些值来自时区数据库，通常处理的是指向这些对象的指针:
 
 \begin{itemize}
 \item 
-Member zones has all canonical entries.
+std::chrono::current\_zone() 生成指向当前时区的指针。
 
 \item 
-Member links has all alias entries with links to them.
+std::chrono::locate\_zone(name) 生成一个指向时区名称的指针。
+
+\item 
+由std::chrono::get\_tzdb()返回的时区数据库具有包含所有时区的非指针集合:
+
+\begin{itemize}
+\item 
+成员区域拥有所有规范。
+
+\item 
+成员链接拥有所有带有链接的别名。
 \end{itemize}
 
-You can use this to find timezones by characteristics such as their abbreviated name.
+可以使用它根据诸如缩写名称之类的特征来查找时区。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 auto tzHere = std::chrono::current_zone(); // type const time_zone*
@@ -141,40 +140,40 @@ std::cout << tzHere->name() << '\n';
 std::cout << tzUTC->name() << '\n';
 \end{cpp}
 
-The output depends on your current timezone. For me in Germany, it looks like this:
+输出取决于当前的时区。对我来说，在德国是这样的:
 
 \begin{shell}
 Europe/Berlin
 Etc/UTC
 \end{shell}
 
-As you can see, you can search for any entry in the timezone database (such as "UTC") but what you get is the canonical entry of it. For example, "UTC" is just a timezone link to "Etc/UTC". If locate\_zone() finds no corresponding entry with that name, a std::runtime\_error exception is thrown.
+可以搜索时区数据库中的任何条目(如“UTC”)，但得到的是它的规范。例如，"UTC"只是指向"Etc/UTC"的时区链接。若locate\_zone()没有找到与该名称对应的信息，则抛出std::runtime\_error异常。
 
-You cannot do much with a time\_zone. The most important thing is to combine it with a system timepoint or with a local timepoint.
+time\_zone不能做很多事情，但最重要的是将它与系统时间点或本地时间点结合起来使用。
 
-If you output a time\_zone you get some implementation-specific output only for debugging purposes:
+若输出一个time\_zone，会得到一些特定于实现的输出，仅用于调试:
 
 \begin{cpp}
 std::cout << *tzHere << '\n'; // some implementation-specific debugging output
 \end{cpp}
 
-The chrono library also allows you to define and use types for custom timezones.
+chrono库还允许定义和使用自定义时区的类型。
 
-\mySamllsection{Type zoned\_time}
+\mySamllsection{zoned\_time类型}
 
-Objects of type std::chrono::zoned\_time apply timepoints to timezones. You have two options for performing this conversion:
+std::chrono::zoned\_time类型的对象将时间点应用于时区。执行此转换有两个选项:
 
 \begin{itemize}
 \item 
-Apply a system timepoint (a timepoint that belongs to the system clock) to a timezone. In that case, we convert the timepoint of an event to happen simultaneously with the local time of the other timezone.
+将系统时间点(属于系统时钟的时间点)应用于时区，将事件的时间点转换为与另一个时区的本地时间同时发生。
 
 \item
-Apply a local timepoint (a timepoint that belongs to the pseudo clock local\_t) to a timezone. In that case, we apply a timepoint as it is as local time to another timezone.
+将本地时间点(属于伪时钟local\_t的时间点)应用于时区，将一个时间点作为本地时间应用到另一个时区。
 \end{itemize}
 
-In addition, you can convert the point of time of a zoned\_time to a different timezone by initializing a new zoned\_time object with another zoned\_time object.
+此外，可以通过用另一个带zoned\_time对象初始化新的zoned\_time对象，将zoned\_time的时间点转换为不同的时区。
 
-For example, let us schedule both a local party at every office at 18:00 and a company party over multiple timezones at the end of September 2021:
+例如，将每个办公室安排18:00的本地派对，并在2021年9月底安排一个跨越多个时区的公司派对。
 
 \begin{cpp}
 auto day = 2021y/9/chr::Friday[chr::last]; // last Friday of month
@@ -190,7 +189,7 @@ std::cout << " " << chr::zoned_time{"America/New_York", tpOfficeParty} << '\n';
 std::cout << " " << chr::zoned_time{"America/New_York", tpCompanyParty} << '\n';
 \end{cpp}
 
-The output of this code is as follows:
+这段代码有如下输出:
 
 \begin{shell}
 Berlin Office and Company Party:
@@ -201,7 +200,7 @@ New York Office and Company Party:
   2021-09-24 13:00:00 EDT
 \end{shell}
 
-Details matter when combining timepoints and timezones. For example, consider the following code:
+组合时间点和时区时，细节很重要。例如，考虑下面的代码:
 
 \begin{cpp}
 auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
@@ -211,14 +210,14 @@ std::cout << "sysTp:         " << sysTp << '\n';
 std::cout << "locTime:       " << locTime << '\n';
 \end{cpp}
 
-First, we initialize sysTp as the current system timepoint in seconds and combine this timepoint with the current timezone. The output shows the system and the local timepoint of the same point in time:
+首先，将sysTp初始化为以秒为单位的当前系统时间点，并将该时间点与当前时区结合起来。输出显示的是同一时间点的系统和本地时间点:
 
 \begin{shell}
 sysTp:      2021-04-13 13:40:02
 locTime:    2021-04-13 15:40:02 CEST
 \end{shell}
 
-Now let us initialize a local timepoint. One way to do this is just to convert a system timepoint to a local timepoint. To do this we need a timezone. If we use the current timezone, the local time is converted to UTC:
+现在初始化一个本地时间点。一种方法是将系统时间点转换为本地时间点，现在需要一个时区。若使用当前时区，本地时间将被转换为UTC:
 
 \begin{cpp}
 auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
@@ -227,14 +226,14 @@ std::cout << "sysTp:            " << sysTp << '\n';
 std::cout << "locTp:            " << locTp << '\n';
 \end{cpp}
 
-The corresponding output is as follows:
+输出结果如下:
 
 \begin{shell}
 sysTp:     2021-04-13 13:40:02
 curTp:     2021-04-13 13:40:02
 \end{shell}
 
-However, if we use UTC as the timezone, the local time is used as local time without an associated timezone:
+但若使用UTC作为时区，则本地时间用作本地时间，并不会关联时区:
 
 \begin{cpp}
 auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
@@ -243,14 +242,14 @@ std::cout << "sysTp:              " << sysTp << '\n';
 std::cout << "locTp:              " << locTp << '\n';
 \end{cpp}
 
-According to the output, both timepoints look the same:
+根据输出，两个时间点看起来是一样的:
 
 \begin{shell}
 sysTp:     2021-04-13 13:40:02
 locTp:     2021-04-13 13:40:02
 \end{shell}
 
-However, they are not the same. sysTp has an associated UTC epoch but locTp does not. If we now apply the local timepoint to a timezone, we do not convert; we specify the missing timezone, leaving the time as it is:
+然而，它们是不一样的。sysTp有一个相关的UTC epoch，而locTp没有。若现在将本地时间点应用于时区，则不会进行转换。我们指定时区，保持时间不变:
 
 \begin{cpp}
 auto timeFromSys = chr::zoned_time{chr::current_zone(), sysTp}; // converted time
@@ -259,14 +258,14 @@ std::cout << "timeFromSys: " << timeFromSys << '\n';
 std::cout << "timeFromLoc: " << timeFromLoc << '\n';
 \end{cpp}
 
-Thus, the output is as follows:
+因此，输出如下:
 
 \begin{shell}
 timeFromSys: 2021-04-13 15:40:02 CEST
 timeFromLoc: 2021-04-13 13:40:02 CEST
 \end{shell}
 
-Now let us combine all four objects with the timezone of New York:
+现在让我们将这四个对象与纽约的时区结合起来:
 
 \begin{cpp}
 std::cout << "NY sysTp: "
@@ -279,7 +278,7 @@ std::cout << "NY timeFromLoc: "
 		  << std::chrono::zoned_time{"America/New_York", timeFromLoc} << '\n';
 \end{cpp}
 
-The output is as follows:
+输出结果如下:
 
 \begin{shell}
 Y sysTp:        2021-04-13 09:40:02 EDT
@@ -288,13 +287,13 @@ NY timeFromSys: 2021-04-13 09:40:02 EDT
 NY timeFromLoc: 2021-04-13 07:40:02 EDT
 \end{shell}
 
-The system timepoint and the local time derived from it both convert the time now to the timezone of New York. As usual, the local timepoint is applied to New York so that we now have the same value as the original time with the timezone removed. timeFromLoc is the initial local time 13:40:02 in Central Europe applied to the timezone of New York.
+系统时间点和由它导出的本地时间，都将现在的时间转换为纽约时区。与往常一样，将本地时间点应用于纽约，因此现在拥有与删除时区后的原始时间相同的值。timeFromLoc是中欧的初始当地时间13:40:02，适用于纽约时区。
 
-\mySubsubsection{11.6.4}{Dealing with Timezone Abbreviations}
+\mySubsubsection{11.6.4}{处理时区的缩写}
 
-Because timezone abbreviations might refer to different timezones, you cannot define a unique timezone by its abbreviation. Instead, you have to map the abbreviation to one of multiple IANA timezone entries.
+由于时区缩写可能引用不同的时区，因此不能通过缩写定义唯一的时区。相反，必须将缩写映射到多个IANA时区项中的一个。
 
-The following program demonstrates this for the timezone abbreviation CST:
+下面的程序演示了时区缩写CST的用法:
 
 \filename{lib/chronocst.cpp}
 
@@ -324,7 +323,7 @@ int main(int argc, char** argv)
 }
 \end{cpp}
 
-The program passing no command-line argument or "CST" may have the followi
+不传递命令行参数或“CST”的程序可能具有以下内容
 
 \begin{shell}
 2021-01-01 00:00:00 UTC maps these ’CST’ entries:
@@ -350,17 +349,17 @@ The program passing no command-line argument or "CST" may have the followi
   2020-12-31 18:00:00 CST CST6CDT
 \end{shell}
 
-Because CST may stand for Central Standard Time, China Standard Time, or Cuba Standard Time, you can see a 14 hour difference between most of the entries for America and China. In addition, Havana in Cuba has a 1 or 13 hour difference to those entries.
+因为CST可能代表中央标准时间、中国标准时间或古巴标准时间，所以可以看到美国和中国的大多数时区之间有14个小时的差异。此外，古巴的哈瓦那与这些时区有1或13个小时的时差。
 
-Note that the output is significantly smaller when we search for "CST" on a day in the summer, because the US entries and Cuba’s entry then switch to "CDT" (the corresponding daylight saving time). However, we still have some entries because, for example, China and Costa Rica do not have daylight saving time.
+注意，当我们在夏季的某一天搜索“CST”时，输出要小得多，因为美国条目和古巴的时区会切换到“CDT”(相应的夏令时)。然而，我们仍然有一些信息，因为中国和哥斯达黎加没有夏令时。
 
-Note also that for CST, you might find no entry at all, because the timezone database is not available or uses something like GMT-6 instead of CST.
+还要注意，对于CST，可能根本找不到任何时区，因为时区数据库不可用，或者使用GMT-6之类的东西代替了CST。
 
-\mySubsubsection{11.6.5}{Custom Timezones}
+\mySubsubsection{11.6.5}{自定义的时区}
 
-The chrono library allows you to use custom timezones. One common example is the need to have a timezone that has an offset from UTC that is not known until run time.
+chrono库允许使用自定义时区。一个常见的例子是需要有一个时区，它与UTC有一个直到运行时才知道的偏移量。
 
-Here is an example that supplies a custom timezone OffsetZone that can hold a UTC offset with minutes precision:
+下面是一个提供自定义时区OffsetZone的示例，该时区可以保存以分钟为精度的UTC偏移量:
 
 \filename{lib/offsetzone.hpp}
 
@@ -405,9 +404,9 @@ class OffsetZone
 };
 \end{cpp}
 
-As you can see, all you have to define are conversions between the local time and the system time.
+要定义的只是本地时间和系统时间之间的转换。
 
-You can use the timezone just like any other time\_zone pointer:
+可以像使用任何其他time\_zone指针一样使用timezone:
 
 \filename{lib/offsetzone.cpp}
 
@@ -431,7 +430,7 @@ int main()
 }
 \end{cpp}
 
-The program might have the following output:
+程序可能有以下输出:
 
 \begin{shell}
 UTC:    2021-05-31 13:01:19.0938339

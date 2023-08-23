@@ -1,15 +1,15 @@
 
-Now that you have learned about the new features and types of the chrono library, this section discusses how to use them in practice.
+已经了解了chrono库的新特性和新类型，本节将讨论如何在实践中使用它们。
 
-See also \url{http://github.com/HowardHinnant/date/wiki/Examples-and-Recipes} for more examples and recipes.
+更多的例子请参见\url{http://github.com/HowardHinnant/date/wiki/Examples-and-Recipes}。
 
-\mySubsubsection{11.5.1}{Invalid Dates}
+\mySubsubsection{11.5.1}{无效日期}
 
-Values of calendrical types may not be valid. This can happen in two ways:
+日历类型的值可能无效。这有两种情况:
 
 \begin{itemize}
 \item 
-By an initialization with an invalid value. For example:
+使用无效值进行初始化。例如:
 
 \begin{cpp}
 std::chrono::day d{0}; // invalid day
@@ -18,7 +18,7 @@ std::chrono::year_month_day ymd{2021y/2/31}; // invalid year_month_day
 \end{cpp}
 
 \item 
-By a computation that results in an invalid date. For example:
+通过导致无效日期的计算。例如:
 
 \begin{cpp}
 auto ymd1 = std::chrono::year{2021}/1/31; // January 31, 2021
@@ -29,34 +29,34 @@ ymd1 += std::chrono::years{1}; // February 29, 2021 (invalid)
 \end{cpp}
 \end{itemize}
 
-Table Valid values of standard date attributes lists the internal types and possible values of the different attributes of a date.
+表“标准日期属性的有效值”列出了日期的内部类型和不同属性的可能值。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|l|}
 \hline
-\textbf{Attribute} & \textbf{Internal Type} & \textbf{Vaild Values}                                                  \\ \hline
+\textbf{属性} & \textbf{内部类型} & \textbf{有效值}                                                  \\ \hline
 \endfirsthead
 %
 \endhead
 %
-Day           & unsigned char & 1 to 31         \\ \hline
-Month         & unsigned char & 1 to 12         \\ \hline
-Year          & short         & -32767 to 32767 \\ \hline
-Weekday            & unsigned char          & 0(Sunday) to 6(Saturday) and 7 (again Sunday), which is converted to 0 \\ \hline
-Weekday index & unsigned char & 1 to 5          \\ \hline
+Day           & unsigned char & 1 到 31         \\ \hline
+Month         & unsigned char & 1 到 12         \\ \hline
+Year          & short         & -32767 到 32767 \\ \hline
+Weekday            & unsigned char          & 0(周日) 到 6(周六) 和 7 (还是周日)，转换为0\\ \hline
+Weekday index & unsigned char & 1 到 5          \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 11.10. Valid values of standard date attributes
+表11.10 标准日期属性的有效值
 \end{center}
 
-All combined types are valid if the individual components are valid (e.g., a valid month\_weekday is valid if both the month and the weekday are valid). However, additional checks may apply:
+若单个组件有效，则所有组合类型都有效(例如，若月份和工作日都有效，则有效的month\_weekday有效)，但需要进行以下检查:
 
 \begin{itemize}
 \item 
-A full date of type year\_month\_day has to exist which means that it takes leap years into account. For example:
+必须存在类型为year\_month\_day的完整日期，这里考虑了闰年。例如:
 
 \begin{cpp}
 2020y/2/29; // valid (there is a February 29 in 2020)
@@ -64,9 +64,9 @@ A full date of type year\_month\_day has to exist which means that it takes leap
 \end{cpp}
 
 \item 
-A month\_day is valid only if the day could be valid in that month. For February, 29 is valid but 30 is not.
+month\_day只有当该日在当月有效时才有效。2月29是有效的，30是无效的。
 
-For example:
+例如:
 
 \begin{cpp}
 February/29; // valid (a February can have 29 days)
@@ -74,9 +74,9 @@ February/30; // invalid (no February can have 30 days)
 \end{cpp}
 
 \item 
-A year\_month\_weekday is valid only if the weekday index can exist in the specified month of a year.
+year\_month\_weekday仅当weekday索引能够在一年中的指定月份中存在时才有效。
 
-For example:
+例如:
 
 \begin{cpp}
 2020y/1/Thursday[5]; // valid (there is a fifth Thursday in January 2020)
@@ -84,13 +84,13 @@ For example:
 \end{cpp}
 \end{itemize}
 
-Each calendrical type provides a member function ok() to check whether the value is valid. Default output operators signal invalid dates.
+每个日历类型都提供一个成员函数ok()来检查值是否有效，默认输出操作符表示无效日期。
 
-The way to handle invalid dates depends on your programming logic. For the typical scenario where you have created a day too high for a month, you have the following options:
+处理无效日期的方式取决于编程逻辑。对于一个月中创建的天数过高的典型场景，有以下选项:
 
 \begin{itemize}
 \item 
-Round down to the last day of the month:
+四舍五入到每月的最后一天:
 
 \begin{cpp}
 auto ymd = std::chrono::year{2021}/1/31;
@@ -100,10 +100,10 @@ if (!ymd.ok()) {
 }
 \end{cpp}
 
-Note that the expression on the right creates a year\_month\_last which is then converted to type year\_month\_day.
+注意，右边的表达式创建了year\_month\_last，然后将其转换为year\_month\_day类型。
 
 \item 
-Round up to the first day of the next month:
+四舍五入到下个月的第一天:
 
 \begin{cpp}
 auto ymd = std::chrono::year{2021}/1/31;
@@ -113,10 +113,10 @@ if (!ymd.ok()) {
 }
 \end{cpp}
 
-Do not just add 1 to the month because for December, you create an invalid month.
+不要只在月份上加1，因为对于12月，则创建了一个无效的月份。
 
 \item
-Round up to the date according to all overflown days:
+根据所有超过的天数进行四舍五入:
 
 \begin{cpp}
 auto ymd = std::chrono::year{2021}/1/31;
@@ -126,10 +126,10 @@ if (!ymd.ok()) {
 }
 \end{cpp}
 
-This uses a special feature of the conversion of a year\_month\_day where all overflown days are logically added to the next month. However, this does work only for a few days (you cannot add 1000 days that way).
+这使用了year\_month\_day转换的特殊功能，其中所有溢出的天数都被逻辑地添加到下一个月。然而，这只适用于几天(不能以这种方式添加1000天)。
 \end{itemize}
 
-If the date is not a valid value, the default output format will signal that with “is not a valid type.” For example:
+若日期不是一个有效值，默认输出格式将用“不是一个有效类型”发出信号。例如:
 
 \begin{cpp}
 std::chrono::day d{0}; // invalid day
@@ -138,14 +138,14 @@ std::cout << "day: " << d << '\n';
 std::cout << "ymd: " << ymd << '\n';
 \end{cpp}
 
-This code will output:[Note that the specification in the C++20 standard is a little inconsistent here and is currently fixed. For example, it states that for an invalid year\_month\_days “is not a valid date” is the output.]
+这段代码将输出:[注意，C++20标准中的规范在这里有点不一致，目前正在修复。例如，它声明对于无效的year\_month\_days“不是一个有效日期”是输出]。
 
 \begin{shell}
 day: 00 is not a valid day
 ymd: 2021-02-31 is not a valid year_month_day
 \end{shell}
 
-The same happens when using the default formatting (just {}) of formatted output. By using specific conversion specifiers, you can disable the “is not a valid” output (in software for banking or quarterly processing, a day such as June 31 is sometimes even used):
+当使用格式化输出的默认格式(仅为\{\})时，也会发生同样的情况。通过使用特定的转换说明符，可以禁用“not a valid”输出(在银行或季度处理软件中，有时甚至使用6月31日之类的日期):
 
 \begin{cpp}
 std::chrono::year_month_day ymd{2021y/2/31};
@@ -154,23 +154,23 @@ std::cout << std::format("{:%F}\n", ymd); // “2021-02-31”
 std::cout << std::format("{:%Y-%m-%d}\n", ymd); // “2021-02-31”
 \end{cpp}
 
-\mySubsubsection{11.5.2}{Dealing with months and years}
+\mySubsubsection{11.5.2}{处理月份和年份}
 
-Because std::chrono::months and std::chrono::years are not integral multiples of days, you have to be careful when using them.
+因为std::chrono::months和std::chrono::years不是天数的整数倍，所以在使用时必须非常小心。
 
 \begin{itemize}
 \item 
-For standard types that have their own value just for the year (month, year, year\_month, year\_month\_day, year\_month\_weekday\_last, ...), they work fine when adding a specific number of months or years to a date.
+对于仅具有年份值的标准类型(month, year, year\_month, year\_month\_day, year\_month\_weekday\_last，…)，向日期添加特定的月份或年份数时可以正常工作。
 
 \item
-For standard timepoint types that have one value for the date as a whole (time\_point, sys\_time, sys\_seconds, and sys\_days), they add the corresponding average fractional period to a date, which might not result in the date you expect. 
+对于整个日期只有一个值的标准时间点类型(time\_point、sys\_time、sys\_seconds和sys\_days)，将相应的平均分数周期添加到日期中，这可能不会产生期望的日期。 
 \end{itemize}
 
-For example, let us look at the different effects of adding four months or four years to December 31, 2020:
+例如，看看在2020年12月31日之前增加四个月或四年的不同影响:
 
 \begin{itemize}
 \item 
-When dealing with year\_month\_day:
+当处理year\_month\_day时:
 
 \begin{cpp}
 chr::year_month_day ymd0 = chr::year{2020}/12/31;
@@ -183,7 +183,7 @@ std::cout << " +4years: " << ymd2 << '\n'; // 2024-12-31
 \end{cpp}
 
 \item 
-When dealing with year\_month\_day\_last:
+当处理year\_month\_day\_last时:
 
 \begin{cpp}
 chr::year_month_day_last yml0 = chr::year{2020}/12/chr::last;
@@ -198,7 +198,7 @@ std::cout << " +4years: " << yml2 << '\n'; // 2024/Dec/last
 \end{cpp}
 
 \item 
-When dealing with sys\_days:
+当处理sys\_days时:
 
 \begin{cpp}
 chr::sys_days day0 = chr::year{2020}/12/31;
@@ -212,31 +212,31 @@ std::cout << " +4months: " << day1 << '\n'; // 2021-05-01 17:56:24
 std::cout << " +4years: " << day2 << '\n'; // 2024-12-30 23:16:48
 \end{cpp}
 
-This feature is supported only to allow you to model things such as physical or biological processes that do not care about the intricacies of human calendars (weather, gestation periods, etc.) and the feature should not be used for other purposes.
+支持此特性的唯一目的是，允许对诸如物理或生物过程之类的事物进行建模，这些过程不关心人类日历(天气、妊娠期等)的复杂性，并且不应将此特性用于其他目的。
 \end{itemize}
 
-Note that both the output values and the default output formats differ. That is a clear sign that different types are used:
+注意，输出值和默认输出格式都是不同的。这是一个明显的迹象，表明使用了不同的类型:
 
 \begin{itemize}
 \item 
-When you add months or years to calendrical types, these types process the correct logical date (the same day or again the last day of the next month or year). Please note that this might result in invalid dates such as April 31, which the default output operator even signals in its output as follows:[Due to some inconsistencies, the exact format of invalid dates might not match the C++20 standard, which specifies “is not a valid date” here.]
+当向日历类型添加月份或年份时，这些类型处理正确的逻辑日期(同一天或下个月或年份的最后一天)。请注意，这可能会导致无效日期，例如4月31日，默认输出操作符甚至在其输出中发出如下信号:[由于一些不一致，无效日期的确切格式可能与C++20标准不匹配，该标准在这里指定“不是有效日期”。]
 
 \begin{shell}
 2021-04-31 is not a valid year_month_day
 \end{shell}
 
 \item
-When you add months or years to a day of type std::chrono::sys\_days, the result is not of type sys\_days. As usual in the chrono library, the result has the best type that is able to represent any possible result:
+当在类型为std::chrono::sys\_days的日期上添加月或年时，结果不是类型为sys\_days。与往常一样，在chrono库中，结果具有能够表示结果的最佳类型:
 
 \begin{itemize}
 \item 
-Adding months yields a type with a unit of 54 seconds.
+加上月份会得到一个单位为54秒的类型。
 
 \item 
-Adding years yields a type with a unit of 216 seconds.
+加上年份将得到一个单位为216秒的类型。
 \end{itemize}
 
-Both units are a multiple of a second, which means that they can be used as std::chrono::sys\_seconds. By default, the corresponding output operator prints both the day and the time in seconds, which, as you can see, is not the same day and time of a later month or year. Both timepoints are no longer the 31st or last day of a month and the time is no longer midnight:
+这两个单位都是秒的倍数，们可以用作std::chrono::sys\_seconds。默认情况下，相应的输出操作符以秒为单位打印日期和时间，这不是相同的日期和后一个月或年的时间。两个时间点都不再是一个月的31号或最后一天，时间也不再是午夜:
 
 \begin{shell}
 2021-05-01 17:56:24
@@ -245,11 +245,11 @@ Both units are a multiple of a second, which means that they can be used as std:
 
 \end{itemize}
 
-Both can be useful. However, using months and years with timepoints is usually only useful for computing the approximate day after many months and/or years.
+两者都是有用的，但使用带有时间点的月份和年份通常只适用于计算许多月份和/或年份之后的大致日期。
 
-\mySubsubsection{11.5.3}{Parsing Timepoints and Durations}
+\mySubsubsection{11.5.3}{解析时间点和时间段}
 
-If you have a timepoint or duration, you can access the different fields as demonstrated by the following program:
+若有一个时间点或时间段，可以访问不同的字段，如下程序所示:
 
 \filename{lib/chronoattr.cpp}
 
@@ -306,15 +306,15 @@ weekday:  Fri
 timezone: CEST
 \end{shell}
 
-The function now() yields a timepoint with the granularity of the system clock:
+函数now()产生一个与系统时钟粒度相同的时间点:
 
 \begin{cpp}
 auto now = std::chrono::system_clock::now();
 \end{cpp}
 
-The result has type std::chrono::sys\_time<> with some implementation-specific duration type for the resolution.
+结果具有std::chrono::sys\_time<>类型和一些特定于实现的解析时间段类型。
 
-If you want to deal with the local time, you have to implement the following:
+若要处理本地时间，必须实现以下几点:
 
 \begin{cpp}
 auto tpLoc = std::chrono::zoned_time{std::chrono::current_zone(),
@@ -322,13 +322,13 @@ auto tpLoc = std::chrono::zoned_time{std::chrono::current_zone(),
 									}.get_local_time();
 \end{cpp}
 
-To deal with the date part of the timepoint, we need the granularity of days, which we get with:
+为了处理时间点的日期部分，需要按天数粒度:
 
 \begin{cpp}
 auto today = std::chrono::floor<std::chrono::days>(now);
 \end{cpp}
 
-The initialized variable today has the type std::chrono::sys\_days. You can assign this to an object of type std::chrono::year\_month\_day, so that you can access year, month, and day with the corresponding member functions:
+现在初始化的变量的类型是std::chrono::sys\_days，可以把它赋值给std::chrono::year\_month\_day类型的对象，这样就可以用相应的成员函数访问year、month和day:
 
 \begin{cpp}
 std::chrono::year_month_day ymd{today};
@@ -337,13 +337,13 @@ std::cout << "month: " << ymd.month() << '\n';
 std::cout << "day: " << ymd.day() << '\n';
 \end{cpp}
 
-To deal with the time part of the timepoint we need a duration, which we get when we compute the difference between our original timepoint and its value at midnight. We use the duration to initialize a hh\_mm\_ss object:
+为了处理时间点的时间部分，需要一个时间段，当计算原始时间点和午夜值之间的差值时，就会得到这个时间段。我们使用duration来初始化hh\_mm\_ss对象:
 
 \begin{cpp}
 std::chrono::hh_mm_ss hms{now - today};
 \end{cpp}
 
-From this, you can get the hour, minute, second, and subseconds directly:
+从这里，可以直接得到小时、分钟、秒和亚秒:
 
 \begin{cpp}
 std::cout << "hours: " << hms.hours() << '\n';
@@ -352,7 +352,7 @@ std::cout << "seconds: " << hms.seconds() << '\n';
 std::cout << "subsecs: " << hms.subseconds() << '\n';
 \end{cpp}
 
-For the subseconds, hh\_mm\_ss determines the necessary granularity and uses the appropriate unit. In our case, it is printed as nanoseconds:
+对于亚秒，hh\_mm\_ss决定必要的粒度并使用适当的单位。例子中，其输出为纳秒:
 
 \begin{shell}
 hms:      13:37:34.059858000
@@ -362,21 +362,21 @@ seconds:  34s
 subsecs:  59858000ns
 \end{shell}
 
-For the weekday, you only have to initialize it with a type of granularity day. This works for sys\_days, local\_days, and year\_month\_day (because the latter implicitly converts to std::sys\_days):
+对于工作日，只需要用粒度日类型初始化即可。这适用于sys\_days、local\_days和year\_month\_day(后者可隐式转换为std::sys\_days):
 
 \begin{cpp}
 std::chrono::weekday wd{today}; // OK (today has day granularity)
 std::chrono::weekday wd{ymd}; // OK due to implicit conversion to sys_days
 \end{cpp}
 
-For timezone aspects, you have to combine the timepoint (here now) with a timezone (here the current timezone). The resulting std::chrono::sys\_info object contains information such as the abbreviated timezone name:
+对于时区，必须将时间点(这里是现在)与时区(这里是当前时区)结合起来。生成的std::chrono::sys\_info对象包含如下信息:
 
 \begin{cpp}
 std::chrono::sys_info info{std::chrono::current_zone()->get_info(now)};
 std::cout << "timezone: " << info.abbrev << '\n';
 \end{cpp}
 
-Note that not every C++ platform will support the timezone database. Therefore, on some systems this part of the program might throw an exception.
+注意，并非每个C++平台都支持时区数据库。在某些系统上，这部分代码可能会抛出异常。
 
 
 
