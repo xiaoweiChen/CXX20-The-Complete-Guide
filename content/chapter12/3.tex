@@ -62,7 +62,7 @@ ssrc.request_stop(); // request stop on stop token of t1
 
 因为get\_token()和get\_stop\_source()按值返回，所以停止源和停止令牌甚至可以在线程分离时，在后台运行使用。
 
-\mySamllsection{std::jthreads集合中使用停止令牌}
+\mySamllsection{std::jthread集合中使用停止令牌}
 
 如果启动多个jthread，每个线程都有自己的停止令牌。注意，这可能会导致停止所有线程的时间可能比预期的要长:
 
