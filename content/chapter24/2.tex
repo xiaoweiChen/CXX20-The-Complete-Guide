@@ -1,30 +1,30 @@
 
 
 
-\mySubsubsection{24.2.1}{Deprecated Library Features}
+\mySubsubsection{24.2.1}{已弃用的库功能}
 
-The following library features are deprecated since C++20 and should no longer be used:
+以下库特性自C++20以来已弃用，不应再使用:
 
 \begin{itemize}
 \item 
-The type trait is\_pod<>.
+类型特征is\_pod<>。
 
-Use is\_trivial<> or a similar type trait instead.
+使用is\_trivial<>或相似的类型特征替代。
 
 \item 
-Atomic operations for regular shared pointers are deprecated now. Use atomic shared pointers instead.
+普通shared指针的原子操作现在已经弃用，使用原子shared指针代替。
 \end{itemize}
 
 
 
-\mySubsubsection{24.2.2}{Removed Library Features}
+\mySubsubsection{24.2.2}{删除的库功能}
 
 \begin{itemize}
 \item 
-For strings, the member function reserve() can no longer be called with no argument and it no longer shrinks the capacity.
+对于字符串，成员函数reserve()不能再在没有参数的情况下调用，它也不再缩减容量。
 
 \item 
-You can no longer write a UTF-8 string to a standard output stream.
+不能再将UTF-8字符串写入标准输出流。
 \end{itemize}
 
 
