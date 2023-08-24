@@ -1,53 +1,53 @@
 
-Table Operations of objects of class jthread lists the API of std::thread. The column Diff notes member functions that Modified the behavior or are New compared to std::thread.
+“jthread类对象的操作”表列出了std::thread的API。列Diff记录了Mod(修改)了行为或与std::thread相比是New的成员函数。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|l|}
 \hline
-\textbf{Operation}      & \textbf{Effect}                                                                                        & \textbf{Diff} \\ \hline
+\textbf{操作}      & \textbf{效果}                                                                                        & \textbf{Diff} \\ \hline
 \endfirsthead
 %
 \endhead
 %
-jthread t               & Default constructor; creates a nonjoinable thread object                                               &               \\ \hline
+jthread t               & 默认构造函数;创建一个不可汇入的线程对象                                               &               \\ \hline
 jthread t\{f,...\} &
-Creates an object representing a new thread that call f (with additional args) or throws std::system\_error &
+\begin{tabular}[c]{@{}l@{}}创建一个表示新线程的对象，该线程调用f(带有附加参数)\\或抛出std::system\_error \end{tabular} &
 \\ \hline
-jthread t\{rv\}         & Move constrctor; creates a new thread object, which gets the state of rv, and makes rv nonjoinable     &               \\ \hline
-t.$\sim$jthread()       & Destructor; calls request\_stop() and join() if the object is joinable                                 & Mod           \\ \hline
-t = rv                  & Move assignment; move assigns the state of rv to t (calls request\_stop() and join() if t is joinable) & Mode          \\ \hline
-t.joinable()            & Yields true if t has an associated thread (is joinable)                                                &               \\ \hline
+jthread t\{rv\}         & \begin{tabular}[c]{@{}l@{}}移动构造函数;创建一个新的线程对象，该对象获取rv的状\\态，并使rv不可连接  \end{tabular}   &               \\ \hline
+t.$\sim$jthread()       & 析构函数;若对象是可连接的，调用request\_stop()和join()                                 & Mod           \\ \hline
+t = rv                  & \begin{tabular}[c]{@{}l@{}}移动赋值;将rv的状态移动赋值给t(若t是可连接的，则调\\用request\_stop()和join())) \end{tabular} & Mod          \\ \hline
+t.joinable()            & 若有关联的线程(可连接)则返回true                                                &               \\ \hline
 t.join() &
-Waits for the associated thread to finish and makes the object non-joinable (throw std::system\_error if the thread is not joinable) &
+\begin{tabular}[c]{@{}l@{}}等待相关线程完成并使对象不可汇入(若线程不可汇入则抛\\出std::system\_error) \end{tabular} &
 \\ \hline
 t.detach() &
-Releases the association of t to its thread while the thread continues and makes the object nonjoinable(throws std::system\_error if the thread is not joinable) &
+\begin{tabular}[c]{@{}l@{}}线程继续运行时释放t与其线程的关联，并使对象不可汇入\\(若线程不可连接则抛出std::system\_error) \end{tabular} &
 \\ \hline
-t.request\_stop()       & Requests a stop on the associated stop token                                                           & New           \\ \hline
-t.get\_stop\_source()   & Yields an object to request a stop from                                                                & New           \\ \hline
-t.get\_stop\_token()    & Yields an object to check for a requested stop                                                         & New           \\ \hline
-t.get\_id()             & Returns a unique thread ID of the member type id if joinable or a default constructed ID if not        &               \\ \hline
+t.request\_stop()       & 关联的停止令牌上请求停止                                                           & New           \\ \hline
+t.get\_stop\_source()   & 从请求停止生成一个对象来                                                               & New           \\ \hline
+t.get\_stop\_token()    & 生成一个对象来检查请求的停止                                                         & New           \\ \hline
+t.get\_id()             & \begin{tabular}[c]{@{}l@{}}若可汇入，则返回成员类型ID的唯一线程ID;若不可汇入，则\\返回默认构造ID   \end{tabular}     &               \\ \hline
 t.native\_handle() &
-Returns a platform-specific member type native\_handle\_type for a non-portable handling of the thread &
+\begin{tabular}[c]{@{}l@{}}返回一个平台特定的成员类型native\_handle\_type，用于不可移\\植的线程处理 \end{tabular} &
 \\ \hline
-t1.swap(t2)             & Swaps the states of t1 and t2                                                                          &               \\ \hline
-swap(t1, t2)            & Swaps the states of t1 and t2                                                                          &               \\ \hline
-hardware\_concurrency() & Static function with a hint about possible hardware threads                                            &               \\ \hline
+t1.swap(t2)             & 交换t1和t2的状态                                                                          &               \\ \hline
+swap(t1, t2)            & 交换t1和t2的状态                                                                          &               \\ \hline
+hardware\_concurrency() & 带有可能的硬件线程提示的静态函数                                            &               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 12.4. Operations of objects of class jthread
+表12.4 jthread类对象的操作
 \end{center}
 
-Note that the member types id and native\_handle\_type are the same for both std::thread and std::jthread so it does not matter if you use decltype(mythread)::id or std::thread::id. That way, you can just replace std::thread in existing code with std::jthread without having to replace anything else.
+注意，std::thread和std::jthread的成员类型id和native\_handle\_type相同，所以使用decltype(mythread)::id或std::thread::id都没有关系。这样，就可以直接用std::jthread替换现有代码中的std::thread，就好了。
 
-\mySubsubsection{12.3.1}{Using Stop Tokens with std::jthread}
+\mySubsubsection{12.3.1}{对std::jthread使用停止令牌}
 
-Besides the fact that the destructor joins, the major benefit of std::jthread is that it automatically establishes the mechanism to signal a stop. For that, the constructor starting a thread creates a stop source, stores it as a member of the thread object, and passes the corresponding stop token to the called function in case that function takes an additional stop\_token as first parameter.
+除了析构函数连接之外，std::jthread的主要优点是会自动建立停止信号的机制。为此，启动线程的构造函数创建一个停止源，将其存储为线程对象的成员，并将相应的停止令牌传递给被调用的函数，以避免该函数将额外的stop\_token作为第一个参数。
 
-You can also get the stop source and stop token via member functions from the thread:
+也可以通过线程的成员函数获得停止源和停止令牌:
 
 \begin{cpp}
 std::jthread t1{[] (std::stop_token st) {
@@ -60,11 +60,11 @@ std::stop_source ssrc{t1.get_stop_source()};
 ssrc.request_stop(); // request stop on stop token of t1
 \end{cpp}
 
-Because get\_token() and get\_stop\_source() return by value, both the stop source and the stop token can even be used after a thread has been detached and runs in the background.
+因为get\_token()和get\_stop\_source()按值返回，所以停止源和停止令牌甚至可以在线程分离时，在后台运行使用。
 
-\mySamllsection{Using Stop Tokens with a Collection of std::jthreads}
+\mySamllsection{std::jthreads集合中使用停止令牌}
 
-If you start multiple jthreads, each thread has its own stop token. Note that this might result in a situation that stopping all threads might take longer than expected. Consider the following code:
+如果启动多个jthread，每个线程都有自己的停止令牌。注意，这可能会导致停止所有线程的时间可能比预期的要长:
 
 \begin{cpp}
 {
@@ -80,7 +80,7 @@ If you start multiple jthreads, each thread has its own stop token. Note that th
 } // destructor stops all threads
 \end{cpp}
 
-At the end of the loop, the destructor stops all running threads similarly to the following code:
+循环结束时，析构函数停止所有正在运行的线程:
 
 \begin{cpp}
 for (auto& t : threads) {
@@ -89,9 +89,9 @@ for (auto& t : threads) {
 }
 \end{cpp}
 
-This means that we always wait for one thread to end before we signal stop to the next thread.
+则总是等待一个线程结束，然后向下一个线程发出停止信号。
 
-Code like this can be improved by requesting a stop for all threads before calling join() for all of them (via the destructor)
+这样的代码可以为所有线程调用join()之前，请求所有线程停止(通过析构函数)进行改进。
 
 \begin{cpp}
 {
@@ -111,11 +111,11 @@ Code like this can be improved by requesting a stop for all threads before calli
 } // destructor stops all threads
 \end{cpp}
 
-Now we first request a stop for all threads and threads might end before the destructor calls join() for the threads to finish. An example of this technique is demonstrated by the destructor of a coroutine thread pool.
+首先请求所有线程停止，线程可能在析构函数调用join()让线程结束之前就结束了。协程线程池的析构函数也有使用这种技术的一个示例。
 
-\mySamllsection{Using the Same Stop Token for Multiple std::jthreads}
+\mySamllsection{对多个std::jthread使用相同的停止令牌}
 
-It might also be necessary to request a stop for multiple threads using the same stop token. This can be done easily. Just create the stop token yourself or take the stop token from the first thread that has been started and start the (other) threads with this stop token as first argument. For example:
+可能还需要使用相同的停止令牌为多个线程请求停止。这很容易做到，只需自己创建停止令牌，或者从已经启动的第一个线程中获取停止令牌，并将此停止令牌作为第一个参数启动(其他)线程。例如:
 
 \begin{cpp}
 // initialize a common stop token for all threads:
@@ -133,9 +133,9 @@ for (int i = 0; i < 9; ++i) {
 }
 \end{cpp}
 
-Remember that the callable usually just takes all arguments passed. The internal stop token of the thread started is used only if Only if there is an additional stop token parameter for which no argument is passed.
+记住，可调用对象通常只接受传递的所有参数。仅当存在未传递参数的附加停止令牌参数时，才使用已启动线程的内部停止令牌。
 
-See lib/atomicref.cpp for a complete example.
+请参阅lib/atomicref.cpp获得完整的示例。
 
 
 

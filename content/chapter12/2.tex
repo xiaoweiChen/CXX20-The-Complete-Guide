@@ -1,35 +1,31 @@
 
-C++20 provides stop tokens not only for threads. It is a general-purpose mechanism to asynchronously request to stop with various ways to react to this request.
+C++20不仅为线程提供了停止令牌。它是一种通用机制，可以异步请求停止，并使用各种方式对该请求作出响应。
 
-The basic mechanism is as follows:
-
-C++20 provides stop tokens not only for threads. It is a general-purpose mechanism to asynchronously request to stop with various ways to react to this request.
-
-The basic mechanism is as follows:
+其机制如下所示:
 
 \begin{itemize}
 \item 
-The C++20 standard library allows us to establish a shared stop state. By default, a stop is not signaled.
+C++20标准库可创建一个共享的停止状态。默认情况下，停止状态不会发出信号。
 
 \item 
-Stop sources of type std::stop\_source can request a stop in their associated shared stop state.
+类型为std::stop\_source的停止源可以在其关联的共享停止状态下请求停止。
 
 \item 
-Stop tokens of type std::stop\_token can be used to react to a stop request in their associated shared stop state. You can actively poll whether there is a stop requested or register a callback of type std::stop\_callback, which will be called when a stop is/was requested.
+std::stop\_token类型的停止令牌可用于，在其关联的共享停止状态下响应停止请求。可以主动轮询是否请求了停止，或者注册一个类型为std::stop\_callback的回调，该回调将在请求停止时调用。
 
 \item 
-Once a stop request has been made, it cannot be withdrawn (a subsequent stop request has no effect).
+当停止请求发出，就不能撤销(后续的停止请求无效)。
 
 \item 
-Stop sources and stop tokens can be copied and moved around to allow code to signal or react to a stop at multiple locations. Copying a source or token is relatively cheap so you usually pass them by value to avoid any lifetime issues.
+可以复制和移动停止源和停止令牌，以允许代码在多个位置发出停止信号或对停止做出反应。复制源代码或令牌的成本相对较低，因此按值传递可避免生命周期问题。
 
-However, copying is not as cheap as passing an integral value or raw pointer around. It is more like passing a shared pointer. If you frequently pass them to a sub-function, it might be better to pass them by reference.
+然而，复制并不像传递整型值或原始指针那么便宜，更像是传递一个共享指针。若经常将其传递给子函数，那么通过引用传递可能会更好。
 
 \item 
-The mechanism is thread safe and can be used in concurrent situations. Stop requests, checks for requested stops, and calls to register or unregister callbacks are properly synchronized, and the associated shared stop state is automatically destroyed when the last user (stop source, stop token, or stop callback) is destroyed.
+该机制是线程安全的，可以在并发情况下使用。停止请求、检查请求的停止，以及对注册或取消注册回调的调用是正确同步的，并且当最后一个用户(停止源、停止令牌或停止回调)被销毁时，关联的共享停止状态将自动销毁。
 \end{itemize}
 
-The following example shows how to establish both a stop source and a stop token:
+下面的例子展示了如何建立一个停止源和一个停止令牌:
 
 \begin{cpp}
 #include <stop_token>
@@ -40,26 +36,25 @@ std::stop_source ssrc; // creates a shared stop state
 std::stop_token stok{ssrc.get_token()}; // creates a token for the stop state
 \end{cpp}
 
-The first step is simply to create the stop\_source object, which provides the API to request a stop. The constructor also creates the associated shared stop state. Then, you can ask the stop source for the stop\_token object, which provides the API to react to a stop request (by polling or registering callbacks).
+第一步是简单地创建stop\_source对象，该对象提供了请求停止的API。构造函数还创建关联的共享停止状态。然后，可以向停止源请求stop\_token对象，该对象提供对停止请求作出反应的API(通过轮询或注册回调)。
 
-You can then pass the token (and/or the source) to locations/threads to establish the asynchronous communication between the places that might request a stop and those that might react to a stop.
+然后，可以将令牌(和/或源)传递给位置/线程，以在可能请求停止的位置和可能对停止做出反应的位置之间建立异步通信。
 
-There is no other way to create a stop token with an associated shared stop state. The default constructor of a stop token has no associated stop state.
+没有其他方法可以创建具有关联的共享停止状态的停止令牌，停止令牌的默认构造函数没有关联的停止状态。
 
-\mySubsubsection{12.2.1}{Stop Sources and Stop Tokens in Detail}
+\mySubsubsection{12.2.1}{停止源和停止令牌的详情}
 
+详细的了解一下停止源、停止令牌和停止回调的API，所有类型都在头文件<stop\_token>中声明。
 
-Let us look at the APIs of stop sources, stop tokens, and stop callbacks in detail. All types are declared in the header file <stop\_token>.
+\mySamllsection{停止源的详情}
 
-\mySamllsection{Stop Sources in Detail}
+“stop\_source类对象的操作”表列出了std::stop\_source的API。
 
-Table Operations of objects of class stop\_source lists the API of std::stop\_source.
+构造函数通常在堆上为停止状态分配内存，所有停止令牌和停止回调都使用该内存。没有办法用分配器指定不同的位置。
 
-The constructor usually allocates memory on the heap for the stop state, which is used by all stop tokens and stop callbacks. There is no way to specify a different location with an allocator.
+请注意，停止源、停止令牌和停止回调之间没有生命周期约束。当使用该状态的最后一个停止源、停止令牌或停止回调销毁时，用于停止状态的内存将自动释放。
 
-Note that there are no lifetime constraints between stop sources, stop tokens, and stop callbacks. The memory for the stop state is automatically released when the last stop source, stop token, or stop callback using this state is destroyed.
-
-To enable you to create stop sources with no associated stop state (which might be useful because the stop state needs resources), you can create a stop source with a special constructor and assign a stop source later:
+为了能够创建没有关联停止状态的停止源(这可能很有用，因为停止状态需要资源)，可以用一个特殊的构造函数创建一个停止源，并在稍后分配一个停止源:
 
 \begin{cpp}
 std::stop_source ssrc{std::nostopstate}; // no associated shared stop state
@@ -68,61 +63,60 @@ ssrc = std::stop_source{}; // assign new shared stop state
 \end{cpp}
 
 
-\mySamllsection{Stop Tokens in Detail}
+\mySamllsection{停止令牌的详情}
 
-Table Operations of objects of class stop\_token lists the API of std::stop\_token.
+“stop\_token类对象的操作表”列出了std::stop\_token的API。
 
-Note that stop\_possible() yields false signals whether stops can still occur. It yields false in two situations:
+请注意，stop\_possible()会产生是否仍然可以停止的错误信号。其会在两种情况下产生false:
 
 \begin{itemize}
 \item 
-If there is no associated stop state
+若没有关联的停止状态
 
 \item 
-If there is a stop state, but there is no longer a stop source and a stop was never requested
+若存在停止状态，但不再有停止源，并且从未请求过停止
 \end{itemize}
 
-This can be used to avoid defining reactions to stops that can never occur.
+这可以用来避免定义反应停止(永远不会发生)。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}            & \textbf{Effect}                                                                     \\ \hline
+\textbf{操作}            & \textbf{效果}                                                                     \\ \hline
 \endfirsthead
 %
 \endhead
 %
-stop\_source s                & Default constructor; creates a stop source with associated stop state               \\ \hline
-stop\_source s\{nostopstate\} & Creates a stop source with no associated stop state                                 \\ \hline
-stop\_source s\{s2\}          & Copy constructor;creates a stop source that shares the associated stop state of s2  \\ \hline
-stop\_source s\{move(s2)\} &
-Move constructor;creates a stop source that gets the associated stop state of s2(s2 no longer has an associated stop state) \\ \hline
-s.$\sim$stop\_source()        & Destructor;destorys the associated shared stop state if this is the last user of it \\ \hline
+stop\_source s                & 默认构造函数;创建具有关联停止状态的停止源               \\ \hline
+stop\_source s\{nostopstate\} & 创建没有关联停止状态的停止源                                 \\ \hline
+stop\_source s\{s2\}          & 复制构造函数;创建一个停止源，该停止源共享s2的关联停止状态  \\ \hline
+stop\_source s\{move(s2)\} & \begin{tabular}[c]{@{}l@{}}移动构造函数;创建一个获取s2的关联停止状态的停止源 \\ (s2不再具有关联的停止状态) \end{tabular} \\ \hline
+s.$\sim$stop\_source()        & 析构函数;若这是相关的共享停止状态的最后一个用户，则销毁 \\ \hline
 s = s2 &
-Copy assignment;copy assigns the state of s2 so that s now also shares the stop state of s2(any former stop state of s is released) \\ \hline
+\begin{tabular}[c]{@{}l@{}}复制赋值；复制赋值s2的状态，这样s现在也共享了s2的停止状态\\(s之前的停止状态都释放了) \end{tabular} \\ \hline
 s = move(s2) &
-Move assignment;move assigns the state of s2 so that s now shares the stop state of s2(s2 no longer has a stop state and any former stop state of s is released) \\ \hline
+\begin{tabular}[c]{@{}l@{}}移动赋值:移动赋值s2的状态，使s现在共享s2的停止状态\\(s2不再有停止状态，s之前的停止状态被释放) \end{tabular} \\ \hline
 s.get\_token() &
-Yields a stop\_token for the associated stop state(returns a stop token with no associated stop state if there is no stop state to share) \\ \hline
+\begin{tabular}[c]{@{}l@{}}为关联的停止状态生成一个stop\_token\\(若没有可共享的停止状态，则返回一个没有关联的停止状态的停止令牌) \end{tabular} \\ \hline
 s.request\_stop() &
-Requests a stop on the associated stop state if any of it is not done yet(returns whether a stop was requested) \\ \hline
-s.stop\_possible()            & Yields whether s has an associated stop state                                       \\ \hline
-s.stop\_requested()           & Yields whether s has an associated stop state for which a stop was requested        \\ \hline
-s1 == s2                      & Yields whether s1 and s2 share the same stop state (or both share none)             \\ \hline
-s1 != s2                      & Yields whether s2 and s2 do not share the same stop state                           \\ \hline
-s1.swap(s2)                   & Swaps the states of s1 and s2                                                       \\ \hline
-swap(s1, s2)                  & Swaps the states of s1 and s2                                                       \\ \hline
+若其中任何一个尚未完成(返回是否请求了停止)，则相关的停止状态下请求停止 \\ \hline
+s.stop\_possible()            & 生成s是否具有关联的停止状态                                       \\ \hline
+s.stop\_requested()           & 生成s是否具有请求停止的关联停止状态        \\ \hline
+s1 == s2                      & 生成s1和s2是否共享相同的停止状态(或者两者都不共享)             \\ \hline
+s1 != s2                      & 生成s2和s2是否共享相同的停止状态                           \\ \hline
+s1.swap(s2)                   & 交换s1和s2的状态                                                       \\ \hline
+swap(s1, s2)                  & 交换s1和s2的状态                                                       \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 12.2. Operations of objects of class stop\_source
+表12.2 类stop\_source对象的操作
 \end{center}
 
-\mySubsubsection{12.2.2}{Using Stop Callbacks}
+\mySubsubsection{12.2.2}{使用停止回调}
 
-A stop callback is an object of the RAII type std::stop\_callback. The constructor registers a callable (function, function object, or lambda) to be called when a stop is requested for a specified stop token:
+停止回调是RAII类型std::stop\_callback的对象。构造函数注册一个可调用对象(函数、函数对象或Lambda)，以便在为指定的停止令牌请求停止时调用:
 
 \begin{cpp}
 void task(std::stop_token st)
@@ -141,34 +135,34 @@ void task(std::stop_token st)
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}     & \textbf{Effect}                                                                          \\ \hline
+\textbf{操作}     & \textbf{效果}                                                                          \\ \hline
 \endfirsthead
 %
 \endhead
 %
-stop\_token t          & Default constructor; creates a stop token with no associated stop state                  \\ \hline
-stop\_token t\{t2\}    & Copy constructor; creates a stop token that shares the associated stop state of t2       \\ \hline
+stop\_token t          & 默认构造函数;创建没有关联停止状态的停止令牌                  \\ \hline
+stop\_token t\{t2\}    & 复制构造函数;创建一个停止令牌，共享t2的相关停止状态       \\ \hline
 stop\_token t\{move(t2)\} &
-Move constructor; creates a stop token that gets the associated stop state of t2(t2 no longer has an associated stop state) \\ \hline
-t.$\sim$stop\_token()  & Destructor;destroys the associated shared stop state if this is the last user of it      \\ \hline
+\begin{tabular}[c]{@{}l@{}}移动构造函数;创建一个停止令牌，获取t2的关联停止状态\\(t2不再具有关联停止状态) \end{tabular} \\ \hline
+t.$\sim$stop\_token()  & 析构函数;若这是相关的共享停止状态的最后一个用户，则销毁      \\ \hline
 t = t2 &
-Copy assignment; copy assigns the state of t2 so that t now also shares the stop state of t2(any former stop state of t is released) \\ \hline
+\begin{tabular}[c]{@{}l@{}}复制赋值;复制分配t2的状态，使t现在也共享t2的停止状态\\(释放任何以前的t停止状态) \end{tabular}\\ \hline
 t = move(t2) &
-Move assignment; move assigns the state of t2 so that t now shares the stop state of t2(t2 no longer has a stop state and any former stop state of t is released) \\ \hline
-t.stop\_possible()     & Yields whether t has an associated stop state and a stop was or can (still) be requested \\ \hline
-t.stop\_requested()    & Yields whether t has an associated stop state for which a stop was requested             \\ \hline
-t1 == t2               & Yields whether t1 and t2 share the same stop state (or both share none)                  \\ \hline
-t1 != t2               & Yields whether t1 and t2 do not share the same stop state                                \\ \hline
-t1.swap(t2)            & Swaps the states of t1 and t2                                                            \\ \hline
-swap(t1. t2)           & Swaps the states of t1 and t2                                                            \\ \hline
-stop\_token cb\{t, f\} & Registers cb as stop callback of t calling f                                             \\ \hline
+\begin{tabular}[c]{@{}l@{}}移动赋值;移动赋值t2的状态，使t现在共享t2的停止状态\\(t2不再具有停止状态，并且释放t之前的停止状态) \end{tabular}\\ \hline
+t.stop\_possible()     & 生成的t是否具有关联的停止状态，以及是否已经或仍可以请求停止 \\ \hline
+t.stop\_requested()    & 生成t是否具有请求停止的关联停止状态             \\ \hline
+t1 == t2               & 输出t1和t2是否共享相同的停止状态(或者两者都不共享)                  \\ \hline
+t1 != t2               & 生成t1和t2是否共享相同的停止状态                                \\ \hline
+t1.swap(t2)            & 交换t1和t2的状态                                                            \\ \hline
+swap(t1. t2)           & 交换t1和t2的状态                                                            \\ \hline
+stop\_token cb\{t, f\} & 将cb注册为t调用f的停止回调                                             \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 12.3. Operations of objects of class stop\_token
+表12.3 类stop\_token对象的操作
 \end{center}
 
-Assume we have created the shared stop state and create an asynchronous situation where one thread might request a stop and another thread might run task(). We might create this situation with code like the following:
+假设已经创建了共享停止状态，并创建了一个异步情况，其中一个线程可能请求停止，另一个线程可能运行task()。可以用下面的代码来模拟这种情况:
 
 \begin{cpp}
 // create stop_source with associated stop state:
@@ -179,32 +173,32 @@ registerOrStartInBackgound(task, ssrc.get_token());
 ...
 \end{cpp}
 
-The function registerOrStartInBackgound() could start task() immediately, or start task() later by calling std::async() or initializing a std::thread, call a coroutine, or register an event handler.
+函数registerOrStartInBackgound()可以立即开始task()。或启动task()后通过调用std::async()初始化一个std::thread，称之为协程，或注册一个事件处理程序。
 
-Now, whenever we request a stop:
+现在，每当我们请求停止时:
 
 \begin{cpp}
 ssrc.request_stop();
 \end{cpp}
 
-one of the following things can happen:
+可能发生以下情况之一:
 
 \begin{itemize}
 \item 
-If task() has been started with its callback was initialized, is still running, and the destructor of the callback has not been called yet, the registered callable is called immediately in the thread where request\_stop() was called. request\_stop() blocks until all registered callables have been called. The order of the calls is not defined.
+若task()在初始化回调时已经启动，并且仍在运行，并且还没有调用回调的析构函数，则在调用request\_stop()的线程中立即调用已注册的可调用对象。request\_stop()阻塞，直到所有注册的可调用对象调用，且调用的顺序没有定义。
 
 \item
-If task() has not been started (or its callback has not been initialized yet), request\_stop() changes the stop state to signal that a stop was requested and returns. If task() is started later and the callback is initialized, the callable is called immediately in the thread where the callback is initialized. The constructor of the callback blocks until the callable returns.
+若task()在初始化回调时已经启动，并且仍在运行，并且还没有调用回调的析构函数，则在调用request\_stop()的线程中立即调用已注册的可调用对象。请求\_stop()阻塞，直到所有注册的可调用对象被调用，且调用的顺序没有定义。
 
 \item
-If task() has already finished (or at least the destructor of the callback has been called), the callable will never be called. The end of the lifetime of the callback signals that there is no longer a need to call the callable.
+若task()已经完成(或者至少已经调用了回调函数的析构函数)，则永远不会调用可调用对象。回调生命周期的结束表明不再需要调用可调用对象。
 \end{itemize}
 
-These scenarios are carefully synchronized. If we are in the middle of initializing a stop\_callback so that the callable is registered, one of the above scenarios will happen. The same applies if a stop is requested while a callable is being unregistered due to destroying a stop callback. If the callable has already been started by another thread, the destructor blocks until the callable has finished.
+这些场景都是精心同步的。若正在初始化一个stop\_callback，以便注册可调用对象，就会发生上述情况之一。若在可调用对象由于破坏了停止回调而未注册时请求停止，则同样适用。若可调用对象已经用另一个线程启动，则析构函数阻塞，直到可调用对象完成。
 
-For your programming logic, this means that from the moment you initialize the callback until the end of its destruction, the registered callable might be called. Up to the end of the constructor, the callback runs in the thread of the initialization; afterwards it runs in the thread requesting the stop. The code that requests a stop might immediately call the registered callable, it might call it later (if the callback is initialized later), or might never call it (if it is too late to call the callback).
+对于编程逻辑，则从初始化回调到其销毁结束的那一刻起，可能会调用已注册的可调用对象。直到构造函数结束，回调函数在初始化的线程中运行;之后，在请求停止的线程中运行。请求停止的代码可能会立即调用已注册的可调用对象，也可能会稍后调用(若回调稍后初始化)，也可能永远不会调用(若调用回调为时已晚)。
 
-For example, consider the following program:
+例如，下面的代码:
 
 \filename{lib/stop.cpp}
 
@@ -267,9 +261,9 @@ int main()
 }
 \end{cpp}
 
-Note that we use synchronized output streams to ensure that the print statements of the different threads are synchronized line by line.
+注意，使用同步输出流来确保不同线程的print语句逐行同步。
 
-For example, the output might be as follows:
+例如，输出可能如下所示:
 
 \begin{shell}
 call task(1)
@@ -286,7 +280,7 @@ call task(9)
 \end{shell}
 
 
-Or it might also be like this:
+或者也可能是这样的:
 
 \begin{shell}
 call task(1)
@@ -307,7 +301,7 @@ call task(7)
 ...
 \end{shell}
 
-Or it might look like this:
+或者它看起来像这样:
 
 \begin{shell}
 call task(1)
@@ -324,7 +318,7 @@ call task(6)
 ...
 \end{shell}
 
-It might even just be:
+它甚至可能只是:
 
 \begin{shell}
 call task(1)
@@ -335,13 +329,13 @@ call task(9)
 - STOP requested in main()
 \end{shell}
 
-Without using syncOut(), the output might even have interleaved characters because the output from the main thread and the thread running task() might be completely mixed.
+若不使用syncOut()，输出甚至可能有交错字符，因为主线程和运行task()的线程的输出可能完全混合在一起。
 
-\mySamllsection{Stop Callbacks in Detail}
+\mySamllsection{停止回调的详情}
 
-The type of stop callback, stop\_callback, is a class template with a very limited API. Effectively, it only provides a constructor to register a callable for a stop token and a destructor that unregisters the callable. Copying and moving are deleted and no other member function is provided.
+停止回调的类型，stop\_callback，是一个具有非常有限API的类模板。实际上，只提供了一个构造函数来为停止令牌注册可调用对象，并提供了一个析构函数来取消可调用对象的注册。删除复制和移动，不提供其他成员函数。
 
-The template parameter is the type of the callable and is usually deduced when the constructor is initialized:
+模板形参是可调用对象的类型，通常在初始化构造函数时推导出来:
 
 \begin{cpp}
 auto func = [] { ... };
@@ -349,9 +343,9 @@ auto func = [] { ... };
 std::stop_callback cb{myToken, func}; // deduces stop_callback<decltype(func)>
 \end{cpp}
 
-The only public member besides constructor and destructor is callback\_type, which is the type of the stored callable.
+除了构造函数和析构函数之外，唯一的公共成员是callback\_type，存储的可调用对象的类型。
 
-The constructors accept both lvalues (objects with a name) and rvalues (temporary objects or objects marked with std::move()):
+构造函数接受左值(有名字的对象)和右值(临时对象或用std::move()标记的对象):
 
 \begin{cpp}
 auto func = [] { ... };
@@ -361,32 +355,32 @@ std::stop_callback cb2{myToken, std::move(func)}; // moves func
 std::stop_callback cb3{myToken, [] { ... }}; // moves the lambda
 \end{cpp}
 
-\mySubsubsection{12.2.3}{Constraints and Guarantees of Stop Tokens}
+\mySubsubsection{12.2.3}{停止令牌的限制和保证}
 
-The feature to deal with stop requests is pretty robust regarding a couple of scenarios that might occur in asynchronous contexts. However, it cannot avoid every pitfall.
+对于可能发生在异步上下文中的几个场景，处理停止请求的特性是相当健壮的，但并不能避免所有的陷阱。
 
-The C++20 standard library guarantees the following:
+C++20标准库保证了以下内容:
 
 \begin{itemize}
 \item 
-All request\_stop(), stop\_requested(), and stop\_possible() calls are synchronized.
+所有的request\_stop()、stop\_requested()和stop\_possible()调用都是同步的。
 
 \item 
-The callback registration is guaranteed to be performed atomically. If there is a concurrent call to request\_stop() from another thread, then either the current thread will see the request to stop and immediately invoke the callback on the current thread, or the other thread will see the callback registration and will invoke the callback before returning from request\_stop().
+保证自动执行回调注册。若另一个线程并发调用request\_stop()，那么当前线程将看到请求停止并立即调用当前线程上的回调，或者另一个线程将看到回调注册并在从request\_stop()返回之前调用回调。
 
 \item 
-The callable of a stop\_callback is guaranteed not to be called after the destructor of the stop\_callback returns.
+stop\_callback的可调用对象保证在stop\_callback的析构函数返回后不会调用。
 
 \item 
-The destructor of a callback waits for its callable to finish if it is just called by another thread (it does not wait for other callables to finish).
+若回调函数的析构函数刚刚在另一个线程调用，则它等待可调用对象完成(它不等待其他可调用对象完成)。
 \end{itemize}
 
-However, note the following constraints:
+然而，请注意以下限制:
 
 \begin{itemize}
 \item 
-A callback should not throw. If an invocation of its callable exits via an exception, then std::terminate() is called.
+回调不应该抛出异常，若对其可调用对象的调用通过异常退出，则调用std::terminate()。
 
 \item 
-Do not destroy a callback in its own callable. The destructor does not wait for the callback to finish.
+不要在回调的可调用对象中销毁回调，析构函数不会等待回调完成的。
 \end{itemize}
