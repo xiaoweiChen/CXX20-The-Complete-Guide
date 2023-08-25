@@ -1,5 +1,4 @@
-
-Consider we want the following function to be a coroutine:
+这里，我们希望下面的函数是协程:
 
 \begin{cpp}
 void coro(int max)
@@ -14,9 +13,9 @@ void coro(int max)
 }
 \end{cpp}
 
-This function has a parameter for the maximum value, which we first print. Then, it loops from 1 to this maximum value and prints each value. Finally, we have a print statement at the end.
+该函数有一个表示最大值的形参，首先将其打印出来。然后，从1循环到这个最大值，并打印每个值，最后有一个print语句。
 
-When the function is called with coro(3), it has the following output:
+当用coro(3)调用该函数时，有以下输出:
 
 \begin{shell}
 CORO 3 start
@@ -26,11 +25,11 @@ CORO 3/3
 CORO 3 end
 \end{shell}
 
-However, we want to program this as a coroutine that is suspended each time the print statement inside the loop is performed. Therefore, the function is interrupted and the user of the coroutine can trigger the next output with a resumption.
+但是，我们希望将其编程为一个协程，每次执行循环中的print语句时，都会挂起。因此，函数可中断，协程的用户可以通过恢复触发下一个值的输出。
 
-\mySubsubsection{14.2.1}{Defining the Coroutine}
+\mySubsubsection{14.2.1}{定义协程}
 
-Here is the complete code for the definition of the coroutine:
+以下是协程定义的完整代码:
 
 \filename{lib/atomicwait.cpp}
 
@@ -53,25 +52,25 @@ CoroTask coro(int max)
 }
 \end{cpp}
 
-We still have a kind of a function that loops over the values up to the parameter max. However, two things differ from ordinary functions:
+仍然有一种循环遍历这些值直到参数max的函数，但有两点与普通函数不同:
 
 \begin{itemize}
 \item 
-Inside the loop after the print statement, there is a co\_await expression, which suspends the coroutine and blocks it until it is resumed. This is called a suspend point.
+在print语句之后的循环中，有一个co\_await表达式，其可挂起协程并阻塞它，直到协程恢复。这被称为挂起点。
 
-The exact behavior of the suspend call is defined by the expression immediately after co\_await. It enables programmers to control the exact behavior of the suspension.
+挂起调用的确切行为由紧跟在co\_await后面的表达式定义，使开发者能够控制挂起的确切行为。
 
-For the moment, we will use a default-constructed object of type std::suspend\_always, which accepts the suspension and gives control back to the caller. However, you can reject the suspension or resume another coroutine instead by passing special operands to co\_await.
+目前，我们将使用std::suspend\_always类型的默认构造对象，其接受挂起并将控制权交还给调用者。也可以通过将特殊操作数传递给co\_await，来拒绝挂起或恢复另一个协程。
 
 \item 
-Although the coroutine has no return statement, it has a return type, CoroTask. This type serves as the coroutine interface for the caller of the coroutine. Note that we cannot declare the return type as auto.
+虽然协程没有返回语句，但其有一个返回类型CoroTask。此类型用作协程调用者的协程接口，但不能将返回类型声明为auto。
 
-The return type is necessary because the caller needs an interface to be able to deal with the coroutine (such as resuming it). In C++20, coroutine interface types have to be provided by the programmer (or a third party library). We will see later how it is implemented. The plan is that upcoming C++ standards will provide some standard coroutine interface types in their library.
+返回类型是必需的，因为调用者需要一个接口来处理协程(例如恢复它)。C++20中，协程接口类型必须由程序员(或第三方库)提供，稍后我们将看到它是如何实现的。计划是，即将到来的C++标准将在其库中提供一些标准的协程接口类型。
 \end{itemize}
 
-\mySubsubsection{14.2.2}{Using the Coroutine}
+\mySubsubsection{14.2.2}{使用协程}
 
-We can use the coroutine as follows:
+我们可以这样使用协程:
 
 \filename{coro/coro.cpp}
 
@@ -94,7 +93,7 @@ int main()
 }
 \end{cpp}
 
-After initializing the coroutine, which yields the coroutine interface coroTask, we start a loop that again and again resumes the coroutine after it has been suspended:
+初始化协程后，产生协程接口coroTask，我们启动一个循环，在协程挂起后一次又一次地恢复协程:
 
 \begin{cpp}
 auto coroTask = coro(3); // initialize coroutine
@@ -104,21 +103,21 @@ while (coroTask.resume()) { // RESUME
 }
 \end{cpp}
 
-By calling coro(3), we call the coroutine like a function. However, in contrast to function calls, we do not wait for the coroutine to end. Instead, the call returns the coroutine interface to deal with the coroutine after the coroutine is initialized (there is an implicit suspend point at the beginning).
+通过调用coro(3)，像调用函数一样调用协程。然而，与函数调用相比，我们不等待协程结束。相反，在协程初始化之后，调用返回协程接口来处理协程(在开始处有一个隐式挂起点)。
 
-We use auto here for the coroutine interface type; however, we could also use its type, which is the return type of the coroutine:
+在这里使用auto作为协程接口类型，也可以使用它的类型，这是协程的返回类型:
 
 \begin{cpp}
 CoroTask coroTask = coro(3); // initialize coroutine
 \end{cpp}
 
-The API provided by the class CoroTask provides a member function resume(), which resumes the coroutine. Each call of resume() allows the coroutine to continue to run until the next suspension or until the end of the coroutine. Note that a suspension does not leave any scope in the coroutine. On resumption, we continue the coroutine in the state of its suspension.
+类CoroTask提供的API提供了一个成员函数resume()，可用于恢复协程。每次调用resume()都允许协程继续运行，直到下一次挂起或直到协程结束。请注意，挂起不会在协程中留下任何作用域。在恢复时，可继续暂停状态下的协程。
 
-The effect is that within the loop in main(), we call the next bunch of statements in the coroutine until we reach a suspend point or the end. That is, we call the following:
+其效果是，在main()的循环中，调用协程中的下一组语句，直到挂起点或结束。也就是说，调用以下语句:
 
 \begin{itemize}
 \item 
-First, the initial output, the initialization of val, and the first output inside the loop:
+首先，初始输出，val的初始化，以及循环中的第一个输出:
 
 \begin{cpp}
 std::cout << "                 CORO " << max << " start\n";
@@ -129,7 +128,7 @@ for (int val = 1; val <= max; ... ) {
 \end{cpp}
 
 \item 
-Then twice, the next iteration in the loop:
+然后是两次，循环中的下一个迭代:
 
 \begin{cpp}
 	for (...; val <= max; ++val) {
@@ -139,7 +138,7 @@ Then twice, the next iteration in the loop:
 \end{cpp}
 
 \item 
-Finally, after the last iteration in the loop, the coroutine performs the final print statement:
+最后，在循环中的最后一次迭代之后，协程执行最后的print语句:
 
 \begin{cpp}
 for ( ... ; val <= max; ++val) {
@@ -150,7 +149,7 @@ std::cout << " CORO " << max << " end\n";
 \end{cpp}
 \end{itemize}
 
-The output of the program is as follows:
+程序输出如下:
 
 \begin{shell}
 coro() started
@@ -168,56 +167,56 @@ coro() done
 
 \begin{center}
 \includegraphics[width=0.6\textwidth]{content/chapter14/images/2.png}\\
-Figure 14.2. Coroutine example
+图14.2 协同程序的例子
 \end{center}
 
-In combination with the interface type CoroTask, which we will see in a moment, we get the following control flow (see Figure 14.2):
+结合接口类型CoroTask，我们马上就会看到，可得到以下控制流(见图14.2):
 
 \begin{enumerate}[label=\alph*)]
 \item 
-First, we call the coroutine so that it starts. The coroutine is immediately suspended and the call returns the interface object to deal with the coroutine.
+首先，调用协程，使其启动。协程立即挂起，调用返回处理协程的接口对象。
 
 \item 
-We can then use the interface object to resume the coroutine so that it starts performing its statements.
+然后，可以使用接口对象来恢复协程，以便执行其语句。
 
 \item 
-Inside the coroutine we process the starting statements up to the first suspend point: the first print statement, the initialization of the local counter val in the head of the loop, and (after checking that val is less than or equal to max) the print statement inside the loop. At the end of this part, the coroutine is suspended.
+协程内部，处理开始语句直到第一个挂起点:第一个print语句，在循环头部初始化局部计数器val，以及(在检查val小于或等于max之后)循环内的print语句。在这部分结束时，协程暂停。
 
 \item 
-The suspension transfers control back to the main function, which then continues until it resumes the coroutine again.
+挂起将控制转移回主函数，然后主函数继续执行，直到再次恢复协程。
 
 \item 
-The coroutine continues performing the next statements until we reach the suspend point again, incrementing val and (after checking that val is still less than or equal to max) executing the print statement inside the loop. At the end of this part, the coroutine is suspended again.
+协程继续执行下一个语句，直到再次到达挂起点，增加val并(在检查val仍然小于或等于max之后)在循环中执行print语句。在这部分结束时，协程再次挂起。
 
-Note that we continue here with the value that val had when the coroutine was suspended before.
-
-\item 
-This again transfers control back to the main function, which then continues until it resumes the coroutine once more.
+注意，这里继续使用之前协程挂起时val的值。
 
 \item 
-The coroutine continues the loop as long as the incremented val is less than or equal to max.
+再次将控制转移回主函数，然后主函数继续运行，直到再次恢复协程。
 
 \item 
-The main function resumes the coroutine as long as the coroutine was suspended with co\_await.
+只要增量val小于或等于max，协程就继续循环。
 
 \item 
-Finally, the coroutine leaves the loop after val was incremented, which calls the final print statement with the value of max.
+只要协程co\_await挂起，主函数就会恢复协程。
 
 \item 
-The end of the coroutine transfers control back to the main function for the last time. The main function then ends its loop and continues until its end.
+最后，协程在val加1之后离开循环，它调用最后的print语句，值为max。
+
+\item 
+协程结束时，最后一次将控制转回主函数。然后main函数结束它的循环，并继续运行直到它结束。
 \end{enumerate}
 
-The exact behavior of the initialization and the interface of the coroutine depends on the interface type CoroTask. It might just start the coroutine or provide a context with some initializations, such as opening a file or starting a thread. It also defines whether the coroutine starts immediately or starts lazily (is immediately suspended). With the current implementation of CoroTask it starts lazily, which means that the initial call of the coroutine does not perform any statements of coro() yet.
+协程的初始化和接口的确切行为取决于接口类型CoroTask，可能只是启动协程或提供具有一些初始化的上下文，例如打开文件或启动线程，还定义协程是立即启动还是惰性启动(立即挂起)。在CoroTask的当前实现中，是惰性启动的，所以协程的初始调用还没有执行coro()的任何语句。
 
-Note that there is no asynchronous communication or control flow. It is more that coroTask.resume() is like a function call for the next portion of coro().
+注意，这里没有异步通信或控制流。coroTask.resume()更像是coro()下一部分的函数调用。
 
-The loop ends when we have reached the end of the coroutine. For this purpose, resume() is implemented such that it returns whether the coroutine is not done (yet). Thus, while resume() returns true, we continue the loop (after printing that it was suspended).
+当到达协程的末尾时，循环结束。为此，resume()的实现使得它返回协程是否(尚未)完成。因此，当resume()返回true时，我们继续循环(在打印暂停之后)。
 
-\mySamllsection{Using Coroutines Multiple Times}
+\mySamllsection{多次使用协程}
 
-As written, a coroutine is kind of a quasi-parallel function, executed sequentially by switching the control flow back and forth. Its state is stored in some heap memory controlled by the coroutine handle, which is usually held by the coroutine interface. By having multiple coroutine interface objects, we can deal with the state of multiple active coroutines, which might be running or suspended independently of each other.
+如上所述，协程是一种准并行函数，通过来回切换控制流来顺序执行。其状态存储在由协程句柄控制的堆内存中，该句柄通常由协程接口持有。通过拥有多个协程接口对象，可以处理多个活动协程的状态，这些协程可能彼此独立地运行或挂起。
 
-Assume that we start two coroutines with different values for max:
+假设用不同的max值启动两个协程:
 
 \filename{coro/coro2.cpp}
 
@@ -245,9 +244,9 @@ int main()
 }
 \end{cpp}
 
-We get two different interface objects, coroTask1 and coroTask2, for the initialized coroutines. By resuming sometimes the first and sometimes the second coroutine, our control flow jumps between the main function and these two coroutines.
+对于初始化的协程，可得到两个不同的接口对象，coroTask1和coroTask2。通过有时恢复第一个协程，有时恢复第二个协程，控制流在主函数和这两个协程之间跳转。
 
-In our case, we resume the second coroutine (having 5 as max) once, then loop over resuming the first coroutine, and finally resume the second coroutine once again. As a result, the program has the following output:
+例子中，我们恢复第二个协程(最大5个)一次，然后循环恢复第一个协程，最后再次恢复第二个协程。结果，程序有以下输出:
 
 \begin{shell}
 coro(3) and coro(5) started
@@ -265,13 +264,13 @@ coro() done
          CORO 2/5
 \end{shell}
 
-You can even pass the coroutine interface objects to different functions or threads to resume them there. They will always continue with their current state.
+甚至可以将协程接口对象传递给不同的函数或线程以在那里恢复，其将永远保持目前的状态。
 
-\mySubsubsection{14.2.3}{Lifetime Issues with Call-by-Reference}
+\mySubsubsection{14.2.3}{引用调用的生命周期问题}
 
-A coroutine usually lives longer than the statement it was initially called from. That has an important consequence: you can run into fatal runtime problems if you pass temporary objects by reference.
+协程的生命周期通常比最初调用它的语句要长。这有一个重要的后果:若通过引用传递临时对象，可能会遇到致命的运行时问题。
 
-Consider the following slightly modified coroutine. All we do now is take the max value by reference:
+考虑以下稍微修改过的协程，现在所做的就是通过引用取最大值:
 
 \filename{coro/cororef.hpp}
 
@@ -293,7 +292,7 @@ CoroTask coro(const int& max)
 }
 \end{cpp}
 
-The problem is that passing a temporary object, which might even be a literal, creates undefined behavior. You might or might not see it depending on the platform, compiler settings, and the rest of the code. Consider, for example, calling the coroutine as follows:
+问题是，传递一个临时对象(甚至可能是一个文字对象)会创建未定义的行为。可能会看到它，也可能不会看到它，这取决于平台、编译器设置和其他代码。例如，考虑如下方式调用协程:
 
 \filename{coro/cororef.hpp}
 
@@ -316,7 +315,7 @@ int main()
 }
 \end{cpp}
 
-On some platforms this code works fine. However, on one platform where I tested this code, I got the following output:
+某些平台上，此代码运行良好。然而，在我测试这段代码的一个平台上，我得到了以下输出:
 
 \begin{shell}
 coro(3) started
@@ -326,11 +325,11 @@ coro(375) started
 coro() done
 \end{shell}
 
-After the statement that initializes the coroutine, the location the max reference refers to for the passed argument 3 is no longer available. Therefore, when resuming the coroutine for the first time, the output and initialization of val are using a reference to a destroyed object.
+初始化协程的语句之后，max引用所引用的传入参数3的位置不再可用。因此，当第一次恢复协程时，val的输出和初始化使用对已销毁对象的引用。
 
-In general: \textbf{do not use references to declare coroutine parameters.}
+通常: \textbf{不要使用引用来声明协程参数。}
 
-If copying the parameter becomes too expensive, you can “pass by reference” by using reference wrappers created with std::ref() or std::cref(). For containers, you can use std::views::all() instead, which passes the container as a view, so that all standard range functions can still be used without converting the parameter back. For example:
+若复制参数的代价太大，可以通过使用std::ref()或std::cref()创建的引用包装器“按引用传递”。对于容器，可以使用std::views::all()，将容器作为视图传递，因此仍然可以使用所有标准范围函数，而无需将参数转换回来。例如:
 
 \begin{cpp}
 CoroTask printElems(auto coll)
@@ -351,11 +350,11 @@ while (coPrintElems.resume()) { // RESUME
 }
 \end{cpp}
 
-\mySubsubsection{14.2.4}{Coroutines Calling Coroutines}
+\mySubsubsection{14.2.4}{调用协程}
 
-Coroutines can call other coroutines (even indirectly) and both the calling and the called coroutines might have suspend points. Let us look at what that means.
+协程可以调用其他协程(甚至是间接的)，调用和被调用的协程都可能有挂起点。
 
-Consider a coroutine with one suspend point so that it runs in two parts:
+考虑一个具有一个挂起点的协程，以便其分两部分运行:
 
 \begin{cpp}
 CoroTask coro()
@@ -366,7 +365,7 @@ CoroTask coro()
 }
 \end{cpp}
 
-When we use this coroutine as follows:
+这样使用这个协程时:
 
 \begin{cpp}
 auto coroTask = coro(); // initialize coroutine
@@ -379,7 +378,7 @@ while (coroTask.resume()) { // RESUME
 std::cout << "MAIN: coro() done\n";
 \end{cpp}
 
-We get the following output:
+可得到以下输出:
 
 \begin{shell}
 MAIN: coro() initialized
@@ -389,7 +388,7 @@ MAIN: coro() suspended
 MAIN: coro() done
 \end{shell}
 
-Now let us call coro() indirectly via another coroutine. For that, main() calls callCoro() instead of coro():
+现在，我们通过另一个协程间接调用coro()。为此，main()调用callCoro()，而非coro():
 
 \begin{cpp}
 auto coroTask = callCoro(); // initialize coroutine
@@ -402,11 +401,11 @@ while (coroTask.resume()) { // RESUME
 std::cout << "MAIN: callCoro() done\n";
 \end{cpp}
 
-The interesting part is how to implement callCoro().
+有趣的部分是如何实现callCoro()。
 
-\mySamllsection{No Inner resume()}
+\mySamllsection{无内部resume()}
 
-We might try to implement callCoro() by just calling coro():
+可以尝试通过调用coro()来实现callCoro():
 
 \begin{cpp}
 CoroTask callCoro()
@@ -419,7 +418,7 @@ CoroTask callCoro()
 }
 \end{cpp}
 
-This compiles. However, it does not work as expected, as the output of the program demonstrates:
+这段代码可编译。然而，它并没有像预期的那样工作，正如程序的输出所示:
 
 \begin{shell}
 MAIN: callCoro() initialized
@@ -430,21 +429,21 @@ MAIN: callCoro() suspended
 MAIN: callCoro() done
 \end{shell}
 
-The print statements in the body of coro() are never called.
+coro()函数体中的print语句永远不会调用。
 
-The reason is that
+原因是
 
 \begin{cpp}
 coro();
 \end{cpp}
 
-only initializes the coroutine and immediately suspends it. coro() is never resumed. It cannot be resumed because the coroutine interface returned is not even used. A resume() of the outer coroutine does not automatically resume any inner coroutine.
+只初始化协程并立即挂起它，Coro()永远不会恢复。其无法恢复，因为返回的协程接口甚至没有使用。外部协程的resume()不会自动恢复任何内部协程。
 
-To get at least a compiler warning when using coroutines like functions, class CoroTask will be declared with [[nodiscard]].
+为了在使用协程(如函数)时至少获得编译器警告，类CoroTask将使用[[nodiscard]]声明。
 
-\mySamllsection{Using an Inner resume()}
+\mySamllsection{内部使用resume()}
 
-We have to deal with the inner coroutine the same way we deal with the outer coroutine: resume() it in a loop:
+必须像处理外部协程一样处理内部协程:resume()在循环中:
 
 \begin{cpp}
 CoroTask callCoro()
@@ -460,7 +459,7 @@ CoroTask callCoro()
 }
 \end{cpp}
 
-With this implementation of callCoro(), we get the behavior and output we want:
+通过callCoro()的实现，就可以得到我们想要的行为和输出:
 
 \begin{shell}
 MAIN: callCoro() initialized
@@ -474,11 +473,11 @@ MAIN: callCoro() suspended
 MAIN: callCoro() done
 \end{shell}
 
-See coro/corocoro.cpp for the complete example.
+请参阅coro/ corcoro .cpp获得完整的示例。
 
-\mySamllsection{Using One Inner resume()}
+\mySamllsection{内部使用resume()一次}
 
-It is worth noting what happens if we resume coro() inside callCoro() only once:
+值得注意的是，若在callCoro()中只恢复一次coro()，会发生什么:
 
 \begin{cpp}
 CoroTask callCoro()
@@ -492,7 +491,7 @@ CoroTask callCoro()
 }
 \end{cpp}
 
-The output becomes:
+输出变成:
 
 \begin{shell}
 MAIN: callCoro() initialized
@@ -504,11 +503,11 @@ MAIN: callCoro() suspended
 MAIN: callCoro() done
 \end{shell}
 
-After callCoro() initializes coro(), coro() is resumed only once, which means that only the first part of it is called. After that, the suspension of coro() transfers the control flow back to callCoro(), which then suspends itself, meaning that the control flow goes back to main(). When main() resumes callCoro(), the program finishes callCoro(). coro() is never finished at all.
+callCoro()初始化coro()之后，coro()只恢复一次，所以只调用它的第一部分。之后，coro()的挂起将控制流传输回callCoro()，然后callCoro()挂起自己，则控制流返回到main()。当main()恢复callCoro()时，程序完成callCoro()。Coro()永远不会完成。
 
-\mySamllsection{Delegating resume()}
+\mySamllsection{委托resume()}
 
-It is possible to implement CoroTask so that co\_await registers a sub-coroutine in a way that a suspension in the sub-coroutine is handled like a suspension in the calling coroutine. callCoro() would then look as follows:
+可以实现CoroTask，以便co\_await以一种方式注册子协程，从而处理子协程中的挂起，就像处理调用协程中的挂起一样。callCoro()看起来如下所示:
 
 \begin{cpp}
 CoroTaskSub callCoro()
@@ -521,42 +520,42 @@ CoroTaskSub callCoro()
 }
 \end{cpp}
 
-However, resume() then has to delegate a request for resumption to the sub-coroutine if there is one. For this purpose, the CoroTask interface has to become an awaitable. Later, after we have introduced awaitables, we will see such a coroutine interface that delegates resumptions to sub-coroutines.
+然而，resume()随后必须将恢复请求委托给子协同程序(若有的话)。为此，CoroTask接口必须成为一个可等待对象。稍后，在介绍了可等待对象之后，将看到这样一个协程接口，将恢复委托给子协程。
 
-\mySubsubsection{14.2.5}{Implementing the Coroutine Interface}
+\mySubsubsection{14.2.5}{实现协程接口}
 
-I have stated a couple of times that in our example, class CoroTask plays an important role for dealing with the coroutine. It is the interface that both the compiler and the caller of a coroutine usually deal with. The coroutine interface brings together a couple of requirements to let the compiler deal with coroutines and provides the API for the caller to create, resume, and destroy the coroutine. Let us elaborate on that in detail.
+我已经说过几次了，在例子中，类CoroTask在处理协程方面起着重要的作用。它是编译器和协程调用者通常处理的接口。协程接口汇集了一些要求，让编译器处理协程，并为调用者提供API来创建、恢复和销毁协程。让我们详细解释一下这一点。
 
-To deal with coroutines in C++ we need two things:
-
-\begin{itemize}
-\item 
-A promise type 
-
-This type is used to define certain customization points for dealing with a coroutine. Specific member functions define callbacks that are called in certain situations.
-
-\item 
-An internal coroutine handle of the type std::coroutine\_handle<>
-
-This object is created when a coroutine is called (using one of the standard callbacks of the promise type above). It can be used to manage the state of the coroutine by providing a low-level interface to resume a coroutine as well as to deal with the end of the coroutine.
-\end{itemize}
-
-The usual purpose of the type dealing with the return type of a coroutine is to bring these requirements together:
+要处理C++中的协程，需要做两件事:
 
 \begin{itemize}
 \item 
-It has to define which promise type is used (it is usually defined as the type member promise\_type).
+promise类型
+
+此类型用于定义处理协同例程的某些自定义点，特定的成员函数定义了在特定情况下调用的回调函数。
 
 \item 
-It has to define where the coroutine handle is stored (it is usually defined as a data member).
+std::coroutine\_handle<>类型的内部协程句柄
 
-\item 
-It has to provide the interface for the caller to deal with the coroutine (the member function resume() in this case).
+此对象在调用协程时创建(使用上述promise类型的标准回调之一)，可以通过提供一个底层接口来恢复协程以及处理协程的结束，从而用于管理协程的状态。
 \end{itemize}
 
-\mySamllsection{The Coroutine Interface CoroTask}
+处理协程返回类型的类型通常的目的是将这些需求结合在一起:
 
-The class CoroTask, which provides promise\_type, stores the coroutine handle, and defines the API for the caller of the coroutine, may be defined as follows:
+\begin{itemize}
+\item 
+必须定义使用的promise类型(通常定义为类型成员promise\_type)。
+
+\item 
+必须定义协程句柄存储的位置(通常定义为数据成员)。
+
+\item 
+必须为调用者提供处理协程的接口(本例中是成员函数resume())。
+\end{itemize}
+
+\mySamllsection{协程接口CoroTask}
+
+CoroTask类提供promise\_type，存储协程句柄，并定义协程调用者的API，定义如下所示:
 
 \filename{coro/corotask.hpp}
 
@@ -601,7 +600,7 @@ public:
 #include "corotaskpromise.hpp" // definition of promise_type
 \end{cpp}
 
-In the class CoroTask, we first define the basic types and member to deal with the native API of the coroutine. The key member the compiler looks for in a coroutine interface type is the type member promise\_type. With the promise type, we define the type of the coroutine handle and introduce a private member where this coroutine handle, specialized for the promise type, is stored:
+CoroTask类中，首先定义基本类型和成员来处理协程的原生API。编译器在协程接口类型中查找的关键成员是类型成员promise\_type。通过promise类型，定义了协程句柄的类型，并引入了一个私有成员，用于存储针对promise类型的协程句柄:
 
 \begin{cpp}
 class [[nodiscard]] CoroTask {
@@ -615,23 +614,23 @@ private:
 };
 \end{cpp}
 
-We introduce the promise\_type (which every coroutine type has to have) and declare the native coroutine handle hdl, which manages the state of the coroutine. As you can see, the type of the native coroutine handle, std::coroutine\_handle<>, is parameterized with the promise type. That way, any data stored in the promise is part of the handle and the functions in the promise are available via the handle.
+引入promise\_type(每个协程类型都必须拥有)，并声明本地协程句柄hdl，它管理协程的状态。原生协程句柄std::coroutine\_handle<>的类型是用promise类型参数化的，存储在promise中的任何数据都是句柄的一部分，promise中的函数可以通过句柄访问。
 
-The promise type has to be public to be visible from the outside. It is often also helpful to provide a public name of the type of the coroutine handle (CoroHdl in this case). To simplify things, we could even make the handle itself public. That way, we can use
+promise类型必须是public的才能从外部可见，提供协程句柄类型的公共名称(在本例中为CoroHdl)通常也很有帮助。为了简化，我们甚至可以将句柄本身设为公共。这样，就可以用
 
 \begin{cpp}
 CoroTask::CoroHdl
 \end{cpp}
 
-instead of
+而非
 
 \begin{cpp}
 std::coroutine_handle<CoroTask::promise_type>
 \end{cpp}
 
-We could also define the promise type here directly inline. However, in this example, we defer the definition to the later included corotaskpromise.hpp.
+也可以在这里直接内联地定义promise类型。但在本例中，我们将定义推迟到后来包含的corotaskpromise.hpp。
 
-The constructor and destructor of the coroutine interface type initialize the member for the coroutine handle and clean it up before the coroutine interface is destroyed:
+协程接口类型的构造函数和析构函数初始化协程句柄的成员，并在协程接口销毁之前将其清除:
 
 \begin{cpp}
 class CoroTask {
@@ -649,11 +648,11 @@ class CoroTask {
 };
 \end{cpp}
 
-By declaring the class with [[nodiscard]], we force compiler warnings when the coroutine is created but not used (which might especially happen by accidentally using a coroutine as an ordinary function).
+通过用[[nodiscard]]声明类，在创建协程但未使用时强制编译器发出警告(当意外地将协程用作普通函数时尤其可能发生这种情况)。
 
-For simplicity, we disable copying and moving. Providing copy or move semantics is possible but you have to be careful to deal with the resources correctly.
+为简单起见，我们禁用复制和移动。提供复制或移动语义是可能的，但必须小心正确地处理。
 
-Finally, we define our only interface for the caller, resume():
+最后，为调用者定义了唯一的接口resume():
 
 \begin{cpp}
 class CoroTask {
@@ -668,25 +667,25 @@ class CoroTask {
 };
 \end{cpp}
 
-The key API is resume(), which resumes the coroutine when it is suspended. It more or less propagates the request to resume to the native coroutine handle. It also returns whether it makes sense to resume the coroutine again.
+关键的API是resume()，在协程挂起时恢复协程，其或多或少地将恢复请求传播到原生协程句柄，其返回表示是否有必要再次恢复协程。
 
-First, the function checks whether we have a handle at all or whether the coroutine has already ended.
+首先，函数检查是否有句柄，或者协程是否已经结束。
 
-Even though in this implementation the coroutine interface always has a handle, this is a safety net which is necessary, for example, if the interface supports move semantics.
+尽管在这个实现中协程接口总是有一个句柄，但这是一个必要的安全网，例如，若接口支持移动语义。
 
-Calling resume() is only allowed when the coroutine is suspended and has not reached its end. Therefore, checking whether it is done() is necessary. The call itself resumes the suspended coroutine and blocks until it reaches the next suspend point or the end.
+只有当协程挂起且尚未结束时才允许调用resume()，所以检查是否done()是必要的。调用本身恢复挂起的协程并阻塞，直到下一个挂起点或结束。
 
 \begin{cpp}
 hdl.resume(); // RESUME (blocks until suspended again or the end)
 \end{cpp}
 
-You can also use operator() for this:
+也可以使用operator():
 
 \begin{cpp}
 hdl(); // RESUME (blocks until suspended again or the end)
 \end{cpp}
 
-Because our resume() interface for the caller returns whether it makes sense to resume the coroutine again, we return whether the coroutine has reached its end:
+因为调用者的resume()接口返回是否有必要再次恢复协程，所以返回协程是否已经结束:
 
 \begin{cpp}
 bool resume() const {
@@ -695,37 +694,37 @@ bool resume() const {
 }
 \end{cpp}
 
-The member function done() is provided by the native coroutine handle just for that purpose.
+成员函数done()由原生协程句柄提供，就是为了这个目的。
 
-As you can see, the interface for the caller of the coroutine wraps the native coroutine handle and its API completely. In this API, we decide how the caller can deal with the coroutine. We could use different function names or even operators or split the calls for resumption and checking for the end. Later on you will see examples where we iterate over values the coroutine delivers with each suspension, we can even send values back to the coroutine, and we can provide an API to put the coroutine in a different context.
+协程调用者的接口完全包装了原生协程句柄及其API，我们决定调用者如何处理协程。可以使用不同的函数名，甚至操作符，或者分割调用以恢复和检查结束。稍后，将看到一些示例，其中迭代协程在每次挂起时交付的值，甚至可以将值发送回协程，并且可以提供一个API将协程置于不同的上下文中。
 
-Finally, we include a header file with the definition of the promise type:
+最后，包含了一个头文件，里面有promise类型的定义:
 
 \begin{cpp}
 #include "corotaskpromise.hpp" // definition of promise_type
 \end{cpp}
 
-This is usually done inside the declaration of the interface class or at least in the same header file. However, this way, we can split the details of this example over different files.
+通常在接口类的声明中完成，或者至少在同一个头文件中完成。但通过这种方式，可以将这个示例的细节拆分到不同的文件中。
 
-\mySamllsection{Implementing promise\_type}
+\mySamllsection{promise\_type的实现}
 
-The only missing piece is the definition of the promise type. Its purpose is to:
+唯一缺少的部分是promise类型的定义。其目的是:
 
 \begin{itemize}
 \item 
-Define how to create or get the return value of the coroutine (which usually includes creating the coroutine handle)
+定义如何创建或获取协程的返回值(通常包括创建协程句柄)
 
 \item 
-Decide whether the coroutine should suspend at its beginning or end
+决定协同程序是应该在其开始还是结束时挂起
 
 \item 
-Deal with values exchanged between the caller of the coroutine and the coroutine
+处理协程调用者与协程之间交换的值
 
 \item 
-Deal with unhandled exceptions
+处理未处理的异常
 \end{itemize}
 
-Here is a typical basic implementation of the promise type for CoroTask and its coroutine handle type CoroHdl:
+下面是CoroTask的promise类型，及其协程句柄类型CoroHdl的常规基本实现:
 
 \filename{coro/corotaskpromise.hpp}
 
@@ -748,25 +747,25 @@ struct CoroTask::promise_type {
 };
 \end{cpp}
 	
-We (have to) define the following members (using the typical order in which they are used):
+我们(必须)定义以下成员(使用它们的常规使用顺序):
 
 \begin{itemize}
 \item 
-get\_return\_object() is called to initialize the coroutine interface. It creates the object that is later returned to the caller of the coroutine. It is usually implemented as follows:
+调用get\_return\_object()来初始化协程接口。创建对象，该对象稍后返回给协程的调用者，其实现通常是这样的:
 \begin{itemize}
 \item 
-First, it creates the native coroutine handle for the promise that we call this function for:
+首先，它为我们调用此函数的promise创建原生协程句柄:
 
 \begin{cpp}
 coroHdl = CoroHdl::from_promise(*this)
 \end{cpp}
 
-The promise that we call this member function for is automatically created when we start the coroutine.
+调用该成员函数的promise是在启动协程时自动创建的。
 
-from\_promise() is a static member function that the class template std::coroutine\_handle<> provides for this purpose.
+from\_promise()是类模板std::coroutine\_handle<>为此目的提供的静态成员函数。
 
 \item 
-Then, we create the coroutine interface object, initializing it with the handle just created:
+然后，创建协程接口对象，用刚刚创建的句柄初始化它:
 
 \begin{cpp}
 coroIf = CoroTask{coroHdl}
@@ -774,7 +773,7 @@ coroIf = CoroTask{coroHdl}
 
 
 \item 
-Finally, we return the interface object:
+最后，返回接口对象:
 
 \begin{cpp}
 return coroIf
@@ -782,7 +781,7 @@ return coroIf
 
 \end{itemize}
 
-The implementation does this all in one statement:
+实现在一个语句中完成所有这些:
 
 \begin{cpp}
 auto get_return_object() {
@@ -790,7 +789,7 @@ auto get_return_object() {
 }
 \end{cpp}
 
-We could also return the coroutine handle here without explicitly creating the coroutine interface from it:
+也可以在这里返回协程句柄，而无需从中显式地创建协程接口:
 
 \begin{cpp}
 auto get_return_object() {
@@ -798,55 +797,55 @@ auto get_return_object() {
 }
 \end{cpp}
 
-Internally, the returned coroutine handle is then automatically converted by using it to initialize the coroutine interface. However, this approach is not recommended, because it does not work if the constructor of CoroTask is explicit and because it is not clear when the interface is created.
+在内部，返回的协程句柄然后通过使用它初始化协程接口来自动转换。但不建议使用这种方法，因为若CoroTask的构造函数是显式的，并且在创建接口时不清楚，则这种方法不起作用。
 
 \item 
-initial\_suspend() allows additional initial preparations and defines whether the coroutine should start eagerly or lazily:
+initial\_suspend()允许额外的初始准备，并定义协程是主动启动还是惰性启动:
 
 \begin{itemize}
 \item 
-Returning std::suspend\_never\{\} means starting eagerly. The coroutine starts immediately after its initialization with the first statements.
+返回std::suspend\_never\{\}表示立即启动，协程在用第一个语句初始化之后立即启动。
 
 \item 
-Returning std::suspend\_always\{\} means starting lazily. The coroutine is suspended immediately without executing any statement. It is processed with the resumption.
+返回std::suspend\_always\{\}表示惰性启动。协程立即挂起，不执行任何语句，与恢复一起处理。
 \end{itemize}
 
-In our example, we request immediate suspension.
+例子中，我们要求立即暂停。
 
 \item 
-return\_void() defines the reaction when reaching the end (or a co\_return; statement). it this member function is declared, the coroutine should never return a value. If the coroutine yields or returns data, you have to use another member function instead.
+return\_void()定义到达结束时的反应(或co\_return;声明)。若声明了这个成员函数，协程应该永远不会返回值。若协程产生或返回数据，则必须使用另一个成员函数。
 
 \item 
-unhandled\_exception() defines how to deal with exceptions not handled locally in the coroutine. Here, we specify that this results in an abnormal termination of the program. Other ways of dealing with exceptions are discussed later.
+unhandled\_exception()定义了如何处理协程中未本地处理的异常。这里，指定这会导致程序的异常终止。稍后将讨论处理异常的其他方法。
 
 \item
-final\_suspend() defines whether the coroutine should be finally suspended. Here, we specify that we want to do so, which is usually the right thing to do. Note that this member function has to guarantee not to throw exceptions. It should always return std::suspend\_always\{\}.
+final\_suspend()定义是否应该最终挂起协程。这里，指定要这样做，这通常是正确的做法。注意，这个成员函数必须保证不抛出异常，应该总是返回std::suspend\_always\{\}。
 \end{itemize}
 
-The purpose and use of these members of the promise type are discussed in detail later.
+这些promise类型成员的目的和使用将在后面详细讨论。
 
-\mySubsubsection{14.2.6}{Bootstrapping Interface, Handle, and Promise}
+\mySubsubsection{14.2.6}{引导接口、句柄和Promise}
 
-Let us recapitulate what we need to deal with a coroutine:
+来概括一下处理协例程需要做些什么:
 
 \begin{itemize}
 \item 
-For each coroutine we have a promise, which is created automatically when a coroutine is called.
+对于每个协程，都有一个promise，在协程调用时自动创建。
 
 \item 
-The coroutine state is stored in a coroutine handle. It has the type std::coroutine\_handle<PrmType>. That type provides the native API to resume a coroutine (and check whether it is at its end or destroy its memory).
+协程状态存储在协程句柄中，其的类型是std::coroutine\_handle<PrmType>。该类型提供了恢复协程的原生API(并检查它是否处于结束状态或销毁其内存)。
 
 \item 
-The coroutine interface is the typical place to bring everything together. It holds and manages the native coroutine handle, it is returned by the call of the coroutine, and it provides member functions to deal with the coroutine.
+协程接口是将所有内容组合在一起的场所。它保存并管理本机协程句柄，并由协程调用返回，且提供成员函数来处理协程。
 \end{itemize}
 
-There are various ways to declare the promise type and the coroutine handle (and the type of both). There is no obvious way to do it because the type of the coroutine handle needs the promise type and the definition of the promise type uses the coroutine handle.
+有多种方法可以声明promise类型和协程句柄(以及两者的类型)。没有很好的方法可以做到这一点，因为协程句柄的类型需要promise类型，而promise类型的定义使用协程句柄。
 
-In practice, the following options are usually used:
+实践中，通常可以这样做:
 
 \begin{itemize}
 \item 
-Declare the promise type, declare the type of the coroutine handle, and define the promise type:
+声明promise类型，声明协程句柄的类型，并定义promise类型:
 
 \begin{cpp}
 class CoroTask {
@@ -867,7 +866,7 @@ public:
 \end{cpp}
 
 \item 
-Define the promise type and declare the coroutine handle:
+定义promise类型并声明协程句柄:
 
 \begin{cpp}
 class CoroTask {
@@ -886,7 +885,7 @@ private:
 \end{cpp}
 
 \item 
-Define the promise type outside as a generic helper type:
+在外部定义promise类型为泛型辅助类型:
 
 \begin{cpp}
 template<typename CoroIf>
@@ -908,7 +907,7 @@ class CoroTask {
 \end{cpp}
 \end{itemize}
 
-Because the promise type is often interface-specific (having different/additional members), I usually use the following very condensed form:
+因为promise类型通常是特定于接口的(有不同或额外的成员)，通常使用以下简化的形式:
 
 \begin{cpp}
 class CoroTask {
@@ -930,23 +929,23 @@ public:
 };
 \end{cpp}
 
-Note that everything described so far is kind of the typical way to deal with coroutines. There is more flexibility designed into the coroutine library. For example:
+请注意，目前为止描述的所有内容都是处理协程的常规方式。协程库设计了更多的灵活性。例如:
 
 \begin{itemize}
 \item 
-You can store or manage coroutine interfaces in a container or scheduler.
+可以在容器或调度器中存储或管理协同程序接口。
 
 \item 
-You can even skip the coroutine interface completely. However, this is an option that is very rarely used.
+甚至可以完全跳过协程接口，这是一个很少使用的选项。
 \end{itemize}
 
-\mySubsubsection{14.2.7}{Memory Management}
+\mySubsubsection{14.2.7}{内存管理}
 
-Coroutines have a state that is used in different contexts. For this purpose, a coroutine handle usually stores the state of a coroutine in heap memory. The heap memory allocation can be optimized away or pragmatically changed.
+协程具有在不同上下文中使用的状态，因此协程句柄通常将协程的状态存储在堆内存中。堆内存分配可以优化，也可以进行实际更改。
 
-\mySamllsection{Calling destroy()}
+\mySamllsection{调用destroy()}
 
-To make coroutine handles cheap, there is no smart handling of this memory. Coroutine handles just point to the memory when initialized until destroy() is called. Therefore, you should usually call destroy() explicitly when the coroutine interface is destroyed:
+为了使协程处理的成本更低，没有智能处理此内存的方法。协程句柄在初始化时只指向内存，直到调用destroy()，所以当协程接口被销毁时，应该显式调用destroy():
 
 \begin{cpp}
 class CoroTask {
@@ -963,11 +962,11 @@ class CoroTask {
 };
 \end{cpp}
 
-\mySamllsection{Copying and Moving Coroutines}
+\mySamllsection{复制和移动协程}
 
-The cheap/naive implementation of coroutine handles also makes it necessary to deal with copying and moving. By default, copying the coroutine interface would copy the coroutine handle, which would have the effect that two coroutine interfaces/handles share the same coroutine. This, of course, introduces risks when one coroutine handle brings the coroutine into a state that the other handle is not aware of. Moving coroutine objects has the same effect, because by default, pointers are copied with a move.
+协程句柄的低成本/原生的实现也使得有必要处理复制和移动。默认情况下，复制协程接口将复制协程句柄，这将产生两个协程接口/句柄共享同一个协程的效果。当然，当一个协程句柄将协程带入另一个句柄不知道的状态时，会带来风险。移动协程对象具有相同的效果，因为默认情况下，指针是通过移动复制的。
 
-To reduce the danger, you should be careful about providing copy or move semantics for coroutines. The easiest approach is to disable copying and moving:
+为了减少这种危险，应该小心地为协程提供复制或移动语义。最简单的方法是禁用复制和移动:
 
 \begin{cpp}
 class CoroTask {
@@ -979,7 +978,7 @@ class CoroTask {
 };
 \end{cpp}
 
-However, this then means that you cannot move coroutines around (such as storing them in a container). Therefore, it might make sense to support move semantics. However, you should ensure that the movedfrom object no longer refers to the coroutine and that a coroutine that gets a new value destroys the data for the old one:
+然而，不能移动协程(例如将它们存储在容器中)。因此，支持移动语义可能是有意义的，但应该确保已移动的对象不再引用协程，并且获得新值的协程会破坏旧值的数据:
 
 \begin{cpp}
 class CoroTask {
@@ -1003,7 +1002,7 @@ class CoroTask {
 };
 \end{cpp}
 
-Strictly speaking, you do not need std::move() for the handle here, but it does not hurt and reminds you that we delegate the move semantics to the member.
+严格地说，这里的句柄不需要std::move()，但它不会造成伤害，并提醒开发者将移动语义委托给成员。
 
 
 

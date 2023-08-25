@@ -1,19 +1,19 @@
 
-After introducing a first example using co\_await, we should also introduce the other two keywords for coroutines:
+介绍了使用co\_await的示例之后，还应该介绍协程的其他两个关键字:
 
 \begin{itemize}
 \item 
-co\_yield allows coroutines to yield a value each time they are suspended.
+co\_yield允许协程在每次挂起时产生一个值。
 
 \item 
-co\_return allows coroutines to return a value at their end.
+co\_return允许协程在其结束时返回一个值。
 \end{itemize}
 
-\mySubsubsection{14.3.1}{Using co\_yield}
+\mySubsubsection{14.3.1}{使用co\_yield}
 
-By using co\_yield, a coroutine can yield intermediate results when it is suspended.
+通过使用co\_yield，协程可以在挂起时产生中间结果。
 
-An obvious example is a coroutine that “generates” values. As a variation of our example, we could loop over some values up to max and yield them to the caller of the coroutine instead of only printing them. For this purpose, the coroutine looks as follows:
+一个明显的例子是“生成”值的协程。作为示例的一个变体，可以循环一些值直到最大值，并将它们输出给协程的调用者，而不是仅仅输出它们。为此，协程看起来如下所示:
 
 \filename{coro/coyield.hpp}
 
@@ -36,13 +36,13 @@ CoroGen coro(int max)
 }
 \end{cpp}
 
-By using co\_yield, the coroutine yields intermediate results. When the coroutine reaches co\_yield, it suspends the coroutine, providing the value of the expression behind co\_yield:
+通过使用co\_yield，协程产生中间结果。当协程到达co\_yield时，会挂起协程，并提供co\_yield后面的表达式的值:
 
 \begin{cpp}
 co_yield val; // calls yield_value(val) on promise
 \end{cpp}
 
-The coroutine frame maps this to a call of yield\_value() for the promise of the coroutine, which can define how to handle this intermediate result. In our case, we store the value in a member of the promise, which makes it available in the coroutine interface:
+协程帧将此映射到对yield\_value()的调用，用于协程的承诺，可以定义如何处理此中间结果。我们的例子中，将值存储在promise的成员中，这使得它可以在协程接口中使用:
 
 \begin{cpp}
 struct promise_type {
@@ -56,9 +56,9 @@ struct promise_type {
 };
 \end{cpp}
 
-After storing the value in the promise, we return std::suspend\_always\{\}, which really suspends the coroutine. We could program different behavior here, so that the coroutine (conditionally) continues.
+将值存储在promise中之后，返回std::suspend\_always\{\}，这实际上是挂起协程。可以在这里编写不同的行为，以便协同程序(有条件地)继续。
 
-The coroutine can be used as follows:
+协程可以这样使用:
 
 \filename{coro/coyield.hpp}
 
@@ -82,9 +82,9 @@ int main()
 }
 \end{cpp}
 
-Again, by calling coro(3) we initialize the coroutine to count until 3. Whenever we call resume() for the returned coroutine interface, the coroutine “computes” and yields the next value.
+同样，通过调用coro(3)，初始化协程计数到3。每当我们为返回的协程接口调用resume()时，协程就会“计算”并产生下一个值。
 
-However, resume() does not return the yielded value (it still returns whether it makes sense to resume the coroutine again). To access the next value, getValue() is provided and used. Therefore, the program has the following output:
+然而，resume()并不返回产生的值(仍然返回是否有必要再次恢复协程)。要访问下一个值，提供并使用getValue()，所以程序有如下输出:
 
 \begin{shell}
 coro() started
@@ -99,7 +99,7 @@ coro() suspended with 3
 coro() done
 \end{shell}
 
-The coroutine interface has to deal with the yielded values and provides a slightly different API for the caller. Therefore, we use a different type name: CoroGen. The name demonstrates that instead of performing a task, which we suspend from time to time, we have a coroutine that generates values with each suspension. The type CoroGen might be defined as follows:
+协程接口必须处理产生的值，并为调用者提供稍微不同的API，所以使用不同的类型名称:CoroGen。这个名字表明，没有执行任务，而是有一个协程，在每次挂起时生成值。CoroGen类型可以定义如下:
 
 \filename{coro/corogen.hpp}
 
@@ -156,14 +156,14 @@ public:
 };
 \end{cpp}
 
-In general, the definition of the coroutine interface used here follows the general principles of coroutine interfaces. Two things differ:
+通常，这里使用的协程接口的定义遵循协程接口的一般原则。有两点不同:
 
 \begin{itemize}
 \item 
-The promise provides the member yield\_value(), which is called whenever co\_yield is reached.
+promise提供了成员yield\_value()，在到达co\_yield时调用。
 
 \item
-For the external API of the coroutine interface, CoroGen provides getValue(). It returns the last yielded value stored in the promise:
+对于协程接口的外部API，CoroGen提供了getValue()，其返回存储在promise中的最后一个生成值:
 
 \begin{cpp}
 class CoroGen {
@@ -176,9 +176,9 @@ class CoroGen {
 \end{cpp}
 \end{itemize}
 
-\mySamllsection{Iterating Over Values That a Coroutine Yields}
+\mySamllsection{迭代协程产生的值}
 
-We could also use a coroutine interface that can be used like a range (providing an API to iterate over the values that suspensions yield):
+也可以使用一个协程接口，像一个范围一样使用(提供一个API来迭代挂起产生的值):
 
 \filename{coro/cororange.cpp}
 
@@ -201,7 +201,7 @@ int main()
 }
 \end{cpp}
 
-We only need a slightly different generator returned by the coroutine (see coro/cororange.hpp):
+只需要协程返回一个稍微不同的生成器(参见coro/cororange.hpp):
 
 \begin{cpp}
 Generator<int> coro(int max)
@@ -211,7 +211,7 @@ Generator<int> coro(int max)
 }
 \end{cpp}
 
-As you can see, we use a generic coroutine interface for generator values of a passed type (int in this case). A very simple implementation (which shows the point but has some flaws) might look as follows:
+如您所见，为传递的类型(本例中为int)的生成器值使用了泛型协程接口。一个非常简单的实现(它显示了这一点，但有一些缺陷)可能如下所示:
 
 \filename{coro/generator.hpp}
 
@@ -293,29 +293,29 @@ public:
 };
 \end{cpp}
 
-The key approach is that the coroutine interface provides the members begin() and end() and an iterator type iterator to iterate over the values:
+关键的方法是协程接口提供了成员begin()和end()，以及迭代器来迭代值:
 
 \begin{itemize}
 \item 
-begin() yields the iterator after resuming for the first value. The iterator stores the coroutine handle internally so that it knows its state.
+begin()在恢复第一个值后生成迭代器。迭代器在内部存储协程句柄，以便知道协程的状态。
 
 \item 
-operator++() of the iterator then yields the next value.
+operator++() 迭代器会返回下一个值。
 
 \item 
-end() yields a state that represents the end of the range. Its hdl is nullptr. This is also the state an iterator gets when there is no more value.
+end() 生成一个表示范围结束的状态，它的hdl是null。这也是迭代器在没有更多值时的状态。
 
 \item 
-operator==() of the iterator is default generated just comparing the state by comparing the handles of two iterators.
+operator==() 默认通过比较两个迭代器的句柄来比较状态。
 \end{itemize}
 
-C++23 will probably provide such a coroutine interface in its standard library as std::generator<> with a far more sophisticated and robust API (see \url{http://wg21.link/p2502}).
+C++23可能会在其标准库中提供这样一个协程接口，如std::generator<>，其具有更加复杂和健壮的API(参见\url{http://wg21.link/p2502})。
 
-\mySubsubsection{14.3.2}{Using co\_return}
+\mySubsubsection{14.3.2}{使用co\_return}
 
-By using co\_return, a coroutine can return a result to the caller at its end.
+通过使用co\_return，协程可以在其结束时向调用者返回结果。
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{coro/coreturn.cpp}
 
@@ -354,15 +354,15 @@ int main()
 }
 \end{cpp}
 
-In this program, main() starts a coroutine average(), which iterates over the elements of the passed collection and adds their values to an initial sum. After processing each element, the coroutine is suspended.
+这个程序中，main()启动协程average()，遍历传递的集合中的元素，并将它们的值添加到初始和中。处理完每个元素后，协程挂起。
 
-At the end, the coroutine returns the average by dividing the sum by the number of elements.
+最后，协例程通过将总和除以元素数量返回平均值。
 
-Note that you need co\_return to return the result of the coroutine. Using return is not allowed.
+注意，需要co\_return来返回协程的结果，不允许使用return。
 
-The coroutine interface is defined in the class ResultTask, which is parameterized for the type of the return value. This interface provides resume() to resume the coroutine whenever it is suspended. In addition, it provides getResult() to ask for the return value of the coroutine after it is done.
+协程接口是在ResultTask类中定义的，该类是根据返回值的类型参数化的。这个接口提供resume()，以便在协程挂起时恢复它。此外，还提供了getResult()来请求协程完成后的返回值。
 
-The coroutine interface ResultTask<> looks as follows:
+协同程序接口ResultTask<>如下所示:
 
 \filename{coro/resulttask.hpp}
 
@@ -417,9 +417,9 @@ public:
 };
 \end{cpp}
 
-Again, the definition follows the general principles of coroutine interfaces.
+同样，该定义遵循协程接口的一般原则。
 
-However, this time we have support for a return value. Therefore, in the promise type, the customization point return\_void() is no longer provided. Instead, return\_value() is provided, which is called when the coroutine reaches the co\_return expression:
+但这次我们支持返回值，所以在promise类型中，不再提供自定义点return\_void()。相反，提供了return\_value()，当协程到达co\_return表达式时调用:
 
 \begin{cpp}
 template<typename T>
@@ -436,7 +436,7 @@ class ResultTask {
 };
 \end{cpp}
 
-The coroutine interface then just returns this value whenever getResult() is called:
+当调用getResult()时，协程接口只返回这个值:
 
 \begin{cpp}
 template<typename T>
@@ -449,9 +449,9 @@ class ResultTask {
 };
 \end{cpp}
 
-\mySamllsection{return\_void() and return\_value()}
+\mySamllsection{return\_void() 和 return\_value()}
 
-Note that it is undefined behavior if coroutines are implemented in a way that they sometimes may and sometimes may not return a value. This coroutine is not valid:
+请注意，若协程以有时可能返回值，有时可能不返回值的方式实现，则这是未定义的行为。则这个协程是无效的:
 
 \begin{cpp}
 ResultTask<int> coroUB( ... )
