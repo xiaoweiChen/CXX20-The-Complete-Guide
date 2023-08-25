@@ -1,33 +1,31 @@
-While ordinary functions (or procedures) are called and then run until their end (or until a return statement is reached or an exception is thrown), coroutines are functions that can run in multiple steps (see Figure 14.1).
+调用普通函数(或过程)时，然后运行到它们的结束(或直到到达返回语句或抛出异常)，而协程是可以分多个步骤运行的函数(参见图14.1)。
 
-At certain moments, you can suspend a coroutine, which means that the function pauses its computation until it is resumed. You might suspend it because the function has to wait for something, there are other (more important) things to do, or you have an intermediate result to yield to the caller.
+某些时刻，可以挂起一个协程，所以该函数暂停其计算，直到恢复。挂起可能是因为函数必须等待某些东西，有其他(更重要的)事情要做，或者有一个中间结果要给调用者。
 
-Starting a coroutine therefore means starting another function until a part of it is done. The calling function and the coroutine both run switching back and forth between their two paths of execution. Note that both functions do not run in parallel. Instead, we play a little ping-pong with the control flows:
+因此，启动协程意味着启动另一个函数，直到它的一部分完成。调用函数和协程都在它们的两条执行路径之间来回切换。注意，这两个函数不是并行运行的，我们用控制流来打乒乓球:
 
 \begin{itemize}
 \item 
-A function can decide to start or resume its current control flow by starting or continuing with the statements of the coroutine.
+函数可以通过开始或继续协程的语句来决定启动或恢复其当前控制流。
 
 \item 
-When a coroutine then runs, the coroutine can decide to suspend or end its execution, which means that the function that started or resumed the coroutine continues with its control flow.
+当协程运行时，协程可以决定挂起或结束其执行，启动或恢复协程的函数将继续执行其控制流。
 \end{itemize}
 
-n the most simplest form of a coroutine, both the main control flow and the control flow of the coroutine run in the same thread. We do not have to use multi-threading and we do not have to deal with concurrent access. However, it is possible to run coroutines in different threads. You can even resume a coroutine on a different thread to where it was previously suspended. Coroutines are an orthogonal feature which, however, could be used together with multiple threads.
+协程的最简单形式中，主控制流和协程的控制流都在同一个线程中运行。不需要使用多线程，也不需要处理并发访问，但可以在不同的线程中运行协程。甚至可以在不同的线程上将协程恢复到先前挂起的位置。协程有一种正交特性，但其可以与多个线程一起使用。甚至可以在不同的线程上将协程恢复到先前挂起的位置。
 
 \begin{center}
-\includegraphics[width=0.6\textwidth]{content/chapter14/images/1.png}\\
-Figure 14.1. Coroutines
+\includegraphics[width=0.4\textwidth]{content/chapter14/images/1.png}\\
+图14.1 协程
 \end{center}
 
-different thread to where it was previously suspended. Coroutines are an orthogonal feature which, however, could be used together with multiple threads.
+实际上，使用协程就像在后台有一个函数，你可以不时地启动和继续。然而，由于协程的生命周期超出了嵌套作用域，因此协程也是一个将其状态存储在某些内存中并提供处理状态的API的对象。
 
-Effectively, using a coroutine is like having a function in the background that you start and continue from time to time. However, because the lifetime of a coroutine goes beyond nested scopes, a coroutine is also an object that stores its state in some memory and provides an API for dealing with it.
-
-There are a few basic aspects in C++ regarding coroutines:
+C++中有几个关于协程的基础工具:
 
 \begin{itemize}
 \item 
-Coroutines are defined implicitly just by using one of the following keywords in a function:
+只需在函数中使用以下关键字之一即可隐式定义协程:
 
 \begin{itemize}
 \item 
@@ -40,15 +38,15 @@ co\_yield
 co\_return
 \end{itemize}
 
-In case none of these keywords is necessary inside a coroutine, you have to explicitly write a co\_return; statement at the end.
+若这些关键字在协程中都不需要，则必须显式地使用co\_return;语句。
 
 \item 
-A coroutine usually returns an object that serves as the coroutine interface for the caller. Depending on the purpose and use of the coroutine, that object can represent a running task that suspends or switches context from time to time, a generator that yields values from time to time, or a factory that returns one or more values lazily and on demand.
+协程通常返回一个对象，作为调用者的协程接口。根据协程的目的和用途，该对象可以表示一个不时挂起或切换上下文的正在运行的任务，不时产生值的生成器，或者一个按需惰性地返回一个或多个值的工厂。
 
 \item 
-Coroutines are stackless. You cannot suspend an inner coroutine that was called within an outer coroutine without suspending the outer coroutine. You can only suspend the outer coroutine as a whole.
+协程无堆栈。不挂起外部协程的情况下，无法挂起在外部协程中调用的内部协程，只能将外部协程作为一个整体挂起。
 
-When a coroutine is suspended, the state of the coroutine as a whole is stored in an object separately from the stack so that it can be resumed in a totally different context (in a different call stack, in another thread, etc.).
+当协程挂起时，协程的状态作为一个整体被存储在与堆栈分开的对象中，以便它可以在完全不同的上下文中(在不同的调用堆栈中，在另一个线程中等)恢复。
 \end{itemize}
 
 

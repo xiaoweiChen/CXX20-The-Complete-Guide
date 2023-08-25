@@ -1,19 +1,19 @@
 
-Two new types provide new mechanisms for synchronizing asynchronous computation/processing of multiple threads:
+两个新的类型为多线程同步异步计算/处理提供了新的机制:
 
 \begin{itemize}
 \item 
-Latches allow you to have a one-time synchronization where threads can wait for multiple tasks to finish.
+锁存器可以进行一次性同步，线程可以等待多个任务完成。
 
 \item 
-Barriers allow you to have a repeated synchronization of multiple threads where you have to react when they all have done their current/next processing.
+栅栏对多个线程进行重复同步，当其都完成当前/下一个处理时，必须进行响应。
 \end{itemize}
 
-\mySubsubsection{13.1.1}{Latches}
+\mySubsubsection{13.1.1}{锁存器}
 
-A latch is a new synchronization mechanism for concurrent execution that supports a single-use asynchronous countdown. Starting with an initial integral value, various threads can atomically count this value down to zero. The moment the counter reaches zero, all threads waiting for this countdown continue.
+锁存器是用于并发执行的一种新的同步机制，支持单次使用异步倒计时。从初始整数值开始，各种线程可以自动将该值计数到零。当计数器达到零时，等待此倒计时的所有线程继续。
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{lib/latch.cpp}
 
@@ -65,32 +65,32 @@ int main()
 }
 \end{cpp}
 
-In this example, we start two threads (using std::jthread) to perform a couple of tasks that each process a character of the array tags. Thus, the size of tags defines the number of tasks. The main thread blocks until all tasks are done. For this:
+本例中，我们启动两个线程(使用std::jthread)来执行两个任务，每个任务处理数组标记的一个字符。因此，标签的大小决定了任务的数量。主线程阻塞，直到所有任务完成。:
 
 \begin{itemize}
 \item 
-We initialize a latch with the number of tags/tasks:
+我们用标签/任务的数量初始化一个锁存器:
 
 \begin{cpp}
 std::latch allDone{tags.size()};
 \end{cpp}
 
 \item 
-We let each task decrement the counter when it is done:
+每个任务完成后减少计数器:
 
 \begin{cpp}
 allDone.count_down();
 \end{cpp}
 
 \item 
-We let the main thread wait until all tasks are done (the counter is zero):
+主线程等待直到所有任务完成(计数器为零):
 
 \begin{cpp}
 allDone.wait();
 \end{cpp}
 \end{itemize}
 
-The output of the program might look as follows:
+程序的输出可能如下所示:
 
 \begin{shell}
 ?
@@ -100,11 +100,11 @@ waiting until all tasks are done
 all tasks done
 \end{shell}
 
-Note that the main thread should not assume that when the tasks are done, all threads are done. The threads might still do other things and the system might still clean them up. To wait until all threads are done, you have to call join() for both threads.
+注意，主线程不应该假设任务完成后，所有线程都完成了。线程可能仍然会做其他事情，系统可能仍然会清理它们。要等到所有线程都完成，必须为两个线程调用join()。
 
-You can also use latches to synchronize multiple threads at a specific point and then continue. However, note that you can do this only once with each latch. One application of this is to ensure (as well as possible) that multiple threads start their actual work together even when starting and initializing the threads might take some time.
+还可以使用锁存器在特定点同步多个线程，然后继续。但请注意，每个锁存器只能执行一次此操作。这样做的一个应用是确保(尽可能地)多个线程一起启动它们的实际工作，即使启动和初始化线程可能需要一些时间。
 
-Consider the following example:
+看下下面的例子:
 
 
 \filename{lib/latch.cpp}
@@ -146,18 +146,18 @@ int main()
 }
 \end{cpp}
 
-We start numThreads threads (using std::jthread), which take their time getting initialized and started. To allow them start their functionality together, we use a latch to block until all threads started have been initialized and started. For this:
+我们启动numThreads线程(使用std::jthread)，这些线程需要一些时间来初始化和启动。为了让它们一起启动它们的功能，这里使用一个锁存器来阻塞，直到所有启动的线程都被初始化并启动为止。:
 
 \begin{itemize}
 \item 
-We initialize the latch with the number of threads:
+我们用线程数量初始化锁存器:
 
 \begin{cpp}
 std::latch allReady{numThreads};
 \end{cpp}
 
 \item
-We let each thread decrement the counter to wait until the initialization of all threads is done:
+让每个线程递减计数器，直到所有线程的初始化完成:
 
 \begin{cpp}
 allReady.arrive_and_wait(); // count_down() and wait()
@@ -165,53 +165,53 @@ allReady.arrive_and_wait(); // count_down() and wait()
 
 \end{itemize}
 
-The output of the program might look as follows:
+程序的输出可能如下所示:
 
 \begin{shell}
 86753421098675342019901425376886735241907863524910768352491942538679453876945876957869786789899
 \end{shell}
 
-You can see that all 10 threads (each printing its index) start more or less together.
+可以看到，10个线程(每个线程都打印其索引)或多或少是一起启动的。
 
-Without the latch, the output might look as follows:
+若没有锁存器，输出可能如下所示:
 
 \begin{shell}
 00101021021321324132435243524365463547635746854768547968579685796587968769876987987987989898999
 \end{shell}
 
-Here, the threads started early are already running while the latter have not been started yet.
+这里，早启动的线程已经在运行，而之后的可能还没有启动。
 
-\mySamllsection{Latches in Detail}
+\mySamllsection{锁存器的详情}
 
-The class std::latch is declared in the header file <latch>. Table Operations of objects of class latch lists the API of std::latch.
+类std::latch在头文件<latch>中声明，“latch类对象的操作”表列出了std::latch的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}      & \textbf{Effect}                              \\ \hline
+\textbf{操作}      & \textbf{效果}                              \\ \hline
 \endfirsthead
 %
 \endhead
 %
-latch l\{counter\} & Creates a latch with counter as the starting value for the countdown \\ \hline
-l.count\_down()    & Atomically decrements the counter (if not 0 yet)                     \\ \hline
-l.count\_down(val)      & Atomically decrements the counter by val     \\ \hline
-l.wait()                & Blocks unitl the counter of the latch is 0   \\ \hline
-l.try\_wait()           & Yields whether the counter of the latch is 0 \\ \hline
-l.arrive\_and\_wait()   & Calls count\_down() and wait()               \\ \hline
-l.arrive\_and wait(val) & Calls count\_down(val) and wait()            \\ \hline
-max()              & Static function that yields the maximum possible value for counter   \\ \hline
+latch l\{counter\} & 创建一个锁存器，将计数器作为倒计时的起始值 \\ \hline
+l.count\_down()    & 自动减少计数器(若不为0)                     \\ \hline
+l.count\_down(val)      & 计数器按val自动递减     \\ \hline
+l.wait()                & 阻塞直到锁存器的计数器为0   \\ \hline
+l.try\_wait()           & 生成锁存器的计数器是否为0 \\ \hline
+l.arrive\_and\_wait()   & 调用count\_down()和wait()               \\ \hline
+l.arrive\_and wait(val) & 调用count\_down(val)和wait()            \\ \hline
+max()              & 产生counter最大可能值的静态函数   \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 13.1. Operations of objects of class latch
+表13.1 类latch对象的操作
 \end{center}
 
-Note that you cannot copy or move (assign) a latch.
+注意，不能复制或移动(分配)锁存器。
 
-Note also that passing the size of a container (except std::array) as the initial value of the counter is an error. The constructor takes a std::ptrdiff\_t, which is signed, so that you get the following behavior:
+还要注意，将容器的大小(std::array除外)作为计数器的初始值传递是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会得到以下结果:
 
 \begin{cpp}
 std::latch l1{10}; // OK
@@ -225,13 +225,13 @@ std::latch l6{int(coll.size())}; // OK
 std::latch l7{ssize(coll)}; // OK (see std::ssize())
 \end{cpp}
 
-\mySubsubsection{13.1.2}{Barriers}
+\mySubsubsection{13.1.2}{栅栏}
 
-A barrier is a new synchronization mechanism for concurrent execution that allows you to synchronize multiple asynchronous tasks multiple times. After setting an initial count, multiple threads can count it down and wait until the counter reaches zero. However, in contrast to latches, when zero is reached, an (optional) callback is called and the counter reinitializes to the initial count again.
+栅栏是用于并发执行的新的同步机制，允许多次同步多个异步任务。设置初始计数后，多个线程可以对其进行计数，并等待计数器达到零。与锁存器相比，当达到零时，将调用一个(可选的)回调，计数器将重新初始化为初始计数。
 
-A barrier is useful when multiple threads repeatedly compute/perform something together. Whenever all threads have done their task, the optional callback can process the result or new state and after that, the asynchronous computation/processing can continue with the next round.
+当多个线程一起重复计算/执行某些事情时，屏障是有用的。当所有线程都完成了它们的任务时，可选回调可以处理结果或新状态，之后，异步计算/处理可以继续进行下一轮。
 
-As an example, consider that we repeatedly use multiple threads to compute the square root of multiple values:
+例如，重复使用多个线程来计算多个值的平方根:
 
 \filename{lib/barrier.cpp}
 
@@ -279,7 +279,7 @@ int main()
 }
 \end{cpp}
 
-After declaring an array of floating-point values, we define a function to print them out (using std::format() for formatted output):
+声明了一个浮点值数组之后，定义一个函数来输出它们(使用std::format()来输出格式化的输出):
 
 \begin{cpp}
 // initialize and print a collection of floating-point values:
@@ -295,23 +295,23 @@ auto printValues = [&values] () noexcept{
 };
 \end{cpp}
 
-Note that the callback has to be declared with noexcept.
+注意，回调必须用noexcept声明。
 
-Our goal is to use multiple threads so that each thread deals with one value. In this case, we repeatedly compute the square roots of the values. For this:
+我们的目标是使用多个线程，以便每个线程处理一个值，所以会重复计算这些值的平方根。因此:
 
 \begin{itemize}
 \item 
-We initialize barrier allDone to print all values whenever all threads have done their next computation: the number of tags/tasks:
+初始化栅栏allDone，以便在所有线程完成下一个计算时打印所有值:标签/任务的数量:
 
 \begin{cpp}
 std::barrier allDone{int(values.size()), // initial value of the counter
 					 printValues}; // callback to call whenever the counter is 0
 \end{cpp}
 
-Please note that the constructor should take a signed integral value. Otherwise, the code might not compile.
+请注意，构造函数应该接受带符号整数值。否则，代码可能无法编译。
 
 \item 
-In the loop, each thread decrements the counter after its computation and waits until the counter reaches zero (i.e., all other threads also have signaled that they are done):
+在循环中，每个线程在完成计算后减少计数器，并等待计数器为零(即所有其他线程也已经发出信号，表示已经完成):
 
 \begin{cpp}
 ..
@@ -319,12 +319,12 @@ allDone.arrive_and_wait();
 \end{cpp}
 
 \item 
-When the counter reaches zero, the callback is called to print the result.
+当计数器达到零时，将调用回调函数来打印结果。
 
-Note that the callback is called by the thread that finally decremented the counter to zero. This means that in the loop, the callback is called by different threads.
+请注意，回调是由最终将计数器减为零的线程调用的。所以在循环中，回调由不同的线程调用。
 \end{itemize}
 
-The output of the program might look as follows:
+程序的输出可能如下所示:
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -342,9 +342,9 @@ The output of the program might look as follows:
 1 & 1.0219 & 1.0349 & 1.0443 & 1.0516 & 1.0576 & 1.0627 & 1.0671
 \end{longtable}
 
-The API of barriers also provide a function to drop threads from this mechanism. This is something you need, for example, to avoid deadlocks when the loop runs until a stop has been signaled.
+栅栏的API还提供了从该机制中删除线程的函数，例如：为了避免死锁，在循环运行时发出停止信号。
 
-The code for the threads started might then look as follows:
+启动的线程的代码可以这样写:
 
 \begin{cpp}
 // initialize a thread for each value to compute its square root in a loop:
@@ -364,45 +364,45 @@ for (std::size_t idx = 0; idx < values.size(); ++idx) {
 }
 \end{cpp}
 
-The lambda called by each thread now takes a stop token to react when a stop has been requested (explicitly or by calling the destructor for the thread). If the main thread signals the threads to stop the computing (e.g., by calling threads.clear()), it is important that each thread drops itself from the barrier:
+每个线程调用的Lambda现在接受一个停止令牌，以便在请求停止时做出反应(显式地或通过调用线程的析构函数)。若主线程通知线程停止计算(例如，通过调用threads.clear())，重要的是每个线程会将自己从栅栏中删除:
 
 \begin{cpp}
 allDone.arrive_and_drop();
 \end{cpp}
 
-This call counts down the counter and ensures that the next initial value for the value is decremented. In the next round (the other threads might still be running) the barrier will no longer wait for the dropped thread.
+该调用对计数器进行计数，并确保该值的下一个初始值递减。在下一轮(其他线程可能仍在运行)中，栅栏将不再等待被丢弃的线程。
 
-See lib/barrierstop.cpp for a complete example.
+参见lib/barrierstop.cpp获得完整的示例。
 
-\mySamllsection{Barriers in Detail}
+\mySamllsection{栅栏的详情}
 
-The class std::barrier is declared in the header file <barrier>. Table Operations of objects of class barrier lists the API of std::barrier.
+类std::barrier在头文件<barrier>中声明。“类barrier对象的操作”表列出了std::barrier的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                 \\ \hline
+\textbf{操作} & \textbf{效果}                                                 \\ \hline
 \endfirsthead
 %
 \endhead
 %
-barrier b\{num\}   & Creates a barrier for num asynchronous tasks                    \\ \hline
-barrier b\{num, cb\}  & Creates a barrier for num asynchronous tasks and cb as callback                                                \\ \hline
-b.arrive()         & Marks one task as done and yields an arrival token              \\ \hline
-b.arrive(val)      & Marks val tasks as done and yields an arrival token             \\ \hline
-b.wait(arrivalToken)  & Blocks unitl all tasks have been done and the callback has been called(if there is one)                        \\ \hline
-b.arrive\_and\_wait() & Marks one task as done and blocks until all tasks have been done and the callback have called(if there is one) \\ \hline
-b.arrive\_and\_drop() & Marks one task as done and decrements the number of tasks to repeatedly perform                                \\ \hline
-max()              & Static function that yiields the maximun possible value for num \\ \hline
+barrier b\{num\}   & 为num异步任务创建栅栏                    \\ \hline
+barrier b\{num, cb\}  & 为num异步任务和cb作为回调创建栅栏                                                \\ \hline
+b.arrive()         & 将任务标记为已完成，并产生到达令牌              \\ \hline
+b.arrive(val)      & 将所有任务标记为已完成，并产生到达令牌             \\ \hline
+b.wait(arrivalToken)  & 阻塞，直到所有的任务都已经完成，并回调已调用(若有的话)                        \\ \hline
+b.arrive\_and\_wait() & 将一个任务标记为完成并阻塞，直到所有任务都完成，并回调已调用(若有的话) \\ \hline
+b.arrive\_and\_drop() & 将一个任务标记为已完成，并减少重复执行的任务数量                                \\ \hline
+max()              & 生成num的最大可能值的静态函数 \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 13.2. Operations of objects of class barrier
+表13.2 类barrier对象的操作
 \end{center}
 
-std::barrier<> is a class template with the type of the callback as a template parameter. Usually, the type is deduced by class template argument deduction:
+std::barrier<>是一个类模板，其回调类型作为模板参数。通常，类型是通过类模板参数推导出来的:
 
 \begin{cpp}
 void callback() noexcept; // forward declaration
@@ -410,25 +410,23 @@ void callback() noexcept; // forward declaration
 std::barrier b{6, callback}; // deduces std::barrier<decltype(callback)>
 \end{cpp}
 
-Note that the C++ standard requires that callbacks for barriers guarantee not to throw. Therefore, to be portable, you have to declare the function or lambda with noexcept. If no callback is passed, an implementation-specific type is used, representing an operation that has no effects.
-
-The call
+注意，C++标准要求栅栏的回调保证不会抛出异常。为了便于移植，必须用noexcept声明函数或Lambda。若没有传递回调，则使用特定于实现的类型，表示没有效果的操作。
 
 \begin{cpp}
 l.arrive_and_wait();
 \end{cpp}
 
-is equivalent to
+等价于
 
 \begin{cpp}
 l.wait(l.arrive());
 \end{cpp}
 
-This means that the arrive() function returns an arrival token of type std::barrier::arrival\_token, which ensures that the barrier knows which of the threads to wait for. Otherwise, it cannot handle arrive\_and\_drop() correctly.
+也就是说，arrive()函数会返回一个类型为std::barrier::arrival\_token的到达令牌，以确保barrier知道要等待哪个线程。否则，将无法正确处理arrive\_and\_drop()。
 
-Note that you cannot copy or move (assign) a barrier.
+注意，不能复制或移动(分配)栅栏。
 
-Note also that passing the size of a container (except std::array) as an initial value of the counter is an error. The constructor takes a std::ptrdiff\_t, which is signed, so that you get the following behavior:
+还要注意，将容器的大小(std::array除外)作为计数器的初始值传递是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会看到以下行为:
 
 \begin{cpp}
 std::barrier b1{10, cb}; // OK
@@ -442,7 +440,7 @@ std::barrier b5{int(coll.size()), cb}; // OK
 std::barrier b6{std::ssize(coll), cb}; // OK (see std::ssize())
 \end{cpp}
 
-The function std::ssize() was introduced in C++20.
+函数std::ssize()是在C++20中加入的。
 
 
 

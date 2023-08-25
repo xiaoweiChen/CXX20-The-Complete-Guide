@@ -1,21 +1,21 @@
 
-C++20 introduced new types for dealing with semaphores. Semaphores are lightweight synchronization primitives that allow you to synchronize or restrict access to one or a group of resources.
+C++20引入了处理信号量的新类型。信号量是轻量级同步原语，允许同步或限制对一个或一组资源的访问。
 
-You can use them like mutexes, with the benefit that the threads granting access to a resource do not necessarily have to be the same threads that acquired the access to the resource. You can also use them to limit the availability of resources, such as enabling and disabling the use of threads in a thread pool.
+可以像使用互斥锁一样使用它们，这样做的好处是，授予对资源访问权限的线程不必是获得对资源访问权限的线程。还可以使用它们来限制资源的可用性，例如启用和禁用线程池中线程的使用。
 
-There are two semaphore types provided by the C++ standard library:
+C++标准库提供了两种信号量类型:
 
 \begin{itemize}
 \item 
-std::counting\_semaphore<> to limit the use of multiple resources up to a maximum value
+std::counting\_semaphore<>将多个资源的使用限制在最大值
 
 \item
-std::binary\_semaphore<> to limit the use of a single resource
+std::binary\_semaphore<>限制对单一资源的使用
 \end{itemize}
 
-\mySubsubsection{13.2.1}{Example of Using Counting Semaphores}
+\mySubsubsection{13.2.1}{使用计数信号量的例子}
 
-The following program demonstrates how semaphores operate in general:
+下面的代码演示了信号量的常规操作方式:
 
 \filename{lib/semaphore.cpp}
 
@@ -92,16 +92,16 @@ int main()
 }
 \end{cpp}
 
-In this program, we start 10 threads but limit how many of them are allowed to actively run and process data. To do this, we initialize a semaphore with the maximum possible number we might allow (10) and the initial number of resources allowed (zero):
+代码中，启动了10个线程，但限制了允许其中多少线程主动运行和处理数据。为此，将信号量初始化为允许的最大数量(10)和允许的初始资源数量(0):
 
 \begin{cpp}
 constexpr int numThreads = 10;
 std::counting_semaphore<numThreads> enabled{0};
 \end{cpp}
 
-You might wonder why we have to specify a maximum as a template parameter. The reason is that with this compile-time value, the library can decide to switch to the most efficient implementation possible (native support might be possible only up to a certain value or if the maximum is 1, we may be able to use simplifications).
+读者们可能想知道，为什么必须指定最大值作为模板参数。原因是，有了这个编译时值，库可以决定切换到最有效的实现(本机支持可能只能达到某个值，或者若最大值为1，我们可以使用简化版本)。
 
-In each thread, we use the semaphore to ask for permission to run. We try to “acquire” one of the available resources to start the task and “release” the resource for other use when we are done:
+每个线程中，使用信号量来请求运行许可。可尝试“获取”一个可用资源来启动任务，并在任务完成后“释放”该资源以供其他使用:
 
 \begin{cpp}
 std::jthread{[&, idx] (std::stop_token st) {
@@ -115,23 +115,23 @@ std::jthread{[&, idx] (std::stop_token st) {
 		}}
 \end{cpp}
 
-Initially, we are blocked, because the semaphore was initialized with zero so that no resources are available.
+因为信号量初始化为零，所以最初的情况是阻塞，因此没有可用的资源。
 
-Later, however, we use the semaphore to allow three threads to act concurrently:
+然而，之后，使用信号量来允许三个线程进行并发操作:
 
 \begin{cpp}
 // enable 3 concurrent threads:
 enabled.release(3);
 \end{cpp}
 
-And even later, we allow two more threads to run concurrently:
+之后，允许两个线程并发运行:
 
 \begin{cpp}
 // enable 2 more concurrent threads:
 enabled.release(2);
 \end{cpp}
 
-If you want to sleep or do something else if you cannot get a resource, you can use try\_acquire():
+若不能获得资源，就休眠或做其他事情，可以使用try\_acquire():
 
 \begin{cpp}
 std::jthread{[&, idx] (std::stop_token st) {
@@ -149,7 +149,7 @@ std::jthread{[&, idx] (std::stop_token st) {
 		}}
 \end{cpp}
 
-You can also try to acquire a resource for a limited time using try\_acquire\_for() or try\_acquire\_until():
+还可以使用try\_acquire\_for()或try\_acquire\_until()尝试在有限的时间内获取资源:
 
 \begin{cpp}
 std::jthread{[&, idx] (std::stop_token st) {
@@ -164,15 +164,15 @@ std::jthread{[&, idx] (std::stop_token st) {
 		}}
 \end{cpp}
 
-This would allow us to double check the status of the stop token from time to time.
+这将可不时地再次检查停止令牌的状态。
 
-\mySamllsection{Thread Scheduling Is Not Fair}
+\mySamllsection{线程调度不公平}
 
-Note that threads are not necessarily scheduled fairly. Therefore, the main thread might need some time (or even forever) to become scheduled when it wants to end the program. It is also a good approach to request all threads to stop before we call the destructors of the threads. Otherwise, we request the stops significantly later when the previous threads have finished.
+注意，线程不一定是公平调度的。因此，当主线程想要结束程序时，可能需要一些时间(甚至永远)来调度。调用线程的析构函数之前请求所有线程停止也是一种很好的方法；否则，当前面的线程完成后，会在稍后请求停止。
 
-Another consequence of the fact that threads are not scheduled fairly is that there is no guarantee that threads that wait the longest time are preferred. Usually, the contrary is true: if a thread scheduler already has a thread running calling release() and it immediately calls acquire(), the scheduler keeps the thread running (“great, I do not need a context switch”). Therefore, we have no guarantee which one of multiple threads that wait due to calling acquire() are woken up. It might be the case that the same thread(s) is/are always used.
+线程没有公平调度的另一个后果是，不能保证等待时间最长的线程是首选。通常情况正好相反:若线程调度器已经有一个正在运行的线程调用release()，并且立即使用acquire()，则调度器会保持线程运行(“太好了，不需要上下文切换”)。因此，无法保证acquire()会唤醒等待的多个线程中的哪一个。可能总是使用相同的线程(伪唤醒)。
 
-As a consequence, you should not take the next value out of the queue before you ask for permission to run.
+因此，在请求运行权限之前，不应该从队列中取出下一个值。
 
 \begin{cpp}
 // BAD if order of processing matters:
@@ -185,7 +185,7 @@ enabled.acquire();
 ...
 \end{cpp}
 
-It might be the case that the value val is processed after several other values read later or even never processed. Ask for permission before you read the next value:
+可能是在读取其他几个值之后才处理值val，或者甚至从未处理过。在读取下一个值之前请求许可:
 
 \begin{cpp}
 enabled.acquire();
@@ -197,24 +197,24 @@ enabled.acquire();
 ...
 \end{cpp}
 
-For the same reason, you cannot easily reduce the number of enabled threads. Yes, you can try to call:
+出于同样的原因，不能轻易地减少已启用线程的数量。的确，可以试着调用:
 
 \begin{cpp}
 // reduce the number of enabled concurrent threads by one:
 enabled.acquire();
 \end{cpp}
 
-However, we do not know when this statement is processed. As threads are not treated fairly, the reaction to reduce the number of enabled threads may take very long or even take forever.
+但我们不知道这个报表是什么时候处理的。由于线程没有得到公平的调度，减少启用的线程数量的反应可能会花费很长时间，甚至可能会饿死(饥饿)。
 
-For a fair way to deal with queues and an immediate reaction to resource limitations, you might want to use the new wait() and notify mechanism of atomics.
+为了公平地处理队列和对资源限制的即时响应，应该使用原子的新wait()和通知机制。
 
-\mySubsubsection{13.2.2}{Example of Using Binary Semaphores}
+\mySubsubsection{13.2.2}{使用二值信号量的例子}
 
-For semaphores, a special type std::binary\_semaphore has been defined, which is just a shortcut for std::counting\_semaphore<1> so that it can only enable or disable the use of a single resource.
+对于信号量，定义了一个特殊类型std::binary\_semaphore，这只是std::counting\_semaphore<1>的快捷方式，因此它只能启用或禁用单个资源的使用。
 
-You could also use it as a mutex, with the benefit that the thread releasing the resource does not have to be the same thread that formerly acquired the resource. However, a more typical application is a mechanism to signal/notify a thread from another thread. In contrast to condition variables, you can do that multiple times.
+还可以将其用作互斥锁，这样做的好处是释放资源的线程不必是以前获取资源的线程，但更常用的应用程序是一种从另一个线程发出信号/通知线程的机制。与条件变量不同，可以多次执行此操作。
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{lib/semaphorenotify.cpp}
 
@@ -270,19 +270,19 @@ int main()
 }
 \end{cpp}
 
-We use two binary semaphores to let one thread notify another thread:
+使用两个二值信号量让一个线程通知另一个线程:
 
 \begin{itemize}
 \item 
-With dataReady, the main thread notifies the thread process that there is new data to process in sharedData.
+使用dataReady，主线程通知线程进程sharedData中有新数据需要处理。
 
 \item 
-With dataDone, the processing thread notifies the main thread that the data was processed.
+使用dataDone，处理线程通知主线程数据已处理完成。
 \end{itemize}
 
-Both semaphores are initialized by zero so that by default, the acquiring thread blocks. The moment the notifying thread calls release(), the acquiring thread unblocks so that it can react.
+两个信号量都初始化为零，因此在默认情况下，获取线程阻塞。发出通知的线程调用release()的那一刻，获取消息的线程解除阻塞，以便程序做出反应。
 
-The output of the program is something like the following:
+程序的输出如下所示:
 
 \begin{shell}
 [main] store 0
@@ -314,13 +314,13 @@ The output of the program is something like the following:
 [process] timeout
 \end{shell}
 
-Note that the processing thread only acquires for a limited time using try\_acquire\_for(). The return value yields whether it was notified (access to the resource). This allows the thread to check from time to time whether a stop was signaled (as is done after the main thread ends).
+注意，处理线程只能使用try\_acquire\_for()获取有限的时间。返回值表示是否通知了它(访问资源)。这允许线程不时地检查是否发出了停止信号(就像主线程结束后那样)。
 
-Another application of binary semaphores is to wait for the end of a coroutine running in a different thread.
+二值信号量的另一个应用是，等待在不同线程中运行的协程结束。
 
-\mySamllsection{Semaphores in Detail}
+\mySamllsection{信号量的详情}
 
-The class template std::counting\_semaphore<> is declared in the header file <semaphore> together with the shortcut std::binary\_semaphore for std::counting\_semaphore<1>:
+类模板std::counting\_semaphore<>与std::binary\_semaphore<1>的快捷方式std::binary\_semaphore也声明在头文件<semaphore>中:
 
 \begin{cpp}
 namespace std {
@@ -330,11 +330,11 @@ namespace std {
 }
 \end{cpp}
 
-Table Operations of objects of class counting\_semaphore<> and binary\_semaphore lists the API of semaphores.
+“类counting\_semaphore<>和binary\_semaphore对象的操作”表列出了信号量的API。
 
-Note that you cannot copy or move (assign) a semaphore.
+注意，不能复制或移动(分配)信号量。
 
-Note also that passing the size of a container (except std::array) as an initial value of the counter is an error. The constructor takes a std::ptrdiff\_t, which is signed, so that you get the following behavior:
+还要注意，将容器的大小(std::array除外)作为计数器的初始值传递是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会看到以下结果:
 
 \begin{cpp}
 std::counting_semaphore s1{10}; // OK
@@ -349,8 +349,6 @@ std::counting_semaphore s6{int(coll.size())}; // OK
 std::counting_semaphore s7{std::ssize(coll)}; // OK (see std::ssize())
 \end{cpp}
 
-The function std::ssize() was introduced in C++20.
-
 % Please add the following required packages to your document preamble:
 % \usepackage[normalem]{ulem}
 % \useunder{\uline}{\ul}{}
@@ -358,23 +356,23 @@ The function std::ssize() was introduced in C++20.
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation} & \textbf{Effect}                                                                     \\ \hline
+\textbf{操作} & \textbf{效果}                                                                     \\ \hline
 \endfirsthead
 %
 \endhead
 %
-semaphore s\{num\} & Creates a semaphore with the counter initialized with num                           \\ \hline
-s.acquire()        & Blocks unitl it can atomically decrement the counter (requesting one more resource) \\ \hline
-s.try\_acquire()          & Tries to immediately atomically decrement the counter (requesting onre more resource) and yields true if this was successful      \\ \hline
-s.try\_acquire\_for(dur)  & Tries for duration dur to atomically decrement the counter(requesting one more resource) and yields true if this was successful   \\ \hline
-s.tre\_acquire\_until(tp) & Tries unitl timepoint tp to atomically decrement the counter(requesting one more resource) and yields true if this was successful \\ \hline
-s.release()        & Atomically increments the counter (enabling one more resource)                      \\ \hline
-s.release(num)     & Atomically adds num to the counter (enabling num more resource)                     \\ \hline
-max()              & Static function that yields the maximum possible value of the counter               \\ \hline
+semaphore s\{num\} & 创建一个用num初始化计数器的信号量                           \\ \hline
+s.acquire()        & 阻塞，直到可以自动减少计数器(请求更多的资源)。 \\ \hline
+s.try\_acquire()          & 尝试立即自动减少计数器(请求更多资源)，若成功则返回true      \\ \hline
+s.try\_acquire\_for(dur)  & 尝试在时间段内自动减少计数器(请求更多资源)，若成功则返回true   \\ \hline
+s.tre\_acquire\_until(tp) & 尝试直到时间点tp自动减少计数器(请求更多资源)，若成功则返回true \\ \hline
+s.release()        & 自动增加计数器(多启用一个资源)                      \\ \hline
+s.release(num)     & 自动将num添加到计数器(启用更多资源)                     \\ \hline
+max()              & 产生计数器最大可能值的静态函数               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 13.3. Operations of objects of class counting\_semaphore<> and binary\_semaphore
+表13.3 类counting\_semaphore<>和binary\_semaphore对象的操作
 \end{center}
 
 
