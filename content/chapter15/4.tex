@@ -1,46 +1,46 @@
 
-The type std::coroutine\_handle<> is the generic type for coroutine handles. It can be used to refer to an executing or suspended coroutine. Its template parameter is the promise type of the coroutine, which can be used to place additional data members and behavior.
+类型std::coroutine\_handle<>是协程句柄的泛型类型，可用于引用正在执行或挂起的协程。它的模板参数是协程的promise类型，可用于放置额外的数据成员和行为。
 
-Table API of std::coroutine\_handle<> lists all operations that are provided for coroutine handles.
+“std::coroutine\_handle<>的API”表列出了为协程句柄提供的所有操作。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}                                                                     & \textbf{Effect}                                                                        \\ \hline
+\textbf{操作}                                                                     & \textbf{效果}                                                                        \\ \hline
 \endfirsthead
 %
 \endhead
 %
-coroutine\_handle\textless{}PrmT\textgreater{}::from\_promise(prm)                     & Creates a handle with the promise prm                                                  \\ \hline
-CoroHandleType\{\}                                                                     & Creates a handle to no coroutine                                                       \\ \hline
-CoroHandleType\{nullptr\}                                                              & Creates a handle to no coroutine                                                       \\ \hline
-CoroHandleType\{hdl\}                                                                  & Copies the handle hdl(both refer to the same coroutine)                                \\ \hline
-hdl = hdl2                                                                             & Assigns the handle hdl2(both refer to the same coroutine)                              \\ \hline
-if (hdl)                                                                               & Yields whether the handle refers to a couroutine                                       \\ \hline
-==, !=                                                                                 & Checks whether two handles refer to the same coroutine                                 \\ \hline
-\textless{}, \textless{}=, \textgreater{}, \textgreater{}=, \textless{}=\textgreater{} & Creates an order between coroutine handles                                             \\ \hline
-hdl.resume()                                                                           & Resumes the coroutine                                                                  \\ \hline
-hdl()                                                                                  & Resumes the coroutine                                                                  \\ \hline
-hdl.done()                                                                             & Yields whether a suspended coroutine is at its end and resume() is not allowed anymore \\ \hline
-hdl.destroy()                                                                          & Destroys the coroutine                                                                 \\ \hline
-hdl.promise()                                                                          & Yields the promise of the coroutine                                                    \\ \hline
-hdl.address()                                                                          & Yields the internal address to the coroutine data                                      \\ \hline
-coroutine\_handle\textless{}PrmT\textgreater{}::from\_address(addr)                    & Yields the handle for the address addr                                                 \\ \hline
+coroutine\_handle\textless{}PrmT\textgreater{}::from\_promise(prm)                     & 用promise prm创建一个句柄                                                  \\ \hline
+CoroHandleType\{\}                                                                     & 创建无协程的句柄                                                       \\ \hline
+CoroHandleType\{nullptr\}                                                              & 创建无协程的句柄                                                      \\ \hline
+CoroHandleType\{hdl\}                                                                  & Copies 句柄hdl(两者都引用相同的协程)                               \\ \hline
+hdl = hdl2                                                                             & 分配句柄hdl2(两者都引用相同的协程)                             \\ \hline
+if (hdl)                                                                               & Yields 句柄是否引用协程                                    \\ \hline
+==, !=                                                                                 & Checks 两个句柄是否引用同一个协程                                 \\ \hline
+\textless{}, \textless{}=, \textgreater{}, \textgreater{}=, \textless{}=\textgreater{} & 创建协程句柄之间的顺序                                             \\ \hline
+hdl.resume()                                                                           & 恢复协程                                                                 \\ \hline
+hdl()                                                                                  & 恢复协程                                                               \\ \hline
+hdl.done()                                                                             & Yields 挂起的协程是否已结束，并且不再允许使用resume() \\ \hline
+hdl.destroy()                                                                          & 销毁协程                                                                \\ \hline
+hdl.promise()                                                                          & Yields 协程的promise                                                    \\ \hline
+hdl.address()                                                                          & Yields 协程数据的内部地址                                     \\ \hline
+coroutine\_handle\textless{}PrmT\textgreater{}::from\_address(addr)                    & Yields 句柄的地址addr                                             \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 15.2. API of std::coroutine\_handle<>
+表15.2 std::coroutine\_handle<>的API
 \end{center}
 
-The static member function from\_promise() provides the way to initialize a coroutine handle with a coroutine. The function simply stores the address of the promise in the handle. If we have a promise prm this looks as follows:
+静态成员函数from\_promise()方法初始化一个协同程序处理提供了协同程序。该函数只是将promise的地址存储在句柄中。若有一个promise prm:
 
 \begin{cpp}
 auto hdl = std::coroutine_handle<decltype(prm)>::from_promise(prm);
 \end{cpp}
 
-from\_promise() is usually called in get\_return\_object() for a promise created by the coroutine framework:
+from\_promise()通常在get\_return\_object()中调用，用于协程框架创建的承诺:
 
 \begin{cpp}
 class CoroIf {
@@ -55,7 +55,7 @@ class CoroIf {
 };
 \end{cpp}
 
-When the handle is default initialized or nullptr is used as the initial or assigned value, the coroutine handle does not refer to any coroutine. In that case, any conversion to a Boolean value yields false:
+当句柄被默认初始化或nullptr用作初始值或赋值时，协程句柄不引用任何协程。这种情况下，对布尔值的转换都会产生false:
 
 \begin{cpp}
 std::coroutine_handle<PrmType> hdl = nullptr;
@@ -63,9 +63,9 @@ std::coroutine_handle<PrmType> hdl = nullptr;
 if (hdl) ... // false
 \end{cpp}
 
-Copying and assigning a coroutine handle is cheap. They just copy and assign the internal pointer. Therefore, coroutine handles are usually passed by value. This also means that multiple coroutine handles can refer to the same coroutine. As a programmer, you have to ensure that a handle never calls resume() or destroy() if another coroutine handle resumed or destroyed the coroutine.
+复制和分配协程句柄的成本很低，只是复制并赋值内部指针。因此，协程句柄通常是按值传递的，所以多个协程句柄可以引用同一个协程。开发者必须确保当另一个协程句柄恢复或销毁该协程时，该句柄永远不会调用resume()或destroy()。
 
-The address() interface yields the internal pointer of the coroutine as void*. This allows programmers to export the coroutine handle to somewhere and later recreates a handle with the static function from\_address():
+address()接口产生协程的内部指针为void*。这允许开发者将协程句柄导出到某个地方，然后使用from\_address()的静态函数重新创建句柄:
 
 \begin{cpp}
 om_address():
@@ -77,13 +77,13 @@ auto hdl2 = std::coroutine_handle<decltype(prm)>::from_address(hdlPtr);
 hdl == hdl2 // true
 \end{cpp}
 
-However, note that you can use the address only as long as the coroutine exists. After a coroutine has been destroyed, the address may be reused by another coroutine handle.
+但请注意，只要协程存在，就可以使用该地址。在一个协程销毁后，该地址可以让另一个协程句柄重用。
 
 \mySubsubsection{15.4.1}{std::coroutine\_handle<void>}
 
-All coroutine handle types have an implicit type conversion to class std::coroutine<void> (you can skip void in this declaration)
+所有协程句柄类型都有到类std::coroutine<void>的隐式类型转换(可以跳过此声明中的void)
 
-[The original C++ standard specifies that all coroutine handle types derive from std::coroutine<void>. However, that was changed with \url{http://wg21.link/lwg3460}. Thanks to Yung-Hsiang Huang for pointing this out.]
+[原始的C++标准指定所有协程句柄类型都派生自std::coroutine<void>，但\url{http://wg21.link/lwg3460}改变了这一点。感谢黄永祥指出这一点。]
 
 \begin{cpp}
 namespace std {
@@ -97,7 +97,7 @@ namespace std {
 }
 \end{cpp}
 
-Thus, if you do not need the promise, you can always use the type std::coroutine\_handle<void> or the type std::coroutine\_handle<> without any template argument. Note that std::coroutine\_handle<> does not provide the promise() member function:
+因此，若不需要promise，可以使用类型std::coroutine\_handle<void>或类型std::coroutine\_handle<>，而不需要模板参数。注意std::coroutine\_handle<>没有提供promise()成员函数:
 
 \begin{cpp}
 void callResume(std::coroutine_handle<> h)

@@ -1,55 +1,55 @@
 
-Table Special member functions of coroutine promises lists all operations that are provided for coroutine handles in their promise type.
+“协程promise的特殊成员函数”表列出了promise类型中为协程句柄提供的所有操作。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}       & \textbf{Effect}                                          \\ \hline
+\textbf{操作}       & \textbf{效果}                                          \\ \hline
 \endfirsthead
 %
 \endhead
 %
-Constructor              & Initializes the promise                                  \\ \hline
+Constructor              & 初始化promise对象                                  \\ \hline
 get\_return\_object() &
-Defines the object that the coroutine returns(usually of the coroutine interface type) \\ \hline
-initial\_suspend()       & Initial supend point (to let the coroutine start lazily) \\ \hline
-yield\_value(val)        & Deals with a value from co\_yield                        \\ \hline
-unhandled\_exception()   & Reaction to an unhandled exception inside the coroutine  \\ \hline
-return\_void()           & Deals with the end or a co\_return that returns nothing  \\ \hline
-return\_value(val)       & Deals with a return value from co\_return                \\ \hline
-final\_suspend()         & Final suspend point(to let the coroutine end lazily)     \\ \hline
-await\_transform(...)    & Maps values from co\_await to awaiters                   \\ \hline
-operator new(sz)         & Defines the way the coroutine allocates memory           \\ \hline
-operator delete(ptr, sz) & Defines the way the coroutine frees memory               \\ \hline
+定义协程返回的对象(通常为协程接口类型) \\ \hline
+initial\_suspend()       & 初始挂起点(让协程惰性启动) \\ \hline
+yield\_value(val)        & 处理co\_yield的值                        \\ \hline
+unhandled\_exception()   & 对协程内未处理异常的反应  \\ \hline
+return\_void()           & 处理end或不返回任何值的co\_return  \\ \hline
+return\_value(val)       & 处理co\_return的返回值                \\ \hline
+final\_suspend()         & 最终挂起点(让协程惰性结束)     \\ \hline
+await\_transform(...)    & 将值从co\_await映射到awaiter                   \\ \hline
+operator new(sz)         & 定义协程分配内存的方式           \\ \hline
+operator delete(ptr, sz) & 定义协程释放内存的方式               \\ \hline
 \begin{tabular}[c]{@{}l@{}}get\_return\_object\_on\_...\\ ...allocation\_failure()\end{tabular} &
-Defines the reaction if memory allocation failed \\ \hline
+定义内存分配失败时的反应 \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 15.1. Special member functions of coroutine promises
+表15.1 协程promise的特殊成员函数
 \end{center}
 
-Some of these functions are mandatory, some of them depend on whether the coroutine yields intermediate or final results, and some of the are optional.
+其中一些函数是强制性的，一些函数取决于协程是产生中间结果还是最终结果，还有一些函数是可选的。
 
-\mySubsubsection{15.3.1}{Mandatory Promise Operations}
+\mySubsubsection{15.3.1}{强制性Promise操作}
 
-For coroutine promises, the following member functions are required. Without them, the code does not compile or runs into undefined behavior.
+对于协程promise，需要以下成员函数。否则，代码就会无法编译，或者会出现未定义的行为。
 
-\mySamllsection{Constructor}
+\mySamllsection{构造函数}
 
-The constructor of coroutine promises is called by the coroutine framework when a coroutine is initialized.
+协程promise的构造函数在协程初始化时由协程框架调用。
 
-The constructor can be used by the compiler to initialize the coroutine state with some arguments. For this, the signature of the constructor has to match the arguments passed to the coroutine when it is called. This technique is especially used by coroutine traits.
+编译器可以使用构造函数用一些参数初始化协程状态。为此，构造函数的签名必须与调用协程时传递给协程的参数相匹配。这种技术特别适用于协同程序特征。
 
 \mySamllsection{get\_return\_object()}
 
-get\_return\_object() is used by the coroutine frame to create the return value of the coroutine.
+get\_return\_object()由协程框架用于创建协程的返回值。
 
-The function usually has to return the coroutine interface, which is initialized with the coroutine handle, which is usually initialized with the static coroutine handle member function from\_promise(), which itself is initialized with the promise.
+该函数通常必须返回协程接口，该接口由协程句柄初始化，而协程句柄通常from\_promise()中的静态协程句柄成员函数初始化，该函数本身由promise初始化。
 
-For example:
+例如:
 
 \begin{cpp}
 class CoroTask {
@@ -69,46 +69,46 @@ class CoroTask {
 };
 \end{cpp}
 
-In principle, get\_return\_object() may have different return types:
+原则上，get\_return\_object()可以有不同的返回类型:
 
 \begin{itemize}
 \item 
-The typical approach is that get\_return\_object() returns the coroutine interface by explicitly initializing it with the coroutine handle (as above).
+get\_return\_object()通过使用协程句柄显式初始化协程接口(如上所述)来返回协程接口。
 
 \item
-Instead, get\_return\_object() can also return the coroutine handle. In that case, the coroutine interface is implicitly created. This requires that the interface constructor is not explicit.
+相反，get\_return\_object()也可以返回协程句柄，将隐式地创建协程接口。这要求接口构造函数不是显式的。
 
-It is currently not clear when exactly the coroutine interface is created in this case (see \url{http://wg21.link/cwg2563}). Therefore, the coroutine interface object might or might not exist when initial\_suspend() is called, which can create trouble if something goes wrong.
+目前还不清楚在这种情况下何时创建协程接口(参见\url{http://wg21.link/cwg2563})，所以在调用initial\_suspend()时，协程接口对象可能存在，也可能不存在，很可能出现问题。
 
-Therefore, you should better avoid to use this approach.
+因此，最好避免使用这种方法。
 
 \item
-In rare cases, it might even be useful to not return anything, and specify the return type to be void. Using coroutine traits can be one example.
+在极少数情况下，甚至可以不返回任何东西，并将返回类型指定为void。使用协同程序特征就是一个例子。
 \end{itemize}
 
 \mySamllsection{initial\_suspend()}
 
-initial\_suspend() defines the initial suspend point of the coroutine, which is used primarily to specify whether the coroutine should automatically suspend after its initialization (start lazily) or start immediately (start eagerly).
+Initial \_suspend()定义协程的初始挂起点，主要用于指定协程是在初始化后自动挂起(惰性启动)，还是立即启动(急切启动)。
 
-The function is called for the promise prm of the coroutine as follows:
+该函数被协程的promise prm调用，如下所示:
 
 \begin{cpp}
 co_await prm.initial_suspend();
 \end{cpp}
 
-Therefore, initial\_suspend() should return an awaiter.
+因此，initial\_suspend()应该返回一个awaiter。
 
-Usually, initial\_suspend() returns
+通常，initial\_suspend()会返回
 
 \begin{itemize}
 \item 
-std::suspend\_always\{\}, if the coroutine body is started later/lazily, or
+std::suspend\_always\{\}，若协程体较晚/惰性地启动，或者
 
 \item
-std::suspend\_never\{\}, if the coroutine body is started immediately/eagerly
+std::suspend\_never\{\}，若协程体是立即/急切启动的
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 class CoroTask {
@@ -125,25 +125,25 @@ class CoroTask {
 };
 \end{cpp}
 
-However, you can also let the decision of an eager or lazy start depend on some business logic or use this function to perform some initialization for the scope of the coroutine body.
+然而，也可以让立即启动或延迟启动的决定取决于某些业务逻辑，或者使用此函数来执行协程主体范围的一些初始化。
 
 \mySamllsection{final\_suspend() noexcept}
 
-final\_suspend() defines the final suspend point of the coroutine and is called like initial\_suspend() for the promise prm of the coroutine as follows:
+final\_suspend()定义协程的最终挂起点，并像initial\_suspend()一样调用协程的promise prm，如下所示:
 
 \begin{cpp}
 co_await prm.final_suspend();
 \end{cpp}
 
-This function is called by the coroutine frame outside the try block that encloses the coroutine body after return\_void(), return\_value(), or unhandled\_exception() is called. Because final\_suspend() is outside the try block, it has to be noexcept.
+这个函数在调用return\_void()、return\_value()或未处理的\ exception()后由try块外的协程框架调用，try块包含了协程体。因为final\_suspend()在try代码块之外，所以必须是noexcept。
 
-The name of this member function is a little misleading because it gives the impression that you could also return std::suspend\_never\{\} here to force one more resumption after reaching the end of the coroutine. However, it is undefined behavior to resume a coroutine that is really suspended at the final suspend point. The only thing you can do with a coroutine suspended here is destroy it.
+这个成员函数的名称有一点误导，因为它给人的印象是，也可以在这里返回std::suspend\_never\{\}来强制在到达协程末尾后再次执行。然而，在最终挂起点恢复真正挂起的协程是未定义的行为。对于挂起的协程，唯一能做的就是销毁它。
 
-Therefore, the real purpose of this member function is to execute some logic, such as publishing a result, signaling completion, or resuming a continuation somewhere else.
+因此，这个成员函数的真正目的是执行一些逻辑，例如发布结果、发出完成信号或在其他地方恢复执行。
 
-Instead, the recommendation is to structure your coroutines so that they do suspend here where possible. One reason is that it makes it much easier for the compiler to determine when the lifetime of the coroutine frame is nested inside the caller of the coroutine, which makes it more likely that the compiler can elide heap memory allocation of the coroutine frame.
+相反，建议构建协程，以便在可能的情况下暂停。一个原因是，它使编译器更容易确定协程框架的生命周期何时嵌套在协程的调用者中，这使得编译器更有可能忽略协程框架的堆内存分配。
 
-Therefore, unless you have a good reason not to do so, final\_suspend() should always return std::suspend\_always\{\}. For example:
+因此，除非有很好的理由不这样做，否则final\_suspend()应该始终返回std::suspend\_always\{\}。例如:
 
 \begin{cpp}
 class CoroTask {
@@ -163,55 +163,55 @@ class CoroTask {
 
 \mySamllsection{unhandled\_exception()}
 
-unhandled\_exception() defines the reaction when the coroutine body throws an exception. The function is called inside the catch clause of the coroutine frame.
+unhandled \_exception()定义协程抛出异常时的反应，该函数在协程框架的catch子句中调用。
 
-Possible reactions to an exception here are:
+对异常的可能反应如下所示:
 
 \begin{itemize}
 \item 
-Ignoring the exception
+忽略异常
 
 \item 
-Processing the exception locally
+本地处理异常
 
 \item 
-Ending or aborting the program (e.g., by calling std::terminate())
+结束或终止程序(例如，通过调用std::terminate())
 
 \item 
-Storing the exception for later use with std::current\_exception()
+使用std::current\_exception()存储异常以供以后使用
 \end{itemize}
 
-The way to implement these reactions is discussed later in a separate subsection.
+稍后将在单独的小节中讨论实现这些反应的方法。
 
-In any case, after this function is called without ending the program, final\_suspend() is called directly and the coroutine is suspended.
+任何情况下，在不结束程序的情况下调用此函数后，将直接调用final\_suspend()，并挂起协程。
 
-The coroutine is also suspended if you throw or rethrow an exception in unhandled\_exception(). Any exception thrown from unhandled\_exception() is ignored.
+若在unhandled\_exception()中抛出或重新抛出异常，协程也会挂起。
 
-\mySubsubsection{15.3.2}{Promise Operations to Return or Yield Values}
+\mySubsubsection{15.3.2}{promise操作返回或生成值}
 
-Depending on whether and how co\_yield or co\_return is used, you also need some of the following promise operations.
+根据是否以及如何使用co\_yield或co\_return，还需要以下一些promise操作。
 
-\mySamllsection{return\_void() or return\_value()}
+\mySamllsection{return\_void() 或 return\_value()}
 
-You have to implement exactly one the two member functions provided to deal with return statements and the end of the coroutine.:
+必须实现两个成员函数中的一个来处理return语句和协程的结束。
 
 \begin{itemize}
 \item 
 \textbf{return\_void()}
 
-is called if the coroutine reaches the end (either by reaching the end of its body or by reaching a co\_return statement without argument).
+在协程到达终点时调用(到达协程体的终点或到达不带参数的co\_return语句)。
 
-See the first coroutine example for details.
+有关详细信息，请参阅第一个协程示例。
 
 \item 
 \textbf{return\_value(Type)}
 
-is called if the coroutine reaches a co\_return statement with an argument. The passed argument has to be or must convert to the specified type.
+当协程到达带有参数的co\_return语句时调用，传递的参数必须或必须转换为指定的类型。
 
-See the coroutine example with co\_return for details.
+有关详细信息，请参阅带有co\_return的协程示例。
 \end{itemize}
 
-It is undefined behavior if coroutines are implemented in a way that they sometimes may and sometimes may not return a value. Consider this example:
+若协程的实现方式有时可能返回值，有时可能不返回值，这是未定义的行为。考虑一下这个例子:
 
 \begin{cpp}
 ResultTask<int> coroUB( ... )
@@ -222,11 +222,11 @@ ResultTask<int> coroUB( ... )
 }
 \end{cpp}
 
-This coroutine is not valid. Having both return\_void() and return\_value() is not permitted.[There is an ongoing discussion about whether to allow promises to have both return\_void() and return\_value() in a future C++ standard.]
+这个协程无效。不允许同时拥有return\_void()和return\_value()。[关于是否允许promise在未来的C++标准中同时具有return\_void()和return\_value()的讨论正在进行。]
 
-Unfortunately, if you provide a return\_value(int) member function only, this code might even compile and run and compilers might not even warn about it. This will hopefully change soon.
+不幸的是，若只提供return\_value(int)成员函数，这段代码甚至可能会编译并运行，编译器甚至可能不会对此发出警告，但这种情况有望很快改变。
 
-Note that you can overload return\_value() for different types (except void) or make it generic:
+注意，这里可以重载不同类型的return\_value() (void除外)或使其泛型:
 
 \begin{cpp}
 struct promise_type {
@@ -240,7 +240,7 @@ struct promise_type {
 };
 \end{cpp}
 
-In that case, a coroutine can co\_return values of different types.
+协程可以共同返回不同类型的值。
 
 \begin{cpp}
 CoroGen coro()
@@ -257,11 +257,11 @@ CoroGen coro()
 
 \mySamllsection{yield\_value(Type)}
 
-yield\_value(Type) is called if the coroutine reaches a co\_yield statement.
+若协程到达co\_yield语句，则调用yield\_value(Type)。
 
-For basic details, see the coroutine example with co\_yield.
+有关基本细节，请参阅co\_yield的协程示例。
 
-You can overload yield\_value() for different types or make it generic:
+可以为不同的类型重载yield\_value()或其泛型:
 
 \begin{cpp}
 struct promise_type {
@@ -277,7 +277,7 @@ struct promise_type {
 };
 \end{cpp}
 
-In that case, a coroutine can co\_yield values of different types:
+协程可以co\_yield不同类型的值:
 
 \begin{cpp}
 CoroGen coro()
@@ -293,23 +293,23 @@ CoroGen coro()
 }
 \end{cpp}
 
-\mySubsubsection{15.3.3}{Optional Promise Operations}
+\mySubsubsection{15.3.3}{可选的promise操作}
 
-Promises can also be used to define some optional operations that define special behavior of coroutines, where normally some default behavior is used.
+promise也可以用来定义一些可选的操作，这些操作定义了协程的特殊行为，通常会使用一些默认行为。
 
 \mySamllsection{await\_transform()}
 
-await\_transform() can be defined to map values from co\_await to awaiters.
+可以定义await\_transform()将值从co\_await映射到awaiter。
 
-\mySamllsection{operator new() and operator delete()}
+\mySamllsection{new()和delete()操作符}
 
-operator new() and operator delete() allow programmers to define a different way memory is allocated for the coroutine state.
+new()和delete()操作符允许开发者为协程状态分配内存定义不同的方式。
 
-These functions may also be used to ensure that coroutines do not accidentally use heap memory.
+这些函数还可以用于确保协程不会意外地使用堆内存。
 
 \mySamllsection{get\_return\_object\_on\_allocation\_failure()}
 
-get\_return\_object\_on\_allocation\_failure() allows programmers to define how to react to exceptionless failures of memory allocation for coroutines.
+get\_return\_object\_on\_allocation\_failure()允许开发者定义，如何对协程内存分配的无异常失败做出反应。
 
 
 

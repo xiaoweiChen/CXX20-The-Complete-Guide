@@ -1,12 +1,12 @@
-When an exception is thrown inside a coroutine and this exception is not locally handled, unhandled\_exception() is called in a catch clause behind the coroutine body (see Figure 15.1). It is also called in the case of exceptions from initial\_suspend(), yield\_value(), return\_void(), return\_value(), or any awaitable used within the coroutine.
+当在协程内部抛出异常并且该异常没有得到本地处理时，unhandled\_exception()将在协程主体后面的catch子句中调用(参见图15.1)。在出现initial\_suspend()、yield\_value()、return\_void()、return\_value()或协程中使用的任何可等待对象的异常情况时，也会调用该函数。
 
-You have the following options for dealing with these exceptions:
+以下几种方式来处理这些异常:
 
 \begin{itemize}
 \item 
-Ignoring the exception
+忽略异常
 
-In this case, unhandled\_exception() just has an empty body:
+unhandled\_exception()只有一个空函数体:
 
 \begin{cpp}
 void unhandled_exception() {
@@ -14,9 +14,9 @@ void unhandled_exception() {
 \end{cpp}
 
 \item 
-Processing the exception locally 
+本地处理异常
 
-In this case, unhandled\_exception() just deals with the exception. Because you are inside a catch clause, you have to rethrow the exception and deal with it locally:
+unhandled\_exception()只处理异常。因为在catch子句中，必须重新抛出异常并在本地处理它:
 
 \begin{cpp}
 void unhandled_exception() {
@@ -33,7 +33,7 @@ void unhandled_exception() {
 \end{cpp}
 
 \item 
-Ending or aborting the program (e.g., by calling std::terminate()):
+结束或终止程序(例如，通过调用std::terminate()):
 
 \begin{cpp}
 void unhandled_exception() {
@@ -43,9 +43,9 @@ void unhandled_exception() {
 \end{cpp}
 
 \item 
-Storing the exception for later use with std::current\_exception() 
+使用std::current\_exception()存储异常以供以后使用 
 
-In this case, you need an exception pointer in the promise type, which is then set:
+需要在promise类型中设置一个异常指针:
 
 \begin{cpp}
 struct promise_type {
@@ -57,7 +57,7 @@ struct promise_type {
 };
 \end{cpp}
 
-You also have to provide a way to process the exceptions in the coroutine interface. For example:
+必须提供一种在协程接口中处理异常的方法。例如:
 
 \begin{cpp}
 class [[nodiscard]] CoroTask {
@@ -77,11 +77,11 @@ class [[nodiscard]] CoroTask {
 \end{cpp}
 \end{itemize}
 
-Of course, combinations of these approaches are possible.
+当然，这些方法也可以进行组合。
 
-Note that after unhandled\_exception() is called without ending the program, the coroutine is at its end. final\_suspend() is called directly and the coroutine is suspended.
+注意，在调用unhandled\_exception()而不结束程序之后，协程就结束了。直接调用final\_suspend()，协程会挂起。
 
-The coroutine is also suspended if you throw or rethrow an exception in unhandled\_exception(). Any exception thrown from unhandled\_exception() is ignored.
+若在unhandled\_exception()中抛出或重新抛出异常，协程也会挂起。unhandled\_exception()抛出的任何异常都会忽略。
 
 
 

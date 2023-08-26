@@ -1,136 +1,136 @@
 
-Now that we have introducing awaiters let us discuss them in detail and look up further examples.
+之前已经介绍了awaiter，让我们更详细的对其进行了解。
 
-\mySubsubsection{15.7.1}{Details of the Awaiter Interface}
+\mySubsubsection{15.7.1}{Awaiter接口的详细信息}
 
-Table Special member functions of awaiters once again lists the key operations that awaiters have to provide.
+“awaiter的特殊成员函数”表再次列出了awaiter必须提供的关键操作。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}                & \textbf{Effect}                                           \\ \hline
+\textbf{操作}                & \textbf{效果}                                           \\ \hline
 \endfirsthead
 %
 \endhead
 %
-Constructor              & Initializes the awaiter                          \\ \hline
-await\_ready()           & Yields whether suspension is(currently) disabled \\ \hline
-await\_suspend(awaitHdl) & Handle suspension                                \\ \hline
-await\_resume()          & Handle resumption                                \\ \hline
+Constructor              & 初始化awaiter                          \\ \hline
+await\_ready()           & 是否(当前)禁用挂起 \\ \hline
+await\_suspend(awaitHdl) & 处理挂起                                \\ \hline
+await\_resume()          & 处理恢复                               \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 15.3. Special member functions of awaiters
+表15.3 awaiter的特殊成员函数
 \end{center}
 
-Let us look at this awaiter interface in detail:
+详细看看awaiter的接口:
 
 \begin{itemize}
 \item 
-\textit{Constructor}
+\textit{构造函数}
 
-The constructor allows coroutines (or wherever the awaiter is created) to pass arguments to the awaiter. These parameters can be used to impact or change the way the awaiter handles suspensions and resumptions. An awaiter for priority requests of a coroutine is one example.
+构造函数允许协程(或任何创建awaiter的地方)向awaiter传递参数，这些参数可用于影响或更改侍者处理挂起和恢复的方式。协程优先级请求的awaiter就是一个例子。
 
 \item 
 \textbf{bool await\_ready()}
 
-is called right before the coroutine that this function is called for is suspended.
+在调用此函数的协程挂起前调用。
 
-It can be used to (temporarily) turn off suspension completely. If it returns true, we are “ready” to immediately return from the request to suspend and continue with the coroutine without suspending it.
+可以用来(暂时)完全关闭挂起。若它返回true，就“准备好”立即从请求返回挂起并继续执行协程，而不挂起它。
 
-Usually, this function just returns false (“no, do not avoid/block any suspension”). However, it might conditionally yield true (e.g., if the suspension depends on some data being available).
+通常，这个函数只返回false(“不，不要避免/阻止任何挂起”)，但可能会有条件地产生true(例如，若挂起依赖于可用的某些数据)。
 
-With its return type, await\_suspend() can also signal not to accept a suspension of the coroutine (note that true and false have the opposite meaning there: by returning true in await\_suspend(), the suspension is accepted). Not accepting a suspension with await\_ready() has the benefit that the program saves the costs of initiating the suspension of the coroutine at all.
+通过其返回类型，await\_suspend()也可以发出不接受协程挂起的信号(请注意，true和false在这里具有相反的含义:通过在await\_suspend()中返回true，接受挂起)。不使用await\_ready()接受挂起的好处是，程序完全节省了启动协程挂起的成本。
 
-Note that inside this function, the coroutine it is called for is not suspended yet. Do not (indirectly) call resume() or destroy() here. You can even call more complex business logic here as long as you can ensure that logic does not call resume() or destroy() for the coroutine that is suspended here.
+注意，在这个函数内部，调用它的协程还没有挂起。不要在这里(间接)调用resume()或destroy()，甚至可以在这里调用更复杂的业务逻辑，只要能够确保逻辑不会为这里挂起的协程调用resume()或destroy()。
 
 \item
 \textbf{auto await\_suspend(awaitHdl)}
 
-is called right after the coroutine this function is called for is suspended. awaitHdl is the coroutine where the suspension is requested (with co\_await). It has the type of the awaiting coroutine handle, std::coroutine\_handle<PromiseType>.
+在调用此函数的协程挂起后立即调用。awaitHdl是请求挂起的协程(带有co\_await)，其具有等待协程句柄的类型std::coroutine\_handle<PromiseType>。
 
-Here, you could specify what to do next, including resuming the suspended coroutine or the awaiting coroutine immediately and scheduling the other for later resumption. To support this, special return types may be used (this is discussed below).
+这里，可以指定下一步要做什么，包括立即恢复挂起的协程或等待的协程，并安排另一个延迟恢复，可以使用特殊的返回类型(这将在下面讨论)。
 
-You could even destroy the coroutine here. However, in that case you have to ensure that the coroutine is not used anywhere else (such as calling done() in a coroutine interface).
+甚至可以在这里销毁协程，但必须确保协程没有在其他任何地方使用(例如：调用协程接口中的done())。
 
 \item 
 \textbf{auto await\_resume()}
 
-is called when the coroutine this function is called for is resumed after a successful suspension (i.e., if resume() is called for the coroutine handle).
+当调用此函数的协程在成功挂起后，恢复时调用(即，若协程句柄调用resume())。
 
-The return type of await\_resume() is the type of the value that the co\_await or co\_yield expression that caused the suspension yields. If it is not void, the context of the coroutine can return a value back to the resumed coroutine.
+await\_resume()的返回类型是导致暂停的co\_await或co\_yield表达式产生的值的类型。若不是空的，协程的上下文可以返回一个值给恢复的协程。
 \end{itemize}
 
-await\_suspend() is the key function here. Its parameters and return values can vary as follows:
+await\_suspend()是这里的关键函数，其参数和返回值可以有如下变化:
 
 \begin{itemize}
 \item 
-The parameter of await\_suspend() could be:
+await\_suspend()的参数可以是:
 
 \begin{itemize}
 \item 
-Using the type of the coroutine handle:
+使用协程句柄的类型:
 \begin{cpp}
 std::coroutine_handle<PrmType>
 \end{cpp}
 
 \item 
-Using a basic type usable for all coroutine handles:
+使用可用于所有协程句柄的基本类型:
 \begin{cpp}
 std::coroutine_handle<void> (or just std::coroutine_handle<>)
 \end{cpp}
 
-In that case, you do not have access to the promise.
+这时，无法访问promise。
 
 \item 
-Using auto to let the compiler find out the type.
+可以使用auto让编译器确定类型。
 \end{itemize}
 
 \item 
-The return type of await\_suspend() could be:
+await\_suspend()的返回类型可以是:
 \begin{itemize}
 \item 
-void to continue with the suspension after performing the statements in await\_suspend() and return back to the caller of the coroutine.
+void，在执行await\_suspend()中的语句后继续执行挂起，并返回到协程的调用者。
 
 \item 
-bool to signal whether the suspension should really happen. Here, false means “do not suspend (anymore)” (which is the opposite of the Boolean return values of await\_ready()).
+bool，来表明暂停是否真的应该发生。这里，false表示“不再挂起”(这与await\_ready()的布尔返回值相反)。
 
 \item 
-std::coroutine\_handle<> to resume another coroutine instead.
+std::coroutine\_handle<>用于恢复另一个协程。
 
-This use of await\_suspend() is called symmetric transfer and is described later in detail.
+await\_suspend()的这种使用称为对称传输(symmetric transfer)，稍后将详细描述。
 
-In this case, a noop coroutine can be used to signal not to resume any coroutine at all (in the same way as if the function were to return false).
+这时，可以使用noop协程来发出不恢复任何协程的信号(与函数返回false的方式相同)。
 \end{itemize}
 \end{itemize}
 
-In addition, note the following:
+此外，请注意以下事项:
 
 \begin{itemize}
 \item 
-The member functions are usually const, except when the awaiter has a member that is modified (such as storing the coroutine handle in await\_suspend() to have it available on resumption).
+成员函数通常是const，除非awaiter有一个可修改的成员(比如将协程句柄存储在await\_suspend()中，以便在恢复时可用)。
 
 \item 
-The member functions are usually noexcept (this is necessary to allow use in final\_suspend()).
+成员函数通常是noexcept(这是允许在final\_suspend()中使用的必要条件)。
 
 \item 
-The member functions can be constexpr.
+成员函数可以是constexpr。
 \end{itemize}
 
-\mySubsubsection{15.7.2}{Letting co\_await Update Running Coroutines}
+\mySubsubsection{15.7.2}{让co\_await更新正在运行的协程}
 
-Because awaiters can execute code on suspension, you can use them to change the behavior of a system that deals with coroutines. Let us look at an example where we let the coroutine change its priority.
+因为awaiter可以在挂起时执行代码，所以可以使用它们来改变处理协程的系统的行为。让我们看一个例子，让协程改变它的优先级。
 
-Assume that we manage all coroutines in a scheduler and allow them to change their priorities with co\_await. For that, we would first define a default priority and some arguments for co\_await to change the priority:
+假设在调度器中管理所有的协程，并使用co\_await更改它们的优先级。为此，首先定义一个默认优先级，并为co\_await定义一些参数来改变优先级:
 
 \begin{cpp}
 int CoroPrioDefVal = 10;
 enum class CoroPrioRequest {same, less, more, def};
 \end{cpp}
 
-With this, a coroutine might look as follows:
+协程代码可能如下所示:
 
 \filename{coro/coroprio.hpp}
 
@@ -148,13 +148,13 @@ CoroPrioTask coro(int max)
 }
 \end{cpp}
 
-By using the special coroutine interface CoroPrioTask, the coroutine can use a special awaiter of the type CoroPrio, which allows the coroutine to pass a request for a priority change. On suspension, you can use it for the request to change the current priority:
+通过使用特殊的协程接口CoroPrioTask，协程可以使用类型为CoroPrio的特殊awaiter，允许协程传递更改优先级的请求。在挂起时，可以用它来改变请求的当前优先级:
 
 \begin{cpp}
 co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
 \end{cpp}
 
-For that, the main program creates a scheduler and calls start() to pass each coroutine to the scheduler:
+为此，主程序创建一个调度器并调用start()将每个协程传递给调度器:
 
 \filename{coro/coroprio.cpp}
 
@@ -179,11 +179,11 @@ int main()
 }
 \end{cpp}
 
-The classes CoroPrioScheduler and CoroPrioTask interact as follows:
+类CoroPrioScheduler和CoroPrioTask交互如下:
 
 \begin{itemize}
 \item 
-The scheduler stores all coroutines in the order of their priority and provides members to store a new coroutine, resume the next coroutine, and change the priority of a coroutine:
+调度器按优先级顺序存储所有协程，并提供成员来存储新协程、恢复下一个协程和更改协程的优先级:
 
 \begin{cpp}
 class CoroPrioScheduler
@@ -198,7 +198,7 @@ class CoroPrioScheduler
 \end{cpp}
 
 \item 
-The member function start() of the scheduler stores the passed coroutine in the list and also stores the scheduler in the promise of each task:
+调度器的成员函数start()将传递的协程存储在列表中，并将调度器存储在每个任务的promise中:
 
 \begin{cpp}
 class CoroPrioScheduler
@@ -216,7 +216,7 @@ class CoroPrioScheduler
 \end{cpp}
 
 \item 
-The class CoroPrioTask gives the class CoroPrioScheduler access to the handles, provides members in the promise type to point to the scheduler, and enables the coroutine to use co\_await with a CoroPrioRequest:
+类CoroPrioTask赋予类CoroPrioScheduler对句柄的访问权，在promise类型中提供指向调度程序的成员，并允许协程使用CoroPrioRequest的co\_await:
 
 \begin{cpp}
 class CoroPrioTask {
@@ -231,11 +231,11 @@ class CoroPrioTask {
 }
 \end{cpp}
 
-For start(), it also provides move semantics the usual way.
+对于start()，还可以以提供移动语义。
 
 \end{itemize}
 
-The interface between the coroutine and the scheduler is the awaiter of the type CoroPrio. Its constructor takes the priority request and stores it in the promise on suspension (when we get the coroutine handle). For that, the constructor stores the request to have it available in await\_suspend():
+协程和调度器之间的接口是CoroPrio类型的awaiter。它的构造函数接受优先级请求，并在挂起时(当我们获得协程句柄时)将其存储在promise中，所以构造函数将请求存储在await\_suspend()中:
 
 \begin{cpp}
 class CoroPrio {
@@ -253,9 +253,9 @@ public:
 };
 \end{cpp}
 
-The rest is just the usual boilerplate code for coroutine interfaces plus the handling of priorities. See coro/coropriosched.hpp for the complete code.
+其余部分只是通常的协同程序接口的样板代码加上优先级处理。完整的代码请参见coro/coroprioschedule.hpp。
 
-As shown, the main program schedules the three coroutines and loops until all have been processed:
+主程序调度三个协程并循环，直到所有协程处理完:
 
 \begin{cpp}
 sched.start(coro(5));
@@ -266,7 +266,7 @@ while (sched.resumeNext()) {
 }
 \end{cpp}
 
-The output is as follows:
+输出结果如下所示:
 
 \begin{shell}
 start main()
@@ -291,19 +291,19 @@ loop until all are processed
 end main()
 \end{shell}
 
-Initially, the three coroutines started have the same priority. Because the priority of a coroutine is reduced each time it is suspended, the other coroutines then run in succession until the first coroutine has the highest priority again.
+最初，启动的三个协程具有相同的优先级。由于协程的优先级在每次挂起时都会降低，因此其他协程会连续运行，直到第一个协程再次具有最高优先级。
 
-\mySubsubsection{15.7.3}{Symmetric Transfer with Awaiters for Continuation}
+\mySubsubsection{15.7.3}{具有等待器的对称传输}
 
-The return type of await\_suspend() can be a coroutine handle. In that case, a coroutine is suspended by immediately resuming the returned coroutine. This technique is called symmetric transfer.
+await\_suspend()的返回类型可以是协程句柄，通过立即恢复返回的协程来挂起协程。这种技术被称为对称传输。
 
-Symmetric transfer was introduced to improve performance and avoid stack overflows when coroutines call other coroutines. In general, when resuming a coroutine with resume(), the program needs a new stack frame for the new coroutine. If we were to resume a coroutine inside await\_suspend() or after it was called, we would always pay that price. By returning the coroutine to be called, the stack frame for the current coroutine just replaces its coroutine so that no new stack frame is required.
+引入对称传输是为了提高性能并避免协程调用其他协程时堆栈溢出。通常，当使用resume()恢复协程时，程序需要为新协程提供一个新的堆栈帧。若要在await\_suspend()中或在它被调用之后恢复协程，是要付出代价的。通过返回要调用的协程，当前协程的堆栈帧只是替换它的协程，因此不需要新的堆栈帧。
 
-\mySamllsection{Implementing Symmetric Transfer with Continuations}
+\mySamllsection{用协程实现对称传输}
 
-The typical application of this technique is implemented by using final awaiters that deal with continuations.[This technique is documented with tremendous help from articles and emails by Lewis Baker and Michael Eiler. \url{http://lewissbaker.github.io/2020/05/11/understanding_symmetric_transfer} in particular provides a detailed motivation and explanation.]
+这种技术的典型应用是通过使用处理协程的final await来实现的。[这项技术在Lewis Baker和Michael Eiler的文章和电子邮件中得到了极大的帮助。\url{http://lewissbaker.github.io/2020/05/11/understanding_symmetric_transfer}特别提供了详细的动机和解释。]
 
-Assuming that you have a coroutine that ends and should then continue with another subsequent coroutine without giving control back to the caller, you run into the following problem: inside final\_suspend(), your coroutine is not in a suspended state yet. You have to wait until await\_suspend() is called for the returned awaitable to deal with any resumption. That might look as follows:
+假设有一个协程，它结束了，然后应该继续使用另一个后续协程，而不将控制权交还给调用者，会遇到以下问题:在final\_suspend()中，协程尚未处于挂起状态。必须等待，直到await\_suspend()调用，以返回可等待对象来处理恢复。这可能看起来如下代码所示:
 
 \begin{cpp}
 class CoroTask
@@ -326,7 +326,7 @@ public:
 };
 \end{cpp}
 
-Thus, we return an awaiter that can be used to deal with the coroutine after it has been suspended. Here, the returned awaiter has the type FinalAwaiter, which might look as follows:
+因此，返回一个awaiter，可用于在协程暂停后处理协程。这里，返回的awaiter的类型是FinalAwaiter，可能如下所示:
 
 \begin{cpp}
 struct FinalAwaiter {
@@ -348,15 +348,15 @@ struct FinalAwaiter {
 };
 \end{cpp}
 
-Because await\_suspend() returns a coroutine handle, the coroutine returned is automatically resumed on suspension. In that case, the utility function std::noop\_coroutine() signals not to resume any other coroutine, meaning that the suspended coroutine returns to the caller.
+因为await\_suspend()返回协程句柄，所以在挂起时自动恢复返回的协程，函数std::noop\_coroutine()发出不恢复其他协程的信号，所以挂起的协程会返回给调用者。
 
-std::noop\_coroutine() returns a std::noop\_coroutine\_handle, which is an alias type of std::coroutine\_handle<std::noop\_coroutine\_promise>. Coroutines of that type have no effect when calling resume() or destroy(), return nullptr when calling address(), and always return false when calling done().
+std::noop\_coroutine()会返回一个sstd::noop\_coroutine\_handle，是std::coroutine\_handle<std::noop\_coroutine\_promise>的别名类型。该类型的协程在调用resume()或destroy()时不起作用，在调用address()时返回nullptr，并且在调用done()时始终返回false。
 
-std::noop\_coroutine() and its return type are provided for situations in which await\_suspend() may optionally return a coroutine to continue with. Having return type std::coroutine\_handle<>, await\_suspend() can return a noop coroutine to signal not to automatically resume another coroutine.
+std::noop\_coroutine()及其返回类型是为await\_suspend()可能可选地返回要继续的协程的情况提供的。通过返回类型std::coroutine\_handle<>， await\_suspend()可以返回一个noop协程，以表示不自动恢复另一个协程。
 
-Note that two different return values of std::noop\_coroutine() do not necessarily compare as equal.
+注意，std::noop\_coroutine()的两个不同的返回值并不一定相等。
 
-Therefore, the following code does not work portably:
+因此，下面的代码不可移植:
 
 \begin{cpp}
 std::coroutine_handle<> coro = std::noop_coroutine();
@@ -367,7 +367,7 @@ if (coro == std::noop_coroutine()) { // OOPS: does not check whether coro has in
 }
 \end{cpp}
 
-You should use nullptr instead:
+应该使用nullptr:
 
 \begin{cpp}
 std::coroutine_handle<> coro = nullptr;
@@ -378,7 +378,7 @@ if (coro) { // OK (checks whether coro has initial value)
 }
 \end{cpp}
 
-Dealing with coroutines in a thread pool demonstrates an application of this technique.
+处理线程池中的协程演示了这种技术。
 
 
 

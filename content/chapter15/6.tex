@@ -1,32 +1,32 @@
 
 
-Coroutines need memory for their state. Because coroutines might switch contexts, heap memory is usually used. How this is done and how to change it is discussed in this section.
+协程需要内存来保存它们的状态。因为协程可能会切换上下文，所以通常使用堆内存。本节将讨论如何做到这一点，以及如何更改。
 
 
-\mySubsubsection{15.6.1}{How Coroutines Allocate Memory}
+\mySubsubsection{15.6.1}{协程如何分配内存}
 
-Coroutines need memory to store their state from suspensions to resumptions. However, because the resumptions may take place in very different contexts, in general, the memory can only be allocated on the heap. And in fact, the C++ standard states:
+协程需要内存来存储它们从挂起到恢复的状态，但由于恢复可能发生在非常不同的上下文中，因此通常只能在堆上分配内存。事实上，C++标准规定:
 
 \begin{quote}
-An implementation may need to allocate additional storage for a coroutine. This storage is known as the coroutine state and is obtained by calling a non-array allocation function.
+实现可能需要为协程分配额外的存储空间。这种存储称为协程状态，通过调用非数组分配函数获得。
 \end{quote}
 
-The important word is “may” here. Compilers are allowed to optimize away the need for heap memory. Of course, the compilers need enough information and the code has to be pretty simple. In fact, optimization is most likely if
+这里重要的词是“可能”，编译器可以优化掉对堆内存的需求。当然，编译器需要足够的信息，代码必须非常简单。事实上，最有可能优化的是
 
 \begin{itemize}
 \item 
-The lifetime of the coroutine remains within the lifetime of the caller.
+协程的生命周期保持在调用者的生命周期内。
 
 \item 
-Inline functions are used so that the compiler can at least see everything to compute the size of the frame.
+使用内联函数使编译器至少可以看到计算帧大小的所有内容。
 
 \item 
-final\_suspend() returns std::suspend\_always{} because otherwise, the lifetime management becomes too complicated.
+final\_suspend()返回std::suspend\_always{}，否则生命周期管理将变得过于复杂。
 \end{itemize}
 
-However, at the time of writing this chapter (March 2022), only the Clang compiler was providing a corresponding allocation elision for coroutines.[Visual C++ was providing an optimization with the option \texttt{/await:heapelide}, but for the moment, it seems to be turned off.]
+然而，在撰写本章时(2022年3月)，只有Clang编译器为协程提供了相应的分配省略。[Visual C++提供了一个优化选项\texttt{/await:heapelide}，但目前似乎关闭了。]
 
-Consider, for example, the following coroutines:
+例如，考虑以下协程:
 
 \begin{cpp}
 CoroTask coro(int max)
@@ -46,14 +46,14 @@ CoroTask coroStr(int max, std::string s)
 }
 \end{cpp}
 
-They differ in an additional string parameter for the second coroutine. Assume that we just pass some temporary objects to each parameter:
+其不同之处在于第二个协程的附加字符串参数。假设只是将一些临时对象传递给每个参数:
 
 \begin{cpp}
 coro(3); // create and destroy temporary coroutine
 coroStr(3, "hello"); // create and destroy temporary coroutine
 \end{cpp}
 
-If we have no optimization and track allocations, we might get something like the following output:
+若没有优化和跟踪分配，可能会得到如下输出:
 
 \begin{shell}
 ::new #1 (36 Bytes) => 0x8002ccb8
@@ -63,13 +63,13 @@ If we have no optimization and track allocations, we might get something like th
 ::delete (no size) at 0x8004cd28
 \end{shell}
 
-Here, the second coroutine needs 24 more bytes for the additional string parameter.
+这里，第二个协程需要额外的字符串参数24个字节。
 
-See coro/coromem.cpp for a complete example using coro/tracknew.hpp to see when heap memory is allocated or freed.
+有关使用coro/tracknews.hpp查看何时分配或释放堆内存的完整示例，请参阅coro/coromem.cpp。
 
-\mySubsubsection{15.6.2}{Avoiding Heap Memory Allocation}
+\mySubsubsection{15.6.2}{避免堆内存分配}
 
-The promise type of a coroutine allow programmers to change the way memory is allocated for a coroutine. You simply have to provide the following members:
+协程的promise类型允许开发者更改为协程分配内存的方式，只需要提供以下成员:
 
 \begin{itemize}
 \item 
@@ -79,9 +79,9 @@ The promise type of a coroutine allow programmers to change the way memory is al
 \texttt{void operator delete(void* ptr, std::size\_t sz)}
 \end{itemize}
 
-\mySamllsection{Ensure That no Heap Memory is Used}
+\mySamllsection{确保没有使用堆内存}
 
-At first, the operators new() and delete() can be used to find out whether the coroutine allocated memory on the heap. Simply declare operator new without implementing it:
+首先，可以使用new()和delete()操作符来确定协程是否在堆上分配了内存。简单地声明new操作符而不实现它:
 
 \begin{cpp}
 class CoroTask {
@@ -97,11 +97,11 @@ class CoroTask {
 \end{cpp}
 
 
-\mySamllsection{Let Coroutines use no Heap Memory}
+\mySamllsection{让协程不使用堆内存}
 
-Another use of these operators is to change the way the coroutine allocates memory. For example, you can map the calls for heap memory to some memory already allocated on the stack or in the data segment of the program.
+这些操作符的另一个用途是改变协程分配内存的方式。例如，可以将对堆内存的调用，映射到堆栈上或程序的数据段中已经分配的一些内存。
 
-Here is a concrete example of what this might look like:
+下面是一个具体的例子:
 
 \filename{coro/corotaskpmr.hpp}
 
@@ -172,7 +172,7 @@ public:
 };
 \end{cpp}
 
-Here, we use Polymorphic Memory Resources, a feature introduced with C++17 that simplifies memory management by providing standardized memory pools. In this case, we pass a data segment of 200 kilobytes to the memory pool monobuf. Using the null\_memory\_resource() as fallback ensures that a std::bad\_alloc exception is thrown if this memory is not enough. On top, we place the synchronized memory pool mempool, which manages this buffer with little fragmentation: [See my book 《C++17 - The Complete Guide for details》.]
+这里，我们使用多态内存资源，这是C++17引入的一个特性，通过提供标准化的内存池来简化内存管理。本例中，我们将200kb的数据段传递给内存池monobuf，使用null\_memory\_resource()作为回退确保在内存不足时抛出std::bad\_alloc异常。在最上面，放置了同步内存池mempool，其用很少的碎片来管理这个缓冲区:[详细信息请参阅我的书《C++17——完整指南》]。
 
 \begin{cpp}
 class [[nodiscard]] CoroTaskPmr {
@@ -197,7 +197,7 @@ public:
 };
 \end{cpp}
 
-We can use this coroutine interface as usual:
+可以像往常一样使用这个协程接口:
 
 \filename{coro/coromempmr.cpp}
 
@@ -239,9 +239,9 @@ int main()
 }
 \end{cpp}
 
-No more heap memory is allocated for these coroutines.
+不再为这些协程分配堆内存。
 
-Note that you can also provide a specific operator new that takes the coroutine parameters after the size parameter. For example, for the coroutine that takes an int and a string, we could provide:
+注意，还可以提供一个特定的操作符new，在size参数之后接受协程参数。例如，对于接受int型和string型参数的协程，可以提供:
 
 \begin{cpp}
 class CoroTaskPmr {
@@ -258,15 +258,15 @@ class CoroTaskPmr {
 
 \mySubsubsection{15.6.3}{get\_return\_object\_on\_allocation\_failure()}
 
-If the promise has a static member get\_return\_object\_on\_allocation\_failure(), it is assumed that memory allocation never throws. By default, this has the effect that
+若promise有一个静态成员get\_return\_object\_on\_allocation\_failure()，则假定内存分配从不抛出。默认情况下，其效果是使用new操作符
 
 \begin{cpp}
 ::operator new(std::size_t sz, std::nothrow_t)
 \end{cpp}
 
-is called. In that case, the user-defined operator new must be noexcept and return nullptr on failure.
+这种情况下，用户定义的操作符new必须为noexcept，失败时返回nullptr。
 
-The function can then be used to implement workarounds, such as creating a coroutine handle that does not refer to a coroutine:
+然后，可以使用该函数来实现变通方法，例如创建不引用协程的协程句柄:
 
 \begin{cpp}
 class CoroTask {

@@ -1,53 +1,53 @@
 
-So far, we have passed only awaiters to co\_await. For example, by using a standard awaiter:
+到目前为止，我们只给co\_await传递了awaiter。例如，通过使用标准的awaiter:
 
 \begin{cpp}
 co_await std::suspend_always{};
 \end{cpp}
 
-Or, as another example, co\_await took a user-defined awaiter:
+或者，另一个例子，co\_await接受用户定义的awaiter:
 
 \begin{cpp}
 co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
 \end{cpp}
 
-However, co\_await expr is an operator that can be part of a bigger expression and take values that do not have an awaiter type. For example:
+然而，co\_await expr是一个操作符，可以作为更大表达式的一部分，并接受不具有awaiter类型的值。例如:
 
 \begin{cpp}
 co_await 42;
 co_await (x + y);
 \end{cpp}
 
-The co\_await operator has the same priority as sizeof or new. For this reason, you cannot skip the parentheses in the example above without changing the meaning. The statement
+co\_await操作符与sizeof或new具有相同的优先级。由于这个原因，不能跳过上面例子中的圆括号而不改变其含义。该声明
 
 \begin{cpp}
 co_await x + y;
 \end{cpp}
 
-would be evaluated as follows:
+将按以下方式进行计算:
 
 \begin{cpp}
 (co_await x) + y;
 \end{cpp}
 
-Note that x + y or just x does not have to be an awaiter here. co\_await needs an awaitable and awaiters are only one (typical) implementation of them. In fact, co\_await accepts any value of any type provided there is a mapping to the API of an awaiter. For the mapping, the C++ standard provides two approaches:
+注意，x + y，或者只是x，在这里不一定是一个附加项。co\_await需要一个awaitable对象，而awaiter只是它们的一种(常规的)实现。事实上，co\_await接受任何类型的值，只要有一个到awaiter的API的映射。对于映射，C++标准提供了两种方法:
 
 \begin{itemize}
 \item 
-The promise member function await\_transform()
+promise的成员函数await\_transform()
 
 \item 
-operator co\_await()
+co\_await()操作符
 \end{itemize}
 
-Both approaches allow coroutines to pass any value of any type to co\_await specifying an awaiter implicitly or indirectly.
+这两种方法都允许协程将任何类型的值传递给co\_await，并隐式或间接地指定一个awaiter。
 
 
 \mySubsubsection{15.8.1}{await\_transform()}
 
-If a co\_await expression occurs in a coroutine, the compiler first looks up whether there is a member function await\_transform() that is provided by the promise of the coroutine. If that is the case, await\_transform() is called and has to yield an awaiter, which is then used to suspend the coroutine.
+若co\_await表达式出现在协程中，编译器首先查找是否存在由协程的promise提供的成员函数await\_transform()。若是这样，则调用await\_transform()并产生一个等待器，然后使用该等待器挂起协程。
 
-For example, this means that:
+例如，这意味着:
 
 \begin{cpp}
 class CoroTask {
@@ -66,7 +66,7 @@ CoroTask coro()
 }
 \end{cpp}
 
-has the same effect as:
+与如下代码具有相同的效果:
 
 \begin{cpp}
 class CoroTask {
@@ -79,7 +79,7 @@ CoroTask coro()
 }
 \end{cpp}
 
-You can also use it to enable a coroutine to pass a value to the promise before using a (standard) awaiter:
+也可以使用它来启用协程在使用(标准)awaiter之前向promise传递一个值:
 
 \begin{cpp}
 class CoroTask {
@@ -99,21 +99,21 @@ CoroTask coro()
 }
 \end{cpp}
 
-\mySamllsection{Using Values to Let co\_await Update Running Coroutines}
+\mySamllsection{使用值让co\_await更新正在运行的协程}
 
-Remember the example in which an awaiter was used to change the priority of the coroutine. There, we used an awaiter of the type CoroPrio to enable the coroutine to request the new priority as follows:
+还记得使用awaiter来更改协程优先级的示例吗?在这里，我们使用CoroPrio类型的awaiter使协程能够请求新的优先级，如下所示:
 
 \begin{cpp}
 co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
 \end{cpp}
 
-We could also allow only the new priority to be passed:
+也可以只允许传递新的优先级:
 
 \begin{cpp}
 co_await CoroPrioRequest::less; // SUSPEND with lower prio
 \end{cpp}
 
-All we would need is for the coroutine interface promise to provide a member function await\_transform() for values of this type:
+只需要让协程接口promise为这种类型的值提供await\_transform()成员函数:
 
 \begin{cpp}
 class CoroPrioTask {
@@ -133,7 +133,7 @@ public:
 };
 \end{cpp}
 
-The implementation of await\_transform() may look as follows:
+await\_transform()的实现如下:
 
 \begin{cpp}
 inline auto CoroPrioTask::promise_type::await_transform(CoroPrioRequest pr) {
@@ -143,13 +143,13 @@ inline auto CoroPrioTask::promise_type::await_transform(CoroPrioRequest pr) {
 }
 \end{cpp}
 
-Here, we again use the static member function from\_promise() for coroutine handles to get the handle, because changePrio() needs the handle as its first argument.
+这里，再次使用协程句柄from\_promise()中的静态成员函数来获取句柄，因为changePrio()需要该句柄作为其第一个参数。
 
-That way, we can skip the awaiter CoroPrio as a whole. See coro/coropriosched2.hpp for the whole code (and coro/coroprio2.cpp and coro/coroprio2.hpp for its use).
+这样的话，我们就可以跳过整个awaiter CoroPrio了。完整代码请参见coro/coropriosched2.hpp(以及coro/coroprio2.cpp和coro/coroprio2.hpp)。
 
-\mySamllsection{Letting co\_await Act Like co\_yield}
+\mySamllsection{让co\_await像co\_yield一样运行}
 
-Remember the example with co\_yield. To handle the value to be yielded we do the following:
+记住co\_yield的例子。要处理要产生的值，并做了以下的操作:
 
 \begin{cpp}
 struct promise_type {
@@ -164,7 +164,7 @@ struct promise_type {
 co_yield val; // calls yield_value(val) on promise
 \end{cpp}
 
-We can get the same effect with the following:
+可以用下面的方法得到同样的效果:
 
 \begin{cpp}
  can get the same effect with the following:
@@ -180,25 +180,25 @@ struct promise_type {
 co_await val; // calls await_transform(val) on promise
 \end{cpp}
 
-In fact,
+事实上,
 
 \begin{cpp}
 co_yield val;
 \end{cpp}
 
-is equivalent to
+等于
 
 \begin{cpp}
 co_await prm.yield_value(val);
 \end{cpp}
 
-where prm is the promise of the enclosing coroutine.
+其中prm是封闭协程的promise。
 
-\mySubsubsection{15.8.2}{operator co\_await()}
+\mySubsubsection{15.8.2}{co\_await()操作符}
 
-The other option for letting co\_await deal with any value of (almost) any type is to implement operator co\_await() for that type. This means that you have to pass a value of a class.
+让co\_await处理(几乎)任何类型的任何值的另一个选择是为该类型实现操作符co\_await()，所以必须传递一个类的值。
 
-Assume we have implemented operator co\_await() for some type MyType:
+假设已经为某些类型MyType实现了操作符co\_await():
 
 \begin{cpp}
 class MyType {
@@ -208,7 +208,7 @@ class MyType {
 };
 \end{cpp}
 
-Then, calling co\_await for an object of that type:
+然后，对该类型的对象调用co\_await:
 
 \begin{cpp}
 CoroTask coro()
@@ -218,7 +218,7 @@ CoroTask coro()
 }
 \end{cpp}
 
-calls the operator and uses the returned awaiter to handle the suspension. Here, operator co\_await() yields std::suspend\_always{}, which means that we effectively get:
+呼叫接线员并使用返回的awaiter来处理暂停。这里，操作符co\_await()产生std::suspend\_always{}，则可得到:
 
 \begin{cpp}
 CoroTask coro()
@@ -228,9 +228,9 @@ CoroTask coro()
 }
 \end{cpp}
 
-However, you could pass arguments to MyType{} and pass them to an awaiter so that you can pass values to the suspended coroutine for immediate or later resumption.
+也可以将参数传递给MyType\{\}，并将其传递给一个awaiter，以便将值传递给挂起的协程，立即或稍后恢复。
 
-Another example is to pass a coroutine to co\_await, which can then be called, including implementing preparations such as changing threads or scheduling the coroutine a thread pool.
+另一个例子是将协程传递给co\_await，然后可以调用，包括实现准备工作，例如：更改线程或将协程调度到线程池中。
 
 
 
