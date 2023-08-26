@@ -1,48 +1,48 @@
 
-When a coroutine is started, three things happen:
+当协程启动时，会发生三件事:
 
 \begin{itemize}
 \item 
-A coroutine frame is created to store all necessary data of the coroutine. This usually happens on the heap.
+创建协程框架来存储协程的必要数据，这通常发生在堆上。
 
-However, compilers are allowed to put the coroutine frame on the stack. This typically happens if the lifetime of the coroutine is within the lifetime of the caller and the compiler has enough information to compute the size of the frame.
-
-\item 
-All parameters of the coroutine are copied into the frame.
-
-Note that references are copied as references; it is not that their values are copied. This means that the arguments that the reference parameters refer to have to be valid as long as the coroutine is running.
-
-The advice is to never declare coroutine parameters as references. Otherwise, fatal runtime errors with undefined behavior may occur.
+但允许编译器将协程帧放在堆栈上。若协程的生命周期在调用者的生命周期内，并且编译器有足够的信息来计算帧的大小，则会发生这种情况。
 
 \item 
-The promise object is created inside the frame. Its purpose is to store the state the coroutine and provide hooks for customization while the coroutine is running.
+协程的所有参数都会复制到帧中。
 
-You can think of these objects as a “coroutine state controller” (an object that controls the behavior of the coroutine and can be used to track its state).
+注意，引用复制为引用;这并不是说他们的值复制了。所以只要协程在运行，引用形参所引用的实参必须有效。
+
+建议是永远不要将协程参数声明为引用。否则，可能会发生带有未定义行为的致命运行时错误。
+
+\item 
+promise对象是在框架内创建的，其目的是存储协程的状态，并在协程运行时提供用于自定义的钩子。
+
+可以将这些对象视为“协程状态控制器”(一个控制协程行为，并可用于跟踪其状态的对象)。
 \end{itemize}
 
-Figure 15.1 visualizes this initialization and shows which customization points of the promise object are used while the coroutine is running.
+图15.1可视化了这个初始化过程，并显示了在协程运行时使用promise对象的哪些自定义点。
 
 \begin{center}
 \includegraphics[width=0.8\textwidth]{content/chapter15/images/1.png}\\
-Figure 15.1. Coroutine frame and promise
+图15.1 协程框架和promise
 \end{center}
 
-\mySubsubsection{15.2.1}{How Coroutine Interfaces, Promises, and Awaitables Interact}
+\mySubsubsection{15.2.1}{如何与协程接口、promise和Awaitable对象交互}
 
-Let us also bring the awaitables into play again and see how work as a whole is organized:
+让我们再次使用awaitables，看看如何作为一个整体进行组织的:
 
 \begin{itemize}
 \item 
-For each coroutine started, the compiler creates a promise.
+对于每一个启动的协程，编译器都会创建一个promise。
 
 \item 
-That promise, embedded in a coroutine handle, is then placed in a coroutine interface. That is, the coroutine interface usually controls the lifetime of the handle and its promise.
+该promise嵌入在协程句柄中，然后放置在协程接口中，协程接口通常控制句柄及其promise的生命周期。
 
 \item 
-On suspension, coroutines use awaitables to control what happens on suspension and resumption.
+暂停时，协程使用awaitable对象来控制暂停和恢复时发生的事情。
 \end{itemize}
 
-The following program demonstrates the exact control flow by using a tracing coroutine interface, promise, and awaiter. The tracing coroutine interface and promise are implemented as follows:
+下面的程序通过使用跟踪协程接口、promise和awaiter来演示精确的控制流。跟踪协程接口和promise的实现如下所示:
 
 \filename{coro/tracingcoro.hpp}
 
@@ -118,20 +118,20 @@ class [[nodiscard]] TracingCoro {
 };
 \end{cpp}
 
-We trace:
+我们跟踪:
 
 \begin{itemize}
 \item 
-When the coroutine interface is initialized and destroyed
+当协程接口初始化和销毁时
 
 \item 
-When the coroutine interface resumes the coroutine
+当协程接口恢复协程时
 
 \item 
-Each promise operation
+每个promise操作
 \end{itemize}
 
-The tracing awaiter is implemented as follows:
+跟踪awaiter的实现如下:
 
 \filename{coro/tracingawaiter.hpp}
 
@@ -175,11 +175,11 @@ class TracingAwaiter {
 };
 \end{cpp}
 
-Here, we also trace each operation.
+这里，我们还跟踪每个操作。
 
-Note that the member functions cannot be constexpr because they have I/O.
+注意，成员函数不能是constexpr，因为它们有I/O。
 
-The coroutine is implemented and used as follows:
+协程的实现和使用如下所示:
 
 \filename{coro/corotrace.cpp}
 
@@ -218,7 +218,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 **** start coro()
@@ -273,21 +273,21 @@ The program has the following output:
       PROMISE: destructor
 \end{shell}
 
-The first thing that happens when we call a coroutine is that the coroutine promise is created.
+当调用协程时，发生的第一件事就是创建协程的promise。
 
-Then, get\_return\_object() is called for the promise created. This function usually initializes the coroutine handle and returns the coroutine interface initialized with it. To create the handle, usually the static member function from\_promise() is called. The handle is then passed to initialize the coroutine interface of the type TracingCoro. The coroutine interface is then returned to the caller of get\_return\_object() so that it can be used as the return value of the call of the coroutine (in rare cases other return types are possible).
+然后，对创建的promise调用get\_return\_object()方法，这个函数通常初始化协程句柄并返回用它初始化的协程接口。要创建句柄，通常会调用from\_promise()中的静态成员函数，然后传递句柄来初始化TracingCoro类型的协程接口，再将协程接口返回给get\_return\_object()的调用者，以便它可以用作协程调用的返回值(极少数情况下可能有其他返回类型)。
 
-Then, initial\_suspend() is called to see whether the coroutine should be immediately suspended (start lazily), which is the case here. Therefore, the control flow is given back to the caller of the coroutine.
+然后，调用initial\_suspend()来查看是否应该立即挂起协程(惰性启动)，所以控制流会返回给协程的调用者。
 
-Later, main() calls resume(), which calls resume() for the coroutine handle. This call resumes the coroutine, which means that the coroutine processes the following statements up to the next suspension or its end.
+稍后，main()调用resume()，resume()为协程句柄调用resume()。此调用恢复协程，所以协程将处理以下语句，直到下一次挂起或结束。
 
-With each suspension, co\_await uses an awaitable, which is an awaiter of the type TracingAwaiter in this case. It is created with the default constructor. For the awaiter, the member functions await\_ready() and await\_suspend() are called to control the suspension (they might even reject it). Because await\_ready() returns false and await\_suspend() returns nothing, the request to suspend is accepted. Therefore, the resumption of the coroutine ends and main() continues. On the next resumption, await\_resume() is called and the coroutine continues.
+对于每个暂停，co\_await都会使用一个awaitable对象，在本例中它是一个类型为TracingAwaiter的awaiter对象，是用默认构造函数创建的。对于awaiter，调用成员函数await\_ready()和await\_suspend()来控制挂起(甚至可能拒绝挂起)。因为await\_ready()返回false，而await\_suspend()不返回任何值，所以接受挂起请求。因此，协程的恢复结束，main()继续。下一次恢复时，调用await\_resume()并继续协程。
 
-When a coroutine reaches its end or a co\_return statement, the corresponding member functions for dealing with its end are called. First, depending on whether or not there is a return value, return\_void() or return\_value() is called. Then, the function for the final suspension, final\_suspend(), is called. Note that even inside final\_suspend() the coroutine is still “running,” which means that calling resume() again or destroy() inside final\_suspend() would cause a runtime error.
+当协程到达其结束或co\_return语句时，将调用处理其结束的相应成员函数。首先，根据是否有返回值，调用return\_void()或return\_value()。然后，调用用于最终挂起的函数final\_suspend()。注意，即使在final\_suspend()中，协程仍在“运行”，则再次调用resume()，或在final\_suspend()中调用destroy()，将导致运行时错误。
 
-At the end of the lifetime of the coroutine interface, its destructor is called, which destroys the coroutine handle. Finally, the promise is destroyed.
+在协程接口生命周期结束时，调用其析构函数，析构函数将销毁协程句柄。最后，销毁promise。
 
-As an alternative, assume that initial\_suspend() returns a promise type signaling to start the coroutine eagerly instead of initially suspending it:
+作为一种替代方案，假设初始化的\_suspend()返回一个promise类型，表示提前启动协程，而不是一开始挂起它:
 
 \begin{cpp}
 class [[nodiscard]] TracingCoro {
@@ -305,7 +305,7 @@ class [[nodiscard]] TracingCoro {
 };
 \end{cpp}
 
-In this case, we would get the following output:
+将得到以下输出:
 
 \begin{shell}
 **** start coro()
@@ -356,7 +356,7 @@ In this case, we would get the following output:
       PROMISE: destructor
 \end{shell}
 
-Again, the coroutine framework creates the promise and calls get\_return\_object() for it, which initializes the coroutine handle and the coroutine interface. However, initial\_suspend() does not suspend. Therefore, the coroutine starts eagerly executing the first statements until the first co\_await suspends it for the first time. This suspension is the moment when the TracingCoro object that initially was created in get\_return\_object() is returned to the caller of the coroutine. After that, as before, we loop over the resumptions.
+同样，协程框架创建了promise，并对其调用get\_return\_object()，这初始化了协程句柄和协程接口，但initial\_suspend()不会挂起。因此，协程开始急切地执行第一个语句，直到第一个co\_await第一次挂起。当最初在get\_return\_object()中创建的TracingCoro对象返回给协程的调用者时，就触发了这个暂停。之后，和前面一样，恢复循环遍历。
 
 
 

@@ -1,30 +1,30 @@
 
-Coroutines have the following attributes and constraints:
+协程具有以下属性和限制:
 
 \begin{itemize}
 \item 
-Coroutines are not allowed to have return statements.
+协程不允许有返回语句。
 
 \item 
-Coroutines cannot be constexpr or consteval.
+协程不能是constexpr或consteval。
 
 \item 
-Coroutines cannot have return type auto or other placeholder types.
+协程不能有返回类型auto或其他占位符类型。
 
 \item 
-main() cannot be a coroutine.
+main()不能是协程。
 
 \item 
-A constructor or destructor cannot be a coroutine.
+构造函数或析构函数不可为协程。
 \end{itemize}
 
-A coroutine may be static. A coroutine may be a member function if it is not a constructor or destructor.
+协程可以是静态的。协程若不是构造函数或析构函数，可以是成员函数。
 
-A coroutine may even be a lambda. However, in that case, care must be taken.
+协程甚至可以是Lambda，但在这种情况下，必须小心。
 
-\mySubsubsection{15.1.1}{Coroutine Lambdas}
+\mySubsubsection{15.1.1}{Lambda协程}
 
-A coroutine may be a lambda. We could also implement our first coroutine as follows:
+协程可以是Lambda，也可以像这样实现我们的第一个协程示例:
 
 \begin{cpp}
 auto coro = [] (int max) -> CoroTask {
@@ -38,9 +38,9 @@ auto coro = [] (int max) -> CoroTask {
 };
 \end{cpp}
 
-However, note that a coroutine lambda should never capture anything. This is because a lambda is a shortcut for defining a function object that is created in the scope in which the lambda is defined. When you leave that scope, the coroutine lambda might still be resumed even though the lambda object has been destroyed.
+但请注意协程Lambda不应该捕获任何内容。这是因为Lambda是定义函数对象的快捷方式，该对象在定义Lambda的作用域中创建。当离开该作用域时，协程Lambda可能仍然会恢复，这是Lambda对象已销毁了。
 
-Here is an example of broken code that results in a fatal runtime error:
+下面是一个导致致命运行时错误的代码示例:
 
 \begin{cpp}
 auto getCoro()
@@ -62,9 +62,9 @@ auto coroTask = getCoro()(3); // initialize coroutine
 coroTask.resume(); // FATAL RUNTIME ERROR
 \end{cpp}
 
-Normally, returning a lambda that captures something by value has no lifetime issues.
+通常，返回一个按值捕获的Lambda没有生命周期问题。
 
-We could use the coroutine lambda as follows:
+可以像下面这样使用协程Lambda:
 
 \begin{cpp}
 auto coro = getCoro(); // initialize coroutine lambda
@@ -72,7 +72,7 @@ auto coroTask = coro(3); // initialize coroutine
 coroTask.resume(); // OK
 \end{cpp}
 
-We could also pass str to getCoro() by reference and ensure that str lives as long as we use the coroutine.
+还可以通过引用将str传递给getCoro()，并确保只要使用协程，str就存在。
 
-However, the fact that you cannot combine both initializations into one statement may be very surprising and more subtle lifetime issues can occur easily. Therefore, not using captures in coroutine lambdas at all is highly recommended.
+但不能将两个初始化组合到一个语句中，因为很容易出现更微妙的生命周期问题。因此，强烈建议不要在协程Lambda中使用捕获。
 
