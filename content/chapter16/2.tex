@@ -1,31 +1,31 @@
 
 
-The purpose of modules is to deal with code of significant size distributed over multiple files. Modules can be used to wrap code of small, medium-sized, and very large components consisting of 2, 10, or even 100 files. These files might even be provided and maintained by multiple programmers and teams.
+模块的目的是处理分布在多个文件上的大量代码。模块可用于包装由2个、10个甚至100个文件组成的小型、中型和超大型组件的代码。这些文件甚至可能由多个开发者和团队提供和维护。
 
-To demonstrate the scalability of this approach and its benefits, let us now look at how multiple files can be used to define a module that can be used/imported by other code. The code size of the example is still small so that you would normally not spread it over multiple files. The goal is to demonstrate the features with very simple examples.
+为了演示这种方法的可扩展性及其好处，现在来看一下如何使用多个文件来定义可以被其他代码使用/导入的模块。示例的代码大小仍然很小，通常不会将其分散到多个文件中。我们的目标是用非常简单的示例来演示这些特性。
 
-\mySubsubsection{16.2.1}{Module Units}
+\mySubsubsection{16.2.1}{模块单元}
 
-In general, modules consist of multiple module units. Module units are translation units that belong to a module.
+通常，模块由多个模块单元组成。模块单元是属于一个模块的翻译单元。
 
-All module units have to be compiled in some way. Even if they contain only declarations, which would go in header files in traditional code, some kind of precompilation is necessary. Therefore, the files are always transferred into some internal platform-specific format that is used to avoid having to (pre)compile the same code again and again.
+所有模块单元都必须以某种方式编译，只包含声明(传统代码中的头文件)，也需要进行某种预编译。因此，这些文件总可转换成某种特定于平台的内部格式，以避免不得不一次又一次地(预)编译相同的代码。
 
-Besides the primary module interface unit, C++ provides three other unit types to split the code of a module into multiple files:
+除了主要的模块接口单元，C++还提供了另外三种单元类型来将模块的代码拆分为多个文件:
 
 \begin{itemize}
 \item 
-Module implementation units allow programmers to implement definitions in their own file so that they can be compiled separately (similar to traditional C++ source code in .cpp files).
+模块实现单元允许开发者在自己的文件中实现定义，这样就可以单独编译(类似于传统的C++源代码在.cpp文件中)。
 
 \item 
-Internal partitions allow programmers to provide declarations and definitions that are visible only within a module in separate files.
+内部分区允许开发者在单独的文件中提供仅在模块内可见的声明和定义。
 
 \item 
-Interface partitions even allow programmers to split the exported module API into multiple files.
+接口分区甚至允许开发者将导出的模块API拆分为多个文件。
 \end{itemize}
 
-The next sections introduce these additional module units with examples.
+下一节将通过示例介绍这些额外的模块单元。
 
-\mySubsubsection{16.2.2}{Using Implementation Units}
+\mySubsubsection{16.2.2}{使用已实现的单元}
 
 The first example of a module that is implemented in multiple files demonstrates how to split definitions (such as function implementations) to avoid having them in one file. The usual motivation for this is to be able to compile the definitions separately.
 
@@ -33,7 +33,7 @@ This can be done by using module implementations (the official name is module im
 
 Let us look at an example.
 
-\mySamllsection{A Primary Interface with a Global Module Fragment}
+\mySamllsection{带有全局模块片段的主接口}
 
 As usual, first we need the primary interface that defines what we export:
 
@@ -126,7 +126,7 @@ As you can see, we need the header files and the internal data structure Order t
 
 For the class Customer, the member functions averagePrice(), sumPrice(), and print() are only declared. Here, we use the feature to define them in module implementation units.
 
-\mySamllsection{Module Implementation Units}
+\mySamllsection{模块实现单元}
 
 A module may have any number of implementation units. In our example, we provide two of them: one to implement numeric operations and one to implement I/O operations.
 
@@ -196,7 +196,7 @@ Here, we introduce the module with module; to have a global module fragment for 
 
 As you can see, module implementation units use the file extension of traditional C++ translation units (most of the time .cpp). Compilers deal with them just like any other non-module C++ code.
 
-\mySamllsection{Using the Module}
+\mySamllsection{使用模块}
 
 The code using the module looks as follows:
 
@@ -236,13 +236,13 @@ Note that any attempt to use type Order in the code that imports the module resu
 
 Note also that the use of the module does not depend on how many implementation units we have. The number of implementation units matters only in that the linker has to use all object files generated for them.
 
-\mySubsubsection{16.2.3}{Internal Partitions}
+\mySubsubsection{16.2.3}{内部分区}
 
 In the previous example, we introduced a data structure Order that is only used within the module. It looks like we have to declare it in the primary interface to make it available to all implementation units, which of course does not really scale in large projects. With internal partitions, you can declare and define internal types and functions of a module in separate files. Note that partitions can also be used to define parts of an exported interface in a separate file, which we will discuss later.
 
 Note that internal partitions are sometimes called partition implementation units, which is based on the fact that in the C++20 standard, they are officially called “module implementation units that are module partitions” and that sounds like they provide the implementations of interface partitions. They do not. They just act like internal header files for a module and may provide both declarations and definitions.
 
-\mySamllsection{Defining an Internal Partition}
+\mySamllsection{定义内部分区}
 
 Using an internal partition, we can define the local type Order in its own module unit as follows:
 
@@ -313,7 +313,7 @@ The primary interface has to import the internal partition because it uses type 
 
 Again, note that partitions are only an internal implementation aspect of a module. For the user of the code, it does not matter whether code is in the primary module, its implementation, or in an internal partition. However, code from internal partitions cannot be exported.
 
-\mySubsubsection{16.2.4}{Interface Partitions}
+\mySubsubsection{16.2.4}{分区的接口}
 
 You can also split the interface of a module into multiple files. In that case, you declare interface partitions, which themselves export whatever should be exported.
 
@@ -449,7 +449,7 @@ int main()
 \end{cpp}
 
 
-\mySubsubsection{16.2.5}{Summary of Splitting Modules into Different Files}
+\mySubsubsection{16.2.5}{将模块拆分到不同文件的总结}
 
 The examples in this section demonstrate how you can deal with modules of increasing code size so that splitting the code is helpful or even necessary to “tame the beast:”
 

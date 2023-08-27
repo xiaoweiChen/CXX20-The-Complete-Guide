@@ -1,7 +1,7 @@
 
 This section describes a few additional details for using modules.
 
-\mySubsubsection{16.4.1}{Private Module Fragments}
+\mySubsubsection{16.4.1}{私有模块片段}
 
 If you declare a module in a primary interface, you might sometimes need a private module fragment. This allows programmers to have declarations and definitions within the primary interface that are neither visible nor reachable by any other module or translation unit. One way to use a private module fragment is to disable exporting the definition of a class or function although its declaration is exported.
 
@@ -97,7 +97,7 @@ void foo(const C& c) { // OK
 }
 \end{cpp}
 
-\mySubsubsection{16.4.2}{Module Declaration and Export in Detail}
+\mySubsubsection{16.4.2}{详细介绍模块的声明和导出}
 
 Module units have to start with one of the following (after initial comments and whitespace):
 
@@ -183,7 +183,7 @@ No inline is necessary for any export. Formally, a definition within a module al
 
 This applies even if the object is also re-exported by another module.
 
-\mySubsubsection{16.4.3}{Umbrella Modules}
+\mySubsubsection{16.4.3}{伞形模块}
 
 Modules can export everything they import. For imported interface partitions, export is even required.
 
@@ -214,7 +214,7 @@ export using ::log;
 \end{cpp}
 
 
-\mySubsubsection{16.4.4}{Module Import in Detail}
+\mySubsubsection{16.4.4}{模块导入的详情}
 
 With import, any C++ source code file can import a module to use the functions, types, and objects exported there.
 
@@ -224,9 +224,7 @@ Translation or module units that use import have to be compiled after the module
 Otherwise, you might get an error that the module is not defined or, even worse, you might compile against an old version of a module. As a consequence, circular imports are not possible.
 
 
-
-
-\mySubsubsection{16.4.5}{Reachable versus Visible Symbols in Detail}
+\mySubsubsection{16.4.5}{可达符号与可见符号的细节}
 
 Let us look at a few more details and an example of the visibility and reachability of exported and imported symbols.
 
@@ -318,7 +316,7 @@ std::cout << p3 << '\n'; // OK (operator<< is reachable now)
 
 Note again that by using private module fragments, you can restrict the reachability of indirectly exported symbols.
 
-\mySamllsection{Non-Exported Symbols Cannot Conflict}
+\mySamllsection{未导出的符号不能冲突}
 
 The behavior that indirectly exported symbols are not visible but reachable allows programmers to use different modules that use the same symbol names in their exported interface. Consider, for example, you have a module defining a class Person as follows:
 

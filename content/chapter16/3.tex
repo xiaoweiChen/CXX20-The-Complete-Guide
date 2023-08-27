@@ -3,7 +3,7 @@
 This section discusses some additional aspects of modules for using them in practice.
 
 
-\mySubsubsection{16.3.1}{Dealing with Module Files with Different Compilers}
+\mySubsubsection{16.3.1}{用不同的编译器处理模块文件}
 
 In C++, extensions are not standardized. In practice, different file extensions are used (usually .cpp and .hpp, but also .cc, .cxx, .C, .hh, .hxx, .H, and even .h are used).
 
@@ -149,7 +149,7 @@ However, you cannot use internal partition files.
 \end{itemize}
 
 
-\mySubsubsection{16.3.2}{Dealing with Header Filess}
+\mySubsubsection{16.3.2}{处理头文件}
 
 While in theory modules could replace all traditional header files with all their flaws, in practice this will never happen. There will be header files from code and libraries developed for C++ (and C) that do not require the use of modules. This will be the case especially because the use of a precompiler makes compiling and linking C++ programs more complex. Therefore, modules should be able to deal with traditional header files.
 
@@ -199,7 +199,7 @@ Both NDEBUG and assert() are not visible in other units of this module or import
 
 After the declaration of a module, \#include is no longer supported. Other preprocessor commands such as \#define and \#ifdef can be used.
 
-\mySamllsection{import for Header Files}
+\mySamllsection{头文件的导入}
 
 The future goal is to have the whole C++ standard library available as modules. However, for the standard C++ header files, it is already possible to use import, which then can be used within a module. For example:
 
@@ -224,7 +224,7 @@ import <cassert>; // ERROR (or at least not portable)
 
 Platforms are also allowed to support this feature for other header files; however, code using this feature is not portable.
 
-\mySamllsection{Standard Modules}
+\mySamllsection{标准模块}
 
 C++20 just introduces the technology. It does not introduce any standard modules (one reason is that the standards committee wants to reorganize the symbols over different modules to clean up some of the historic mess with header files).
 

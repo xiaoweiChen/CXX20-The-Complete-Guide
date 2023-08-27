@@ -1,12 +1,12 @@
 
 
-In principle, passing operands to co\_await can execute any code. We can jump to a very different context or perform some operation and continue with the result of that operation as soon as we have it. Even when the other operation runs in a different thread, no synchronization mechanism is necessary.
+原则上，将操作数传递给co\_await可以执行任何代码。可以跳转到一个非常不同的上下文，或者执行一些操作，并在得到结果后继续执行。即使其他操作在不同的线程中运行，也不需要同步机制。
 
-This section provides a basic example to demonstrate this technique. Part of it is a simple thread pool to deal with coroutines, which uses std::jthread and a couple of new concurrency features of C++20.
+本节提供一个基本示例来进行演示，其一部分是处理协程的简单线程池，使用std::jthread和C++20的一些新的并发特性。
 
-\mySubsubsection{15.9.1}{co\_await Coroutines}
+\mySubsubsection{15.9.1}{co\_await协程}
 
-Assume we have the following coroutines calling each other:
+假设有以下相互调用的协程:
 
 \filename{coro/coroasync.hpp}
 
@@ -43,9 +43,9 @@ CoroPoolTask runAsync(std::string id)
 }
 \end{cpp}
 
-Both coroutines use CoroPoolTask, a coroutine interface for tasks running in a thread pool. The implementation of the interface and the pool will be discussed later.
+这两个协程都使用CoroPoolTask，一个在线程池中运行任务的协程接口。接口和池的实现将在后面讨论。
 
-The important part is that the coroutine runAsync() uses co\_await to call another coroutine print():
+重要的部分是协程runAsync()使用co\_await调用另一个协程print():
 
 \begin{cpp}
 CoroPoolTask runAsync(std::string id)
@@ -56,13 +56,13 @@ CoroPoolTask runAsync(std::string id)
 }
 \end{cpp}
 
-As we will see, this has the effect that the coroutine print() will be scheduled in a thread pool to run in different threads. In addition, co\_await blocks until print() is done.
+这样做的效果是，协程print()将被安排在线程池中，在不同的线程中运行。此外，co\_await阻塞直到print()完成。
 
-Note that print() needs a co\_return to ensure that it is treated as a coroutine by the compiler. Without this, we would not have any co\_ keyword at all and the compiler (assuming this is an ordinary function) would complain that we have a return type but no return statement.
+注意，print()需要一个co\_return来确保它被编译器视为协程。若没有这个，就不会有任何co\_关键字，编译器(假设这是一个普通的函数)会抱怨有返回类型，但没有返回语句。
 
-Note also that we use the helper syncOut(), which yields a std::osyncstream, to ensure that the concurrent output from different threads is synchronized line by line.
+还要注意，使用辅助函数syncOut()，会产生一个std::osyncstream，以确保来自不同线程的并发输出逐行同步。
 
-Assume we call the coroutine runAsync() as follows:
+假设按如下方式调用协程runAsync():
 
 \filename{coro/coroasync1.cpp}
 
@@ -90,34 +90,34 @@ int main()
 }
 \end{cpp}
 
-Here, we first create a thread pool of the type CoroPool for all coroutines using the interface CoroPoolTask:
+这里，首先使用CoroPoolTask接口为所有协程创建一个CoroPool类型的线程池:
 
 \begin{cpp}
 CoroPool pool{4};
 \end{cpp}
 
-Then, we call the coroutine, which starts the coroutine lazily and returns the interface, and hand the interface over to the pool to take control of the coroutine:
+然后，使用协程，惰性地启动协程并返回接口，并将接口交给池来控制协程:
 
 \begin{cpp}
 CoroPoolTask t1 = runAsync("1");
 pool.runTask(std::move(t1));
 \end{cpp}
 
-We use (and have to use) move semantics for the coroutine interface, because runTask() requires to pass an rvalue to be able to take over the ownership of the coroutine (after the call t1 no longer has it).
+为协程接口使用(并且必须使用)移动语义，因为runTask()需要传递一个右值，以便能够接管协程的所有权(t1不再拥有它)。
 
-We could also do that in one statement:
+也可以用一条语句来实现:
 
 \begin{cpp}
 pool.runTask(runAsync("1"));
 \end{cpp}
 
-Before we end the program. the pool blocks until all scheduled coroutines have been processed:
+在我们结束这个项目。协程池会阻塞，直到所有调度的协程都处理完:
 
 \begin{cpp}
 pool.waitUntilNoCoros();
 \end{cpp}
 
-When we run this program, we get something like the following output (the thread IDs vary):
+当运行这个程序时，会得到如下输出(线程id不同):
 
 \begin{shell}
 **** main() on thread 0x80000008
@@ -134,22 +134,22 @@ runTask(runAsync(1))
 **** main() done
 \end{shell}
 
-As you can see, different threads are used:
+如您所见，这里使用不同的线程:
 
 \begin{itemize}
 \item 
-The coroutine runAsync() is started on a different thread to main()
+协程runAsync()在与main()不同的线程上启动。
 
 \item 
-The coroutine print() called from there is started on a third thread
+调用的协程print()从第三个线程开始
 
 \item 
-The second call of coroutine print() called from there is started on a fourth thread
+第二次调用协程print()是从第四个线程开始的
 \end{itemize}
 
-However, runAsync() changes threads with each call of print(). By using co\_await, these calls suspend runAsync() and call print() on a different thread (as we will see, the suspension schedules the called coroutine in the pool). At the end of print(), the calling coroutine runAsync() resumes on the same thread in which print() was running.
+然而，每次调用print()时，runAsync()都会改变线程。通过使用co\_await，这些调用挂起runAsync()并在另一个线程上调用print()(挂起调度池中被调用的协程)。print()结束时，调用协同程序runAsync()在print()运行的同一线程上恢复。
 
-As a variation, we could also start and schedule coroutine runAsync() four times:
+作为一种变体，还可以启动并调度四次协程runAsync():
 
 \filename{coro/coroasync2.cpp}
 
@@ -178,7 +178,7 @@ int main()
 }
 \end{cpp}
 
-This program might have the following output (using different thread IDs due to a different platform):
+这个程序可能有以下输出(由于不同的平台使用不同的线程id):
 
 \begin{shell}
 **** main() on thread 17308
@@ -216,19 +216,19 @@ runTask(runAsync(4))
 **** main() done
 \end{shell}
 
-The output now varies more because we have concurrent coroutines using the next available thread. However, in general, we have the same behavior:
+输出现在变化更大，因为有使用下一个可用线程的并发协程。总的来说，其有相同的行为:
 
 \begin{itemize}
 \item 
-Whenever the coroutine calls print(), it is scheduled and probably started on a different thread (it might be the same thread if no other thread is available).
+每当协程调用print()时，都会调度并可能在不同的线程上启动(若没有其他线程可用，则可能是同一个线程)。
 
 \item 
-Whenever print() is done, the calling coroutine runAsync() directly resumes on the same thread that print() was running on, meaning that runAsync() effectively changes threads with each call of print().
+每当print()完成时，调用协同程序runAsync()直接在print()运行的同一个线程上恢复，所以每次调用print()时，runAsync()都改变了运行线程。
 \end{itemize}
 
-\mySubsubsection{15.9.2}{A Thread Pool for Coroutine Tasks}
+\mySubsubsection{15.9.2}{协程任务的线程池}
 
-Here is the implementation of the coroutine interface CoroPoolTask and the corresponding thread pool class CoroPool:
+下面是协程接口CoroPoolTask和对应的线程池类CoroPool的实现:
 
 \filename{coro/coropool.hpp}
 
@@ -429,32 +429,32 @@ void CoroPoolTask::CoAwaitAwaiter::await_suspend(CoroHdl awaitingHdl) noexcept
 }
 \end{cpp}
 
-Both classes CoroPoolTask and CoroPool carefully play together:
+CoroPoolTask和CoroPool两个类需要谨慎地使用:
 
 \begin{itemize}
 \item 
-CoroPoolTask is used to initialize a coroutine as task to call. The task should be schedule in the pool, which then takes control over it until it gets destroyed.
+CoroPoolTask用于将协程初始化为要调用的任务。任务应该在池中调度，然后由池控制它，直到销毁。
 
 \item 
-CoroPool implements a minimal thread pool that can run scheduled coroutines. In addition, it provides a very minimal API to
+CoroPool实现了一个最小的线程池，可以运行调度的协程。此外，还提供了一个非常小的API
 \begin{itemize}
 \item 
-block until all scheduled coroutines are done
+阻塞，直到所有计划的协程完成
 
 \item
-shutdown the pool (which is automatically done by its destructor)
+关闭池(由其析构函数自动完成)
 \end{itemize}
 \end{itemize}
 
-Let us look at the code in detail.
+让我们详细地看一下代码。
 
-\mySamllsection{Class CoroPoolTask}
+\mySamllsection{类CoroPoolTask}
 
-Class CoroPoolTask provides a coroutine interface to run a task with the following specialties:
+类CoroPoolTask提供了一个协程接口来运行具有以下特性的任务:
 
 \begin{itemize}
 \item 
-Each coroutine knows has a pointer to the thread pool, which is initialized when the thread pool takes control over the coroutine:
+每个协程都知道有一个指向线程池的指针，这个指针在线程池控制协程时初始化:
 
 \begin{cpp}
 class [[nodiscard]] CoroPoolTask
@@ -469,7 +469,7 @@ class [[nodiscard]] CoroPoolTask
 \end{cpp}
 
 \item 
-Each coroutine has a member for an optional continuation as described before:
+每个协程都有一个可选持续的成员，如前所述:
 
 \begin{cpp}
 class [[nodiscard]] CoroPoolTask
@@ -500,10 +500,10 @@ class [[nodiscard]] CoroPoolTask
 \end{cpp}
 
 \item 
-Each coroutine has an operator co\_await(), which means that a co\_await task() uses a special awaiter so that the co\_await suspends the current coroutine after scheduling the passed coroutine to the pool with the current coroutine as continuation.
+每个协程都有一个co\_await()运算符，则co\_await任务()使用一个特殊的awaiter，因此co\_await在将传递的协程调度到池中，并以当前协程作为可持续成员后挂起当前协程。
 \end{itemize}
 
-Here is how the implemented operator co\_await() works. This is the relevant code:
+下面是实现的操作符co\_await()的工作原理。以下是有关守则:
 
 \begin{cpp}
 class [[nodiscard]] CoroPoolTask
@@ -527,7 +527,7 @@ void CoroPoolTask::CoAwaitAwaiter::await_suspend(CoroHdl awaitingHdl) noexcept
 }
 \end{cpp}
 
-When we call print() with co\_await:
+当用co\_await调用print()时:
 
 \begin{cpp}
 CoroPoolTask runAsync(std::string id)
@@ -538,48 +538,48 @@ CoroPoolTask runAsync(std::string id)
 }
 \end{cpp}
 
-the following happens:
+发生以下情况:
 
 \begin{itemize}
 \item
-print() is called as a coroutine and initialized. 
+print()作为协程调用并初始化。
 
 \item 
-For the returned coroutine interface of the type CoroPoolTask, operator co\_await() is called.
+对于返回的CoroPoolTask类型的协程接口，调用操作符co\_await()。
 
 \item 
-operator co\_await() takes the handle to initialize an awaiter of the type CoAwaitAwaiter. This means that the new coroutine print() becomes the member newHdl of the awaiter.
+操作符co\_await()接受用于初始化CoAwaitAwaiter类型的awaiter的句柄，所以新的协程print()将成为该await而的成员newwhdl。
 
 \item 
-std::exchange() ensures that in the initialized coroutine interface, the handle hdl becomes nullptr so that a destructor does not call destroy().
+std::exchange()可确保在初始化的协程接口中，句柄HDL变为nullptr，这样析构函数就不会调用destroy()。
 
 \item 
-runAsync() is suspended with the awaiter initialized by operator co\_await(), which calls await\_suspend() with the handle of the coroutine runAsync() as parameter.
+runAsync()使用由操作符co\_await()初始化的awaiter挂起，该操作符以协同程序runAsync()的句柄作为参数调用await\_suspend()。
 
 \item 
-Inside await\_suspend() we store the passed suspended runAsync() as a continuation and schedule the newHdl (print()) in the pool to be resumed by one of the threads.
+在await\_suspend()中，我们将传递的挂起的runAsync()作为持续存储，并在池中调度newHdl(print())，以便由其中一个线程恢复。
 \end{itemize}
 
-\mySamllsection{Class CoroPool}
+\mySamllsection{类CoroPool}
 
-CoroPool implements its minimal thread pool by a combination of some features introduced here and in other parts of this book.
+CoroPool通过结合本文和本书其他部分介绍的一些特性来实现其最小线程池。
 
-First let us look at the members:
+首先让看一下其成员:
 
 \begin{itemize}
 \item 
-Like any typical thread pool, this class has a member for the threads using the new thread class std::jthread so that we do not have to deal with exceptions and can signal a stop:
+与其他线程池一样，这个类有一个使用新线程类std::jthread的线程成员，这样我们就不必处理异常，可以发出停止信号:
 
 \begin{cpp}
 std::list<std::jthread> threads; // list of threads
 \end{cpp}
 
-We do not need any synchronization because the only other moment we use threads after initialization is during a shutdown(), which first joins all threads (after signaling stop). Copying and moving the pool is not supported (this is for simplicity; we could easily provide move support).
+因为在初始化之后使用线程的唯一其他时刻是在shutdown()期间，所以不需要同步，其首先会连接所有线程(信号停止之后)。不支持复制和移动池(简单起见，可以很容易地提供移动支持)。
 
-Note that for better performance, the destructor first requests all threads to stop before starting to join() them.
+请注意，为了获得更好的性能，析构函数在开始join()之前首先请求所有线程停止。
 
 \item 
-Then, we have a queue of coroutines to process with corresponding synchronization members:
+然后，有一个具有相应同步成员的协程队列要处理:
 
 \begin{cpp}
 std::list<CoroPoolTask::CoroHdl> coros; // queue of scheduled coros
@@ -588,32 +588,32 @@ std::condition_variable_any corosCV;
 \end{cpp}
 
 \item 
-To avoid stopping the pool too early, the pool also tracks the total number of coroutines owned by the pool:
+为了避免过早停止池，池还跟踪池拥有的协程总数:
 
 \begin{cpp}
 std::atomic<int> numCoros = 0; // counter for all coros owned by the pool
 \end{cpp}
 
-and provides the member function waitUntilNoCoros().
+并提供成员函数waitUntilNoCoros()。
 \end{itemize}
 
-The member function runCoro() is the key function for scheduling a coroutine for resumption. It takes a coroutine handle of the interface CoroPoolTask as an argument. There are two approaches for scheduling the coroutine interface itself:
+成员函数runCoro()是调度协程恢复的关键函数，接受接口CoroPoolTask的协程句柄作为参数。有两种方法可以调度协程接口本身:
 
 \begin{itemize}
 \item 
-Calling runTask()
+调用runTask()
 
 \item 
-Using co\_await task()
+使用co\_await task()
 \end{itemize}
 
-Both approaches move the coroutine handle into the pool, so that the pool is then has the responsibility to destroy() the handle when it is no longer in use.
+这两种方法都将协程句柄移动到池中，这样池就有责任在不再使用该句柄时destroy()该句柄。
 
-However, implementing the right moment to call destroy() (and adjust the total number of coroutines) is not easy to do correctly and safely. The coroutine should be finally suspended for that, which rules out doing this in final\_suspend() of the task or await\_suspend() of the final awaiter. So, tracking and destruction works as follows:
+然而，实现正确的时刻调用destroy()(并调整协程的总数)并不容易正确和安全地完成。协程应该最终挂起，这就排除了在任务的final\_suspend()或final awaiter的await\_suspend()中执行此操作，所以跟踪和销毁工作如下所示:
 
 \begin{itemize}
 \item 
-Each time a coroutine handle is passed to the pool, we increment the number of coroutines:
+每次将协程句柄传递给池时，将增加协程的数量:
 
 \begin{cpp}
 void runCoro(CoroPoolTask::CoroHdl coro) noexcept {
@@ -623,9 +623,9 @@ void runCoro(CoroPoolTask::CoroHdl coro) noexcept {
 \end{cpp}
 
 \item 
-After any resumption by a thread is done, we check whether the coroutine and possible continuations have been done. Note that the continuations are called automatically by the coroutine frame according to await\_suspend() of the final awaiter of the task.
+在线程的任何恢复完成后，将检查协程和可能的延续是否已经完成。注意，根据任务的最后一个等待器的await\_suspend()，协程帧会自动调用持续。
 
-Therefore, after each resumption has finished, we recursively iterate over all continuations to destroy all of the coroutines done:
+因此，在每次恢复完成后，会递归地迭代所有的可持续对象以销毁所有已完成的协程:
 
 \begin{cpp}
 std::function<void(CoroPoolTask::CoroHdl)> destroyDone;
@@ -640,10 +640,10 @@ destroyDone = [&destroyDone, this](auto hdl) {
 destroyDone(coro); // recursively destroy coroutines done
 \end{cpp}
 
-Because the lambda is used recursively, we have to forward declare it as a std::function<>.
+因为Lambda是递归使用的，所以必须将其转发声明为std::function<>。
 
 \item 
-Finally, we wake up any waiting waitUntilNoCoros() with the new thread synchronization feature of atomic types:
+最后，用原子类型的新线程同步特性唤醒所有等待的waitUntilNoCoros():
 
 \begin{cpp}
 numCoros.notify_all(); // wake up any waiting waitUntilNoCoros()
@@ -658,14 +658,14 @@ void waitUntilNoCoros() {
 \end{cpp}
 
 \item 
-If the pool is destroyed, we also destroy all remaining coroutine handles after all threads have finished.
+若池销毁了，也可在所有线程完成后销毁所有剩余的协程句柄。
 \end{itemize}
 
-\mySamllsection{Synchronous Waiting for Asynchronous Coroutines}
+\mySamllsection{同步等待异步协程}
 
-In real-world coroutine pools, a lot of aspects might look different, more sophisticated, and use additional tricks to make the code more robust and safe.
+实际的协程池会更复杂，并使用额外的技巧来使代码更健壮和安全。
 
-For example, pools might provide a way to schedule a task and wait for its end, which for CoroPool, would look as follows:
+例如，池可以提供一种调度任务并等待其结束的方法，对于CoroPool来说，看起来如下所示:
 
 \begin{cpp}
 class CoroPool
@@ -692,9 +692,9 @@ class CoroPool
 };
 \end{cpp}
 
-Here we use a binary semaphore so that we can signal the end of the passed task and wait for it in a different thread.
+这里我们使用一个二值信号量，就可以发出传递任务结束的信号，并在另一个线程中等待它。
 
-Note that you have to be careful about what exactly is signaled. Here, the signal says we are behind the task that called with co\_await was performed. In this case, you could even signal this in await\_ready():
+请注意，必须注意信号的确切内容，信号表明我们已经落后于执行了co\_await调用的任务，所以也可以在await\_ready()中发出信号:
 
 \begin{cpp}
 bool await_ready() {
@@ -703,33 +703,33 @@ bool await_ready() {
 }
 \end{cpp}
 
-In general, you have to consider that in await\_ready(), the coroutine is not suspended yet. Therefore, any signal that causes it to check whether it is done() or even destroy() it results in a fatal runtime error. Because we use concurrent code here, you have to ensure that the signal does not even cause corresponding calls indirectly.
+通常，必须考虑在await\_ready()中，协程尚未挂起。因此，检查是否为done()，甚至destroy()的信号都会导致致命的运行时错误。因为在这里可以使用并发代码，所以必须确保信号不会间接引起相应的调用。
 
-\mySubsubsection{15.9.3}{What C++ Libraries Will Provide After C++20}
+\mySubsubsection{15.9.3}{C++20之后的库将提供什么特性}
 
-All you have seen here in this section of the coroutine chapter is just a pretty simple code example that is not robust, thread-safe, complete, or flexible enough to provide general solutions for various typical use cases of coroutines.
+在协程章节的这一节中，所看到的只是一个非常简单的代码示例，不够健壮、线程安全、完整或灵活，无法为协程的各种典型用例提供通用解决方案。
 
-The C++ standards committee is working on better solutions to provide them in future libraries.
+C++标准委员会正致力于在未来的库中提供更好的解决方案。
 
-For a program that can run coroutines concurrently in a safe and flexible way, you need at least the following components:
+对于一个能够以安全和灵活的方式并发运行协程的程序，至少需要以下组件:
 
 \begin{itemize}
 \item 
-A kind of task type that allows you to chain coroutines together
+一种任务类型，允许将协程链接在一起
 
 \item 
-Something that allows you to start multiple coroutines that run independently and join them later
+允许启动多个独立运行的协程，并在稍后汇入
 
 \item 
-Something like syncWait() that allows a synchronous function to block waiting for an asynchronous function
+比如syncWait()，允许同步函数阻塞等待异步函数
 
 \item 
-Something that allows multiple coroutines to be multiplexed on a smaller number of threads
+允许多个协程在较少数量的线程上复用
 \end{itemize}
 
-The Class CoroPool combines the last three aspects together more or less. However, the more flexible approach is to come with individual building blocks that can be combined in various ways. In addition, good thread-safety needs much better design and implementation techniques.
+类CoroPool将后三个方面或多或少地结合在一起，但更灵活的方法是使用可以以各种方式组合的单个构建块。此外，良好的线程安全性需要更好的设计和实现技术。
 
-We are still learning and discussing how to do that best. Therefore, even in C++23, there will probably only be minimal support (if any).
+我们仍在学习和讨论如何做到最好。因此，即使在C++23中，也可能只有最低限度的支持(若有的话)。
 
 
 

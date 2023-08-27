@@ -1,4 +1,4 @@
-So far, in all examples, the coroutine interface was returned by the coroutine. However, you can also implement coroutines so that they use an interface created somewhere else. Consider the following example (a modified version of the first coroutine example):
+到目前为止，在所有示例中，协程接口都是由协程返回的。但也可以实现协程，以便它们使用在其他地方创建的接口。考虑以下示例(第一个协程示例的修改版本):
 
 \begin{cpp}
 void coro(int max, CoroTask&)
@@ -16,7 +16,7 @@ void coro(int max, CoroTask&)
 }
 \end{cpp}
 
-Here, the coroutine takes the coroutine interface of the type CoroTask as a parameter. However, we have to specify that the parameter is used as the coroutine interface. This is done by a specialization of the template std::coroutine\_traits<>. Its template parameters have to specify the signature (return type and parameter types) and inside, we have to map the type member promise\_type to the type member of the coroutine interface parameter:
+这里，协程将CoroTask类型的协程接口作为参数，但必须指定将参数用作协程接口。这是通过模板std::coroutine\_traits<>的特化来完成。模板参数必须指定签名(返回类型和参数类型)，并且在内部，必须将类型成员promise\_type映射到协程接口参数的类型成员:
 
 \begin{cpp}
 template<>
@@ -26,7 +26,7 @@ struct std::coroutine_traits<void, int, CoroTask&>
 };
 \end{cpp}
 
-The only thing we now have to ensure is that the coroutine interface can be created without a coroutine and refer to a coroutine later. For this, we need a promise with a constructor that takes the same parameters as the coroutine
+现在唯一需要确保的是，可以在没有协程的情况下创建协程接口，并在以后引用协程。为此，需要一个带有构造函数的promise，该构造函数接受与协程相同的参数
 
 \begin{cpp}
 class CoroTask {
@@ -54,7 +54,7 @@ public:
 };
 \end{cpp}
 
-Now the code using the coroutine might look as follows:
+现在使用协程的代码可能如下所示:
 
 \begin{cpp}
 CoroTask coroTask; // create coroutine interface without coroutine
@@ -68,9 +68,9 @@ while (coroTask.resume()) { // resume
 }
 \end{cpp}
 
-You can find the complete example in coro/corotraits.cpp.
+可以在coro/corotraits.cpp中找到完整的示例。
 
-The promise constructor gets all parameters passed to the coroutine. However, because the promise usually only needs the coroutine interface, you might pass the interface as the first parameter and then use auto\&\&... as the last parameter.
+promise构造函数获取传递给协程的所有参数，由于promise通常只需要协程接口，可以将接口作为第一个参数传递，然后使用auto\&\&…作为最后一个参数。
 
 
 
