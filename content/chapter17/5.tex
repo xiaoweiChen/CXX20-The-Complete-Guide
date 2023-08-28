@@ -1,10 +1,10 @@
 
 
-C++20 introduces several new extensions to the capturing of values and objects in lambdas.
+C++20引入了几个新的扩展来捕获Lambda中的值和对象。
 
-\mySubsubsection{17.5.1}{Capturing this and *this}
+\mySubsubsection{17.5.1}{捕获this和*this}
 
-If a lambda is defined inside a member function, the question is how you can access data of the object for which the member function is called. Before C++20, we had the following rules:
+若在成员函数中定义Lambda，问题是如何访问调用该成员函数对象的数据。C++20前，有以下规则:
 
 \begin{cpp}
 class MyType {
@@ -28,7 +28,7 @@ class MyType {
 };
 \end{cpp}
 
-Since C++20, the following rules apply:
+自C++20起，可使用以下规则:
 
 \begin{cpp}
 class MyType {
@@ -52,19 +52,19 @@ class MyType {
 };
 \end{cpp}
 
-Thus, since C++20, we have the following changes:
+C++20起，有如下的变化:
 
 \begin{itemize}
 \item 
-[=, this] is now allowed as a lambda capture (some compilers did allow it before, although it was formally invalid).
+[=, this]现在允许作为Lambda捕获(一些编译器以前允许，尽管在形式上无效)。
 
 \item 
-The implicit capture of *this is deprecated.
+不可隐式捕获*this。
 \end{itemize}
 
-\mySubsubsection{17.5.2}{Capturing Structured Bindings}
+\mySubsubsection{17.5.2}{捕获结构化绑定}
 
-Since C++20, it the capture of structured bindings (introduced with C++17) is allowed:
+C++20起，允许捕获结构化绑定(C++17引入):
 
 \begin{cpp}
 std::map<int, std::string> mymap;
@@ -78,14 +78,11 @@ for (const auto& [key,val] : mymap) {
 }
 \end{cpp}
 
-Some compilers did allow the capture of structured bindings before, although it was formally invalid.
+一些编译器以前确实允许捕获结构化绑定，尽管它在形式上无效。
 
+\mySubsubsection{17.5.3}{捕获可变模板的参数包}
 
-
-
-\mySubsubsection{17.5.3}{Capturing Parameter Packs of Variadic Templates}
-
-If you have a variadic template, you could capture parameter packs as follows:
+若有一个可变的模板，可以像下面这样捕获参数包:
 
 \begin{cpp}
 template<typename... Args>
@@ -101,17 +98,17 @@ void foo(Args... args)
 }
 \end{cpp}
 
-However, if you wanted to return the lambda that was created for later use, there was a problem:
+然而，若想返回为以后使用而创建的Lambda，就会出现问题:
 
 \begin{itemize}
 \item 
-Using [\&], you would return a lambda that refers to a destroyed parameter pack.
+使用[\&]，将返回一个lambda，该Lambda会引用已销毁的参数包。
 
 \item 
-Using [args...] or [=], you would copy the passed parameter pack.
+使用[args…]或[=]，则复制传递的参数包。
 \end{itemize}
 
-You can usually use init-captures to use move semantics when capturing objects:
+在捕获对象时，可以使用init-capturing来使用移动语义:
 
 \begin{cpp}
 template<typename T>
@@ -124,9 +121,9 @@ void foo(T arg)
 }
 \end{cpp}
 
-However, there was no syntax provided to use init-captures with parameter packs.
+但是，没有提供与参数包一起使用init-capture的语法。
 
-C++20 introduces a corresponding syntax:
+C++20引入了相应的语法:
 
 \begin{cpp}
 template<typename... Args>
@@ -139,7 +136,7 @@ void foo(Args... args)
 }
 \end{cpp}
 
-You can also init-capture parameter packs by reference. For example, we can change to a parameter name for the lambda as follows:
+还可以通过引用来初始化捕获参数包。例如，可以将Lambda的参数名更改为:
 
 \begin{cpp}
 template<typename... Args>
@@ -152,9 +149,9 @@ void foo(Args... args)
 }
 \end{cpp}
 
-\mySamllsection{Example of Capturing Parameter Packs of Variadic Templates}
+\mySamllsection{使用实例获取可变模板的参数包}
 
-A generic function that creates and returns a lambda that captures a variadic number of parameters by value now looks as follows:
+创建并返回一个按值捕获可变数量参数的Lambda泛型函数，可以这样:
 
 \begin{cpp}
 template<typename Callable, typename... Args>
@@ -166,7 +163,7 @@ auto createToCall(Callable op, Args... args)
 }
 \end{cpp}
 
-Using the new syntax for abbreviated function templates, the code looks as follows:
+使用简化函数模板的新语法，代码如下所示:
 
 \begin{cpp}
 auto createToCall(auto op, auto... args)
@@ -177,7 +174,7 @@ auto createToCall(auto op, auto... args)
 }
 \end{cpp}
 
-Here is a complete example:
+下面是一个完整的例子:
 
 \filename{lang/capturepack.cpp}
 
@@ -205,11 +202,10 @@ int main()
 }
 \end{cpp}
 
-Run it to print a hero!
 
-\mySubsubsection{17.5.4}{Lambdas as Coroutines}
+\mySubsubsection{17.5.4}{Lambda作为协程}
 
-Lambdas can also be coroutines, which were introduced with C++20. However, note that in this case, the lambdas should not capture anything, because a coroutine may easily be used longer than the lambda object, which is created locally, exists.
+Lambda也可以是协程，这是在C++20引入的。但请注意，在这种情况下，Lambda不该捕获任何内容，因为协程可能比本地创建的Lambda对象存在的时间更长。
 
 
 

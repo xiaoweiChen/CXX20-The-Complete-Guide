@@ -1,6 +1,6 @@
 
 
-C++20 introduces an extension to enable the use of template parameters for generic lambdas. You can specify these template parameters between the capture clause and the call parameters (if there are any):
+C++20引入了一个扩展，允许对泛型Lambda使用模板形参。可以在捕获子句和调用参数(若有的话)之间指定这些模板参数:
 
 \begin{cpp}
 auto foo = []<typename T>(const T& param) { // OK since C++20
@@ -9,7 +9,7 @@ auto foo = []<typename T>(const T& param) { // OK since C++20
 			};
 \end{cpp}
 
-Template parameters for lambdas provide the benefit of having a name for the type or a part of it when declaring generic parameters. For example:
+Lambda的模板形参有一个优点，即在声明泛型参数时为类型或类型的一部分提供名称。例如:
 
 \begin{cpp}
 []<typename T>(T* ptr) { // OK since C++20
@@ -17,7 +17,7 @@ Template parameters for lambdas provide the benefit of having a name for the typ
 };
 \end{cpp}
 
-Or:
+或:
 
 \begin{cpp}
 []<typename T, int N>(T (&arr)[N]) {
@@ -25,23 +25,23 @@ Or:
 };
 \end{cpp}
 
-If you are wondering why you would not use a function template in these cases, remember that lambdas provide some benefits that functions cannot provide:
+若想知道为什么在这些情况下不使用函数模板，请记住Lambda提供了一些函数无法提供的便利:
 
 \begin{itemize}
 \item 
-They can be defined inside functions.
+可以在函数内部定义。
 
 \item 
-They can capture runtime values to specify their functional behavior at runtime.
+可以捕获运行时的值，来指定在运行时的功能行为。
 
 \item 
-You can pass them as arguments without the need to specify the parameter types.
+可以将它们作为参数传递，而无需指定参数类型。
 \end{itemize}
 
 
-\mySubsubsection{17.1.1}{Using Template Parameters for Generic Lambdas in Practice}
+\mySubsubsection{17.1.1}{使用泛型Lambda的模板参数}
 
-Explicit template parameters can be useful for specializing (or partially restricting the type of parameters of) generic lambdas. Consider the following example:
+显式模板参数可用于特化(或部分限制)泛型Lambda的参数类型。考虑下面的例子:
 
 \begin{cpp}
 []<typename T>(const std::vector<T>& vec) { // can only pass vectors
@@ -49,9 +49,9 @@ Explicit template parameters can be useful for specializing (or partially restri
 };
 \end{cpp}
 
-This lambda accepts only vectors as arguments. When using auto, it would not be easy to restrict the argument to vectors because C++ does not (yet) support something like std::vector<auto>. However, in this case, you could also use type constraints to constrain the type of the parameter (such as to require random access or even a specific type).
+这个Lambda只接受vector作为参数。当使用auto时，将实参限制为vector并不容易，因为C++(还)不支持std::vector<auto>类型，但还可以使用类型约束来约束参数的类型(例如：要求可随机访问，甚至特定类型)。
 
-Explicit template parameters also help to avoid the need for decltype. For example, for perfect forwarding of a generic parameter pack in a lambda, you can write:
+显式模板参数也有助于避免对decltype的需要。例如，要在Lambda中完美地转发泛型参数包，可以这样:
 
 \begin{cpp}
 []<typename... Types>(Types&&... args) {
@@ -59,7 +59,7 @@ Explicit template parameters also help to avoid the need for decltype. For examp
 };
 \end{cpp}
 
-instead of:
+而非:
 
 \begin{cpp}
 [] (auto&&... args) {
@@ -67,7 +67,7 @@ instead of:
 };
 \end{cpp}
 
-A similar example would be code to provide special behavior of a certain type when visiting a std::variant<> (introduced in C++17):
+类似的例子是在访问std::variant<>时，会具有特定类型的行为(C++17中引入):
 
 \begin{cpp}
 std::variant<int, std::string> var;
@@ -82,7 +82,7 @@ std::visit([](const auto& val) {
 			var);
 \end{cpp}
 
-We have to use decltype() to get the type of the parameter and compare that type as a const\& (or remove const and the reference). Since C++20, you can just write the following:
+必须使用decltype()来获取参数的类型，并将该类型作为const\&进行比较(或删除const和引用)。C++20起，可以这样写代码:
 
 \begin{cpp}
 std::visit([]<typename T>(const T& val) { // since C++20
@@ -94,13 +94,13 @@ std::visit([]<typename T>(const T& val) { // since C++20
 			var);
 \end{cpp}
 
-You can also declare template parameters for consteval lambdas to force that their execution at compile time.
+还可以为coneval的Lambda声明模板参数，强制在编译时执行。
 
-\mySubsubsection{17.1.2}{Explicit Specification of Lambda Template Parameters}
+\mySubsubsection{17.1.2}{Lambda模板参数的显式规范}
 
-Lambdas provide a convenient way to define function objects (functors). For generic lambdas, their function call operator (operator()) is a template. With the syntax to specify a name for the parameter instead of using auto, you have a name for the template parameter in the generated function call operator.
+Lambda提供了一种方便的方式来定义函数对象(函子)。对于泛型lambda，函数调用函数操作符是一个模板。使用为参数指定名称，而不是使用auto的语法，可以在生成的函数调用操作符中为模板参数指定名称。
 
-For example, if you define the following lambda:
+例如，若定义了下面的Lambda:
 
 \begin{cpp}
 auto primeNumbers = [] <int Num> () {
@@ -110,7 +110,7 @@ auto primeNumbers = [] <int Num> () {
 					};
 \end{cpp}
 
-the compiler defines a corresponding closure type:
+编译器定义了相应的闭包类型:
 
 \begin{cpp}
 class NameChosenByCompiler {
@@ -125,22 +125,22 @@ public:
 };
 \end{cpp}
 
-and creates an object of this class (using the default constructor if no values are captured):
+并创建该类的一个对象(若没有捕获值则使用默认构造函数):
 
 \begin{cpp}
 auto primeNumbers = NameChosenByCompiler{};
 \end{cpp}
 
-To specify the template parameter explicitly, you have to pass it to operator() when you use the lambda as a function:
+要显式指定模板形参，当将Lambda用作函数时，必须将其传递给函数操作符:
 
 \begin{cpp}
 // initialize array with the first 20 prime numbers:
 auto primes20 = primeNumbers.operator()<20>();
 \end{cpp}
 
-There is no way to avoid specifying operator() when specifying its template parameters except by using an indirect call.
+除非使用间接调用，否则在指函数操作符的模板形参时，无法避免指定函数操作符。
 
-You can try to make the template parameter deducible by making it a compile-time value; however, the resulting syntax is not much better:
+可以尝试将模板参数设置为编译时值，使其可推导，但最终的语法并没有好到哪里去:
 
 \begin{cpp}
 auto primeNumbers = [] <int Num> (std::integral_constant<int, Num>) {
@@ -153,7 +153,7 @@ auto primeNumbers = [] <int Num> (std::integral_constant<int, Num>) {
 auto primes20 = primeNumbers(std::integral_constant<int,20>{});
 \end{cpp}
 
-Alternatively, you might think about using a variable template, a technique introduced in C++14. With this, you can make the variable primeNumbers generic instead of making the lambda generic:
+或者，可以考虑使用变量模板，这是C++14中引入的一种技术。这样，就可以将primeNumbers变量设置为泛型，而不是将Lambda设置为泛型:
 
 \begin{cpp}
 template<int Num>
@@ -167,7 +167,7 @@ auto primeNumbers = [] () {
 auto primes20 = primeNumbers<20>();
 \end{cpp}
 
-However, in that case, you cannot define the lambda inside a function scope. Generic lambdas allow you to define generic functionality locally inside a scope.
+但这种情况下，不能在函数作用域中定义Lambda。泛型Lambda可以在作用域内局部定义泛型功能。
 
 
 

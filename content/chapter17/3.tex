@@ -1,4 +1,4 @@
-Since C++20, lambdas can be used as non-type template parameters (NTTPs):
+C++20起，Lambda可以用作非类型模板形参(NTTPs):
 
 \begin{cpp}
 template<std::invocable auto GetVat>
@@ -14,7 +14,7 @@ auto defaultTax = [] { // OK
 std::cout << addTax<defaultTax>(100) << '\n';
 \end{cpp}
 
-This feature is a side effect of the new support for using literal types with public members only as nontype template parameter types. See the chapter about non-type template parameter extensions for a detailed discussion and complete examp
+这个特性有一个副作用，即仅将带有公共成员的文字类型用作非类型模板参数类型。有关详细的讨论和完整的示例，请参阅关于非类型模板参数扩展的章节
 
 
 

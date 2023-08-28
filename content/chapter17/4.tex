@@ -1,4 +1,4 @@
-By using the new consteval keyword with lambdas, you can now require that lambdas become immediate functions so that “function calls” of them have to be evaluated at compile time. For example:
+通过对Lambda使用新的consteval关键字，现在可以要求lambdas成为直接函数，以便“函数调用”必须在编译时求值。例如:
 
 \begin{cpp}
 auto hashed = [] (const char* str) consteval {
@@ -7,7 +7,7 @@ auto hashed = [] (const char* str) consteval {
 auto hashWine = hashed("wine"); // hash() called at compile time
 \end{cpp}
 
-Due to the use of consteval in the definition of the lambda, any call has to happen at compile time with values known at compile time. Passing a runtime value is an error:
+由于在Lambda的定义中使用了consteval，调用都必须在编译时使用编译时已知的值进行。传递运行时值是错误的:
 
 \begin{cpp}
 const char* s = "beer";
@@ -17,11 +17,11 @@ constexpr const char* cs = "water";
 auto hashWater = hashed(cs); // OK
 \end{cpp}
 
-Note that hashed itself does not have to be constexpr. It is a runtime object of the lambda for which the “function call” is performed at compile time.
+注意，哈希本身并不一定是constexpr。它是Lambda的运行时对象，在编译时对其执行“函数调用”。
 
-The discussion of consteval for lambdas in the section about the new consteval keyword provides more details of this example.
+关于新的consteval关键字一节中对Lambda的consteval进行更加细致的讨论。
 
-You can also use the new template syntax for generic lambdas with consteval. This enables programmers to define the initialization of a compile-time function inside another function. For example:
+还可以将新的模板语法用于具有consteval的泛型Lambda。这使开发者能够在另一个函数中定义编译时函数的初始化。例如:
 
 \begin{cpp}
 // local compile-time computation of Num prime numbers:
@@ -37,15 +37,15 @@ auto primeNumbers = [] <int Num> () consteval {
 				};
 \end{cpp}
 
-See lang/lambdaconsteval.cpp for a complete program using this lambda.
+请参阅lang/lambdaconsteval.cpp获取使用该Lambda的完整示例。
 
-Note that in this case, the template parameter is not deduced. Therefore, the syntax to explicitly specify the template parameter becomes a bit ugly:
+注意，这时，模板参数没有推导出来，所以显式指定模板参数的语法会有点难看:
 
 \begin{cpp}
 auto primes = primeNumbers.operator()<100>();
 \end{cpp}
 
-Note also that you always have to provide the parameter list before consteval (the same applies when specifying constexpr there). You cannot skip the parentheses even if there is no parameter declared.
+还要注意的是，必须在consteval之前提供参数列表(指定constexpr时也适用)。即使没有声明参数，也不能没有括号。
 
 
 

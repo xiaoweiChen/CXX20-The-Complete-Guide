@@ -1,4 +1,4 @@
-Lambdas provide a simple way to define function objects. If you define
+Lambda提供了一种简单的方法来定义函数对象，若定义
 
 \begin{cpp}
 auto cmp = [] (const auto& x, const auto& y) {
@@ -6,7 +6,7 @@ auto cmp = [] (const auto& x, const auto& y) {
 			};
 \end{cpp}
 
-this is equivalent to defining a class (the closure type) and creating an object of this class:
+这相当于定义一个类(闭包类型)并创建一个该类的对象:
 
 \begin{cpp}
 class NameChosenByCompiler {
@@ -20,13 +20,13 @@ class NameChosenByCompiler {
 auto cmp = NameChosenByCompiler{};
 \end{cpp}
 
-The generated closure type has operator() defined, which means that you can use the lambda object cmp as a function:
+生成的闭包类型定义了函数操作符，则可以将Lambda对象cmp作为函数使用:
 
 \begin{cpp}
 cmp(val1, val); // yields the result of 42 > obj2
 \end{cpp}
 
-However, before C++20, the generated closure type had no callable default constructor and assignment operator. Objects of the generated class could only be initially created by the compiler. Only copying was possible:
+然而，在C++20之前，生成的闭包类型没有可调用的默认构造函数和赋值操作符。生成类的对象最初只能由编译器创建，只可复制:
 
 \begin{cpp}
 auto cmp1 = [] (const auto& x, const auto& y) {
@@ -38,7 +38,7 @@ decltype(cmp1) cmp3; // ERROR until C++20: no default constructor provided
 cmp1 = cmp2; // ERROR until C++20: no assignment operator provided
 \end{cpp}
 
-As a consequence, you could not easily pass a lambda as a sorting criterion or hash function to a container, where the type of the helper function was required. Consider a class Customer with the following interface:
+因此，因为容器需要辅助函数的类型，所以不好将Lambda作为排序标准或哈希函数传递给容器。考虑一个具有以下接口的Customer类:
 
 \begin{cpp}
 class Customer
@@ -49,7 +49,7 @@ class Customer
 };
 \end{cpp}
 
-To use the name returned by getName() as the ordering criterion or value for the hash function, you had to pass both the type and the lambda as a template and call parameter:
+要使用getName()返回的名称作为哈希函数的排序标准或值，必须将类型和Lambda作为模板和调用参数传递:
 
 \begin{cpp}
 // create balanced binary tree with user-defined ordering criterion:
@@ -65,9 +65,9 @@ auto hashName = [] (const Customer& c) {
 std::unordered_set<Customer, decltype(hashName)> coll2{0, hashName};
 \end{cpp}
 
-The containers get the lambda when they are initialized so that they can use an internal copy of the lambda (for the unordered containers, you have to pass a minimum bucket size before). To compile, the type of the containers needs the type of the lambda.
+容器在初始化时获得Lambda，以便可以使用Lambda的内部副本(对于无序容器，必须先传递最小桶大小)。要进行编译，容器的类型需要Lambda的类型。
 
-Since C++20, lambdas with no captures have a default constructor and an assignment operator:
+自C++20起，没有捕获的Lambda有一个默认构造函数和一个赋值操作符:
 
 \begin{cpp}
 auto cmp1 = [] (const auto& x, const auto& y) {
@@ -79,7 +79,7 @@ decltype(cmp1) cmp3; // OK since C++20
 cmp1 = cmp2; // OK since C++20
 \end{cpp}
 
-For this reason, it is now enough to pass the type of the lambda for the ordering criterion or hash function respectively:
+出于这个原因，现在可以分别为排序条件或哈希函数传递Lambda的类型:
 
 \begin{cpp}
 // create balanced binary tree with user-defined ordering criterion:
@@ -96,9 +96,9 @@ auto hashName = [] (const Customer& c) {
 std::unordered_set<Customer, decltype(hashName)> coll2; // OK since C++20
 \end{cpp}
 
-This works because the argument for the ordering criterion or hash function has a default value, which is a default-constructed object of the type of the ordering criterion or hash function. And because lambdas without captures have a default constructor since C++20, the initialization of the ordering criterion with a default-constructed object of the type of the lambda now compiles.
+这是有效的，因为排序条件或散列函数的参数有一个默认值，该值是排序条件或哈希列函数类型的默认构造对象。而且由于自C++20以来，没有捕获的Lambda有默认构造函数，因此使用Lambda类型的默认构造对象初始化排序条件现在可以编译了。
 
-You can even define the lambda inside the declaration of the container and use decltype to pass its type. For example, you can declare an associative container with an ordering criterion defined in the declaration as follows:
+甚至可以在容器的声明中定义Lambda，并使用decltype传递其类型。例如，可以声明一个关联容器，并在声明中定义排序，如下所示:
 
 \begin{cpp}
 // create balanced binary tree with user-defined ordering criterion:
@@ -108,7 +108,7 @@ std::set<Customer,
 		})> coll3; // OK since C++20
 \end{cpp}
 
-In the same way, you can declare an unordered container with a hash function defined in the declaration as follows:
+以同样的方式，可以用哈希函数声明一个无序容器，如下所示:
 
 \begin{cpp}
 // create hash table with user-defined hash function:
@@ -118,7 +118,7 @@ std::unordered_set<Customer,
 					})> coll; // OK since C++20
 \end{cpp}
 
-See lang/lambdahash.cpp for a complete example.
+请参阅lang/lambdahash.cpp获取完整示例。
 
 
 
