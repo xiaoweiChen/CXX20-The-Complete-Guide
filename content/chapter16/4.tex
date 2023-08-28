@@ -1,11 +1,11 @@
 
-This section describes a few additional details for using modules.
+本节描述使用模块的一些其他细节。
 
-\mySubsubsection{16.4.1}{私有模块片段}
+\mySubsubsection{16.4.1}{私有模块}
 
-If you declare a module in a primary interface, you might sometimes need a private module fragment. This allows programmers to have declarations and definitions within the primary interface that are neither visible nor reachable by any other module or translation unit. One way to use a private module fragment is to disable exporting the definition of a class or function although its declaration is exported.
+若在主接口中声明一个模块，有时可能需要一个私有模块。这允许程序员在主接口中拥有声明和定义，这些声明和定义对任何其他模块或翻译单元都是不可见或不可达的。使用私有模块片段的一种方法是禁用导出类或函数的定义，尽管它的声明是导出的。
 
-Consider, for example, the following primary interface:
+例如，考虑下面的主接口:
 
 \begin{cpp}
 export module MyMod;
@@ -25,7 +25,7 @@ void print(const C& c) { // provides details of the exported function
 }
 \end{cpp}
 
-Here, we first forward declare the class C and function print() with export:
+这里，首先用export声明类C和函数print():
 
 \begin{cpp}
 export module MyMod;
@@ -34,7 +34,7 @@ export class C; // class C is exported
 export void print(const C& c); // print() is exported
 \end{cpp}
 
-export may be specified only once at the point where a name is introduced in its namespace. The details are also exported later. Therefore, any translation unit can import this module and use objects of type C:
+export只能在命名空间中引入名称时指定一次，稍后还会导出详细信息。因此，翻译单元都可以导入该模块，并使用C类型的对象:
 
 \begin{cpp}
 import MyMod;
@@ -44,7 +44,7 @@ C c; // OK, definition of class C was exported
 print(c); // OK (compiler can replace the function call with its body)
 \end{cpp}
 
-However, if you want to encapsulate the definition within the module, so that importing code sees only the declaration and you still want to have the definition in the primary interface, you have to place the definitions in the private module fragment:
+然而，若想在模块中封装定义，以便导入代码只看到声明，并且仍然希望在主接口中拥有定义，必须将定义放在私有模块中:
 
 \begin{cpp}
 export module MyMod;
@@ -66,17 +66,17 @@ void print(const C& c) { // definition not exported
 }
 \end{cpp}
 
-The private module fragment is declared with
+声明私有模块
 
 \begin{cpp}
 module :private;
 \end{cpp}
 
-It can only occur in primary interfaces and can occur only once. With its declaration, the rest of the file is no longer implicitly exported (not even implicitly). Using export afterwards to export anything is an error.
+只能发生在主接口中，并且只能发生一次。有了这个声明，文件的其余部分不再隐式导出(甚至不是隐式导出)。之后使用export来导出任何内容都是错误的。
 
-By moving the definition into the private module fragment, importing code can no longer use any definition from there. It can only use the forward declaration of the class C (class C is an incomplete type) and print().
+通过将定义移动到私有模块中，导入代码就不能再使用其中的任何定义，只能使用类C的前向声明(类C是不完整类型)和print()。
 
-For example, you cannot create objects of type C:
+例如，不能创建C类型的对象:
 
 \begin{cpp}
 import MyMod;
@@ -86,7 +86,7 @@ C c; // ERROR (C only declared, not defined)
 print(c); // OK (compiler can replace the function call with its body)
 \end{cpp}
 
-However, the declarations are good enough to use references and pointers of type C:
+然而，声明还是可以使用C类型的引用和指针:
 
 \begin{cpp}
 import MyMod;
@@ -99,7 +99,7 @@ void foo(const C& c) { // OK
 
 \mySubsubsection{16.4.2}{详细介绍模块的声明和导出}
 
-Module units have to start with one of the following (after initial comments and whitespace):
+模块单元必须以下列之一开头(在初始注释和空格之后):
 
 \begin{itemize}
 \item 
@@ -118,13 +118,13 @@ module name:partname;
 export module name:partname;
 \end{itemize}
 
-If a module unit starts with module; to introduce a global module fragment, exactly one of the other module declarations must follow the preprocessor commands in the global module fragment.
+若一个模块单元以module开头;要引入全局模块，其他模块声明中的一个必须遵循全局模块中的预处理器命令。
 
-Within the module, you can export all kinds of symbols that have a name:
+模块中，可以导出所有具有名称的符号:
 
 \begin{itemize}
 \item 
-You can export namespaces that have a name, which exports all symbols defined within the namespace declaration. For example:
+可以导出具有名称的命名空间，将导出命名空间声明中定义的所有符号。例如:
 
 \begin{cpp}
 export namespace MyMod {
@@ -142,7 +142,7 @@ export namespace MyMod {
 
 
 \item 
-You can export types, which exports them with all members (if there are any). For example:
+可以导出类型，这将导出所有成员(若有的话)。例如:
 
 \begin{cpp}
 export class MyClass;
@@ -152,10 +152,10 @@ export enum class MyEnum;
 export using MyString = std::string;
 \end{cpp}
 
-You do not have to export class members or enumeration values. Class members and values of enumeration types are automatically exported if the type is exported.
+不必导出类成员或枚举值。若导出类型，则自动导出枚举类型的类成员和值。
 
 \item 
-You can export objects. For example:
+可以导出对象。例如:
 
 \begin{cpp}
 export std::string progname;
@@ -168,26 +168,26 @@ export auto myLambda = [] {};
 \end{cpp}
 
 \item 
-You can export functions. For example:
+可以导出函数。例如:
 
 \begin{cpp}
 export friend std::ostream& operator<< (std::ostream&, const MyType&);
 \end{cpp}
 \end{itemize}
 
-To declare an entity that shall be exported, use export for its first declaration. You can later specify again that it is exported, but declaring an entity without export and declaring/defining it later with export is not allowed.[However, I have seen compilers accepting that.]
+声明的实体应该导出，以导出作为首次声明。可以稍后再次指定它是导出的，但是不允许在没有导出的情况下声明实体，并在以后使用导出声明/定义实体。[然而，编译器已经接受了这一点。]
 
-export is not allowed in unnamed namespaces, for static objects, and within a private module fragment.
+在未命名的命名空间、静态对象和私有模块片段中不允许导出。
 
-No inline is necessary for any export. Formally, a definition within a module always exists only once.
+任何导出都不需要内联。形式上，模块中的定义总是只存在一次。
 
-This applies even if the object is also re-exported by another module.
+即使对象也被另一个模块重新导出，这也适用。
 
 \mySubsubsection{16.4.3}{伞形模块}
 
-Modules can export everything they import. For imported interface partitions, export is even required.
+模块可以导出所有内容。对于导入的接口分区，也需要导出。
 
-To export imported symbols, you can usually use using:
+要导出导入的符号，可以使用using:
 
 \begin{cpp}
 export module MyMod; // declare module MyMod
@@ -216,21 +216,20 @@ export using ::log;
 
 \mySubsubsection{16.4.4}{模块导入的详情}
 
-With import, any C++ source code file can import a module to use the functions, types, and objects exported there.
+通过import，C++源代码文件都可以导入一个模块来使用导出的函数、类型和对象。
 
-import is not an ordinary keyword; it is a contextual keyword. This means that you can still name other components with the identifier import, although this is not recommended. It was not introduced as a keyword because that might have broken too much existing code.
-Translation or module units that use import have to be compiled after the module has been precompiled.
+import不是一个普通的关键字，是一个上下文关键字。所以仍然可以使用标识符导入命名其他组件，尽管不建议这样做。其没有作为关键字引入，所以可能会破坏太多现有的代码。使用import的翻译单元或模块单元必须在模块预编译之后进行编译。
 
-Otherwise, you might get an error that the module is not defined or, even worse, you might compile against an old version of a module. As a consequence, circular imports are not possible.
+否则，可能会得到模块未定义的错误，或者更糟的是，可能会针对旧版本的模块进行编译，所以不能循环导入。
 
 
 \mySubsubsection{16.4.5}{可达符号与可见符号的细节}
 
-Let us look at a few more details and an example of the visibility and reachability of exported and imported symbols.
+让我们看一些更多的细节，并举例说明导出和导入符号的可见性和可达性。
 
-When importing a module, you also indirectly import all types that are used by the exported API. If these types are not exported explicitly, you can use the types including all of their member functions, but no free-standing functions.
+在导入模块时，还可以间接导入导出API所使用的所有类型。若没有显式导出这些类型，则可以使用包含其所有成员函数的类型，但不能使用独立函数。
 
-The following module exports getPerson() as a visible symbol and Person as a reachable class:
+下面的模块将getPerson()导出为一个可见的符号，将Person导出为一个可访问的类:
 
 \filename{modules/person1.cppm}
 
@@ -262,7 +261,7 @@ export Person getPerson(std::string s) {
 }
 \end{cpp}
 
-Importing this module has the following consequences:
+导入该模块会产生以下结果:
 
 \begin{cpp}
 #include <iostream>
@@ -277,7 +276,7 @@ std::cout << p3 << '\n'; // ERROR: free-standing operator<< not exported
 std::cout << s2 << '\n'; // OK
 \end{cpp}
 
-If this code also includes the header file for strings, the declaration of s1 compiles:
+若这段代码还包括字符串的头文件，则s1的声明编译为:
 
 \begin{cpp}
 #include <iostream>
@@ -293,7 +292,7 @@ std::cout << p3 << '\n'; // ERROR: free-standing operator<< not exported
 std::cout << s2 << '\n'; // OK
 \end{cpp}
 
-If you declare operator<< within the class Person as a hidden friend (something you should always do):
+若在Person类中声明operator<{}<作为一个隐藏的友元(应该这样做):
 
 \begin{cpp}
 export module ModPerson;
@@ -306,7 +305,7 @@ class Person {
 };
 \end{cpp}
 
-the member operator becomes reachable:
+成员操作符变为可访问的:
 
 \begin{cpp}
 member operator becomes reachable:
@@ -314,11 +313,11 @@ auto p3 = getPerson("Tana"); // OK
 std::cout << p3 << '\n'; // OK (operator<< is reachable now)
 \end{cpp}
 
-Note again that by using private module fragments, you can restrict the reachability of indirectly exported symbols.
+再次注意，通过使用私有模块，可以限制间接导出符号的可达性。
 
 \mySamllsection{未导出的符号不能冲突}
 
-The behavior that indirectly exported symbols are not visible but reachable allows programmers to use different modules that use the same symbol names in their exported interface. Consider, for example, you have a module defining a class Person as follows:
+间接导出的符号不可见，但可访问的行为允许开发者在其导出的接口中，使用相同符号名称的不同模块。例如，有一个模块定义了一个类Person，如下所示:
 
 \begin{cpp}
 export module ModPerson1;
@@ -336,7 +335,7 @@ export Person getPerson1(std::string s) {
 }
 \end{cpp}
 
-and another module also defining a different class Person:
+另一个模块也定义了一个不同的类Person:
 
 \begin{cpp}
 export module ModPerson2;
@@ -354,7 +353,7 @@ export Person getPerson2(std::string s) {
 }
 \end{cpp}
 
-In that case, a program can import both modules without any conflict because the only visible symbols are getPerson1() from the first module and getPerson2() from the second module. The following code works fine:
+程序可以导入两个模块而不会产生任何冲突，因为唯一可见的符号是第一个模块的getPerson1()和第二个模块的getPerson2()。下面的代码可以正常工作:
 
 \begin{cpp}
 auto p1 = getPerson1("Tana");
@@ -364,7 +363,7 @@ auto p2 = getPerson2("Tana");
 auto s2 = p2.getName();
 \end{cpp}
 
-The types of p1 and p2 have the same name but are different:
+p1和p2的类型名称相同，但实际类型不同:
 
 \begin{cpp}
 std::same_as<decltype(p1), decltype(p2)> // yields false

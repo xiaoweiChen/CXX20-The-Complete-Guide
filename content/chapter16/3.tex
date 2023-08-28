@@ -1,139 +1,138 @@
 
 
-This section discusses some additional aspects of modules for using them in practice.
+本节讨论在实践中使用模块的一些其他方面。
 
 
 \mySubsubsection{16.3.1}{用不同的编译器处理模块文件}
 
-In C++, extensions are not standardized. In practice, different file extensions are used (usually .cpp and .hpp, but also .cc, .cxx, .C, .hh, .hxx, .H, and even .h are used).
+C++中，扩展是不标准化的。实践中，会使用不同的文件扩展名(通常是.cpp和.hpp，但也使用.cc、.cxx、.c、.hh、.hxx、.h，甚至是.h)。
 
-We also have no standard extension for modules. Even worse, we do not even agree on whether new extensions are necessary (yet). In principle, there are two approaches:
+所以也没有模块的标准后缀。更糟糕的是，甚至不同意是否有必要(目前)进行新的后缀。如何判断，原则上，有两种方法:
 
 \begin{itemize}
 \item 
-Compilers should consider all kinds of module files as ordinary C++ source files and find out how to handle them based on their content. With this approach, all files still have the extension .cpp. gcc/g++ follows this policy.
+编译器应该将各种模块文件视为普通的c++源文件，并根据其内容找出如何处理它们的方法。使用这种方法，所有文件的扩展名仍然是.cpp。gcc/g++遵循这个策略。
  
 \item 
-Compilers treat (some) module files differently as they can be both files for declarations (traditional header files) and files with definitions (traditional source files). While there is no doubt that it helps tremendously to have different suffixes for that reason, compilers might even indirectly require different suffixes to avoid having to use different command-line options for the same extensions. Visual C++ follows this approach.
+编译器对(某些)模块文件的处理方式不同，因为它们既可以是声明文件(传统的头文件)，也可以是定义文件(传统的源文件)。由于这个原因，使用不同的后缀非常有帮助，编译器甚至可能间接地要求使用不同的后缀，以避免对相同的扩展使用不同的命令行选项。Visual C++遵循这种方法。
 \end{itemize}
 
-Therefore, different file extensions are recommended for module files in practice by different compilers (.cppm, .ixx, and .cpp), which is one reason why using modules in practice is still challenging.
+因此，在实践中，不同的编译器会为模块文件推荐不同的文件扩展名(.cppm、.ixx和.cpp)，这就是为什么在实际使用模块仍然具有挑战性的原因之一。
 
-I thought about this for a while and tried things out and discussed the situation with the people in the standards committee, but so far, there seems to be no compelling solution. Formally, the C++ standard does not standardize the way source code is handled (the code might not even be stored in files). This has the consequence that there is no easy way to write even a simple portable first example using modules.
+我想了一会儿，尝试了一下，并与标准委员会的人讨论了情况，但到目前为止，似乎没有令人信服的解决方案。在形式上，C++标准并没有标准化处理源代码的方式(代码甚至可能没有存储在文件中)，所以没有一种简单的方法可以使用模块编写一个简单的可移植的第一个示例。
 
-Therefore, let me suggest something here so that you can at least try modules out on different platforms: 
+因此，我在这里提出一些建议，以便读者们可以在不同的平台上尝试使用模块:
 
-There are multiple reasons why different file extensions seem to be necessary:
+为什么不同的文件扩展名似乎是必要的有多种原因:
 
 \begin{itemize}
 \item 
-Compilers require different command-line options for dealing with different types of module files.
+编译器需要不同的命令行选项来处理不同类型的模块文件。
 
 \item 
-Similar to header files, you have to provide some of the module files to customers and third-party code.
+与头文件类似，必须向客户和第三方代码提供一些模块文件。
 
 \item 
-Different module files create different artifacts, which you might have to deal with (e.g., when removing the generated artifacts).
+不同的模块文件创建不同的工件，可能必须处理这些工件(例如，在删除生成的工件时)。
 \end{itemize}
 
-Personally, I have no final decision and recommendation for file extensions of module files yet. However, given the current situation, I recommend the following:
+就个人而言，我还没有最终的决定和建议模块文件的文件扩展名。然而，鉴于目前的情况，我的建议如下:
 
 \begin{itemize}
 \item 
-For interface files (both primary interfaces and interface partitions), use the file extension .cppm. The reasons are:
+对于接口文件(主接口和接口分区)，使用文件扩展名.cppm。原因是:
 
 \begin{itemize}
 \item 
-It is the best self-explanatory file extension (far better than .ixx as currently recommended by Visual C++).
+最好的自解释文件扩展名(远好于Visual C++目前推荐的.ixx)。
 
 \item 
-This is what Clang currently requires.
+这是Clang目前所需要的。
 
 \item 
-It can be used by gcc.
+也可以在gcc中使用。
 
 \item 
-Visual C++ requires special treatment anyway, unless you use the extension .ixx.
+Visual C++无论如何都需要特殊处理，除非使用扩展名。ixx。
 \end{itemize}
 
 
 \item 
-For module implementation files (but not partition implementation files), use the usual file extension .cpp. The reasons are:
+对于模块实现文件(但不是分区实现文件)，使用通常的文件扩展名.cpp。原因是:
 
 \begin{itemize}
 \item 
-No special artifacts are generated.
+没有生成特殊的工件。
 
 \item 
-No special command-line options are required.
+不需要特殊的命令行选项。
 \end{itemize}
 
 \item 
-For internal partition files (partition implementation files), use the file extension .cppp. The reasons are:
+对于内部分区文件(分区实现文件)，使用文件扩展名.cppp。原因是:
 
 \begin{itemize}
 \item 
-Visual C++ requires the command-line option /internalPartition for these files. The file suffix does not matter. Therefore, you have to use a special suffix to have a chance of a generic rule in build systems that do not want to parse the file contents.
+Visual C++需要命令行选项/internalPartition来存放这些文件。文件后缀不重要。因此，必须使用特殊后缀，以便在不想解析文件内容的构建系统中有机会使用通用规则。
 
 \item 
-It can be used by gcc.
+也可以在gcc中使用。
 
 \item 
-Currently, Clang does not support these files at all (September 2021)
+目前，Clang根本不支持这些文件(2021年9月)
 \end{itemize}
 
-The way Microsoft handles internal partitions is really counter-productive for the success of modules and I hope they will fix the need for a specific suffix as soon as possible.
+微软处理内部分区的方式对模块的成功是不利的，我希望他们能尽快解决对特定后缀的需求。
 
 \end{itemize}
 
-As a consequence, you have to (pre)compile module files as follows:
+因此，必须(预)编译模块文件如下:
 
 \begin{itemize}
 \item 
 Visual C++:
 
-Visual C++ requires specific command-line extensions and prefers a different file extension .ixx than the one I propose. For this reason:
+Visual C++需要特定的命令行扩展名，并且倾向使用与我建议的不同的文件扩展名.ixx。出于这个原因:
 
 \begin{itemize}
 \item 
-Compile an interface file file.cppm as follows:
+编译一个接口文件file.cppm的命令行如下所示:
 
 \begin{shell}
 cl /TP /interface /c file.cppm
 \end{shell}
 
-The option /TP specifies that all following files contain C++ source code. Alternatively, you can use /Tpfile.cppm. The option /interface specifies that all following files are interface files (having both interface and non-interface files on one command-line might not work).
+选项/TP指定以下所有文件都包含C++源代码。或者，可以使用/Tpfile.cppm。选项/interface指定以下所有文件都是接口文件(在一个命令行中同时拥有接口和非接口文件可能无法正常工作)。
 
-If you use the file extension .ixx instead, the compiler recognizes the file automatically as an interface file.
+若使用文件扩展名.ixx，编译器会自动将该文件识别为接口文件。
 
 \item 
-Compile an internal partition file file.cppp as follows:
-
+编译一个内部分区file.cppp的命令行如下所示:
 
 \begin{shell}
 cl /Tp /internalPartition /c file.cppp
 \end{shell}
 
-The option /internalPartition specifies that all following files are internal partitions. Note that having both internal partition and interface files on one command-line is not supported. There is no specific suffix you can use instead; internal partitions always need this option.
+选项/internalPartition指定以下所有文件为内部分区。注意，不支持在一个命令行中同时使用内部分区和接口文件。没有特定的后缀可以代替，内部分区需要这个选项。
 \end{itemize}
 
-The fact that Visual C++ currently recommends different file suffixes and requires specific commandline options for specific module units makes the use of modules both cumbersome and non-portable. To circumvent the restrictions of Visual C++ (at least when you compile via command line), I have provided the Python script clmod.py, which you can find at \url{http://github.com/josuttis/cppmodules}. I hope Microsoft will fix their flaws so that this workaround is no longer necessary.
+事实上，Visual C++目前推荐不同的文件后缀，并要求针对特定模块单元使用特定的命令行选项，这使得模块的使用既麻烦又不可移植。为了规避Visual C++的限制(至少在通过命令行编译时)，我提供了Python脚本clmod.py，可以在\url{http://github.com/josuttis/cppmodules}上找到它。我希望微软能修复他们的缺陷，这样就不再需要这种变通的方法了。
 
 \item 
 gcc/g++:
 
-gcc does not require any special file extension or command-line option at all. Therefore, by using special file extensions, you only have to specify that the files contain C++ code using the command-line option -xc++:
+gcc根本不需要任何特殊的文件扩展名或命令行选项。因此，通过使用特殊的文件扩展名，只需要使用命令行选项-xc++指定文件包含c++代码:
 
 \begin{itemize}
 \item 
-Compile an interface file file.cppm as follows:
+编译一个接口文件file.cppm的命令行如下所示:
 
 \begin{shell}
 g++ -xc++ -c file.cppm
 \end{shell}
 
 \item
-Compile an internal partition file file.cppp as follows:
+编译一个内部分区文件file.cppp的命令行如下所示:
 
 \begin{shell}
 g++ -xc++ -c file.cppp
@@ -143,40 +142,39 @@ g++ -xc++ -c file.cppp
 \item 
 Clang:
 
-Clang currently supports only interface files. As the proposed extension .cppm is required for them anyway, using it should work.
+Clang目前只支持接口文件。由于建议的扩展名.cppm无论如何都是必需的，因此应该可以工作。
 
-However, you cannot use internal partition files.
+但是，不能使用内部分区文件。
 \end{itemize}
-
 
 \mySubsubsection{16.3.2}{处理头文件}
 
-While in theory modules could replace all traditional header files with all their flaws, in practice this will never happen. There will be header files from code and libraries developed for C++ (and C) that do not require the use of modules. This will be the case especially because the use of a precompiler makes compiling and linking C++ programs more complex. Therefore, modules should be able to deal with traditional header files.
+虽然理论上模块可以取代所有传统的头文件，但实际上这永远不会发生。将会有一些不需要使用模块的头文件，其来自为C++(和C)开发的代码和库。因为使用预编译器会使编译和链接C++程序变得更加复杂，所以情况尤其如此。因此，模块应该能够处理传统的头文件。
 
-The basic approach for using traditional header files is to use the global module fragment.
-
-\begin{itemize}
-\item 
-Start your module with module;
-
-\item 
-Then, place all necessary preprocessor commands before you come to the module declaration
-\end{itemize}
-
-In that case:
+使用传统头文件的基本方法是使用全局模块。
 
 \begin{itemize}
 \item 
-Everything not used from the header file included will be discarded.
+用module开启模块;
 
 \item 
-Everything used will get module linkage, which means that it is visible only throughout the module unit but neither in other module units nor outside the module.
-
-\item 
-A \#define before the \#include is honored.
+然后，在进行模块声明之前放置所有必要的预处理器命令
 \end{itemize}
 
-For example:
+这种情况下:
+
+\begin{itemize}
+\item 
+包含的头文件中未使用的所有内容都将丢弃。
+
+\item 
+所使用的所有内容都将获得模块链接，所以只在整个模块单元中可见，而在其他模块单元和模块外部都不可见。
+
+\item 
+在\#include之前使用\#define 。
+\end{itemize}
+
+例如:
 
 \begin{cpp}
 module;
@@ -193,15 +191,15 @@ void foo(std::string s) {
 }
 \end{cpp}
 
-With this global module fragment, the preprocessor symbol NDEBUG and the macro assert() from <cassert> are defined within this module unit. However, due to NDEBUG, any runtime check with assert() is disabled.
+在这个全局模块中，预处理器符号NDEBUG和宏assert()都是在这个模块单元中定义的。但由于NDEBUG，使用assert()的运行时检查都是禁用的。
 
-Both NDEBUG and assert() are not visible in other units of this module or imported modules.
+NDEBUG和assert()在该模块或导入模块的其他单元中都不可见。
 
-After the declaration of a module, \#include is no longer supported. Other preprocessor commands such as \#define and \#ifdef can be used.
+声明模块之后，\#include不再受支持。可以使用其他预处理器命令，如\#define和\#ifdef。
 
 \mySamllsection{头文件的导入}
 
-The future goal is to have the whole C++ standard library available as modules. However, for the standard C++ header files, it is already possible to use import, which then can be used within a module. For example:
+未来的目标是使整个C++标准库作为模块可用。然而，对于标准的C++头文件，已经可以使用import，然后可以在模块中使用。例如:
 
 \begin{cpp}
 export module ModTest;
@@ -209,11 +207,11 @@ export module ModTest;
 import <chrono>;
 \end{cpp}
 
-That command is a shortcut for declaring and importing a module with everything from the corresponding header file exported. Even macros are visible within this module with this import (with all other imports, they are not).
+该命令是声明和导入模块的快捷方式，并导出相应头文件中的所有内容。通过此导入，甚至可以在该模块中看到宏(对于所有其他导入，都不可见)。
 
-However, constants that are defined before the import with \#define are not passed to the imported header file. That way, we can guarantee that the content of the imported header file is always the same so that the header file can be precompiled.
+但在使用\#define导入之前定义的常量不会传递给导入的头文件。这样，就可以保证导入的头文件的内容总是相同的，这样头文件就可以预编译了。
 
-Note that this feature is only guaranteed to work on standard C++ headers. It also does not apply to a standard C header adopted by C++:
+注意，此功能只保证在标准C++头文件上工作，不适用于C++使用的标准C头文件:
 
 \begin{cpp}
 export module ModTest;
@@ -222,25 +220,25 @@ import <chrono>; // OK
 import <cassert>; // ERROR (or at least not portable)
 \end{cpp}
 
-Platforms are also allowed to support this feature for other header files; however, code using this feature is not portable.
+平台也允许为其他头文件支持此功能，但使用此特性的代码不可移植。
 
 \mySamllsection{标准模块}
 
-C++20 just introduces the technology. It does not introduce any standard modules (one reason is that the standards committee wants to reorganize the symbols over different modules to clean up some of the historic mess with header files).
+C++20只是介绍了这种技术，没有引入任何标准模块(原因是标准委员会希望重新组织不同模块上的符号，以清理头文件中一些历史上的混乱)。
 
-It looks like with C++23, there will be two standard modules (see \url{http://wg21.link/p2465})
+看起来在C++23，将有两个标准模块(参见\url{http://wg21.link/p2465})
 
 \begin{itemize}
 \item 
-std will provide everything in the namespace std from C++ headers, including those that wrap C (e.g., std::sort(), std::ranges::sort(), std::fopen(), and ::operator new).
+std将提供来自C++头文件的命名空间std中的所有内容，包括那些包装C的内容(例如std::sort()， std::ranges::sort()，std::fopen()和::operator new)。
 
-No macros and no feature test macros are provided. For them, you have to include <cassert> or <version> yourself.
+不提供宏和特性测试宏。对于它们，必须手动包含<cassert>或<version>。
 
 \item 
-std.compat will provide everything from the module std plus the counterparts of C symbols from C headers (e.g., ::fopen()).
+std.compat将提供模块std中的所有内容，以及C头文件中的C符号对应(例如，::fopen())。
 \end{itemize}
 
-Note that std and every module name starting with std is reserved by the C++ standard for its standard modules.
+注意，std和每个以std开头的模块名，都由C++标准为其标准模块进行保留。
 
 
 
