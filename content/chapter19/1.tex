@@ -1,43 +1,43 @@
 
-Since C++20, you can use new types for non-type template paramet
+自C++20起，可以为非类型模板形参使用新类型
 
 \begin{itemize}
 \item 
-Floating-point types (such as double)
+浮点类型(如double)
 
 \item 
-Structures and simple classes (such as std::pair<>), which indirectly also allows you to use string literals as template parameters
+结构和简单类(如std::pair<>)，这也间接地允许使用字符串字面值作为模板参数
 
 \item 
-Lambdas
+Lambda
 \end{itemize}
 
-In fact, non-type template parameters may now be all structural types. A structural type is a type that
+事实上，非类型模板形参现在可能都是结构类型。结构类型是一种类型
 
 \begin{itemize}
 \item 
-either is a (const or volatile qualified) arithmetic, enum, or pointer type
+可以是(const或volatile限定的)算术类型、枚举类型或指针类型
 
 \item 
-or and lvalue reference type
+或为左值引用类型
 
 \item 
-or a literal type (is either an aggregate or has a constexpr constructor, no copy/move constructor, no destructor, no copy/move constructor or destructor, and where every initialization of data members is a constant expression) where:
+或为文字类型(要么是聚合类型，要么有constexpr构造函数，没有复制/移动构造函数，没有析构函数，没有复制/移动构造函数或析构函数，并且每个数据成员的初始化都是常量表达式)，其中:
 
 \begin{itemize}
 \item 
-All non-static members are public and not mutable and use only structural types or arrays thereof
+所有非静态成员都是public且不可变的，并且只使用结构类型或其数组
 
 \item 
-All base classes (if there are any) are inherited publicly and also structural types
+所有基类(若有的话)都是public继承的，结构类型也是如此
 \end{itemize}
 \end{itemize}
 
-Let us look at what the consequences of this new definition are.
+来看看这个新类型如何使用。
 
-\mySubsubsection{19.1.1}{Floating-Point Values as Non-Type Template Parameters}
+\mySubsubsection{19.1.1}{浮点值作为非类型模板形参}
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{lang/nttpdouble.cpp}
 
@@ -59,7 +59,7 @@ int main()
 }
 \end{cpp}
 
-The output of the program is as follows:
+程序输出如下:
 
 \begin{shell}
 119
@@ -67,16 +67,16 @@ The output of the program is as follows:
 2087
 \end{shell}
 
-By declaring addTax() as follows:
+addTax()的声明如下:
 
 \begin{cpp}
 template<double Vat>
 int addTax(int value)
 \end{cpp}
 
-the function template addTax() takes a double as a template parameter, which is then used as value-added tax to add it to an integral value.
+函数模板addTax()接受一个double作为模板参数，然后将其用作增值税，将其添加到整数值中。
 
-Passing a floating-point value is now also allowed when the non-type template parameter is declared with auto:
+当使用auto声明非类型模板形参时，现在也允许传递浮点值:
 
 \begin{cpp}
 template<auto Vat>
@@ -89,7 +89,7 @@ std::cout << addTax<0>(1950) << '\n'; // Vat is the int value 0
 std::cout << addTax<0.07>(1950) << '\n'; // Vat is the double value 0.07
 \end{cpp}
 
-In the same way, you can now use floating-point values in class templates (declared as double or as auto):
+同样，现在可以在类模板中使用浮点值(声明为double或auto):
 
 \begin{cpp}
 template<double Vat>
@@ -98,11 +98,11 @@ class Tax {
 };
 \end{cpp}
 
-\mySamllsection{Dealing with Inexact Floating-Point Values}
+\mySamllsection{处理不精确的浮点值}
 
-Due to rounding errors, values of floating-point types end up being slightly imprecise. This has an effect when dealing with floating-point values as template parameters. The issue is, when two instantiations of a template have the same type.
+由于舍入误差，浮点类型的值最终会略微不精确，处理浮点值作为模板参数时会产生影响。问题是，当模板的两个实例化具有相同的类型时。
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{lang/nttpdouble2.cpp}
 
@@ -136,7 +136,7 @@ int main()
 }
 \end{cpp}
 
-The output of this program depends on the platform. Often, it is as follows:
+该程序的输出取决于平台。通常是这样的:
 
 \begin{shell}
 false
@@ -149,13 +149,13 @@ false
 true
 \end{shell}
 
-Note that templates instantiated for NaN always have the same type even though NaN == NaN is false.
+请注意，为NaN实例化的模板总是具有相同的类型，即使NaN == NaN为false。
 
-\mySubsubsection{19.1.2}{Objects as Non-Type Template Parameters}
+\mySubsubsection{19.1.2}{对象作为非类型模板形参}
 
-Since C++20, you can use an object/value of a data structure or class as a non-type template parameter provided all members are public and the type is a literal type.
+C++20起，可以使用数据结构或类的对象/值作为非类型模板形参，前提是所有成员都是public且类型为字面类型。
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{lang/nttpstruct.cpp}
 
@@ -194,7 +194,7 @@ int main()
 }
 \end{cpp}
 
-Here, we declare a literal data structure Tax with public members, a constexpr constructor, and an additional member function:
+这里，声明了一个具有public成员的文本数据结构Tax，一个constexpr构造函数和一个额外的成员函数:
 
 \begin{cpp}
 struct Tax {
@@ -208,7 +208,7 @@ struct Tax {
 };
 \end{cpp}
 
-This allows us to pass objects of this type as template arguments:
+这允许将这种类型的对象作为模板参数传递:
 
 \begin{cpp}
 constexpr Tax tax{0.19};
@@ -216,20 +216,20 @@ std::cout << "tax: " << tax << '\n';
 std::cout << addTax<tax>(100) << '\n'; // pass Tax object as a template argument
 \end{cpp}
 
-This works if the data structure or class is a structural type. This roughly means that:
+若数据结构或类是结构类型，则此操作有效。这意味着:
 
 \begin{itemize}
 \item 
-All non-static members are public and not mutable and use only structural types or arrays thereof
+所有非静态成员都是public且不可变的，并且只使用结构类型或其数组
 
 \item 
-All base classes (if there are any) are inherited publicly and also structural types
+所有基类(若有的话)都是public继承的，结构类型也是如此
 
 \item 
-The type is a literal type (is either an aggregate or has a constexpr constructor, no copy/move constructor, no destructor, no copy/move constructor or destructor, and where every initialization of data members is a constant expression)
+该类型是文字类型(要么是聚合类型，要么有constexpr构造函数，没有复制/移动构造函数，没有析构函数，没有复制/移动构造函数或析构函数，其中每个数据成员的初始化都是常量表达式)。
 \end{itemize}
 
-For example:
+例如:
 
 \filename{lang/nttpstruct2.cpp}
 
@@ -271,13 +271,13 @@ int main()
 }
 \end{cpp}
 
-Type Type cannot be used if its constructor or foo() would not be constexpr or a std::string member would be used.
+如果Type的构造函数或foo()不是constexpr，或者使用std::string成员，则不能使用Type。
 
-\mySamllsection{std::pair<> and std::array<> Values as Non-Type Template Parameters}
+\mySamllsection{std::pair<>和std::array<>作为非类型模板形参}
 
-As a consequence, you can now use compile-time objects of types std::pair<> and std::array<> as template parameters:
+因此，可以使用std::pair<>和std::array<>类型的编译时对象作为模板形参:
 
-[For this, C++ had to add the additional requirement that std::pair<> and std::array<> may not be implemented with a private base class, which some implementers did before C++20 (see \url{http://wg21.link/lwg3382}).]
+[为此，C++必须添加额外的要求，std::pair<>和std::array<>不能用private基类实现，这是C++20之前的一些实现者所做的(参见\url{http://wg21.link/lwg3382})。]
 
 \begin{cpp}
 template<auto Val>
@@ -289,11 +289,11 @@ MyClass<std::pair{47,11}> mcp; // OK since C++20
 MyClass<std::array{0, 8, 15}> mca; // OK since C++20
 \end{cpp}
 
-\mySamllsection{Strings as Non-Type Template Parameters}
+\mySamllsection{字符串作为非类型模板形参}
 
-Note that a data structure that has a character array as a public member is a structural type. That way, we can now quite easily pass string literals as template arguments.
+请注意，将字符数组作为公共成员的数据结构是结构类型，就可以很容易地将字符串字面量作为模板参数传递。
 
-For example:
+例如:
 
 \filename{lang/nttpstring.cpp}
 
@@ -329,17 +329,17 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 > hello
 \end{shell}
 
-\mySubsubsection{19.1.3}{Lambdas as Non-Type Template Parameters}
+\mySubsubsection{19.1.3}{Lambda作为非类型模板形参}
 
-Because lambdas are just shortcuts for function objects, they can now also be used as non-type template parameters provided the lambda can be used at compile time.
+因为Lambda只是函数对象的引用，现在只要Lambda能在编译时使用，也可以用作非类型模板参数。
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{lang/nttplambda.cpp}
 
@@ -364,7 +364,7 @@ int main()
 }
 \end{cpp}
 
-The function template addTax() uses a helper function, which can now also be a lambda:
+函数模板addTax()使用了一个辅助函数，也可以是一个Lambda:
 
 \begin{cpp}
 template<std::invocable auto GetVat>
@@ -374,7 +374,7 @@ int addTax(int value)
 }
 \end{cpp}
 
-We can now pass a lambda to this function template:
+现在可以将Lambda传递给这个函数模板:
 
 \begin{cpp}
 auto getDefaultTax = [] {
@@ -384,15 +384,15 @@ auto getDefaultTax = [] {
 addTax<getDefaultTax>(100) // passes lambda as template argument
 \end{cpp}
 
-We could even define the lambda directly when calling the function template:
+甚至可以在调用函数模板时直接定义Lambda:
 
 \begin{cpp}
 addTax<[]{ return 0.19; }>(100) // passes lambda as template argument
 \end{cpp}
 
-Note that it is a good idea to constrain the template parameter with the concepts std::invocable or std::regular\_invocable. That way, you can document and ensure that the passed callable can be called with arguments of the specified types.
+注意，用std::invocable或std::regular\_invocable这两个概念约束模板参数是个好主意。这样，就可以记录并确保可以使用指定类型的参数调用传递的可调用对象。
 
-By using just std::invocable auto, we require that the callable takes no arguments. If the passed callable should take arguments, you need something like this:
+通过使用std::invocable auto，要求可调用对象不接受任何参数。若传递的可调用对象应该接受参数，则需要这样做:
 
 \begin{cpp}
 template<std::invocable<std::string> auto GetVat>
@@ -403,19 +403,19 @@ int addTax(int value, const std::string& name)
 }
 \end{cpp}
 
-Note that you cannot skip auto in the declaration of the function template. We use std::invocable as a type constraint for the type a passed value/object/callback has:
+注意，函数模板的声明中不能跳过auto。使用std::invocable作为传递的值/对象/回调具有类型约束:
 
 \begin{cpp}
 template<std::invocable auto GetVat> // GetVat is a callable with constrained type
 \end{cpp}
 
-Without auto, we would declare a function template that has an ordinary type parameter, which we constrain:
+若没有auto，将声明一个具有普通类型形参的函数模板，并对其进行约束:
 
 \begin{cpp}
 template<std::invocable GetVat> // GetVat is a constrained type
 \end{cpp}
 
-It would also work if we declare the function template with the concrete type of the lambda (which, however, means that we have to define the lambda first):
+若用Lambda的具体类型声明函数模板也可以工作(必须首先定义Lambda):
 
 \begin{cpp}
 auto getDefaultTax = [] {
@@ -429,17 +429,17 @@ int addTax(int value)
 }
 \end{cpp}
 
-Note the following constraints for using lambdas as non-type template parameters:
+注意，以下使用Lambda作为非类型模板形参的约束:
 
 \begin{itemize}
 \item 
-The lambda may not capture anything.
+Lambda可能没有捕获任何东西。
 
 \item
-In must be possible to use the lambda at compile time.
+必须能够在编译时使用Lambda。
 \end{itemize}
 
-Fortunately, since C++17, any lambda is implicitly constexpr provided it uses only features that are valid for compile-time computing. Alternatively, you can declare the lambda with constexpr or consteval to get an error on the lambda itself instead of when using it as a template parameter if invalid compile-time features are used.
+幸运的是，从C++17开始，Lambda都是隐式的constexpr，只要它只使用对编译时计算有效的特性。或者，可以使用constexpr或consteval声明Lambda，以便在Lambda内部捕获错误，而不是在使用无效编译时特性时将其用作模板参数。
 
 
 
