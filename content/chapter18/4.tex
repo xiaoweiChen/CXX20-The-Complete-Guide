@@ -1,7 +1,7 @@
 
-C++20 provides a new helper function that allows programmers to implement different code for compiletime and runtime computing: std::is\_constant\_evaluated(). It is defined in the header file <type\_traits> (although it is not really a type function).
+C++20提供了一个新的辅助函数，允许开发者为编译时和运行时计算实现不同的代码:std::is\_constant\_evaluate()。其在头文件<type\_traits>中定义(尽管它实际上不是一个类型函数)。
 
-It allows code to switch from calling a helper function that can be called only at runtime to code that can be used at compile time. For example:
+其允许代码只能在运行时调用的辅助函数，再切换到可以在编译时使用的代码。例如:
 
 \filename{comptime/isconsteval.hpp}
 
@@ -24,18 +24,18 @@ constexpr int len(const char* s)
 }
 \end{cpp}
 
-In the function len(), we compute the length of a raw string or string literal. If called at runtime, we use the standard C function strlen(). However, to enable the function be used at compile time, we provide a different implementation if we are in a compile-time context.
+函数len()中，计算原始字符串或字符串字面值的长度。若在运行时调用，则使用标准的C函数strlen()。但为了在编译时使用该函数，若在编译时上下文中，则提供不同的实现。
 
-Here is how the two branches can be called:
+下面是这两个分支的调用方式:
 
 \begin{cpp}
 constexpr int l1 = len("hello"); // uses then branch
 int l2 = len("hello"); // uses else branch (no required compile-time context)
 \end{cpp}
 
-The first call of len() happens in a compile-time context. In that case, is\_constant\_evaluated() yields true so that we use the then branch. The second call of len() happens in a runtime context, so that is\_constant\_evaluated() yields false and strlen() is called. The latter happens even if the compiler decides to evaluate the call at compile time. The important point is whether the calls is required to happen at compile time or not.
+len()的第一次调用发生在编译时上下文中，is\_constant\_evaluate()产生true，因此可使用then分支。len()的第二次调用发生在运行时上下文中，因此\_constant\_evaluate()产生false并调用strlen()。即使编译器决定在编译时对调用求值，后一种情况也会发生。重要的一点是这些调用是否需要在编译时发生。
 
-Here is a function that does the opposite: it converts an integral value to a string both at compile time and at runtime:
+下面是一个相反的函数:在编译时和运行时都将整型值转换为字符串:
 
 \filename{comptime/asstring.hpp}
 
@@ -68,25 +68,25 @@ constexpr std::string asString(long long value)
 }
 \end{cpp}
 
-At runtime, we simply use std::format(). At compile time, we manually create a string of the optional negative sign and all digits (we use a recursive approach to bring them into the right order). An example of its use you can be found in the section about exporting compile-time strings to runtime strings.
+运行时，只需使用std::format()。编译时，可手动创建一个由可选的负号和所有数字组成的字符串(使用递归方法将它们按正确的顺序排列)。在关于将编译时字符串导出到运行时字符串的部分中，可以找到一个使用它的示例。
 
 
-\mySubsubsection{18.4.1}{std::is\_constant\_evaluated() in Detail}
+\mySubsubsection{18.4.1}{std::is\_constant\_evaluated()的详情}
 
-According to the C++20 standard, std::is\_constant\_evaluated() yields true when it is called in a manifestly constant-evaluated expression or conversion. That is roughly the case if we call it:
+根据C++20标准，std::is\_constant\_evaluate()在明显为常量求值的表达式或转换中调用时产生true。称其为:
 
 \begin{itemize}
 \item 
-In a constant expression
+在常量表达式中
 
 \item 
-In a constant context (in if constexpr, a consteval function, or an constant initialization)
+在常量上下文中(在if constexpr、consteval函数或常量初始化中)
 
 \item 
-For an initializer of a variable that can be used at compile time
+用于可在编译时使用的变量的初始化器
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 constexpr bool isConstEval() {
@@ -111,11 +111,11 @@ int main()
 }
 \end{cpp}
 
-We would get the same effect if isConstEval() is called indirectly via a constexpr function.
+通过constexpr函数间接调用isConstEval()，也会得到相同的效果。
 
-\mySamllsection{std::is\_constant\_evaluated() with constexpr and consteval}
+\mySamllsection{使用constexpr和consteval的std::is\_constant\_evaluated()}
 
-For example, assume we have the following functions defined:
+例如，假设定义了以下函数:
 
 \begin{cpp}
 bool runtimeFunc() {
@@ -131,7 +131,7 @@ consteval bool constevalFunc() {
 }
 \end{cpp}
 
-Then we have the following behavior:
+然后有以下行为:
 
 \begin{cpp}
 void foo()
@@ -157,13 +157,13 @@ void foo()
 }
 \end{cpp}
 
-By using constexpr or static constinit instead of const, an initialization without y would have the same effect as shown for cb1, cb2, and cb3. However, with y involved, using constexpr or static constinit always results in an error because a runtime value is involved.
+通过使用constexpr或静态constinit(而非const)，不带y的初始化将具有与cb1、cb2和cb3相同的效果。但若涉及到y，使用constexpr或静态constinit总是会导致错误，因为涉及到运行时的值。
 
-In general, it makes no sense to use std::is\_constant\_evaluated() in the following situations:
+通常，在以下情况下使用std::is\_constant\_evaluate()是没有意义的。
 
 \begin{itemize}
 \item 
-As a condition in a compile-time if because that always yields true:
+作为编译时if的条件，总是产生true:
 
 \begin{cpp}
 if constexpr (std::is_constant_evaluated()) { // always true
@@ -171,12 +171,12 @@ if constexpr (std::is_constant_evaluated()) { // always true
 }
 \end{cpp}
 
-Inside if constexpr we have a compile-time context, meaning that the answer to the question of whether we are in a compile-time context is always true (regardless of the context the whole function was called from).
+在if constexpr中，有一个编译时上下文，所以是否处于编译时上下文的问题的答案总是为true(不管整个函数是从哪个上下文调用的)。
 
 \item 
-Inside a pure runtime function, because that usually yields false.
+在纯运行时函数中，这通常会产生false。
 
-The only exception is if is\_constant\_evaluated() is used in a local constant evaluation:
+唯一的例外是if is\_constant\_evaluate()用于局部常量求值:
 
 \begin{cpp}
 void foo() {
@@ -188,7 +188,7 @@ void foo() {
 \end{cpp}
 
 \item 
-Inside a consteval function, because that always yields true:
+在consteval函数中，总是产生true:
 
 \begin{cpp}
 consteval void foo() {
@@ -200,7 +200,7 @@ consteval void foo() {
 
 \end{itemize}
 
-Therefore, using std::is\_constant\_evaluated() usually only makes sense in constexpr functions. It also makes no sense to use std::is\_constant\_evaluated() inside a constexpr function to call a consteval function, because calling a consteval function from a constexpr function is not allowed in general: [C++23 will probably enable code like this with if consteval.]
+因此，使用std::is\_constant\_evaluate()通常只在constexpr函数中有意义。在constexpr函数中使用std::is\_constant\_evaluate()来调用consteval函数也是没有意义的，通常不允许从constexpr函数调用consteval函数:[C++23可能会使用if consteval启用这样的代码。]
 
 \begin{cpp}
 consteval int funcConstEval(int i) {
@@ -217,9 +217,9 @@ constexpr int foo(int i) {
 }
 \end{cpp}
 
-\mySamllsection{std::is\_constant\_evaluated() and Operator ?:}
+\mySamllsection{std::is\_constant\_evaluated()和三元操作符?:}
 
-In the C++20 standard, there is an interesting example to clarify the way std::is\_constant\_evaluated() can be used. Slightly modified, it looks as follows:
+C++20标准中，有一个有趣的例子来说明如何使用std::is\_constant\_evaluate()。稍作修改，如下图所示:
 
 \begin{cpp}
 int sz = 10;
@@ -227,27 +227,27 @@ constexpr bool sz1 = std::is_constant_evaluated() ? 20 : sz; // true, so 20
 constexpr bool sz2 = std::is_constant_evaluated() ? sz : 20; // false, so ERROR
 \end{cpp}
 
-The reason for this behavior is as follows:
+这种行为的原因如下所示:
 
 \begin{itemize}
 \item 
-The initialization of sz1 and sz2 is either static initialization or dynamic initialization.
+sz1和sz2的初始化要么是静态初始化，要么是动态初始化。
 
 \item 
-For static initialization, the initializer must be constant. Therefore, the compiler attempts to evaluate the initializer with std::is\_constant\_evaluated() treated as a constant of value true.
+对于静态初始化，初始化项必须是常量，所以编译器尝试用std::is\_constant\_evaluate()作为值为true的常量来计算初始化式。
 
 \begin{itemize}
 \item 
-With sz1, that succeeds. The result is 1, and that is a constant. Therefore, sz1 is a constant initialized with 20.
+对于sz1，这是成功的。结果是1，这是一个常数，所以sz1是一个用20初始化的常数。
 
 \item
-With sz2, the result is sz, which is not a constant. Therefore, sz2 is (notionally) dynamically initialized. The previous result is therefore discarded and the initializer is evaluated with std::is\_constant\_evaluated() producing false instead. Therefore, the expression to initialize sz2 is also 20.
+对于sz2，结果是sz，不是常数。因此，sz2(理论上)是动态初始化的，先前的结果将丢弃，并使用std::is\_constant\_evaluate()对初始化器进行计算，结果反而产生false，则初始化sz2的表达式也是20。
 
-However, sz2 is not necessarily a constant because std::is\_constant\_evaluated() is not necessarily a constant expression during this evaluation. Therefore, the initialization of sz2 with this 20 does not compile.
+但sz2不一定是常量，因为std::is\_constant\_evaluate()在此求值期间不一定是常量表达式，所以用这个20初始化sz2不能编译。
 \end{itemize}
 \end{itemize}
 
-Using const instead of constexpr makes the situation even more tricky:
+使用const(而不是constexpr)会使情况更加棘手:
 
 \begin{cpp}
 int sz = 10;
@@ -258,7 +258,7 @@ double arr1[sz1]; // OK
 double arr2[sz2]; // may or may not compile
 \end{cpp}
 
-Only sz1 is a compile-time constant and can always be used to initialize an array. For the reason described above, sz2 is also initialized to 20. However, because the initial values is not necessarily a constant, the initialization of arr2 may or may not compile (depending on the compiler and optimizations used).
+只有sz1是编译时常数，并且总是可以用来初始化数组。由于上述原因，sz2也可初始化为20。但由于初始值不一定是常量，因此arr2的初始化可能会编译，也可能不会编译(取决于所使用的编译器和优化)。
 
 
 

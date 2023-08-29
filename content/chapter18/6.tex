@@ -1,67 +1,66 @@
 
-Besides the ability to use heap memory at compile time, compile-time functions (whether declared with constexpr or consteval) can use a couple of additional language features since C++20. As a consequence and in addition, a couple of library features can now also be used at compile time.
+除了在编译时使用堆内存的能力之外，编译时函数(无论是用constexpr还是consteval声明)自C++20以来还可以使用一些额外的语言特性，所以现在还可以在编译时使用一些库特性。
 
-\mySubsubsection{18.6.1}{constexpr Language Extensions}
+\mySubsubsection{18.6.1}{constexpr的语言扩展}
 
-Since C++20, the following language features can be used in compile-time functions (whether declared with constexpr or consteval):
-
-\begin{itemize}
-\item 
-You can now use heap memory at compile time.
-
-\item 
-Runtime polymorphism is supported:
+自C++20起，以下语言特性可以在编译时函数中使用(无论是用constexpr还是consteval声明):
 
 \begin{itemize}
 \item 
-You can now use virtual functions.
+现在可以在编译时使用堆内存。
 
 \item 
-You can now use dynamic\_cast.
+支持运行时多态性:
+
+\begin{itemize}
+\item 
+可以使用虚函数。
 
 \item 
-You can now use typeid.
+可以使用dynamic\_cast。
+
+\item 
+可以使用typeid。
 \end{itemize}
 
 \item
-You can have try-catch blocks now (but you are still not allowed to throw).
+现在可以使用try-catch语句块了(但仍然不允许抛出异常)。
 
 \item
-You can now change the active member of a union.
+现在可以更改联合的活动成员。
 \end{itemize}
 
-Note that you are still not allowed to use static in constexpr or consteval functions.
+注意，仍然不允许在constexpr或consteval函数中使用static。
 
+\mySubsubsection{18.6.2}{constexpr的库扩展}
 
-\mySubsubsection{18.6.2}{constexpr Library Extensions}
+C++标准库扩展了可以在编译时使用的实用程序。
 
-The C++ standard library has extended the utilities that can be used at compile time.
+\mySamllsection{constexpr算法和工具}
 
-\mySamllsection{constexpr Algorithms and Utilities}
+<algorithm>、<numeric>和<utility>中的大多数算法现在都是constexpr。所以，现在可以在编译时对元素进行排序和累加(参见在编译时使用vector的示例)。
 
-Most algorithms in <algorithm>, <numeric>, and <utility> are constexpr now. This means that you can now sort and accumulate elements at compile time (see the example using vectors at compile time).
+然而，并行算法(具有执行策略参数的算法)仍然只能在运行时使用。
 
-However, parallel algorithms (algorithms that have an execution policy parameter) can still only be used at runtime.
+\mySamllsection{constexpr的库类型}
 
-\mySamllsection{constexpr Library Types}
-
-Several types of the C++ standard library now have better support for constexpr so that objects can be used (better) at compile time:
+几种类型的C++标准库现在更好地支持constexpr，以便在编译时可以(更好地)使用对象:
 
 \begin{itemize}
 \item 
-Vectors and strings can be used at compile time now.
+vector和字符串现在可以在编译时使用。
 
 \item 
-A couple of std::complex<> operations became constexpr.
+一些std::complex<>操作变成了constexpr。
 
 \item 
-A couple of missing constexpr in std::optional<> and std::variant<> were added.
+std::optional<>和std::variant<>中添加了两个缺失的constexpr。
 
 \item 
-constexpr was added to std::invoke(), std::ref(), std::cref(), mem\_fn(), not\_fn(), std::bind(), and std::bind\_front(),
+constexpr添加到std::invoke()，std::ref()，std::cref()，mem\_fn()，not\_fn()，std::bind()和std::bind\_front()中，
 
 \item 
-In pointer\_traits, pointer\_to() for raw pointers can now be used at compile time.
+pointer\_traits中，用于原始指针的pointer\_to()现在可以在编译时使用。
 \end{itemize}
 
 

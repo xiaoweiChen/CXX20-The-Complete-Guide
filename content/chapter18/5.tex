@@ -1,9 +1,9 @@
 
-Since C++20, compile-time functions can allocate memory provided the memory is also released at compile time. For this reason, you can now use strings or vectors at compile time. However, there is an important constraint: the strings or vectors created at compile time cannot be used at runtime. The reason is that memory allocated at compile time also has to be released at compile time.
+C++20开始，编译时函数可以分配内存，前提是这些内存在编译时也被释放。由于这个原因，现在可以在编译时使用字符串或vector，但有一个重要的限制:在编译时创建的字符串或vector不能在运行时使用，原因是在编译时分配的内存也必须在编译时释放。
 
-\mySubsubsection{18.5.1}{Using Vectors at Compile Time}
+\mySubsubsection{18.5.1}{在编译时使用vector}
 
-Here is a first example, using a std::vector<> at compile time:
+下面是第一个例子，在编译时使用std::vector<>:
 
 \filename{comptime/vector.hpp}
 
@@ -35,11 +35,11 @@ constexpr auto modifiedAvg(const T& rg)
 }
 \end{cpp}
 
-Here, we define modifiedAvg() with constexpr so that it could be called at compile time. Inside, we use the std::vector<> v, initialized with the elements of the passed range. This allows us to use the full API of a vector (especially inserting and removing elements). As an example, we insert an element, sort the elements, and remove consecutive duplicates with unique(). All these algorithms are constexpr now so that we can use them at compile time.
+这里，用constexpr定义modifiedAvg()，以便在编译时调用。在内部，使用std::vector<> v，用传递的范围的元素初始化，可以使用vector的全部API(特别是插入和删除元素)。例如，插入一个元素，对元素排序，并使用unique()删除连续的重复项。所有这些算法现在都是constexpr的，因此可以在编译时使用。
 
-However, at the end, we do not return the vector. We only return a value computed with the help of a compile-time vector.
+但在最后，不返回vector，只返回在编译时向量的帮助下计算出来的值。
 
-We can call this function at compile time:
+可以在编译时调用这个函数:
 
 \filename{comptime/vector.cpp}
 
@@ -57,9 +57,9 @@ int main()
 }
 \end{cpp}
 
-Due to the fact that avg is declared with constexpr, modifiedAvg() is evaluated at compile time.
+由于avg是用constexpr声明的，所以modiedavg()是在编译时求值的。
 
-We could also declare modifiedAvg() with consteval, in which case we could pass the argument by value because we do not copy elements at runtime:
+也可以用consteval声明modifiedAvg()，因为不会在运行时复制元素，所以可以按值传递参数:
 
 \begin{cpp}
 template<std::ranges::input_range T>
@@ -74,7 +74,7 @@ consteval auto modifiedAvg(T rg)
 }
 \end{cpp}
 
-However, we still cannot declare and initialize a vector at compile time if it can be used at runtime:
+然而，若vector可以在运行时使用，则仍然不能在编译时声明和初始化:
 
 \begin{cpp}
 int main()
@@ -84,7 +84,7 @@ int main()
 }
 \end{cpp}
 
-For the same reason, a compile-time function can only return a vector to the caller when the return value is used at compile time:
+出于同样的原因，编译时函数只能在编译时使用返回值时向调用者返回一个vector:
 
 \filename{comptime/returnvector.cpp}
 
@@ -114,9 +114,9 @@ int main()
 }
 \end{cpp}
 
-\mySubsubsection{18.5.2}{Returning a Collection at Compile Time}
+\mySubsubsection{18.5.2}{编译时返回集合}
 
-Although you cannot return a compile-time vector so that it can be used at runtime, there is a way to return a collection of elements computed at compile time: you can return a std::array<>. The only problem is that you need to know the size of the array because the size cannot be initialized by the size of the vector:
+虽然不能返回编译时的vector，以便在运行时使用它，但有一种方法可以返回编译时计算的元素集合:可以返回std::array<>。唯一的问题是需要知道数组的大小，因为大小不能通过vector的大小初始化:
 
 \begin{cpp}
 std::vector v;
@@ -124,7 +124,7 @@ std::vector v;
 std::array<int, v.size()> arr; // ERROR
 \end{cpp}
 
-Code like this never compiles because size() is a runtime value and the declaration of arr needs a compiletime value. It does not matter whether this code is evaluated at compile time. For this reason, you have to return a fixed-sized array. For example:
+这样的代码永远不会编译，因为size()是一个运行时值，而arr的声明需要一个编译时值。这段代码是否在编译时求值并不重要，所以必须返回一个固定大小的数组。例如:
 
 \filename{comptime/mergevalues.hpp}
 
@@ -151,7 +151,7 @@ consteval auto mergeValues(T rg, auto... vals)
 }
 \end{cpp}
 
-We use a vector in a consteval function to merge a variadic number of passed arguments with the elements of the passed range and sort them all. However, we return the resulting collection as std::array so that it can be passed to a runtime context. For example, the following program works fine with this function:
+在consteval函数中使用vector将传入的可变数量的实参与传入范围的元素合并，并对它们全排序。但可将结果集合作为std::array返回，以便将其传递给运行时上下文。例如，下面的程序可以很好地使用这个函数:
 
 \filename{comptime/mergevalues.cpp}
 
@@ -175,13 +175,13 @@ int main()
 }
 \end{cpp}
 
-It has the following output:
+其输出如下:
 
 \begin{shell}
 0 3 4 4 8 15 42 77 132
 \end{shell}
 
-If we do not know the resulting size of the array at compile time, we have to declare the returned array with a maximum size and return the resulting size in addition. The function that merges the values might now look as follows:
+若在编译时不知道数组的结果大小，则必须声明具有最大大小的返回数组，并返回结果大小。合并这些值的函数现在可能如下所示:
 
 \filename{comptime/mergevaluessz.hpp}
 
@@ -210,11 +210,11 @@ consteval auto mergeValuesSz(T rg, auto... vals)
 }
 \end{cpp}
 
-In addition, we use std::ranges::unique\_copy() to remove consecutive duplicates after sorting and return both the array and the resulting number of elements.
+此外，可使用std::ranges::unique\_copy()来删除排序后的连续重复项，并返回数组和结果元素的数量。
 
-Note that you should declare arr with \{\} to ensure that all values in the array are initialized. Compiletime functions are not allowed to yield uninitialized memory.
+注意，应该用\{\}声明arr，以确保数组中的所有值都初始化。编译时函数不允许产生未初始化的内存。
 
-We can now use the returned value as follows:
+现在可以这样使用返回值:
 
 \filename{comptime/mergevaluessz.cpp}
 
@@ -240,19 +240,19 @@ int main()
 }
 \end{cpp}
 
-By using the view adaptor std::views::counted(), we can easily combine both the returned array and the returned size of elements to use in the array as a single range.
+通过使用视图适配器std::views:: counts()，可以很容易地将返回的数组和返回的元素大小结合起来，作为一个范围在数组中使用。
 
-The output of the program is now:
+现在程序的输出是:
 
 \begin{shell}
 0 3 4 8 15 42 77 132
 \end{shell}
 
-\mySubsubsection{18.5.3}{Using Strings at Compile Time}
+\mySubsubsection{18.5.3}{编译时使用字符串}
 
-For compile-time strings, all operations are constexpr now. Therefore, you can use std::string but also any other string types such as std::u8string at compile time now.
+对于编译时字符串，现在所有的操作都是constexpr，所以现在可以在编译时使用std::string，也可以使用任何其他字符串类型，例如std::u8string。
 
-However, there is again the restriction that you cannot use a compile-time string at runtime. For example:
+但也有一个限制，即不能在运行时使用编译时字符串。例如:
 
 \begin{cpp}
 consteval std::string returnString()
@@ -281,11 +281,11 @@ consteval void useStringInConsteval()
 }
 \end{cpp}
 
-You also cannot solve the problem by returning just the compile-time string with data() or c\_str() or as a std::string\_view. You would return the address of memory allocated at compile time. Compilers raise a compile-time error if that happens.
+不能通过使用data()或c\_str()或std::string\_view返回编译时字符串来解决这个问题，可将返回在编译时分配的内存地址。若发生这种情况，编译器会引发编译时错误。
 
-However, we can use the same trick as described for vectors above. We can convert the string into an array of fixed size and return both the array and the size of the vector.
+然而，可以使用与上面描述的向量相同的技巧。可以将string对象转换为固定大小的数组，并返回数组和vector对象的大小。
 
-Here is a complete example:
+下面是一个完整的例子:
 
 \filename{comptime/comptimestring.cpp}
 
@@ -337,11 +337,11 @@ int main()
 }
 \end{cpp}
 
-Again, we define two helper functions to export a compile-time string to a runtime string:
+同样，这里定义了两个辅助函数来将编译时字符串导出为运行时字符串:
 
 \begin{itemize}
 \item 
-The compile-time function toRuntimeString() converts a string into a std::array<> and returns the array and the size of the string:
+编译时函数toRuntimeString()将字符串转换为std::array<>，并返回该数组和字符串的大小:
 
 \begin{cpp}
 template<int MaxSize>
@@ -359,10 +359,10 @@ consteval auto toRuntimeString(std::string s)
 }
 \end{cpp}
 
-By using assert(), we double check that the size of the array is large enough. In the same way, we could double check at compile time that we do not waste too much memory.
+通过使用assert()，再次检查数组的大小是否足够大。以同样的方式，可以在编译时确定有没有浪费太多的内存。
 
 \item 
-The runtime function fromComptimeString() then takes the returned array and size to initialize a runtime string and returns it:
+运行时函数fromComptimeString()接受返回的数组和大小，初始化运行时字符串并返回:
 
 \begin{cpp}
 std::string fromComptimeString(const auto& dataAndSize)
@@ -372,9 +372,9 @@ std::string fromComptimeString(const auto& dataAndSize)
 }
 \end{cpp}
 
-The test case of the function uses the helper function asString(), which can be used at compile time and runtime to convert an integral value into a string.
+该函数的测试用例使用辅助函数asString()，可以在编译时和运行时使用它将整型值转换为字符串。
 
-The program has, for example, the following output:
+该程序有以下输出:
 
 \begin{shell}
 max int is 2147483647 (32 bits)

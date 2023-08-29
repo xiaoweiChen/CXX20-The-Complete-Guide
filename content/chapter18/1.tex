@@ -1,13 +1,13 @@
 
-One new keyword C++20 introduces is constinit. It can be used to force and ensure that a mutable static or global variable is initialized at compile time. Roughly speaking, the effect is described as:
+C++20引入的一个新关键字是constinit，可用于强制并确保在编译时初始化可变静态或全局变量。大致说来，其效果为:
 
 \begin{cpp}
 constinit = constexpr - const
 \end{cpp}
 
-Yes, a constinit variable is not const (it would have better to name the keyword compiletimeinit). The name comes from the fact that these initializations usually happen when compile-time constants are initialized.
+是的，constinit变量不是const(最好将关键字命名为compiletimeinit)。这个名称来源于这样一个事实，即这些初始化通常在编译时常量初始化时发生。
 
-You can use constinit whenever you declare a static or global variable. For example:
+无论何时声明静态或全局变量，都可以使用constinit。例如:
 
 \begin{cpp}
 // outside any function:
@@ -28,7 +28,7 @@ constexpr std::array<int, 5> getColl() {
 constinit auto globalColl = getColl();
 \end{cpp}
 
-As written, you can still modify the declared values. The following code using the declarations above for the first time:
+如前所述，仍然可以修改声明的值。下面的代码是第一次使用上面的声明:
 
 \begin{cpp}
 std::cout << i << " " << coll[0] << '\n'; // prints 42 1
@@ -37,69 +37,69 @@ coll = {};
 std::cout << i << " " << coll[0] << '\n'; // prints 84 0
 \end{cpp}
 
-has the following output:
+输出如下:
 
 \begin{shell}
 42 1
 84 0
 \end{shell}
 
-The effect of using constinit is that the initialization compiles only if the initial value is a constant value known at compile time. This means that in contrast to a declaration such as:
+使用constinit的效果是，只有当初始值是编译时已知的常数值时，初始化才会编译。所以，与以下声明相反:
 
 \begin{cpp}
 auto x = f(); // f() might be a runtime function
 \end{cpp}
 
-the corresponding declaration with constinit requires a compile-time initialization, meaning that it must be possible to call f() at compile time (which means f() must be constexpr or consteval).
+与constinit相对应的声明需要编译时初始化，则必须能够在编译时调用f()(f()必须是constexpr或consteval)。
 
 \begin{cpp}
 constinit auto x = f(); // f() must be a compile-time function
 \end{cpp}
 
-If you initialize an object with constinit, it must be possible to use the constructor at compile time:
+若用constinit初始化一个对象，必须能够在编译时使用构造函数:
 
 \begin{cpp}
 constinit std::pair p{42, "ok"}; // OK constinit std::list l; // ERROR: default constructor not constexpr
 \end{cpp}
 
-The reasons for using constinit are as follows:
+使用constinit的原因如下所示:
 
 \begin{itemize}
 \item 
-You can require initialization of mutable global/static objects at compile time. That way, you can avoid the initialization using runtime. In particular, this can improve performance when using thread\_local variables.
+可以在编译时要求初始化可变全局/静态对象。这样，就可以避免在运行时进行初始化，当使用thread\_local变量时，这可以提高性能。
 
 \item 
-You can ensure that a global/static object is always initialized when it is used. In fact, constinit can be used to fix the static initialization order fiasco, which can occur when an initial value of a static/global object depends on another static/global object.
+可以确保全局/静态对象在使用时总是初始化。实际上，constinit可以用来修复静态初始化顺序的错误，当一个静态/全局对象的初始值依赖于另一个静态/全局对象时，就会出现这种错误。
 \end{itemize}
 
-Note that using constinit never changes the functional behavior of a program (unless we have the static initialization order fiasco). It can only lead to the consequence that code no longer compiles.
+注意，使用constinit永远不会改变程序的功能行为(除非我们遇到静态初始化顺序的惨败)，只能导致代码不再编译的结果。
 
-\mySubsubsection{18.1.1}{Using constinit in Practice}
+\mySubsubsection{18.1.1}{实践constinit}
 
-There are couple of thing to respect when using constinit.
+使用constinit时有几件事需要注意。
 
-First, you cannot initialize a constinit value with another constinit value:
+首先，不能用另一个constinit值初始化一个constinit值:
 
 \begin{cpp}
 constinit auto x = f(); // f() must be a compile-time function
 constinit auto y = x; // ERROR: x is not a constant initializer
 \end{cpp}
 
-The reason is that the initial value must be a constant value known at compile time, but constinit values are not constant. Only the following compiles:
+原因是初始值必须是编译时已知的常量值，但constinit不是常量。只编译以下代码:
 
 \begin{cpp}
 constexpr auto x = f(); // f() must be a compile-time function
 constinit auto y = x; // OK
 \end{cpp}
 
-When initializing objects, a compile-time constructor is required. However, a compile-time destructor is not required. For this reason, you can use constinit for smart pointers:
+初始化对象时，需要编译时构造函数，但编译时析构函数不是必需的。出于这个原因，可以对智能指针使用constinit:
 
 \begin{cpp}
 constinit std::unique_ptr<int> up; // OK
 constinit std::shared_ptr<int> sp; // OK
 \end{cpp}
 
-constinit does not imply inline (this is different from constexpr). For example:
+constinit并不意味着内联(这与constexpr不同)。例如:
 
 \begin{cpp}
 class Type {
@@ -109,7 +109,7 @@ class Type {
 };
 \end{cpp}
 
-You can use constinit together with extern:
+可以和extern一起使用constinit:
 
 \begin{cpp}
 // header:
@@ -119,33 +119,32 @@ extern constinit int max;
 constinit int max = 42;
 \end{cpp}
 
-For the same effect, you can also skip constinit in the declaration. However, skipping constinit in the definition would no longer force compile-time initialization.
+为了达到同样的效果，也可以跳过声明中的constinit，但在定义中跳过constinit，将不再强制进行编译时初始化。
 
-You can use constinit together with static and thread\_local:
+也可以将constinit与static和thread\_local一起使用:
 
 \begin{cpp}
 static thread_local constinit int numCalls = 0;
 \end{cpp}
 
-Any order of constinit, static, and thread\_local is fine.
+constinit、static和thread\_local的顺序无所谓。
 
-Note that for thread\_local variables, using constinit might create a performance improvement, because it might avoid that the generated code needs an internal guard to signal whether the variable is already initialized:
+请注意，对于thread\_local变量，使用constinit可能会提高性能，因为其可以避免生成的代码(需要内部保护)来指示变量是否已经初始化:
 
 \begin{cpp}
 extern thread_local int x1 = 0;
 extern thread_local constinit int x2 = 0; // better (might avoid an internal guard)
 \end{cpp}
 
-Using constinit to declare references is possible but makes no sense because the reference refers to a constant object. You should use constexpr instead.
+使用constinit声明引用是可能的，但是没有意义，因为引用引用的是一个常量对象，这里应该使用constexpr。
 
+\mySubsubsection{18.1.2}{constinit如何解决静态初始化顺序的问题}
 
-\mySubsubsection{18.1.2}{How constinit Solves the Static Initialization Order Fiasco}
-
-In C++, there is a problem called static initialization order fiasco, which constinit can solve. The problem is that the order of static and global initializations in different translation units is not defined. For that reason, the following code can be a problem:
+C++中，有一个叫做静态初始化顺序的问题，constinit可以解决这个问题。问题是没有定义不同翻译单元中静态和全局初始化的顺序。出于这个原因，下面的代码可能是一个问题:
 
 \begin{itemize}
 \item 
-Assume we have a type with a constructor to initialize the objects and introduce an extern global object of this type:
+假设有一个带构造函数的类型来初始化对象，并引入该类型的外部全局对象:
 
 \filename{comptime/truth.hpp}
 
@@ -164,7 +163,7 @@ extern Truth theTruth; // declare global object
 \end{cpp}
 
 \item
-We initialize the object in its own translation unit:
+在对象自己的转换单元中初始化该对象:
 
 \filename{comptime/truth.cpp}
 
@@ -175,7 +174,7 @@ Truth theTruth; // define global object (should have value 42)
 \end{cpp}
 
 \item
-And then in another translation unit, we initialize another global/static object with theTruth:
+然后，在另一个转换单元中，用theTruth初始化另一个全局/静态对象:
 
 \filename{comptime/fiasco.cpp}
 
@@ -194,16 +193,16 @@ int main()
 \end{cpp}
 \end{itemize}
 
-There is a good chance that val is initialized with theTruth before theTruth itself was initialized. As a result, the program might have the following output: [For example, when using the gcc compiler, you get this effect if you pass truth.o before fiasco.o to the linker.]
+有一个很好的机会，val初始化在theTruth初始化之前。因此，程序可能有以下输出:[例如，在使用gcc编译器时，若传递在fiasco.o前传递了truth.o给连接器，就会出现这个问题。]
 
 \begin{shell}
 0 
 1
 \end{shell}
 
-When using constinit to declare val, that problem cannot occur. constinit ensures that an object is always initialized before it is used because the initialization happens at compile time. If the guarantee cannot be given, the code does not compile. Note that an initialization would also be guaranteed if val was declared with constexpr; however, in that case, you would not be able to modify the value anymore.
+当使用constinit声明val时，就不会出现这个问题。constinit确保对象总是在使用之前进行初始化，因为初始化是在编译时进行的。若不能给出保证，代码将无法编译。注意，若val用constexpr声明，初始化也会得到保证，但这种情况下，将无法再修改该值。
 
-In our example, just using constinit would first result in a compile-time error (signaling that initialization cannot be guaranteed at compile time):
+例子中，仅仅使用constinit首先会导致一个编译时错误(表示在编译时无法保证初始化):
 
 \begin{cpp}
 // truth.hpp:
@@ -218,7 +217,7 @@ extern Truth theTruth;
 constinit int val = theTruth.value ; // ERROR: no constant initializer
 \end{cpp}
 
-That error message signals now at compile time that val cannot be initialized at compile time. To make the initialization valid, you have to modify the declaration of class Truth and theTruth so that theTruth can be used at compile time:
+该错误消息表明，在编译时不能初始化val。为了使初始化有效，必须修改类Truth和theTruth的声明，以便theTruth可以在编译时使用:
 
 \filename{comptime/truthc.hpp}
 
@@ -237,7 +236,7 @@ constexpr Truth theTruth; // force compile-time initialization
 #endif // TRUTH_HPP
 \end{cpp}
 
-Now, the program compiles and val is guaranteed to be initialized with the initialized value of theTruth:
+现在，程序编译，val可保证用theTruth的初始值进行初始化:
 
 \filename{comptime/constinit.hpp}
 
@@ -255,14 +254,14 @@ int main()
 }
 \end{cpp}
 
-Therefore, the output of the program is now guaranteed to be:
+因此，程序的输出现在可以保证为:
 
 \begin{shell}
 42
 43
 \end{shell}
 
-There are other ways to solve the static initialization order fiasco (using a static function to get the value or using inline). Nevertheless, you might think carefully about following a programming style that always declares global and static variables with constinit, provided the initialization does not need any runtime value/feature. Using it in a function like this at least does not hurt:
+还有其他方法可以解决静态初始化顺序的问题(使用静态函数获取值或使用内联)。然而，若初始化不需要运行时值/特性，则可能需要仔细考虑遵循总是使用constinit声明全局变量和静态变量的编程风格。在这样的函数中使用，至少没有坏处:
 
 \begin{cpp}
 long nextId()

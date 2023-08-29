@@ -1,11 +1,11 @@
 
-Since C++11, C++ has the keyword constexpr to support the evaluation of functions at compile time. Provided all aspects of the functions are known at compile time, you can also use the results in compile-time contexts. However, constexpr functions also serve as “normal” runtime functions.
+C++11起，C++有了关键字constexpr来支持在编译时对函数求值。若函数的所有方面在编译时都是已知的，可以在编译时上下文中使用其结果。然而，constexpr函数也可以作为“普通”运行时函数使用。
 
-C++20 introduces a similar keyword consteval, which mandates compile-time computing. In contrast to functions marked with constexpr, functions marked with consteval cannot be called at runtime; instead, they are required to be called at compile time. If this is not possible, the program is ill-formed. Because these functions are called immediately, when the compiler sees calls of them, these functions are also called immediate functions.
+C++20引入了一个类似的关键字consteval，要求进行编译时计算。与用constexpr标记的函数相反，用consteval标记的函数不能在运行时调用;相反，其需要在编译时调用。弱这是不可能的，则程序处于病态。因为这些函数是立即调用的，所以当编译器看到对它们的调用时，这些函数也称为立即函数。
 
-\mySubsubsection{18.2.1}{A First consteval Example}
+\mySubsubsection{18.2.1}{第一个consteval的示例}
 
-Consider the following example:
+考虑下面的例子:
 
 \filename{comptime/consteval1.cpp}
 
@@ -48,7 +48,7 @@ int main()
 }
 \end{cpp}
 
-Here, we use consteval to define the function primeNumbers<N>(), which returns an array of the first N prime numbers at compile time:
+这里，使用consteval定义了函数primeNumbers<N>()，在编译时返回一个包含前N个素数的数组:
 
 \begin{cpp}
 template<int Num>
@@ -61,15 +61,15 @@ std::array<int, Num> primeNumbers()
 }
 \end{cpp}
 
-To compute the prime numbers, primeNumbers() uses a helper function isPrime() that is declared with constexpr to be usable at both runtime and compile time (we could also declare it with consteval, but then it would not be usable at runtime).
+为了计算质数，primeNumbers()使用一个辅助函数isPrime()，该函数是用constexpr声明的，在运行时和编译时都可用(也可以用consteval声明，但这样它在运行时就不可用了)。
 
-The program then uses primeNumbers<>() to initialize an array of 100 prime numbers:
+然后使用primeNumbers<>()初始化一个包含100个素数的数组:
 
 \begin{cpp}
 auto primes = primeNumbers<100>();
 \end{cpp}
 
-Because primeNumbers<>() is consteval, this initialization must happens at compile time. You would have the same effect if primeNumbers<>() is declared with constexpr and the function is called in a compile-time context (such as to initialize a constexpr or constinit array prime):
+因为primeNumbers<>()是consteval，所以这个初始化必须在编译时进行。若使用constexpr声明primeNumbers<>()，并在编译时上下文中调用该函数(例如，初始化constexpr或constinit数组prime)，也会有同样的效果:
 
 \begin{cpp}
 template<int Num>
@@ -84,22 +84,22 @@ std::array<int, Num> primeNumbers()
 constinit static auto primes = primeNumbers<100>();
 \end{cpp}
 
-In both cases, you can see that the compile time becomes significantly slower when the number of prime numbers to compute for the initializations grows significantly.
+这两种情况下，可以看到，当要为初始化计算的素数数量显著增加时，编译时间明显变慢。
 
-However, note that compilers usually have a limit when evaluating constant expressions. The C++ standard only guarantees the evaluation of 1,048,576 expressions within a core constant exp
+但请注意编译器在计算常量表达式时通常有限制，C++标准只保证在一个核心常量exp内对1,048,576个表达式求值
 
 
-\mySamllsection{consteval Lambdas}
+\mySamllsection{consteval的Lambda}
 
-You can also declare lambdas to be consteval now. This requires that the lambda is evaluated at compile time.
+现在也可以将Lambda声明为consteval，从而要求在编译时对Lambda求值。
 
-Consider the following example:
+考虑下面的例子:
 
 \begin{cpp}
 int main(int argc, char* argv[])
 {
 	// compile-time function to compute hash value for string literals:
-	// (for the algorithm, see http: // www. cse. yorku. ca/ ~ oz/ hash. html )
+	// (for the algorithm, see http://www.cse.yorku.ca/~oz/hash.html )
 	auto hashed = [] (const char* str) consteval {
 					std::size_t hash = 5381;
 					while (*str != '\0') {
@@ -122,34 +122,34 @@ int main(int argc, char* argv[])
 }
 \end{cpp}
 
-Here we initialize hashed with a lambda that can be used only at compile time. Therefore, the use of the lambda has to happen in a compile-time context with compile-time values. The calls are valid only if they take string literals or a parameter of type constexpr const char*.
+这里，用一个只能在编译时使用的Lambda初始化hash。因此，Lambda的使用必须在具有编译时值的编译时上下文中进行。这些调用只有在接受字符串字面值或constexpr const char*类型的形参时才有效。
 
-If you declare the lambda with constexpr the switch statement would become valid. (the declaration with constexpr is not necessary, because since C++17, all lambdas are implicitly constexpr if possible). Then, however, it is no longer guaranteed that the computation of the initial values for arr happens at compile time.
+若使用constexpr声明Lambda，则switch语句将生效。(没有必要使用constexpr声明，从C++17开始，若可能的话，所有的Lambda都是隐式的constexpr)。然而，这样就不能保证在编译时对arr的初始值进行计算。
 
-See the discussion on consteval lambdas in the chapter of all new lambda features for more details and another example.
+有关更多细节，请参阅有关consteval Lambda的讨论的章节中的另一个例子。
 
-\mySubsubsection{18.2.2}{constexpr versus consteval}
+\mySubsubsection{18.2.2}{constexpr和consteval}
 
-With constexpr and consteval, we now have the following options for influencing when a function can be and is called:
+使用constexpr和consteval，现在有以下选项来影响何时可以调用/被调用函数:
 
 \begin{itemize}
 \item 
-Neither constexpr nor consteval: 
+既不是constexpr也不是consteval:
 
-These functions can be used only in runtime contexts. However, the compiler can still perform optimizations that evaluate them at compile time.
+这些函数只能在运行时上下文中使用，但编译器仍然可以在编译时进行优化。
 
 \item 
 constexpr: 
 
-These functions can be used in compile-time and runtime contexts. Even in runtime contexts, the compiler can still perform optimizations that evaluate the functions at compile time. The compiler is also allowed to evaluate the functions in compile-time contexts at runtime.
+这些函数可以在编译时和运行时上下文中使用。即使在运行时上下文中，编译器仍然可以在编译时执行对函数求值的优化，编译器还可以在运行时对编译时上下文中的函数求值。
 
 \item 
 consteval: 
 
-These functions can be used only at compile-time. However, the result can be used in a runtime context.
+这些函数只能在编译时使用，但结果可以在运行时上下文中使用。
 \end{itemize}
 
-For example, consider the following three functions declared in a header file (therefore, squareR() is declared with inline):
+例如，考虑在头文件中声明的以下三个函数(因此，squareR()是用inline声明的):
 
 \filename{comptime/consteval2.hpp}
 
@@ -170,7 +170,7 @@ consteval int squareC(int x) {
 }
 \end{cpp}
 
-We can use these functions as follows:
+可以这样使用这些函数:
 
 \filename{comptime/consteval2.cpp}
 
@@ -201,11 +201,11 @@ int main()
 }
 \end{cpp}
 
-The differences between constexpr and consteval are as follows:
+constexpr和consteval的区别如下:
 
 \begin{itemize}
 \item 
-The consteval function is not allowed to process parameters that are not known at compile time:
+不允许consteval函数处理编译时未知的参数:
 
 \begin{cpp}
 std::cout << squareCR(i) << '\n'; // OK
@@ -214,7 +214,7 @@ std::array<int, squareC(i)> arr4; // ERROR
 \end{cpp}
 
 \item 
-The consteval function must to perform its computing at compile time:
+consteval函数必须在编译时执行计算:
 
 \begin{cpp}
 std::cout << squareCR(42) << '\n'; // may be computed at compile time or runtime
@@ -223,17 +223,17 @@ std::cout << squareC(42) << '\n'; // computed at compile time
 
 \end{itemize}
 
-This means that it makes sense to use consteval in two situations:
+在两种情况下使用consteval是有意义的:
 
 \begin{itemize}
 \item 
-You want to enforce compile-time computation.
+希望强制执行编译时计算。
 
 \item 
-You want to disable a function to be used at runtime.
+希望禁用在运行时使用的函数。
 \end{itemize}
 
-For example, whether a function square() or hashed() is constexpr or consteval makes no difference in compile-time contexts such as the following:
+例如，函数square()或hashed()是constexpr还是consteval在编译时上下文中没有区别，例如:
 
 \begin{cpp}
 enum class Drink = { water = hashed("water"), wine = hashed("wine") };
@@ -248,7 +248,7 @@ if constexpr(hashed("wine") > hashed("water")) {
 }
 \end{cpp}
 
-However, in runtime contexts, consteval might make a difference because compile-time computing is not required then:
+然而，在运行时上下文中，consteval可能会有所不同，因为那时不需要编译时计算:
 
 \begin{cpp}
 std::array drinks = { hashed("water"), hashed("wine") };
@@ -260,38 +260,38 @@ if (hashed("wine") > hashed("water")) {
 }
 \end{cpp}
 
-\mySubsubsection{18.2.3}{Using consteval in Practice}
+\mySubsubsection{18.2.3}{实践consteval}
 
-For consteval functions, a couple of restrictions apply when using them in practice.
+对于consteval函数，在实际使用时有一些限制。
 
-\mySamllsection{Constraints for consteval}
+\mySamllsection{consteval的限制}
 
-consteval functions share most of the other aspects of constexpr functions (note that these constraints were relaxed for constexpr functions with C++20):
+consteval函数与constexpr函数几乎相同(注意，C++20放宽了这些限制):
 
 \begin{itemize}
 \item 
-Parameters and the return type (if it is not void) have to be literal types.
+参数和返回类型(若不是void)必须是文字类型。
 
 \item 
-The body may contain only variables of literal types that are neither static nor thread\_local.
+函数体只能包含既不是静态，也不是thread\_local的字面量类型的变量。
 
 \item 
-Using goto and labels is not allowed.
+不允许使用goto和标签。
 
 \item 
-The function may only be a constructor or destructor, the class has no virtual base class.
+函数只能是构造函数或析构函数，类没有虚基类。
 
 \item 
-consteval functions are implicitly inline.
+consteval函数隐式内联。
 
 \item 
-consteval functions cannot be used as coroutines.
+consteval函数不能用作协程。
 \end{itemize}
 
 
-\mySamllsection{Call Chains with consteval Functions}
+\mySamllsection{使用consteval函数的调用链}
 
-Functions marked with consteval can call other functions marked with constexpr or consteval:
+带有consteval标记的函数可以调用其他带有constexpr或consteval标记的函数:
 
 \begin{cpp}
 constexpr int funcConstExpr(int i) {
@@ -307,7 +307,7 @@ consteval int foo(int i) {
 }
 \end{cpp}
 
-However, constexpr functions cannot call consteval functions for variables:
+然而，constexpr函数不能为变量调用consteval函数:
 
 \begin{cpp}
 consteval int funcConstEval(int i) {
@@ -319,7 +319,7 @@ constexpr int foo(int i) {
 }
 \end{cpp}
 
-The function foo() does not compile. The reason is that i is still not a compile-time value because it could be called at runtime. foo() could only call funcConstEval() with a compile-time variable:
+函数foo()无法编译。原因是i仍然不是编译时值，可以在运行时调用。foo()只能用编译时变量调用funcConstEval():
 
 \begin{cpp}
 constexpr int foo(int i) {
@@ -327,11 +327,11 @@ constexpr int foo(int i) {
 }
 \end{cpp}
 
-Note that even if(std::is\_constant\_evaluated()) does not help here.
+注意，即使if(std::is\_constant\_evaluate())在这里也没有太大的作用。
 
-Functions marked with consteval are also not permitted to call pure runtime functions (functions marked with neither constexpr nor consteval). However, this is only checked if the call is really performed. For a consteval function, it is not an error to contain statements that call runtime functions as long as they are not reached (this rule already applies to constexpr functions called at compile time).
+带有consteval标记的函数也不允许调用纯运行时函数(既不带有constexpr，也不带有consteval标记的函数)，但只有在真正执行调用时才会检查这一点。对于consteval函数，只要没有到达运行时函数，包含调用运行时函数的语句就不是错误(这条规则已经适用于编译时调用的constexpr函数)。
 
-Consider the following example:
+考虑下面的例子:
 
 \begin{cpp}
 void compileTimeError()
@@ -347,7 +347,7 @@ consteval int nextTwoDigitValue(int val)
 }
 \end{cpp}
 
-This compile-time function has the interesting effect that it can be used only for some arguments that have a value from zero to 98:
+这个编译时函数有一个有趣的效果，只能用于一些值在0到98之间的参数:
 
 \begin{cpp}
 constexpr int i1 = nextTwoDigitValue(0); // OK (initializes i1 with 1)
@@ -356,7 +356,7 @@ constexpr int i3 = nextTwoDigitValue(99); // compile-time ERROR
 constexpr int i4 = nextTwoDigitValue(-1); // compile-time ERROR
 \end{cpp}
 
-Note that using static\_assert() would not work here because it can only be called for values known at compile time and consteval does not make val a compile-time value inside the function:
+请注意，使用static\_assert()在这里不起作用，因为只能为编译时已知的值调用，并且consteval不会使val成为函数内部的编译时值:
 
 \begin{cpp}
 consteval int nextTwoDigitValue(int val)
@@ -366,13 +366,13 @@ consteval int nextTwoDigitValue(int val)
 }
 \end{cpp}
 
-By using this trick, you can constrain compile-time functions to certain values. That way, you could signal an invalid format of a string parsed at compile time.
+通过使用这个技巧，可以将编译时函数约束为某些值。这样，就可以在编译时对解析的字符串发出无效格式的信号。
 
-\mySubsubsection{18.2.4}{Compile-Time Value versus Compile-Time Context}
+\mySubsubsection{18.2.4}{编译时值与编译时上下文}
 
-You might assume that each and every value in a compile-time function is a compile-time value. However, that is not true. In compile-time functions, there is also a difference between static typing of the code and dynamic computing of values.
+可以假设编译时函数中的每个值都是编译时值，但事实并非如此。在编译时函数中，代码的静态类型和值的动态计算之间也存在差异。
 
-Consider the following example:
+考虑下面的例子:
 
 \begin{cpp}
 consteval void process()
@@ -390,11 +390,11 @@ consteval void process()
 }
 \end{cpp}
 
-Although we are in a function that can be used only at compile time, a2 is not a compile-time value. Therefore, it cannot be used where usually a compile-time value is required, such as to initialize the constexpr variable n2.
+虽然这是一个只能在编译时使用的函数，但a2不是编译时值，所以不能用于通常需要编译时值的地方，例如：初始化constexpr变量n2。
 
-For the same reason, only n1 can be used to declare the size of a std::array. Using n3, which is not constexpr, fails (even if n3 were to be declared as const).
+出于同样的原因，只能使用n1来声明std::array的大小。使用非constexpr的n3会失败(即使将n3声明为const)。
 
-The same applies if process() is declared as a constexpr function. Whether it is called in a compiletime context does not matter.
+若process()声明为constexpr函数，同样适用。但是否在编译时上下文中调用，则并不重要。
 
 
 
