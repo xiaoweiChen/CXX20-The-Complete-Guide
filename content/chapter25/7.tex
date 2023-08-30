@@ -1,38 +1,38 @@
 
 
-\mySamllsection{partial specialization}
+\mySamllsection{偏特化，partial specialization}
 
-An alternative definition for a (primary) template that still depends on one or more template parameters.
+仍然依赖于一个或多个模板参数的(主)模板的替代定义。
 
-\mySamllsection{predicate}
+\mySamllsection{谓词，predicate}
 
-A callable (function, function object, or lambda) that checks whether a certain criterion applies to one or more arguments. It returns a Boolean value, is read-only, and stateless.
+一个可调用对象(函数、函数对象或Lambda)，用于检查某个标准是否适用于一个或多个参数，会返回一个布尔值，是只读的，无状态的。
 
-\mySamllsection{prvalue}
+\mySamllsection{纯右值，prvalue}
 
-A value category of expressions that perform initializations. Prvalues can be assumed to designate pure mathematical values such as 1 or true and temporary objects without names. Examples are:
+执行初始化的表达式的值类别。可以假定值指定纯数学值(如1或true)和没有名称的临时对象。例子有:
 
 \begin{itemize}
 \item [-]
-All literals except string literals (42, true, nullptr, etc.)
+除字符串外的所有字面值(42、true、nullptr等)
 
 \item [-]
-Returned values (values not returned by reference)
+返回值(不是通过引用返回的值)
 
 \item [-]
-Returned lvalue references
+返回左值引用
 
 \item [-]
-Results of constructor calls
+构造函数调用的结果
 
 \item [-]
-Lambdas
+Lambda
 
 \item [-]
 this
 \end{itemize}
 
-What was called an rvalue before C++11 is called a prvalue since C++11.
+在C++11之前称为rvalue，而从C++11开始称为prvalue。
 
 
 

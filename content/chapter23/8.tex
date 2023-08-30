@@ -1,23 +1,23 @@
-The string member functions starts\_with() and ends\_with() were accepted as proposed by Mikhail Maltsev in \url{http://wg21.link/p0457r2}.
+字符串成员函数starts\_with()和ends\_with()由Mikhail Maltsev在\url{http://wg21.link/p0457r2}中提出。
 
-The restriction of the reserve() function of strings was first proposed by Andrew Luo in \url{http://wg21.link/lwg2968}. The finally accepted wording was formulated by Mark Zeren and Andrew Luo in \url{http://wg21.link/p0966r1}.
+字符串的reserve()函数的限制最早是由Andrew Luo在\url{http://wg21.link/lwg2968}中提出的。最终接受的提案是由Mark Zeren和Andrew Luo在\url{http://wg21.link/p0966r1}上制定的。
 
-Access to the source location was first proposed by Robert Douglas in \url{http://wg21.link/n3972}. The finally accepted wording was formulated by Robert Douglas, Corentin Jabot, Daniel Krugler, and Peter ¨ Sommerlad in \url{http://wg21.link/p1208r6}.
+访问源位置最早是由Robert Douglas在\url{http://wg21.link/n3972}中提出的。最终接受的提案是由Robert Douglas、Corentin Jabot、Daniel Kr{\"u}gler和Peter Sommerlad在\url{http://wg21.link/p1208r6}上制定的。
 
-The functions for safe integral comparisons were accepted as proposed by Federico Kircheis in \url{http://wg21.link/p0586r2}.
+采用Federico Kircheis在\url{http://wg21.link/p0586r2}中提出的安全整型比较函数。
 
-The ssize() functions were discussed for a long time as a fix to the problem of comparing signed indexes with unsigned sizes. We would like to let all size() functions yield a signed value; however, there is the backward compatibility problem. As a reaction to a std::span proposal to use a signed size type, ssize() was first proposed by Robert Douglas, Nevin Liber, and Marshall Clow in \url{http://wg21.link/p1089r0}. The finally accepted wording was formulated by Jorg Brown in \url{http://wg21.link/p1227r2}. std::ranges::ssize() was later added by Hannes Hauswedell, Jorg Brown, and Casey Carter in \url{http://wg21.link/p1970r2}.
+ssize()函数作为比较有符号索引和无符号索引大小的问题已经讨论了很长时间。我们希望让所有size()函数产生一个带符号的值;但是，存在向后兼容性问题。作为对std::span建议使用带符号大小类型的回应，ssize()首先由Robert Douglas、Nevin Liber和Marshall Clow在\url{http://wg21.link/p1089r0}中提出。最终接受的提案由Jorg Brown在\url{http://wg21.link/p1227r2}中阐述。std::ranges::ssize()后来由Hannes Hauswedell、Jorg Brown和Casey Carter在\url{http://wg21.link/p1970r2}中添加。
 
-The mathematical constants were first proposed by Lev Minkovsky in \url{http://wg21.link/p0631r0}. The finally accepted wording was formulated by Lev Minkovsky and John McFarlane in \url{http://wg21.link/p0631r8}.
+数学常数最初是由Lev Minkovsky在\url{http://wg21.link/p0631r0}中提出的。最终接受的提案是由Lev Minkovsky和John McFarlane在\url{http://wg21.link/p0631r8}上提出的。
 
-Bit operations were first proposed by Matthew Fioravante in \url{http://wg21.link/n3864}. The finally accepted wording was formulated by Jens Maurer in \url{http://wg21.link/p0553r4} and \url{http://wg21.link/p0556r3}. The names were later modified as proposed by Vincent Reverdy in \url{http://wg21.link/p1956r1}.
+位操作最早是由Matthew Fioravante在\url{http://wg21.link/n3864}上提出的。最终被接受的措辞由Jens Maurer在\url{http://wg21.link/p0553r4}和\url{http://wg21.link/p0556r3}中制定。这些名字后来由Vincent Reverdy在\url{http://wg21.link/p1956r1}上提出修改。
 
-std::bit\_cast<>() was introduced as finally proposed by JF Bastien in \url{http://wg21.link/p0476r2}.
+std::bit＿cast<>()是JF Bastien在\url{http://wg21.link/p0476r2}中提出的。
 
-std::endian was first proposed by Howard Hinnant in \url{http://wg21.link/p0463r0}. The finally accepted wording was formulated by Howard Hinnant in \url{http://wg21.link/p0463r1}. The header file was later corrected as proposed by Walter E. Brown and Arthur O’Dwyer in \url{http://wg21.link/p1612r1}.
+std::endian最早由Howard Hinnant在\url{http://wg21.link/p0463r0}中提出。最终接受的提案是Howard Hinnant在\url{http://wg21.link/p0463r1}中提出的。头文件后来由Walter E. Brown和Arthur O 'Dwyer在\url{http://wg21.link/p1612r1}中修正。
 
-The header file <version> was accepted as proposed by Alan Talbot in \url{http://wg21.link/p0754r2}.
+头文件<version>是由Alan Talbot在\url{http://wg21.link/p0754r2}中提出的。
 
-The new algorithms shift\_left() and shift\_right() were accepted as proposed by Dan Raviv in \url{http://wg21.link/p0769r2}. The new min/max algorithms for ranges were introduced with the ranges library as proposed in \url{http://wg21.link/p0896r4}.
+新算法shift\_left()和shift\_right()被Dan Raviv在\url{http://wg21.link/p0769r2}中提出。在\url{http://wg21.link/p0896r4}中提出的ranges库中引入了新的范围最小/最大算法。
 
-The unseq execution policy was first proposed by Arch D. Robison, Pablo Halpern, Robert Geva, and Clark Nelson in \url{http://wg21.link/p0076r0}. The finally accepted wording was formulated by Alisdair Meredith and Pablo Halpern in \url{http://wg21.link/p1001r2}.
+unseq执行策略首先由Arch D. Robison、Pablo Halpern、Robert Geva和Clark Nelson在\url{http://wg21.link/p0076r0}上提出。最终接受的提案是由Alisdair Meredith和Pablo Halpern在\url{http://wg21.link/p1001r2}上制定的。

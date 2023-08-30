@@ -1,8 +1,7 @@
 
-To disable implicit type conversions, constructors can be declared as explicit. However, for generic code, you might want to make the constructors explicit if and only if a type parameter has explicit constructors.
+要禁用隐式类型转换，可以将构造函数声明为显式。但对于泛型代码，当且仅当类型参数具有显式构造函数时，可能希望显式地使用构造函数。
 
-That way, you can perfectly delegate type conversion support to a wrapper type.
-The way to specify a conditional explicit is like specifying a conditional noexcept. Directly after explicit, you can specify a Boolean compile-time expression in parentheses. Here is an example:
+这样，就可以完美地将类型转换支持委托给包装器类型，指定显式条件的方法类似于指定条件noexcept。直接在explicit之后，就可以在括号中指定布尔编译时表达式。下面是一个例子:
 
 \filename{lang/wrapper.hpp}
 
@@ -22,9 +21,9 @@ public:
 };
 \end{cpp}
 
-The class template Wrapper<> that holds values of type T has a generic constructor, meaning that you could initialize the value with any type that is implicitly convertible to T. If there is no implicit conversion from U to T, the constructor is explicit.
+保存T类型值的类模板Wrapper<>有一个泛型构造函数，则可以用任何可以隐式转换为T的类型初始化该值。若没有从U到T的隐式转换，则构造函数是显式的。
 
-As a consequence, you can initialize a Wrapper of a type only if there is an implicit type conversion enabled. For example:
+因此，只有在启用了隐式类型转换的情况下，才能初始化类型的Wrapper。例如:
 
 \filename{lang/explicitwrapper.cpp}
 
@@ -56,17 +55,17 @@ int main()
 }
 \end{cpp}
 
-To demonstrate the effect of a conditional explicit, we use a Wrapper<> for strings and for vectors of strings:
+为了演示条件显式的效果，对字符串和字符串的vector使用Wrapper<>:
 
 \begin{itemize}
 \item 
-For type std::string, the constructor enables implicit conversions from string literals. Therefore, the constructor of type Wrapper<> is not explicit, which has the effect that we pass string literals to copy initialize a string wrapper or pass a string literal to a function that takes a string wrapper.[Remember that implicit conversions are required for copy initialization (initialization with =) and parameter passing.]
+对于std::string类型，构造函数支持从字符串字面值进行隐式转换，所以Wrapper<>类型的构造函数不是显式的，其作用是传递字符串字面值来复制初始化字符串包装器，或者将字符串字面值传递给接受字符串包装器的函数。[记住，复制初始化(initialization with =)和参数传递需要隐式转换。]
 
 \item
-For type std::vector<std::string>, the constructor that takes an unsigned size is declared as explicit in the C++ standard library. For that reason, std::is\_convertible<> from a size to the vector is false and the Wrapper<> constructor becomes explicit. Therefore, we also cannot pass a size to initialize a wrapper of a vector of strings or pass a size to a function that takes that wrapper type.
+对于std::vector<std::string>类型，接受无符号大小的构造函数在C++标准库中声明为显式，所以std::is\_convertible<>从大小转换为向量为false，Wrapper<>构造函数变为显式。也不能传递size来初始化string类型vector的包装器，也不能将size传递给接受该包装器类型的函数。
 \end{itemize}
 
-The conditional explicit can be used for any place where explicit can be used. Therefore, you could also use it to make conversion operators conditional explicit:
+任何可以使用explicit的地方都可以使用条件显式，也可以使用它使转换操作符显式条件化:
 
 \begin{cpp}
 template<typename T>
@@ -77,13 +76,13 @@ class MyType {
 };
 \end{cpp}
 
-However, I have no useful example of that. Conversions to bool, which is by far the most useful application of conversion operators, should always be explicit so that you do not accidentally pass a MyType object to a function that expects a Boolean value.
+然而，到bool的转换是迄今为止最有用的转换操作符的应用，应该始终是显式的，这样就不会意外地将MyType对象传递给期望布尔值的函数。
 
-\mySubsubsection{22.3.1}{Conditional explicit in the Standard Library}
+\mySubsubsection{22.3.1}{标准库中的条件显式}
 
-The C++ standard library uses a conditional explicit in a couple of places. For example, std::pair<> and std::tuple<> use it to support assignments of pairs and tuples of slightly different types only if there are implicit conversions available.
+C++标准库在几个地方使用了条件显式。例如，std::pair<>和std::tuple<>使用它来支持稍微不同类型的对和元组的赋值，前提是存在可用的隐式转换。
 
-For example:
+例如:
 
 \begin{cpp}
 std::pair<int, int> p1{11, 11};
@@ -96,9 +95,9 @@ p3 = p1; // ERROR
 p3 = std::pair<std::chrono::day, std::chrono::month>{p1}; // OK
 \end{cpp}
 
-Because the constructors of chrono date types that take an integral value are explicit, assignments from a pair of int to a pair of day and month fails. You have to use an explicit conversion.
+因为接受整数值的chrono日期类型的构造函数是显式的，所以将一对int赋值给一对day和month会失败，所以必须使用显式转换。
 
-This also applies when inserting element into maps (because the elements are key/value pairs):
+这也适用于在映射中插入元素时(因为元素是键/值对):
 
 \begin{cpp}
 std::map<std::string, std::string> coll1;
@@ -109,9 +108,9 @@ coll2.insert({"XI", 11}); // ERROR: no implicit conversion that fits
 coll2.insert({"XI", std::chrono::month{11}}); // OK (inserts elem with string and month)
 \end{cpp}
 
-This behavior of std::pair<> is not new. However, before C++20, implementations of the standard library had to use SFINAE to implement the conditional behavior of explicit (declaring two constructors and disabling one of them if the condition is not met).
+std::pair<>的这种行为并不新鲜。但在C++20前，标准库的实现必须使用SFINAE来实现explicit的条件行为(声明两个构造函数，若不满足条件则禁用其中一个)。
 
-As another example, the constructors of std::span<> are conditional explicit:
+另一个例子，std::span<>的构造函数是条件显式的:
 
 \begin{cpp}
 namespace std {
@@ -132,7 +131,7 @@ namespace std {
 }
 \end{cpp}
 
-As a consequence, implicit type conversions of spans are allowed only if the spans have a dynamic extent.
+因此，只有当span具有动态范围时，才允许span的隐式类型转换。
 
 
 

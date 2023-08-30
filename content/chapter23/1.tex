@@ -1,40 +1,40 @@
 
-In C++20, some aspects of string types changed. These changes affect strings (type std::basic\_string<> with its instantiations, such as std::string), string views (std::basic\_string\_view<> with its instantiations, such as std::string\_view), or both.
+C++20中，字符串类型的某些方面发生了变化。这些更改影响字符串(类型std::basic\_string<>及其实例化，如std::string)，字符串视图(std::basic\_string\_view<>及其实例化，如std::string\_view)，或两者兼而有之。
 
-In fact, C++20 introduces the following improvements for string types:
+实际上，C++20为字符串类型引入了以下改进:
 
 \begin{itemize}
 \item 
-All string types now support the spaceship operator <=>. For this, they now declare only operator== and operator<=> and no longer declare operator!=, operator<, operator<=, operator>, and operator>=.
+所有字符串类型现在都支持太空船操作符<=>，则现在只声明==和<=>操作符，不再声明!=、<、<=、>和>=。
 
 \item 
-All string types now provide the new member functions starts\_with() and ends\_with().
+所有字符串类型现在都提供了新的成员函数，ends\_with()，ends\_with()。
 
 \item 
-For strings, the member function reserve() can no longer be used to request to shrink the capacity (memory allocated for the value) of strings. For this reason, you can no longer pass no argument to reserve().
+对于字符串，成员函数reserve()不能再用于请求缩小字符串的容量(为值分配的内存)。由于这个原因，不能再向reserve()传递任何参数。
 
 \item 
-For UTF-8 characters, C++ now provides the string types std::u8string and std::u8string\_view. They are defined as std::basic\_string<> and std::basic\_string\_view<> for the new UTF-8 character type char8\_t. For this reason, library functions that return a UTF-8 string now have the return type std::u8string. Note that this change might break existing code when switching to C++20.
+对于UTF-8字符，C++现在提供了字符串类型std::u8string和std::u8string\_view。它们定义为std::basic\_string<>和std::basic\_string\_view<>，用于新的UTF-8字符类型char8\_t。由于这个原因，返回UTF-8字符串的库函数现在具有返回类型std::u8string。注意，当切换到C++20时，此更改可能会破坏现有的代码。
 
 \item 
-Strings (std::string and other instantiations of std::basic\_string<>) are constexpr now, meaning that you can use strings at compile time.
+字符串(std::string和std::basic\_string<>的其他实例)现在是constexpr，则可以在编译时使用字符串。
 
-Note that you cannot use a std::string at both compile time and runtime. However, there are ways to export a compile-time string to the runtime.
-
-\item 
-String views are now marked as views and borrowed ranges.
+注意，不能在编译时和运行时同时使用std::string，但有几种方法可以将编译时字符串导出到运行时。
 
 \item 
-Standard hash functions were added for types std::u8string and std::u8string\_view, as well as for std::pmr::string, std::pmr::u8string, std::pmr::u16string, std::pmr::u32string, and std::pmr::wstring.
+字符串视图现在标记为视图和租借范围。
+
+\item 
+为类型std::u8string和std::u8string\_view以及std::pmr::string、std::pmr::u8string、std::pmr::u16string、std::pmr::u32string和std::pmr::wstring添加了标准哈希函数。
 \end{itemize}
 
-The following sections explain the non-trivial improvements that are not introduced and explained in other chapters.
+下面几节将解释其他章节中没有介绍和解释的重要改进。
 
-\mySubsubsection{23.1.1}{String Members starts\_with() and ends\_with()}
+\mySubsubsection{23.1.1}{字符串成员starts\_with()和ends\_with()}
 
-Both strings and string views now have new member functions starts\_with() and ends\_with(). They provide an easy way to check the leading and trailing character of a string against a certain sequence of characters. You can compare against a single character, an array of characters, or a string or string view.
+字符串和字符串视图现在都有新的成员函数，starts\_with()和ends\_with()。它们提供了一种简单的方法来根据特定的字符序列检查字符串的开头和结尾字符。可以对单个字符、字符数组、字符串或字符串视图进行比较。
 
-For example:
+例如:
 
 \begin{cpp}
 void foo(const std::string& s, std::string_view suffix)
@@ -51,9 +51,9 @@ void foo(const std::string& s, std::string_view suffix)
 }
 \end{cpp}
 
-\mySubsubsection{23.1.2}{Restricted String Member reserve()}
+\mySubsubsection{23.1.2}{受限字符串成员reserve()}
 
-For strings, the member function reserve() can no longer be used to request to shrink the capacity (memory allocated for the value) of strings:
+对于字符串，成员函数reserve()不能再用于请求缩小字符串的容量(为值分配的内存):
 
 \begin{cpp}
 void modifyString(std::string& s)
@@ -67,15 +67,15 @@ void modifyString(std::string& s)
 }
 \end{cpp}
 
-The reason for this is that releasing memory might take some time, meaning that the performance of this call could vary significantly when porting code.
+这样做的原因是释放内存可能需要一些时间，则在移植代码时，此调用的性能可能会有很大差异。
 
-For this reason, passing no argument to reserve() is no longer supported:
+因此，reserve()需要传递参数:
 
 \begin{cpp}
 s.reserve(); // ERROR since C++20
 \end{cpp}
 
-Use shrink\_to\_fit() instead:
+可以使用shrink\_to\_fit()代替:
 
 \begin{cpp}
 s.shrink_to_fit(); // still OK

@@ -1,6 +1,6 @@
-Sometimes, it is important to let the program deal with the location of the source code that is currently being processed. This is especially used for logging, testing, and checking invariants. So far, programmers have had to use the C preprocessor macros \_\_FILE\_\_, \_\_LINE\_\_, and \_\_func\_\_. C++20 introduces a type-safe feature for that so that an object can be initialized with the current source location and this information can be passed around just like any other object.
+有时，让程序处理当前正在处理的源代码的位置很重要。这尤其用于记录、测试和检查不变量。到目前为止，开发者需要使用C预处理器宏\_\_FILE\_\_、\_\_LINE\_\_和\_\_func\_\_。C++20为此引入了一个类型安全特性，这样就可以用当前源位置初始化对象，并且可以像传递其他对象一样传递该信息。
 
-The use is simple:
+用法很简单:
 
 \begin{cpp}
 #include <source_location>
@@ -15,23 +15,23 @@ void foo()
 }
 \end{cpp}
 
-The static consteval function std::source\_location::current() yields an object for the current source location of type std::source\_location with the following interface:
+静态consteval函数std::source\_location::current()为std::source\_location类型的当前源位置生成一个对象，其接口如下所示:
 
 \begin{itemize}
 \item 
-file\_name() yields the name of the file.
+file\_name()可产生文件的名称。
 
 \item 
-function\_name() yields the name of the function (empty if called outside any function).
+function\_name()生成函数的名称(若在函数之外调用则为空)。
 
 \item 
-line() yields the line number (may be 0 when the line number is not known).
+line()生成行号(当行号未知时可能为0)。
 
 \item 
-column() yields the column in the line (may be 0 when the column number is not known).
+column()生成行中的列(当列号未知时可能为0)。
 \end{itemize}
 
-Details such as the exact format of the function name and the exact position of the column might differ. For example, with the GCCs library, the output might look as follows:
+函数名的确切格式和列的确切位置等细节可能会有所不同。例如，使用gcc库，输出可能如下所示:
 
 \begin{shell}
 file:     sourceloc.cpp
@@ -39,7 +39,7 @@ function: void foo()
 line/col: 8/42
 \end{shell}
 
-while the output of Visual C++ might look as follows:
+而Visual C++的输出可能如下所示:
 
 \begin{shell}
 file:     sourceloc.cpp
@@ -47,7 +47,7 @@ function: foo
 line/col: 8/35
 \end{shell}
 
-Note that by using std::source\_location::current() as a default argument in a parameter declaration, you get the location of the function call. For example:
+注意，通过在形参声明中使用std::source\_location::current()作为默认实参，将获得函数调用的位置。例如:
 
 \begin{cpp}
 void bar(std::source_location sl = std::source_location::current())
@@ -66,7 +66,7 @@ int main()
 }
 \end{cpp}
 
-The output might be something like:
+输出可能是这样的:
 
 \begin{shell}
 file:     sourceloc.cpp
@@ -74,7 +74,7 @@ function: int main()
 line/col: 34/6
 \end{shell}
 
-or:
+或:
 
 \begin{shell}
 file:     sourceloc.cpp
@@ -82,7 +82,7 @@ function: main
 line/col: 34/3
 \end{shell}
 
-Because a std::source\_location is an object, you can store it in a container and pass it around:
+因为std::source\_location是一个对象，所以可以将它存储在容器中并四处传递:
 
 \begin{cpp}
 std::source_location myfunc()
@@ -104,19 +104,19 @@ int main()
 }
 \end{cpp}
 
-The output might be:
+输出可能是:
 
 \begin{shell}
 called: ’std::source_location myfunc()’
 \end{shell}
 
-or:
+或:
 
 \begin{shell}
 called: ’myfunc’
 \end{shell}
 
-See lib/sourceloc.cpp for the complete example.
+完整的示例请参见lib/sourceloc.cpp。
 
 
 

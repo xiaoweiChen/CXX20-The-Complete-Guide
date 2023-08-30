@@ -1,48 +1,48 @@
 
 
 
-\mySamllsection{resource acquisition is initialization (RAII)}
+\mySamllsection{资源获取即初始化，resource acquisition is initialization (RAII)}
 
-A programming pattern to delegate clean-ups necessary for the end of using a resource to a destructor so that the clean-ups happen automatically when the object that represents the resource leaves its scope or ends its lifetime.
+一种编程模式，将结束使用资源所需的清理委托给析构函数，以便在表示资源的对象离开其作用域或结束其生命周期时自动进行清理。
 
 
-\mySamllsection{regular type}
+\mySamllsection{普通类型，regular type}
 
-A type that matches the semantics of built-in value types (such as int). Based on the definition in \url{http://stepanovpapers.com/DeSt98.pdf}, a regular type provides the following basic operations:
-
-\begin{itemize}
-\item [-]
-Default construction (T x;)
-
-\item [-]
-Copying (T y = x;) and in C++, moving
-
-\item [-]
-Assignment (x = y;) and in C++, move assignment
-
-\item [-]
-Equality and inequality (x == y and x != y)
-
-\item [-]
-Ordering (x < y etc.)
-\end{itemize}
-
-These operations follow the “usual” naive rules:
+与内置值类型(如int)的语义匹配的类型。根据\url{http://stepanovpapers.com/DeSt98.pdf}中的定义，正则类型提供以下基本操作:
 
 \begin{itemize}
 \item [-]
-If one object is a copy of the other, the objects are equal.
+默认构造(T x;)
 
 \item [-]
-A copy of an object is equal to an object created with the default constructor to which the source value was assigned.
+复制(T y = x;)和可在C++中移动
 
 \item [-]
-Objects have value semantics. If two objects are equal and we modify one of them, they are no longer equal.
+赋值(x = y;)和可在C++中移动赋值
+
+\item [-]
+支持等式和不等式(x == y和x != y)
+
+\item [-]
+可排序(x < y等)
 \end{itemize}
 
-\mySamllsection{rvalue}
+这些操作遵循“普通”朴素规则:
 
-A value category of expressions that are not lvalues. An rvalue can be a prvalue (such as a temporary object without a name) or an xvalue (e.g., an lvalue marked with std::move()). What was called an rvalue before C++11 is called a prvalue since C++11.
+\begin{itemize}
+\item [-]
+若一个对象是另一个对象的副本，则两个对象相等。
+
+\item [-]
+对象的副本等于用指定源值的默认构造函数创建的对象。
+
+\item [-]
+对象具有值语义。若两个对象相等，修改其中一个，就不再相等了。
+\end{itemize}
+
+\mySamllsection{右值，rvalue}
+
+非左值表达式的值类别。右值可以是右值(没有名称的临时对象)或xvalue(用std::move()标记的左值)。在C++11之前称为右值的东西，从C++11后开始称为prvalue。
 
 
 

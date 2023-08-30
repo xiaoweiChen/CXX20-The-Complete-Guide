@@ -1,13 +1,12 @@
 
 
-\mySamllsection{aggregate}
+\mySamllsection{聚合，aggregate}
 
-Aggregates are simple class or struct types, with restrictions so that the focus lies on storing data and not providing complex behavior. Coming from the programming language C, they are historically raw arrays, structs, and combinations of these two features, which you can initialize with curly braces. In C++, the key requirement is that aggregates have only public data members, no constructors, and no virtual functions. Note that these requirements have changed slightly in C++20. Note also that you can now initialize aggregates with parentheses.
+聚合是简单的类或结构类型，具有限制，因此重点在于存储数据，而不是提供复杂的行为。它们来自编程语言C，历史上是原始数组、结构体以及这两个特性的组合，可以用花括号对其进行初始化。C++中，关键的要求是聚合只有公共数据成员，没有构造函数，也没有虚函数。注意，这些要求在C++20中略有变化。还要注意，现在可以用括号初始化聚合。
 
-\mySamllsection{argument-dependent lookup (ADL)}
+\mySamllsection{参数相关查找，argument-dependent lookup (ADL)}
 
-A feature that allows the programmer to skip namespace qualification of a function when one of the parameters is in its namespace. This means that a function is also looked up in all namespaces of the arguments passed.
-
+当一个参数在函数的命名空间中时，允许开发者跳过函数的命名空间限定的特性，所以会在传递的参数的所有命名空间中查找函数。
 
 
 

@@ -1,19 +1,19 @@
-C++20 introduces a new header file <version>. This header file provides no active functionality. Instead, it provides all implementation-specific general information about the C++ standard library being used.
+C++20引入了一个新的头文件<version>，这个头文件不提供任何功能。相反，它提供了有关所使用的C++标准库的所有特定于实现的通用信息。
 
-For example, <version> might contain:
+例如，<version>可能包含:
 
 \begin{itemize}
 \item 
-The version and release date of the C++ standard library
+C++标准库的版本和发布日期
 
 \item 
-Copyright information
+版权信息
 \end{itemize}
 
 
-In addition, <version> defines the feature test macros of the C++ standard library (they are also defined in the header files they apply to).
+另外，<version>定义了C++标准库的特性测试宏(也在其应用的头文件中定义)。
 
-Because this header file is short and fast to load, tools can include this header file to get all necessary information to make decisions based on the feature set provided or find all information they need to deal with general information of the library used.
+因为这个头文件很短，加载速度也很快，所以工具可以包含这个头文件来获取所有必要的信息，以便根据提供的特性集做出决策，或者找到处理所使用库的一般信息所需的所有信息。
 
 
 

@@ -1,5 +1,5 @@
 
-When using type members of template parameters, you usually have to qualify this use with the keyword typename:
+当使用模板形参的类型成员时，通常必须使用关键字typename来限定这种用法:
 
 \begin{cpp}
 template<typename T>
@@ -12,8 +12,9 @@ typename T::value_type getElem(const T& cont, typename T::iterator pos)
 }
 \end{cpp}
 
-Before C++20, all qualifications of the type members value\_type and iterator of T were necessary.
-Since C++20, you can skip typename in contexts where it is clear that a type is passed. In this case, this applies to the specification of the return type and the type used in the alias declaration (where using introduces a new name for a type):
+C++20之前，类型成员value\_type和T的迭代器的所有限定条件都是必需的。
+
+自C++20起，可以在明确传递类型的上下文中跳过typename，这适用于返回类型和别名声明中使用的类型的规范(其中using为类型引入了一个新名称):
 
 \begin{cpp}
 template<typename T>
@@ -26,26 +27,26 @@ T::value_type getElem(const T& cont, typename T::iterator pos)
 }
 \end{cpp}
 
-Note that the parameter pos and the variable elem still need typename. The most important places where you can skip typename now are:
+注意，参数pos和变量elem仍然需要typename，可以跳过typename的地方是:
 
 \begin{itemize}
 \item 
-When declaring return types (except for a local forward declaration)
+当声明返回类型时(局部前向声明除外)
 
 \item 
-When declaring members in class templates
+在类模板中声明成员时
 
 \item 
-When declaring parameters of member or friend functions in class templates
+在类模板中声明成员函数或友元函数的形参时
 
 \item 
-When declaring parameters of requires expressions
+声明require表达式的参数时
 
 \item 
-For the types in alias declarations
+对于别名声明中的类型
 \end{itemize}
 
-In particular, when declaring a class template, you can now skip typename in most cases:
+特别是，当声明一个类模板时，可以在大多数情况下跳过typename:
 
 \begin{cpp}
 template<typename T>
@@ -59,66 +60,66 @@ public:
 };
 \end{cpp}
 
-However, because the rules for implicit typename are pretty subtle to some extent, you might simply still always use typename when using the type member of a template parameter (at least outside class templates).
+然而，由于隐式typename的规则在某种程度上非常微妙，因此在使用模板形参的类型成员时(至少在类模板之外)，可能仍然总是使用typename。
 
-\mySubsubsection{22.1.1}{Rules for Implicit typename in Detail}
+\mySubsubsection{22.1.1}{隐式类型名的详情}
 
-Since C++20, you can skip typename when using a type member for a template parameter in the following situations:
-
-\begin{itemize}
-\item 
-In an alias declaration (i.e., when declaring a type name with using); note that a type declaration with typedef still needs typename
-
-\item 
-When defining or declaring the return type of a function (unless the declaration happens inside a function or block scope)
-
-\item 
-When declaring a trailing return type
-
-\item 
-When specifying the target type for static\_cast, const\_cast, reinterpret\_cast, or dynamic\_cast
-
-\item 
-When specifying the type for new
-
-\item 
-Inside a class when
+自C++20起，以下情况为模板形参使用类型成员时，可以跳过typename:
 
 \begin{itemize}
 \item 
-Declaring a data member
+在别名声明中(即，使用using声明类型名称时);注意，带typedef的类型声明仍然需要typename
 
 \item 
-Declaring the return type of a member function
+当定义或声明函数的返回类型时(除非声明发生在函数或块范围内)
 
 \item 
-Declaring a parameter of a member or friend function or lambda (a default argument might still need it)
-\end{itemize}
+声明尾步返回类型时
 
 \item 
-When declaring parameter types in a requires expression
+当指定static\_cast、const\_cast、reinterpret\_cast或dynamic\_cast的目标类型时
 
 \item 
-When declaring a default value for a type parameter of a template
+指定类型时
 
 \item 
-When declaring the type of a non-type template parameter
-\end{itemize}
-
-Note that before C++20, typename was not necessary in a few other situations:
+在类中
 
 \begin{itemize}
 \item 
-When specifying the base type of an inherited class
+声明数据成员时
 
 \item 
-When passing initial values to the base class in a constructor
+声明成员函数的返回类型时
 
 \item 
-When using a type member inside the class declaration
+声明成员函数或友元函数或Lambda的形参(默认实参可能仍然需要)时
 \end{itemize}
 
-The following example demonstrates most of the cases above (here, TYPENAME is used where typename is optional since C++20):
+\item 
+在require表达式中声明参数类型时
+
+\item 
+为模板的类型参数声明默认值时
+
+\item 
+声明非类型模板形参的类型时
+\end{itemize}
+
+注意，C++20之前，typename在一些其他情况下是不必要的:
+
+\begin{itemize}
+\item 
+指定继承类的基类型时
+
+\item 
+在构造函数中将初始值传递给基类时
+
+\item 
+在类声明中使用类型成员时
+\end{itemize}
+
+下面的例子演示了上面的大多数情况(这里，TYPENAME表示自C++20以来可选填的地方):
 
 \begin{cpp}
 template<typename T,

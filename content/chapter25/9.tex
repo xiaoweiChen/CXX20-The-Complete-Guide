@@ -1,36 +1,36 @@
 
 
 
-\mySamllsection{semiregular type}
+\mySamllsection{半普通类型，semiregular type}
 
-A type that is regular but does not provide comparison operators:
+普通类型，但不提供比较操作符:
 
 \begin{itemize}
 \item [-]
-If one object is a copy of the other, the objects are equal.
+若一个对象是另一个对象的副本，则两个对象相等。
 
 \item [-]
-A copy of an object is equal to an object created with the default constructor to which the source value was assigned.
+对象的副本等于用指定源值的默认构造函数创建的对象。
 
 \item [-]
-Objects have value semantics. If two objects are equal and we modify one of them, they are no longer equal.
+对象具有值语义。若两个对象相等，修改其中一个，就不再相等了。
 \end{itemize}
 
-\mySamllsection{substitution failure is not an error (SFINAE)}
+\mySamllsection{替换失败不是错误，substitution failure is not an error (SFINAE)}
 
-A mechanism that silently discards templates instead of triggering compilation errors when arguments to template parameters make their declarations ill-formed. You can use the mechanism to disable templates for certain arguments by forcing ill-formed declarations then.
+一种机制，当模板形参的实参声明格式错误时，该机制静默地丢弃模板，而不是触发编译错误。可以使用该机制，通过强制格式错误的声明来禁用某些参数的模板。
 
-\mySamllsection{small string optimization (SSO)}
+\mySamllsection{小字符串优化，small string optimization (SSO)}
 
-An approach to save allocating memory for short strings by always reserving memory for a certain number of characters. A typical value in standard library implementations is to always reserve 16 or 24 bytes of memory so that the string can have 15 or 23 characters (plus 1 byte for the null terminator) without allocating memory. This makes all string objects larger but usually saves a lot of running time because in practice, strings are often shorter than 16 or 24 characters and allocating memory on the heap is quite an expensive operation.
+一种通过始终为一定数量的字符保留内存来节省为短字符串分配内存的方法。标准库实现中的典型值是始终保留16或24字节的内存，以便字符串可以有15或23个字符(加上null终止符的1字节)，而无需分配内存。这使得所有的字符串对象都变大，但通常节省了大量的运行时间。实践中，字符串通常短于16或24个字符，并且在堆上分配内存是一个相当昂贵的操作。
 
-\mySamllsection{stateless}
+\mySamllsection{无状态，stateless}
 
-A function or operation is stateless if it does not change its state due to a call. This has the effect that it does not change its behavior over time and always yields the same result for the same arguments.
+若函数或操作不因调用而改变其状态，则是无状态的。这样做的效果是，不会随着时间的推移而改变其行为，并且总是为相同的参数产生相同的结果。
 
-\mySamllsection{standard template library (STL)}
+\mySamllsection{标准模板库，standard template library (STL)}
 
-The STL is the part of the C++ standard library that deals with containers (data structures), algorithms, and as glue, the iterators. This approach was adopted for the first C++ standard with the goal that programmers can benefit from various standard data structures and algorithms without having to implement them. As generic code, you still get compile-time error messages when you try to combine things that are not supported.
+STL是c++标准库的一部分，用于处理容器(数据结构)、算法以及作为粘合剂的迭代器。第一个C++标准采用了这种方法，其目标是程序员可以从各种标准数据结构和算法中受益，而不必实现它们。作为泛型代码，当尝试组合不受支持的内容时，仍然会得到编译时错误消息。
 
 
 

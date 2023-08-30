@@ -1,53 +1,53 @@
 
-C++20 provides better and cleaner support for dealing with bits:
+C++20为处理位提供了更好、更清晰的支持:
 
 \begin{itemize}
 \item 
-Missing low-level bit operations
+缺少底层位操作
 
 \item 
-Bit casts
+位的强制转换
 
 \item 
-Checks for the endianness of a platform
+检查平台的端序
 \end{itemize}
 
-All of these utilities are defined in the header file <bit>.
+所有这些工具都在头文件<bit>中定义。
 
-\mySubsubsection{23.5.1}{Bit Operations}
+\mySubsubsection{23.5.1}{位操作}
 
-Hardware usually has special support for bit operations such as “rotate left” or “rotate right.” However, before C++20, C++ programmers did not have direct access to these instructions. The newly introduced bit operations provide a direct API to the bit instructions of the underlying CPU.
+硬件通常对位操作有特殊的支持，比如“左移”或“右移”。然而，C++20之前，C++开发者不能直接访问这些指令，新引入的位操作为底层CPU的位指令提供了一个直接的API。
 
-Table Bit operations lists all standardized bit operations that C++20 introduced. They are provided in the header file <bit> as free-standing functions in the namespace std.
+“位操作”表列出了C++20引入的所有标准化的位操作，其在头文件<bit>中作为命名空间std中的独立函数提供。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}    & \textbf{Meaning}                                    \\ \hline
+\textbf{操作}    & \textbf{意义}                                    \\ \hline
 \endfirsthead
 %
 \endhead
 %
-rotl(val, n)          & Yields val with n bits rotated to the left          \\ \hline
-rotr(val, n)          & Yields val with n bits rotated to the right         \\ \hline
-countl\_zero(val)     & Yields number of leading(most significant) 0 bits   \\ \hline
-countl\_one(val)      & Yields number of leading(most significant) 1 bits   \\ \hline
-countr\_zero(val)     & Yields number of trailing(least significant) 0 bits \\ \hline
-countl\_one(val)      & Yields number of trailing(least significant) 1 bits \\ \hline
-popcount(val)         & Yields number of 1 bits in the value                \\ \hline
-has\_single\_bit(val) & Yields whether val is a power of 2 (ont bit set)    \\ \hline
-bit\_floor(val)       & Yields previous power-of-two value                  \\ \hline
-bit\_ceil(val)        & Yields next power-of-two value                      \\ \hline
-bit\_width(val)       & Yields number of bits necessary to store the value  \\ \hline
+rotl(val, n)          & 生成向左移n位的val          \\ \hline
+rotr(val, n)          & 生成向右移n位的val         \\ \hline
+countl\_zero(val)     & 生成前置位中(从最高有效位起)0的个数   \\ \hline
+countl\_one(val)      & 产生前置位中(从最高有效位起)1的个数   \\ \hline
+countr\_zero(val)     & 产生后置位中(从最低有效位起)0的个数 \\ \hline
+countl\_one(val)      & 产生后置位中(从最低有效位起)1的个数 \\ \hline
+popcount(val)         & 输出值中1位的个数                \\ \hline
+has\_single\_bit(val) & 返回val是否为2的幂(二进制集合)    \\ \hline
+bit\_floor(val)       & 得到之前的2次幂值                  \\ \hline
+bit\_ceil(val)        & 得到下一个2次幂值                      \\ \hline
+bit\_width(val)       & 生成存储该值所需的位数  \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 23.3. Bit operations
+表23.3 位操作
 \end{center}
 
-Consider the following program:
+考虑下面的程序:
 
 \filename{lib/bitops8.cpp}
 
@@ -75,7 +75,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 00001101  13
@@ -91,20 +91,20 @@ false
 4
 \end{shell}
 
-Note the following:
+注意事项如下所示:
 
 \begin{itemize}
 \item 
-All these functions are provided only if the passed type is an unsigned integral type.
+只有当传递的类型是无符号整型时，才提供所有这些函数。
 
 \item 
-The rotate functions also take a negative n, which means that the rotation changes its direction.
+位移函数也取负n，则意味着改变了方向。
 
 \item 
-All functions that return a count have the return type int. The only exception is bit\_width(), which returns a value of the passed type, which is an inconsistency (I would assume a bug) in the standard. Therefore, when using it as an int or printing it directly, you might have to use a static cast.
+所有返回计数的函数的返回类型都是int。唯一的例外是bit\_width()，会返回传递类型的值，这是标准中的不一致(我认为是错误)。当将其作为int类型使用或直接打印时，可能必须使用静态强制转换。
 \end{itemize}
 
-If you run a corresponding program for a std::uint16\_t (see lib/bitops16.cpp), you get the following output:
+若为std::uint16\_t运行相应的程序(参见lib/bitops16.cpp)，会得到以下输出:
 
 \begin{shell}
 0000000000001101    13
@@ -120,11 +120,11 @@ false
 4
 \end{shell}
 
-Note also that these functions are defined only for unsigned integral types. That means:
+还要注意，这些函数仅为无符号整型定义。所以:
 
 \begin{itemize}
 \item 
-You cannot use the bit operations for signed integral types:
+不能对有符号整型使用位操作:
 
 \begin{cpp}
 int b1 = ... ;
@@ -132,17 +132,17 @@ auto b2 = std::rotl(b1, 2); // ERROR
 \end{cpp}
 
 \item
-You cannot use the bit operations for type char:
+不能对char类型使用位操作:
 
 \begin{cpp}
 char b1 = ... ;
 auto b2 = std::rotl(b1, 2); // ERROR
 \end{cpp}
 
-Type unsigned char works fine.
+unsigned char类型可以。
 
 \item
-You cannot use the bit operations for type std::byte:
+不能对std::byte类型使用位操作:
 
 \begin{cpp}
 std::byte b1{ ... };
@@ -151,7 +151,7 @@ auto b2 = std::rotl(b1, 2); // ERROR
 
 \end{itemize}
 
-Table Hardware support for bit operations, taken from \url{http://wg21.link/p0553r4}, lists the possible mapping of some of the new bit operations to existing hardware.
+“位操作的硬件支持”表，摘自\url{http://wg21.link/p0553r4}，列出了一些新的位操作到现有硬件的可能映射。
 
 
 % Please add the following required packages to your document preamble:
@@ -159,7 +159,7 @@ Table Hardware support for bit operations, taken from \url{http://wg21.link/p055
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|l|l|}
 \hline
-\textbf{Operation} & \textbf{Intel/AMD} & \textbf{ARM} & \textbf{PowerPC} \\ \hline
+\textbf{操作} & \textbf{Intel/AMD} & \textbf{ARM} & \textbf{PowerPC} \\ \hline
 \endfirsthead
 %
 \endhead
@@ -174,14 +174,14 @@ countr\_ont()      & -                  & -            & -                \\ \hl
 \end{longtable}
 
 \begin{center}
-Table 23.4. Hardware support for bit operations
+表23.4 位操作的硬件支持
 \end{center}
 
 \mySubsubsection{23.5.2}{std::bit\_cast<>()}
 
-C++20 provides a new cast operation for changing the type of a sequence of bits. In contrast to using reinterpret\_cast<> or unions, the operator std::bit\_cast<> ensures that the number of bits fits, a standard layout is used, and no pointer type is used.
+C++20提供了一个新的强制转换操作，用于更改位序列的类型。与使用reinterpret\_cast<>或联合相比，操作符std::bit\_cast<>确保位数合适，使用标准布局，并且不使用指针类型。
 
-For example:
+例如:
 
 \begin{cpp}
 std::uint8_t b8 = 0b0000'1101;
@@ -193,26 +193,26 @@ auto bi = std::bit_cast<int>(b8); // ERROR: wrong number of bits
 
 \mySubsubsection{23.5.2}{std::endian}
 
-C++20 introduces a new utility enumeration type std::endian, which can be used to check the endianness of the execution environment. It introduces three enumeration values:
+C++20引入了一个新的实用程序枚举类型std::endian，可用于检查执行环境的端序。其引入了三个枚举值:
 
 \begin{itemize}
 \item 
-std::endian::big, a value that stands for “big-endian” (scalar types are stored with the most significant byte placed first and the rest in descending order)
+std::endian::big，一个代表“大端”的值(标量类型存储时，最重要的字节放在第一位，其余字节按降序排列)。
 
 \item 
-std::endian::little, a value that stands for “little-endian” (scalar types are stored with the least significant byte placed first and the rest in ascending order)
+std::endian::little，一个代表“l小端”的值(标量类型将最低有效位字节放在首位，其余字节按升序存储)。
 
 \item 
-std::endian::native, a value that specifies the endianness of the execution environment
+std::endian::native，用于指定执行环境的端序
 \end{itemize}
 
-If all scalar types are big-endian, std::endian::native is equal to std::endian::big. If all scalar types are little-endian, std::endian::native is equal to std::endian::little. Otherwise, std::endian::native has a value that is neither std::endian::big nor std::endian::little.
+若所有标量类型都是大端字节数，std::endian::native等于std::endian::big。若所有标量类型都是little-endian, std::endian::native等于std::endian::little。否则，std::endian::native的值既不是std::endian::big，也不是std::endian::little。
 
-If all scalar types have a size of 1, then std::endian::little, std::endian::big, and std::endian::native all have the same value.
+若所有标量类型的大小都为1，则std::endian::little、std::endian::big和std::endian::native都具有相同的值。
 
-The type is defined in the header file <bit>.
+该类型在头文件<bit>中定义。
 
-As enumeration values, these values can be used at compile time. For example:
+作为枚举值，这些值可以在编译时使用。例如:
 
 \begin{cpp}
 #include <bit>

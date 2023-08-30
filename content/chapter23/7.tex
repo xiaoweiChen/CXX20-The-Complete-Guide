@@ -1,68 +1,67 @@
 
 
-For algorithms, C++20 provides a couple of extensions (some of which have already been described in other chapters of this book).
+对于算法，C++20提供了一些扩展(其中一些已经在本书的其他章节中描述过了)。
 
-\mySubsubsection{23.7.1}{Range Support}
+\mySubsubsection{23.7.1}{支持范围}
 
-As discussed in the chapter about ranges, for many algorithms, there is now support:
-
-\begin{itemize}
-\item 
-For passing whole ranges (containers, views) as a single argument
-
-\item 
-For passing a projection parameter as a single argument
-\end{itemize}
-
-This support requires the algorithms to be called in the namespace std::ranges.
-
-For the following algorithms, there is no support for ranges (yet):
+正如在范围一章中所讨论的，对于许多算法，现在都支持:
 
 \begin{itemize}
 \item 
-Numeric algorithms (such as accumulate())
+用于将整个范围(容器，视图)作为单个参数传递
 
 \item 
-Algorithms with parallel execution
-
-\item 
-Algorithm lexicographical\_compare\_three\_way()
+用于将投影参数作为单个参数传递
 \end{itemize}
 
-For more details of the range support for all standard algorithms, see the algorithm overview.
+这种支持要求在命名空间std::ranges中调用算法。
 
-\mySubsubsection{23.7.2}{New Algorithms}
+对于以下算法，目前还不支持范围:
 
-Table New standard algorithms lists the standard algorithms that were introduced with C++20.
+\begin{itemize}
+\item 
+数值算法(如accumulate())
+
+\item 
+并行执行算法
+
+\item 
+算法lexicography \_compare\_three\_way()
+\end{itemize}
+
+有关所有标准算法的范围支持的更多详细信息，请参阅算法概述。
+
+\mySubsubsection{23.7.2}{新算法}
+
+“新标准算法"表列出了C++20中引入的标准算法。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Name}  & \textbf{Effect}                            \\ \hline
+\textbf{名称}  & \textbf{效果}                            \\ \hline
 \endfirsthead
 %
 \endhead
 %
-min()          & Yield the minimum value of a passed ranged \\ \hline
-max()          & Yield the maximum value of a passed ranged \\ \hline
-minmax()                               & Yield the minimum and maximum value of a passed ranged       \\ \hline
-shift\_left()  & Shift all elements to the front            \\ \hline
-shift\_right() & Shift all elements to fht back             \\ \hline
-lexicographical\_compare\_three\_way() & Sort two ranges by using operator \textless{}=\textgreater{} \\ \hline
+min()          & 生成传递的范围的最小值 \\ \hline
+max()          & 生成传递的范围的最大值 \\ \hline
+minmax()       & 生成传递范围的最小值和最大值       \\ \hline
+shift\_left()  & 将所有元素移到前面            \\ \hline
+shift\_right() & 将所有元素移到后面             \\ \hline
+lexicographical\_compare\_three\_way() & 使用运算符对两个范围排序 \textless{}=\textgreater{} \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 23.5. New standard algorithms
+表23.5 新标准算法
 \end{center}
 
+\mySamllsection{支持范围的min(), max()和minmax()}
 
-\mySamllsection{min(), max(), and minmax() for Ranges}
+范围库中引入了std::ranges::min()、std::ranges::max()和std::ranges::minmax()算法，以产生传递的范围的最小值和/或最大值。可以选择传递比较条件和投影。
 
-The algorithms std::ranges::min(), std::ranges::max(), and std::ranges::minmax() were introduced with the ranges library to yield the minimum and/or maximum value of a passed range. You can optionally pass a comparison criterion and a projection.
-
-For example:
+例如:
 
 \filename{lib/minmax.cpp}
 
@@ -82,7 +81,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 0
@@ -90,13 +89,13 @@ The program has the following output:
 0 47
 \end{shell}
 
-Note that there are no corresponding algorithms in std that take two iterators. There are only functions that take two values or a std::initializer\_list<> (and a comparison criterion) as arguments. As usual, the ranges library also provides them with the option to pass a projection.
+注意，std中没有接受两个迭代器的相应算法。只有函数接受两个值或一个std::initializer\_list<>(和一个比较条件)作为参数。与往常一样，范围库还为其提供了传递投影的选项.
 
-\mySamllsection{shift\_left() and shift\_right()}
+\mySamllsection{shift\_left() 和shift\_right()}
 
-With the new standard algorithms shift\_left() and shift\_right, you can move elements to the front or back, respectively. The algorithms return the new end or beginning, respectively.
+使用新的标准算法shift\_left()和shift\_right，可以分别将元素移动到前面或后面。这些算法分别返回新的结束或开始。
 
-For example:
+例如:
 
 \filename{lib/shift.cpp}
 
@@ -131,7 +130,7 @@ int main()
 }
 \end{cpp}
 
-The program has the following output:
+该程序有以下输出:
 
 \begin{shell}
 1 2 3 4 5 6 7 8
@@ -140,19 +139,19 @@ The program has the following output:
 2 3 4 5 6
 \end{shell}
 
-You can pass an execution policy to allow the use of multiple threads. However, the support for ranges with passing a single-argument range and/or projects is not provided (probably an oversight).
+可以通过执行策略来允许使用多个线程，但支持传递单参数范围和/或项目的范围(可能是疏忽)。
 
 \mySamllsection{lexicographical\_compare\_three\_way()}
 
-To compare the elements of two different containers in such a way that one of the new comparison category types is returned, the algorithm std::lexicographical\_compare\_three\_way() was introduced with C++20. It is described in the chapter about the operator <=>.
+为了以返回一种新的比较类别类型的方式比较两个不同容器中的元素，C++20引入了std::lexicographical\_compare\_three\_way()算法，在<=>操作符的章节中进行了描述。
 
-Note that for this algorithm, there is no support for ranges (yet). You can neither pass a range as a single argument nor pass projection parameters (this is probably an oversight).
+注意，对于这个算法，还不支持范围。既不能将范围作为单个参数传递，也不能传递投影参数(这可能是一个疏忽)。
 
-\mySubsubsection{23.7.2}{unseq Execution Policy for Algorithms}
+\mySubsubsection{23.7.2}{unseq算法执行策略}
 
-C++17 introduced various execution policies for the newly introduced parallel algorithms. You could enable parallel computing and allow threads to operate on multiple data items in parallel (called vectorization or SIMD processing).
+C++17为新引入的并行算法引入了各种执行策略，可以启用并行计算并允许线程并行地操作多个数据项(称为向量化或SIMD处理)。
 
-However, you could not allow algorithms to operate on multiple data items but restrict the algorithms to use only one thread. For this, C++20 now provides the execution policy std::execution::unseq. As usual, the new execution policy is a constexpr object of a corresponding unique class unsequenced\_policy in the namespace std::execution. Table Execution policies lists all standardized execution policies now supported.
+但不能允许算法在多个数据项上操作，而是限制算法仅使用一个线程。为此，C++20现在提供了执行策略std::execution::unseq。与往常一样，新执行策略是命名空间std::execution中对应的惟一类unsequenced\_policy的constexpr对象。“执行策略”表列出了现在支持的所有标准化执行策略。
 
 
 % Please add the following required packages to your document preamble:
@@ -160,24 +159,24 @@ However, you could not allow algorithms to operate on multiple data items but re
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Policy}     & \textbf{Meaning}                                           \\ \hline
+\textbf{策略}     & \textbf{意义}                                           \\ \hline
 \endfirsthead
 %
 \endhead
 %
-std::execution::seq & Sequential execution of a single value with one thread     \\ \hline
-std::execution::par & Parallel execution of a single value with multiple threads \\ \hline
-std::execution::unseq      & Parallel execution of multiple values with one thread (since C++20) \\ \hline
-std::execution::par\_unseq & Parallel execution of multiple values with multiple threads         \\ \hline
+std::execution::seq & 用一个线程顺序计算单个值     \\ \hline
+std::execution::par & 用多个线程并行计算单个值 \\ \hline
+std::execution::unseq      & 用一个线程并行计算多个值(C++20起) \\ \hline
+std::execution::par\_unseq & 用多个线程并行计算多个值        \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 23.6. Execution policies
+表23.6 执行策略
 \end{center}
 
-The unsequenced execution policy allows the execution of the operations passed to access the elements to be interleaved on a single thread of execution. You should not use this policy with blocking synchronization (such as using mutexes) because that might result in deadlocks.
+非顺序执行策略允许在单个执行线程中交错执行传递给访问元素的操作，不应该将此策略用于阻塞同步(例如使用互斥锁)，这可能会导致死锁。
 
-Here is an example that uses it:
+下面是一个使用它的例子:
 
 \filename{lib/unseq.cpp}
 
@@ -217,7 +216,7 @@ int main (int argc, char** argv)
 }
 \end{cpp}
 
-As usual for execution policies, you have no way of impacting when and how the policy is used. With this policy, you enable vectorization or SIMD computing; however, you do not mandate it. On hardware that does not support this policy, or if the implementation decides at runtime not to use it (e.g., because the CPU load is too high), the unseq policy results in sequential execution.
+与通常的执行策略一样，无法影响何时以及如何使用策略。使用此策略，可以启用向量化或SIMD计算，但不能强制这样做。在不支持此策略的硬件上，或若实现在运行时决定不使用(例如，因为CPU负载太高)，则unseq策略将会串行执行。
 
 
 

@@ -1,13 +1,13 @@
-C++20 introduces constants for the most important mathematical floating-point constants. Table Math constants lists them.
+C++20为最重要的数学浮点常量引入了常量，“数学常量”表列出了它们。
 
-The constants are provided in the header file <numbers> in the namespace std::numbers.
+这些常量在头文件<numbers>的命名空间std::numbers中提供。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Constant}        & \textbf{Template}                                    \\ \hline
+\textbf{常量}        & \textbf{模板}                                    \\ \hline
 \endfirsthead
 %
 \endhead
@@ -28,10 +28,10 @@ std::number::phi         & std::number::phi\_v\textless{}\textgreater{}         
 \end{longtable}
 
 \begin{center}
-Table 23.2. Math constants
+表23.2 数学常量
 \end{center}
 
-The constants are specializations for type double of corresponding variable templates that have the suffix \_v. The values are the nearest representable values of the corresponding type. For example:
+这些常量是后缀为\_v的相应变量模板的double类型的特化，这些值是对应类型中最接近的表示值。例如:
 
 \begin{cpp}
 namespace std::number {
@@ -40,9 +40,9 @@ namespace std::number {
 }
 \end{cpp}
 
-As you can see, the definitions use the std::floating\_point concept (which was introduced for that reason).
+如前所见，这些定义使用std::floating\_point概念(为此引入该概念)。
 
-Therefore, you can use them as follows:
+因此，可以这样使用:
 
 \begin{cpp}
 #include <numbers>
