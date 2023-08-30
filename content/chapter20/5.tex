@@ -1,15 +1,15 @@
 
-In a couple of situations it is important to know whether two types or pointers to types can safely be converted to each other. The C++ standard uses the term layout-compatible for that.
+一些情况下，了解两个类型或指向类型的指针是否可以安全地相互转换很重要。C++标准使用术语“布局兼容”来表示这一点。
 
-To check the layout-compatible relationships between class members, C++20 also introduces two new ordinary functions. They have the benefit that they can be used in runtime contexts.
+为了检查类成员之间的布局兼容关系，C++20还引入了两个新的普通函数。这个好处是可以在运行时上下文中使用。
 
 \mySubsubsection{20.5.1}{is\_layout\_compatible\_v<>}
 
 \mySamllsection{std::is\_layout\_compatible\_v<T1, T2>}
 
-yields whether types T1 and T2 are layout-compatible so that you can safely convert pointers to them with reinterpret\_cast.
+生成类型T1和T2是否与布局兼容，以便可以使用reinterpret\_cast安全地转换指向它们的指针。
 
-For example:
+例如:
 
 \begin{cpp}
 struct Data {
@@ -28,26 +28,26 @@ class Type {
 std::is_layout_compatible_v<Data, Type> // true
 \end{cpp}
 
-Note that for layout-compatibility it is not enough that the type and the bits fit roughly. According to the language rules:
+请注意，对于布局兼容性来说，仅仅是类型和位的粗略匹配完全不够。根据语言规则:
 
 \begin{itemize}
 \item 
-Signed types are never layout-compatible to unsigned types.
+有符号类型永远不会与无符号类型的布局兼容。
 
 \item 
-char is even never layout-compatible to both signed char and unsigned char.
+char甚至不兼容有符号char和无符号char的布局。
 
 \item 
-References are never layout-compatible to non-references.
+引用与非引用的布局永不兼容。
 
 \item 
-Arrays of different (even layout-compatible) types are never layout-compatible.
+不同(甚至是布局兼容)类型的数组永远不与布局兼容。
 
 \item 
-Enumeration types are never layout-compatible to their underlying type.
+枚举类型永远不会与其基础类型的布局兼容。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 enum class E {};
@@ -71,7 +71,7 @@ yields true if a pointer to type Der can safely be converted to a pointer to its
 
 If both have the same type, the trait always yields true.
 
-For example:
+例如:
 
 \begin{cpp}
 struct B1 { };
@@ -84,7 +84,7 @@ std::is_pointer_interconvertible_base_of_v<B1, D1> // true
 std::is_pointer_interconvertible_base_of_v<B2, D2> // false
 \end{cpp}
 
-The reason that a pointer to D2 cannot be safely converted into a pointer to B2 is that it is not a standard-layout type because not all members are defined in the same class with the same access.
+指向D2的指针不能安全地转换为指向B2的指针，原因是它不是标准布局类型，因为并非所有成员都定义在具有相同访问权限的同一类中。
 
 \mySubsubsection{20.5.3}{is\_corresponding\_member()}
 
@@ -93,9 +93,9 @@ template<typename S1, typename S2, typename M1, typename M2>
 constexpr bool is_corresponding_member(M1 S1::*m1, M2 S2::*m2) noexcept;
 \end{cpp}
 
-returns whether m1 and m2 point to layout-compatible members of S1 and S2. This means that these members and all members in front of these members have to be layout-compatible. The function yields true if and only if S1 and S2 are standard-layout types, M1 and M2 are object types, and m1 and m2 are not null.
+返回m1和m2是否指向S1和S2的布局兼容成员，所以这些成员和这些成员前面的所有成员必须布局兼容。当且仅当S1和S2是标准布局类型，M1和M2是对象类型，且M1和M2不为空时，函数产生true。
 
-For example:
+例如:
 
 \begin{cpp}
 struct Point2D { int a; int b; };
@@ -116,9 +116,9 @@ template<typename S, typename M>
 constexpr bool is_pointer_interconvertible_with_class(M S::*m) noexcept;
 \end{cpp}
 
-returns whether each object s of type S is pointer-interconvertible with its subobject s.*m. The function yields true if and only if S is a standard-layout type, M is an object type, and m is not null.
+返回类型s的每个对象，s是否与其子对象的s指针可互换。当且仅当S是标准布局类型，M是对象类型，且M不为空时，该函数产生true。
 
-For example:
+例如:
 
 \begin{cpp}
 struct B1 { int x; };
@@ -136,9 +136,9 @@ std::is_pointer_interconvertible_with_class<DB1B2, int>(&B1::x) // false
 std::is_pointer_interconvertible_with_class<DB1B2, int>(&DB1B2::x) // false
 \end{cpp}
 
-The C++20 standard explains the reason for the last two statements being false in a note: 
+C++20标准在注释中解释了后两个语句为假的原因:
 
-The type of a pointer-to-member expression \&C::b is not always a pointer to a member of C. This leads to potentially surprising results when using these functions in conjunction with inheritance:
+指针到成员表达式\&C::b的类型，并不总是指向C成员的指针。当将这些函数与继承结合使用时，可能会导致令人惊讶的结果:
 
 \begin{cpp}
 struct A { int a; }; // a standard-layout class

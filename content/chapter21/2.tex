@@ -1,21 +1,21 @@
 
 
-Assume we have a scoped enumeration type (declared with enum class):
+假设有一个限定范围的枚举类型(用枚举类声明):
 
 \begin{cpp}
 enum class Status{open, progress, done = 9};
 \end{cpp}
 
-In contrast to unscoped enumeration types (enum without class), the values of this type need a qualification with their type name:
+与未限定作用域的枚举类型(不带类的枚举)不同，此类型的值需要带有类型名的限定符:
 
 \begin{cpp}
 auto x = Status::open; // OK
 auto x = open; // ERROR
 \end{cpp}
 
-However, qualifying each value all the time can become a bit tedious in some contexts where it is clear that we have no conflicts. To make the use of scoped enumeration types more convenient, you can now use a using enum declaration.
+然而，在某些明显没有冲突的上下文中，一直限定每个值可能会变得有点乏味。为了更方便地使用作用域枚举类型，现在可以使用using枚举声明。
 
-A typical example is a switch over all possible enumeration values. You can now implement it as follows:
+一个典型的例子是切换所有可能的枚举值。现在，可以这样实现:
 
 \begin{cpp}
 void print(Status s)
@@ -35,9 +35,9 @@ void print(Status s)
 }
 \end{cpp}
 
-As long as no other symbol with the name open, progress, or done is declared in the scope of print(), this code works fine.
+只要在print()的作用域中没有声明其他名为open、progress或done的符号，这段代码就可以正常工作。
 
-You can also use multiple using declarations for specific enumeration values now:
+现在，也可以为特定的枚举值使用多个using声明:
 
 \begin{cpp}
 void print(Status s)
@@ -57,9 +57,9 @@ void print(Status s)
 }
 \end{cpp}
 
-That way, you know exactly which names you make available in the current scope.
+这样，就确切地知道哪些名称在当前作用域中可用。
 
-Note that you can also use the using declaration for unscoped enumeration types. It is not necessary, but that way, you do not have to know how an enumeration type is defined:
+注意，也可以对无作用域的枚举类型使用using声明。这不是必需的，但这样，就不必知道枚举类型是如何定义的:
 
 \begin{cpp}
 enum Status{open, progress, done = 9}; // unscoped enum

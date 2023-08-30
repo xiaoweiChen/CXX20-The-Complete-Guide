@@ -1,7 +1,7 @@
 
-C++17 introduced optional initialization for the if and switch control structures. C++20 now introduces such an optional initialization for the range-based for loop.
+C++17引入了if和switch控制结构的可选初始化，C++20现在为基于范围的for循环引入了这样一个可选的初始化。
 
-For example, the following code iterates over elements of a collection while incrementing a counter:
+例如，下面的代码在增加计数器的同时，遍历集合的元素:
 
 \begin{cpp}
 for (int i = 1; const auto& elem : coll) {
@@ -10,7 +10,7 @@ for (int i = 1; const auto& elem : coll) {
 }
 \end{cpp}
 
-As another example, consider this code that iterates over the entries of the directory dirname:
+作为另一个例子，考虑下面的代码，遍历目录dirname的目录名:
 
 \begin{cpp}
 for (std::filesystem::path p{dirname};
@@ -19,7 +19,7 @@ const auto& e : std::filesystem::directory_iterator{p}) {
 }
 \end{cpp}
 
-As a third example, the following code locks a mutex while iterating over a collection:
+作为第三个例子，下面的代码在迭代一个集合时锁定一个互斥锁:
 
 \begin{cpp}
 for (std::lock_guard lg{collMx}; const auto& elem : coll) {
@@ -27,7 +27,7 @@ for (std::lock_guard lg{collMx}; const auto& elem : coll) {
 }
 \end{cpp}
 
-Note that the usual caveats for initializers in control structures apply: the initializer needs to declare a variable with a name. Otherwise, the initialization itself is an expression that creates and immediately destroys a temporary object. As a consequence, initializing a lock guard without a name is a logical error because the guard would no longer lock when the iteration happens:
+注意，在控制结构中初始化器通常需要注意的是:初始化器需要声明一个有名称的变量。否则，初始化本身就是一个表达式，创建并立即销毁临时对象。初始化没有名称的锁保护是一个逻辑错误，因为当迭代发生时，保护将不再锁定:
 
 \begin{cpp}
 for (std::lock_guard{collMx}; const auto& elem : coll) { // runtime ERROR
@@ -35,9 +35,9 @@ for (std::lock_guard{collMx}; const auto& elem : coll) { // runtime ERROR
 }
 \end{cpp}
 
-The range-based for loop with initialization can also be used as a workaround for a bug in the range-based for loop. According to its specification, using the range-based for loop might result in a (fatal) runtime error when iterating over a reference to a temporary object. [The problem has been known since 2009 (see \url{http://wg21.link/cwg900}). However, the C++ standards committee has so far not been willing to fix this bug as proposed, for example, in \url{http://wg21.link/p2012}.]
+带有初始化的基于范围的for循环，也可以用作解决基于范围的for循环中的错误的方法。根据其规范，在迭代对临时对象的引用时，使用基于范围的for循环可能会导致(致命的)运行时错误。这个问题早在2009年就发现了(见\url{http://wg21.link/cwg900})。然而，C++标准委员会到目前为止还不愿意像\url{http://wg21.link/p2012}中提议的那样修复这个bug。
 
-For example:
+例如:
 
 \begin{cpp}
 std::optional<std::vector<int>> getValues(); // forward declaration
@@ -47,7 +47,7 @@ for (int i : getValues().value()) { // fatal runtime ERROR
 }
 \end{cpp}
 
-Using the range-based for loop with initialization avoids this problem:
+使用基于范围的for循环和初始化可以避免这个问题:
 
 \begin{cpp}
 std::optional<std::vector<int>> getValues(); // forward declaration
@@ -57,7 +57,7 @@ for (auto&& optColl = getValues(); int i : optColl) { // OK
 }
 \end{cpp}
 
-In the same way, you can fix a broken iteration using a span:
+以同样的方式，可以使用span修复中断的迭代:
 
 \begin{cpp}
 for (auto elem : std::span{getCollOfConst()}) ... // fatal runtime error

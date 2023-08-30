@@ -1,4 +1,4 @@
-Using enum declarations can also be used to delegate enumeration values to different scopes. For example:
+使用枚举声明还可以将枚举值委托给不同的作用域。例如:
 
 \begin{cpp}
 namespace MyProject {
@@ -15,13 +15,13 @@ auto x = MyProject::open; // OK: x has value MyProject::Task::open
 auto y = MyProject::done; // OK: y has value MyProject::Task::done
 \end{cpp}
 
-Please note that the using enum declaration exposes only the values, not the type:
+请注意using enum声明只公开值，而不公开类型:
 
 \begin{cpp}
 MyProject::Status s; // ERROR
 \end{cpp}
 
-To expose both the type and its values, you also need an ordinary using declaration (type alias):
+要公开类型和它的值，还需要一个普通的using声明(类型别名):
 
 \begin{cpp}
 namespace MyProject {
@@ -32,7 +32,7 @@ namespace MyProject {
 MyProject::Status s = MyProject::done; // OK
 \end{cpp}
 
-For exposed enum values, even argument-dependent lookup (ADL) works fine. For example, we can extend the example above as follows:
+对于公开的枚举值，甚至依赖于参数的查找(ADL)也可以正常工作。例如，可以将上面的例子扩展为如下例子:
 
 \begin{cpp}
 namespace MyProject {
@@ -49,7 +49,7 @@ foo(MyProject::done); // OK: calls MyProject::foo() with MyProject::Task::Status
 foo(MyScope::done); // OK: calls MyProject::foo() with MyProject::Task::Status::done
 \end{cpp}
 
-Note that a type alias is not generally used by ADL:
+请注意，ADL通常不使用类型别名:
 
 \begin{cpp}
 namespace MyScope {

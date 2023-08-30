@@ -1,32 +1,32 @@
 
-C++20 provides a couple of improvements for aggregates, which are described in this section:
+C++20为聚合提供了一些改进，这些改进将在本节中介绍:
 
 \begin{itemize}
 \item 
-Designated initializers (initial values for specific members) are (partially) supported
+(部分)支持指定初始化式(特定成员的初始值)
 
 \item 
-You can initialize aggregates with parentheses
+可以用圆括号初始化聚合
 
 \item 
-The fixed definition of aggregates and the consequence for std::is\_default\_constructible<>
+固定聚合的定义和std::is\_default\_constructible<>
 \end{itemize}
 
-In addition, other sections of this book describe additional new aspects of aggregates when they are used in generic code:
+此外，本书的其他部分描述了聚合在泛型代码中的使用:
 
 \begin{itemize}
 \item 
-Using class template argument deduction (CTAD) for aggregates
+对聚合使用类模板参数推导(CTAD)
 
 \item 
-Aggregates can be used as non-type template parameters (NTTP)
+聚合可以用作非类型模板参数(NTTP)。
 \end{itemize}
 
-\mySubsubsection{21.5.1}{Designated Initializers}
+\mySubsubsection{21.5.1}{指定初始化器}
 
-For aggregates, C++20 provides a way to specify which member should be initialized with a passed initial value. However, you can use this only to skip parameters.
+对于聚合，C++20提供了一种方法来指定应该用传递的初始值初始化哪个成员，但只能使用它来跳过参数。
 
-For example, assume we have the following aggregate type:
+例如，假设有以下聚合类型:
 
 \begin{cpp}
 struct Value {
@@ -36,7 +36,7 @@ struct Value {
 };
 \end{cpp}
 
-Then, the following way to initialize values of this type is supported now:
+那么，现在支持以下方式来初始化该类型的值:
 
 \begin{cpp}
 Value v1{100}; // OK (not designated initializers)
@@ -44,34 +44,34 @@ Value v2{.amount = 100, .unit = "Euro"}; // OK (second member has default value)
 Value v3{.precision = 8, .unit = "$"}; // OK (first member has default value)
 \end{cpp}
 
-See lang/designated.cpp for a complete example.
+完整的示例请参见lang/designated.cpp。
 
-Note the following constraints:
+注意以下限制:
 
 \begin{itemize}
 \item 
-You have to pass the initial value with = or \{\}.
+必须使用=或\{\}传递初始值。
 
 \item 
-You can skip members, but you have to follow their order. The order of members that are initialized by name must match their order in the declaration.
+可以跳过会员，但必须遵循其顺序。按名称初始化的成员的顺序必须与声明中的顺序匹配。
 
 \item 
-You must use designated initializers for either all or none of the arguments. Mixed initialization is not allowed.
+必须对所有参数使用指定初始化式，或者不使用指定初始化式。不允许混合初始化。
 
 \item 
-Using designated initialization for arrays is not supported.
+不支持对数组使用指定初始化。
 
 \item 
-Nested initialization with designated initializers is possible, but not directly using .mem.mem.
+可以使用指定初始化式嵌套初始化，但不能直接使用.mem.mem。
 
 \item 
-You cannot use designated initializers when initializing aggregates with parentheses.
+初始化带有圆括号的聚合时，不能使用指定初始化器。
 
 \item 
-Designated initializers can also be used in unions.
+指定初始化式也可以用在联合体中。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 Value v4{100, .unit = "Euro"}; // ERROR: all or none designated
@@ -79,9 +79,9 @@ Value v5{.unit = "$", .amount = 20}; // ERROR: invalid order
 Value v6(.amount = 29.9, .unit = "Euro"); // ERROR: only supported for curly braces
 \end{cpp}
 
-The restrictions that designated initializers follow the order of members, can be used either for all or for none of the arguments, do not support direct nesting, and do not support arrays are restrictions compared to the programming language C. The reason for respecting the order of the members is to ensure that the initialization reflects the order in which constructors are called (which is the opposite order destructors are called).
+与编程语言C相比，指定初始化器遵循成员顺序的限制，可以用于所有参数，也可以不用于参数，不支持直接嵌套，不支持数组。尊重成员顺序的原因是确保初始化反映了调用构造函数的顺序(与调用析构函数的顺序相反)。
 
-And as an example of nested initialization with = and \{\} and unions:
+作为使用=、\{\}和联合体嵌套初始化的示例:
 
 \begin{cpp}
 union Sub {
@@ -98,16 +98,16 @@ Data d1{.val{.y=42}}; // OK
 Data d2{.val = {.y{42}}}; // OK
 \end{cpp}
 
-You cannot directly nest designated initializers:
+不能直接嵌套指定初始化式:
 
 \begin{cpp}
 Data d2{.val.y = 42}; // ERROR
 \end{cpp}
 
 
-\mySubsubsection{21.5.2}{Aggregate Initialization with Parentheses}
+\mySubsubsection{21.5.2}{用圆括号聚合初始化}
 
-Assume you have declared the following aggregate:
+假设已经声明了以下集合:
 
 \begin{cpp}
 struct Aggr {
@@ -116,7 +116,7 @@ struct Aggr {
 };
 \end{cpp}
 
-Before C++20, you could only use curly braces to initialize aggregates with values:
+C++20之前，只能使用花括号来初始化带有值的聚合:
 
 \begin{cpp}
 Aggr a0; // OK, but no initialization
@@ -128,7 +128,7 @@ Aggr a5 = {"hi"}; // OK, initialized with "hi" and 0
 Aggr a6 = {"hi", 42}; // OK, initialized with "hi" and 42
 \end{cpp}
 
-Since C++20, you can also use parentheses as outer characters for a direct initialization without =:
+自C++20起，还可以使用圆括号作为外部字符来直接初始化，不带=:
 
 \begin{cpp}
 Aggr a7("hi"); // OK since C++20: initialized with "hi" and 0
@@ -136,7 +136,7 @@ Aggr a8("hi", 42); // OK since C++20: initialized with "hi" and 42
 Aggr a9({"hi", 42}); // OK since C++20: initialized with "hi" and 42
 \end{cpp}
 
-Using = or inner parentheses still does not work:
+使用=或内括号仍然不起作用:
 
 \begin{cpp}
 Aggr a10 = "hi"; // ERROR
@@ -144,9 +144,9 @@ Aggr a11 = ("hi", 42); // ERROR
 Aggr a12(("hi", 42)); // ERROR
 \end{cpp}
 
-Using inner parentheses might even compile. In that case, they are used as any parentheses around an expression that uses the comma operator.
+使用内括号甚至可以编译，其用作使用逗号操作符的表达式周围的圆括号。
 
-Note that you can use parentheses even to initialize an array of unknown bounds:
+注意，现在甚至可以使用圆括号来初始化一个边界未知的数组:
 
 \begin{cpp}
 int a1[]{1, 2, 3}; // OK since C++11
@@ -155,7 +155,7 @@ int a3[] = {1, 2, 3}; // OK
 int a4[] = (1, 2, 3); // still ERROR
 \end{cpp}
 
-However, “brace elision” is not supported (there are no nested braces to elide):
+然而，不支持"大括号省略"(没有嵌套的大括号可以省略):
 
 \begin{cpp}
 struct Arr {
@@ -168,16 +168,16 @@ Arr arr3{{1, 2, 3}}; // OK
 Arr arr4({1, 2, 3}); // OK (even before C++20)
 \end{cpp}
 
-Therefore, to initialize std::arrays, you still have to use braces:
+因此，要初始化std::arrays，仍然必须使用大括号:
 
 \begin{cpp}
 std::array<int,3> a1{1, 2, 3}; // OK: shortcut for std::array{{1, 2, 3}}
 std::array<int,3> a2(1, 2, 3); // still ERROR
 \end{cpp}
 
-\mySamllsection{Reason for Aggregate Initialization with Parentheses}
+\mySamllsection{用圆括号初始化聚合的原因}
 
-The reason for supporting aggregate initialization with parentheses is that this allows you to call the operator new with parentheses:
+支持带圆括号的聚合初始化的原因是，可以用圆括号调用new操作符:
 
 \begin{cpp}
 struct Aggr {
@@ -189,21 +189,21 @@ auto p1 = new Aggr{"Rome", 200}; // OK since C++11
 auto p2 = new Aggr("Rome", 200); // OK since C++20 (ERROR before C++20)
 \end{cpp}
 
-This helps to support the use of aggregates in types that call new internally with parentheses to store values in existing memory as is the case for containers and smart pointers. In fact, the following is possible since C++20:
+这有助于支持在类型中使用聚合，这些类型在内部调用new时使用括号将值存储在现有内存中，就像容器和智能指针的情况一样。事实上，自C++20起，以下是可能的:
 
 \begin{itemize}
 \item 
-You can now use std::make\_unique<>() and std::make\_shared<>() for aggregates:
+现在可以对聚合使用std::make\_unique<>()和std::make\_shared<>():
 
 \begin{cpp}
 auto up = std::make_unique<Aggr>("Rome", 200); // OK since C++20
 auto sp = std::make_shared<Aggr>("Rome", 200); // OK since C++20
 \end{cpp}
 
-There was no way to use these helper functions for aggregates before C++20.
+C++20之前，无法对聚合使用这些辅助函数。
 
 \item 
-You can now emplace new values into containers of aggregates:
+现在可以将新值放置到聚合容器中:
 
 \begin{cpp}
 std::vector<Aggr> cont;
@@ -211,7 +211,7 @@ cont.emplace_back("Rome", 200); // OK since C++20
 \end{cpp}
 \end{itemize}
 
-Note that there are still types that cannot be initialized with parentheses but that can be initialized with curly braces: scoped enumerations (enum class types). Type std::byte (introduced with C++17) is one example:
+请注意，仍然有一些类型不能用括号初始化，但可以用花括号初始化:作用域枚举(枚举类类型)。类型std::byte (C++17引入)就是一个例子:
 
 \begin{cpp}
 std::byte b1{0}; // OK
@@ -220,7 +220,7 @@ auto upb2 = std::make_unique<std::byte>(0); // still ERROR
 auto upb3 = std::make_unique<std::byte>(std::byte{0}); // OK
 \end{cpp}
 
-For std::array, you still need braces (as stated above):
+对于std::array，仍然需要大括号(如上所述):
 
 \begin{cpp}
 std::vector<std::array<int, 3>> ca;
@@ -229,41 +229,41 @@ ca.emplace_back({1, 2, 3}); // ERROR
 ca.push_back({1, 2, 3}); // still OK
 \end{cpp}
 
-\mySamllsection{Aggregate Initialization with Parentheses in Detail}
+\mySamllsection{详细地用圆括号聚合初始化}
 
-The proposal to introduce initialization with parentheses lists the following design guidelines:
-
-\begin{itemize}
-\item 
-Any existing meaning of Type(val) should not change.
-
-\item 
-Parenthesized initialization and braced initialization should be as similar as possible but also as distinct as necessary to conform with the existing mental models of braced lists and parenthesized lists.
-\end{itemize}
-
-And in fact, there are the following differences between aggregate initialization with curly braces and aggregate initialization with parentheses:
+引入圆括号初始化的建议列出了以下设计准则:
 
 \begin{itemize}
 \item 
-Initialization with parentheses does not detect narrowing conversions.
+Type(val)的现有含义都不应该改变。
 
 \item 
-Initialization with parentheses allows all implicit conversions (not only from derived to base class).
-
-\item
-When using parentheses, reference members do not extend the lifetime of passed temporary objects.
-
-\item
-Using parentheses does not support brace elisions (using them is like passing arguments to parameters).
-
-\item
-An initialization with empty parentheses works even for explicit members.
-
-\item
-Using parentheses does not support designated initializers.
+括号初始化和括号初始化应尽可能相似，但也应尽可能不同，以符合现有的括号列表和括号列表的心智模型。
 \end{itemize}
 
-An example of the lack of detecting narrowing is the following:
+实际上，带花括号的聚合初始化和带圆括号的聚合初始化有以下区别:
+
+\begin{itemize}
+\item 
+带圆括号的初始化不会检测窄化转换。
+
+\item 
+用圆括号初始化允许所有隐式转换(不仅是从派生类到基类)。
+
+\item
+当使用括号时，引用成员不会延长传递的临时对象的生命周期.
+
+\item
+使用圆括号不支持大括号省略(使用它们就像向形参传递实参一样)。
+
+\item
+带空括号的初始化甚至适用于显式成员。
+
+\item
+使用圆括号不支持指定初始化式。
+\end{itemize}
+
+缺少检测窄化的例子如下:
 
 \begin{cpp}
 struct Aggr {
@@ -278,9 +278,9 @@ std::vector<Aggr> cont;
 cont.emplace_back("Rome", 1.9); // initializes with 1
 \end{cpp}
 
-Note that emplace functions never detect narrowing.
+注意，emplace函数永远不会检测窄化。
 
-An example of the difference when dealing with implicit conversions is this:
+处理隐式转换时的区别示例如下:
 
 \begin{cpp}
 example of the difference when dealing with implicit conversions is this:
@@ -294,9 +294,9 @@ Aggr a7{o}; // ERROR: no implicit conversion supported
 Aggr a8(o); // OK, implicit conversion possible
 \end{cpp}
 
-Note that the conversions cannot be defined by the aggregate itself because aggregates cannot have a userdefined constructor.
+注意，聚合本身不能定义转换，因为聚合不能有用户定义的构造函数。
 
-The missing brace elision and the complex rules of brace initialization lead to the following behavior:
+缺少大括号省略和大括号初始化的复杂规则导致以下行为:
 
 \begin{cpp}
 Aggr a01{"x", 65}; // init string with "x" and int with 65
@@ -321,7 +321,7 @@ Aggr a61{{{{'x', 65}}}}; // ERROR
 Aggr a62({{{'x', 65}}}); // OK even before C++20: init string with ’x’ and 65
 \end{cpp}
 
-When performing copy initialization (initializing with =), explicit matters and might have a different effect with empty parentheses as follows:
+当执行复制初始化(用=初始化)时，显式很重要，使用空括号可能会产生不同的效果，如下所示:
 
 \begin{cpp}
 struct C {
@@ -343,9 +343,9 @@ auto a5 = A{}; // ERROR: cannot call explicit constructor
 auto a6 = A(); // OK: can call explicit constructor
 \end{cpp}
 
-However, this is nothing new in C++20 because the initialization of a6 was already supported before C++20.
+然而，这在C++20中并不新鲜，在C++20之前就已经支持a6的初始化了。
 
-Finally, if you use parentheses for the initialization of an aggregate that has rvalue reference members, the lifetime of initial values is not extended. Thus, you should not pass temporary objects (prvalues):
+最后，若对具有右值引用成员的聚合使用圆括号进行初始化，则初始值的生存期不会延长。因此，不应该传递临时对象(右值):
 
 \begin{cpp}
 struct A {
@@ -364,11 +364,11 @@ A a3(1, std::move(n)); // OK as long as a3 is used only while n exists
 std::cout << a3.r << '\n'; // OK
 \end{cpp}
 
-Due to these complicated rules and traps, you should use aggregate initialization with parentheses only when you have to, such as when using std::make\_unique<>(), std::make\_shared<>() or emplace functions.
+由于这些复杂的规则和陷阱，只有在必要时才应该使用带圆括号的聚合初始化，比如在使用std::make\_unique<>()、std::make\_shared<>()或emplace函数时。
 
-\mySubsubsection{21.5.3}{Definition of Aggregates}
+\mySubsubsection{21.5.3}{聚合体的定义}
 
-Once again, the definition of aggregate changed with C++20. This time, the modification reversed an extension that came in with C++11 and turned out to be an error. From C++11 until C++17, user-provided constructors were not allowed. For this reason, the following was a legal definition of an aggregate:
+再一次，聚合的定义在C++20中发生了变化。这一次，修改逆转了C++11中出现的扩展，结果证明这是一个错误。从C++11到C++17，不允许使用用户提供的构造函数。基于这个原因，下面是聚合的合法定义:
 
 \begin{cpp}
 struct A { // aggregate from C++11 until C++17
@@ -377,14 +377,14 @@ struct A { // aggregate from C++11 until C++17
 };
 \end{cpp}
 
-With this definition, the aggregate initialization was valid even though the type had a deleted default constructor:
+有了这个定义，即使类型有一个删除的默认构造函数，聚合初始化也是有效的:
 
 \begin{cpp}
 A a1; // ERROR
 A a2{}; // OK from C++11 until C++17
 \end{cpp}
 
-This did not apply only to default constructors. For example:
+这不仅适用于默认构造函数。例如:
 
 \begin{cpp}
 struct D { // aggregate from C++11 until C++17
@@ -396,7 +396,7 @@ D d1(3); // ERROR
 D d2{3}; // OK from C++11 until C++17
 \end{cpp}
 
-This special behavior was introduced for a very special case but was totally counter-intuitive.[The feature was introduced as a “hack” to support C compatibility when initializing atomic types. However, even several committee members were not aware of that behavior and were very surprised and it even turned out that this support was never needed.] C++20 fixed this by going back to requiring for aggregates that there is no user-declared constructor (as was the case before C++11):
+这种特殊的行为是在一个非常特殊的情况下引入的，但完全违反直觉。[该特性是作为“hack”引入的，以在初始化原子类型时支持C兼容性。]然而，就连几名委员会成员也不知道这种行为，他们感到非常惊讶，甚至发现这种支持根本不需要。C++20修正了这个问题，重新要求聚合没有用户声明的构造函数(就像C++11之前的情况一样):
 
 \begin{cpp}
 struct A { // NO aggregate since C++20
@@ -408,9 +408,9 @@ A a1; // ERROR
 A a2{}; // ERROR since C++20
 \end{cpp}
 
-For this reason, the type trait std::is\_default\_constructible\_v<> will no longer be true for type A and D as declared above.
+因此，如上所述，对于类型A和D，类型特性std::is\_default\_constructible\_v<>将不再为true。
 
-However, note that some programmers did use this feature to force (possibly empty) curly braces when creating an object of an aggregate type (which does ensure that members are always initialized). For them, the workaround to get the same behavior is to derive from a base type as follows:
+但请注意，一些程序员在创建聚合类型的对象时确实使用此特性来强制(可能为空)花括号(这确实可确保始终对成员进行初始化)。对于它们来说，获得相同行为的解决方法是从基类型派生，如下所示:
 
 \begin{cpp}
 struct MustInit {
@@ -425,42 +425,42 @@ A a1; // ERROR
 A a2{}; // OK
 \end{cpp}
 
-To summarize, since C++20, an aggregate is defined as follows:
+总而言之，自C++20起，聚合的定义如下:
 
 \begin{itemize}
 \item 
-Either an array
+一个数组
 
 \item
-Or a class type (class, struct, or union) with:
+或者一个类型(类、结构或联合):
 
 \begin{itemize}
 \item 
-No user-declared constructor
+没有用户声明的构造函数
 
 \item
-No constructor inherited by a using declaration
+using声明没有继承构造函数
 
 \item
-No private or protected non-static data members
+没有私有或受保护的非静态数据成员
 
 \item
-No virtual functions
+没有虚函数
 
 \item
-No virtual, private, or protected base class
+没有虚拟、私有或受保护的基类
 \end{itemize}
 
 \end{itemize}
 
-To allow you to initialize aggregates, the following additional constraints apply:
+为了初始化聚合，需要应用以下附加限制:
 
 \begin{itemize}
 \item 
-No private or protected base class members
+没有私有或受保护的基类成员
 
 \item 
-No private or protected constructors
+没有私有或受保护的构造函数
 \end{itemize}
 
 

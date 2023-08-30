@@ -1,8 +1,8 @@
-Each and every C++ version introduces various language and library features that are supported by compilers step by step. For that reason, knowing which C++ version a compiler supports in general is often not enough; for portable code, it might be important to know whether a specific feature is available.
+每个C++版本都会逐步引入编译器支持的各种语言和库特性。出于这个原因，知道编译器通常支持哪个C++版本通常是不够的;对于可移植代码，了解某个特定特性是否可用很重要。
 
-For that purpose, C++20 officially introduces feature test macros. For each new language and library feature, a macro can be used to signal whether the feature is available. The macro can even provide information about which version of a feature is supported.
+为此，C++20正式引入了特性测试宏。对于每个新的语言和库特性，都可以使用一个宏来表示该特性是否可用。宏甚至可以提供关于支持哪个版本的特性的信息。
 
-For example, the following source code will use different code depending on whether (and in which form) generic lambdas are available:
+例如，以下源代码将根据是否可用(以及以何种形式)使用不同的代码:
 
 \begin{cpp}
 #ifdef __cpp_generic_lambdas
@@ -15,9 +15,9 @@ For example, the following source code will use different code depending on whet
 #endif
 \end{cpp}
 
-All feature test macros for language features start with \_\_cpp.
+所有用于语言特性的特性测试宏都以\_\_cpp开头。
 
-As another example, the following code provides and uses a workaround if std::as\_const() is not available yet:
+作为另一个例子，若std::as\_const()还不可用，下面的代码提供并使用了一个解决方案:
 
 \begin{cpp}
 #ifndef __cpp_lib_as_const
@@ -36,11 +36,11 @@ const T& asConst(T& t) {
 	};
 \end{cpp}
 
-All feature test macros for library features start with \_\_cpp\_lib.
+库特性的所有特性测试宏都以\_\_cpp\_lib开头。
 
-Feature test macros for language features are defined by the compilers. Feature test macros for library features are provided by the new header <version>.
+语言特性的特性测试宏由编译器定义，库特性的特性测试宏由新的头文件<version>提供。
 
-See the use of \_\_cpp\_char8\_t as another example of making code that uses UTF-8 characters portable before and after C++20.
+参见\_\_cpp\_char8\_t的用法，这是另一个使代码在C++20之前和之后都可移植UTF-8字符的例子。
 
 
 

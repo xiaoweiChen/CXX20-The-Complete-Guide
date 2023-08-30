@@ -1,13 +1,13 @@
 
-Since C++11, it has been possible to specify attributes (formal annotations that enable or disable warnings). With C++20, again new attributes were introduced and existing attributes were extended.
+自C++11起，可以指定属性(启用或禁用警告的正式注释)。在C++20中，又引入了新的属性，并扩展了现有的属性。
 
-\mySubsubsection{21.6.1}{Attributes [[likely]] and [[unlikely]]}
+\mySubsubsection{21.6.1}{属性[[likely]]和[unlikely]]}
 
-The new attributes [[likely]] and [[unlikely]] were introduced by C++20 to help the compiler when performing branch optimizations.
+C++20引入了新属性[[likely]]和[[unlikely]]，以帮助编译器执行分支优化。
 
-When there are multiple paths in the code, you can use these attributes to give the compiler a hint about which path is most likely or not likely.
+当代码中有多条路径时，可以使用这些属性向编译器提示哪条路径最有可能出现，哪条路径最不可能出现。
 
-For example:
+例如:
 
 \begin{cpp}
 int f(int n)
@@ -21,9 +21,9 @@ int f(int n)
 }
 \end{cpp}
 
-This might, for example, force the compiler to generate assembler code that directly handles the else branch while jumping to later assembler commands for the then case.
+例如，这可能会迫使编译器生成直接处理else分支的汇编代码，同时跳转到后面的then情况的汇编命令。
 
-It probably has but is not guaranteed to have the same effect as:
+可能有，但不保证有相同的效果:
 
 \begin{cpp}
 int f(int n)
@@ -37,7 +37,7 @@ int f(int n)
 }
 \end{cpp}
 
-Here is another example:
+下面是另一个例子:
 
 \begin{cpp}
 int g(int n)
@@ -54,15 +54,15 @@ int g(int n)
 }
 \end{cpp}
 
-The effect of these attributes is compiler-specific and there is no guarantee that the attributes have any impact at all.
+这些属性的效果特定于编译器，不能保证这些属性的影响。
 
-You should be careful when using these attributes and double-check their effect. Often, compilers know better how to optimize code, meaning that excessive usage of these attributes might be counter-productive.
+在使用这些属性时应该小心，并仔细检查它们的效果。通常，编译器更了解如何优化代码，若过度使用这些属性可能会适得其反。
 
-\mySubsubsection{21.6.2}{Attribute [[no\_unique\_address]]}
+\mySubsubsection{21.6.2}{属性[[no\_unique\_address]]}
 
-Classes often have members that impact the behavior but do not provide a state. Examples are the hash function of an unordered container, the deleter of a std::unique\_ptr, or the standard allocator of containers or strings. All they provide are member functions (and static members) but no non-static data members.
+类通常具有影响行为但不提供状态的成员，例如：无序容器的哈希函数、std::unique\_ptr的delete函数，或者容器或字符串的标准分配器。它们提供的只是成员函数(和静态成员)，而不是非静态数据成员。
 
-However, members usually need memory even though they do not store anything. For example, consider the following code:
+然而，成员通常需要内存，即使他们不存储任何东西。例如，下面的代码:
 
 \begin{cpp}
 struct Empty {}; // empty class: size is usually 1
@@ -81,7 +81,7 @@ std::cout << "sizeof(I): " << sizeof(I) << '\n'
 std::cout << "sizeof(EandI): " << sizeof(EandI) << '\n';
 \end{cpp}
 
-Depending on the size of int, the output might look something like this:
+根据int类型的大小，输出可能如下所示:
 
 \begin{shell}
 sizeof(E):     1
@@ -89,7 +89,7 @@ sizeof(I):     4
 sizeof(EandI): 8
 \end{shell}
 
-This is an unnecessary waste of space. Before C++20, you could use the empty base class optimization (EBCO) to avoid the unnecessary overhead. By deriving from a class with no data members, compilers are allowed to save the corresponding space:
+这是不必要的空间浪费。在C++20之前，可以使用空基类优化(EBCO)来避免不必要的开销。通过从没有数据成员的类派生，编译器可以节省相应的空间:
 
 \begin{cpp}
 struct EbasedI : Empty { // using EBCO
@@ -99,15 +99,15 @@ struct EbasedI : Empty { // using EBCO
 std::cout << "sizeof(EbasedI): " << sizeof(EbasedI) << '\n';
 \end{cpp}
 
-On a platform with the sizes above, this outputs:
+在具有上述情况的平台上，输出如下:
 
 \begin{shell}
 sizeof(EbasedI): 4
 \end{shell}
 
-However, this workaround is a bit clumsy and might not always work. For example, you cannot use EBCO if the empty base class is final.
+然而，这种解决方法有点笨拙，可能并不总是有效。例如，若空基类是final，则不能使用EBCO。
 
-Since C++20, there is a different way to get the same effect. You only have to declare the members that provide no state with the attribute [[no\_unique\_address]]:
+自C++20起，有一种不同的方法可以获得相同的效果。只需要用属性[[no\_unique\_address]]声明不提供状态的成员:
 
 \begin{cpp}
 struct EattrI { // same effect as EBCO
@@ -124,25 +124,25 @@ std::cout << "sizeof(EattrI): " << sizeof(EattrI) << '\n';
 std::cout << "sizeof(IattrE): " << sizeof(IattrE) << '\n';
 \end{cpp}
 
-On the platform above where this attribute is supported, the output becomes:
+在上面支持此属性的平台上，输出会变为:
 
 \begin{shell}
 sizeof(EattrI): 4
 sizeof(IattrE): 4
 \end{shell}
 
-Note that compilers are not required to honor this attribute.
+请注意，编译器不需要遵循此属性。
 
-The member marked with [[no\_unique\_address]] still counts as a member for initialization:
+标记为[[no\_unique\_address]]的成员在初始化时仍会视为成员:
 
 \begin{cpp}
 EattrI ei = {42}; // ERROR: can’t initialize member e with 42
 EattrI ei = {{},42}; // OK
 \end{cpp}
 
-This optimization also means that the address of the member e gets the same address as the member i of the same object. This still means that the members e of two different objects have different addresses.
+这种优化还意味着成员e的地址与同一对象的成员i的地址相同，则两个不同对象的成员e有不同的地址。
 
-If a data type only has data members with this attribute, it is implementation-defined whether the type trait std::is\_empty\_v<> yields true:
+若数据类型只有具有此属性的数据成员，则类型trait std::is\_empty\_v<>是否产生true是由实现定义的:
 
 \begin{cpp}
 struct OnlyEmpty {
@@ -152,7 +152,7 @@ struct OnlyEmpty {
 std::is_empty_v<OnlyEmpty> // might yield true or false
 \end{cpp}
 
-Finally, note that Visual C++ currently ignores this attribute. The reason is that Visual C++ initially allowed this attribute without honoring it and now honoring it becomes an ABI break. Visual C++ might support it in a future ABI-breaking version, though. Until then, you can use [[msvc::no\_unique\_address]] instead:
+最后，请注意Visual C++目前忽略了这个属性。原因是Visual C++最初允许这个属性不遵守它，现在遵守它变成了一个ABI中断。不过，Visual C++可能会在未来的ABI版本中支持它。在此之前，可以使用[[msvc::no\_unique\_address]]代替:
 
 \begin{cpp}
 struct EattrI { // also works for Visual C++
@@ -161,26 +161,26 @@ struct EattrI { // also works for Visual C++
 };
 \end{cpp}
 
-\mySubsubsection{21.6.3}{Attribute [[nodiscard]] with Parameter}
+\mySubsubsection{21.6.3}{带参数的属性[[nodiscard]]}
 
-C++17 introduced the attribute [[nodiscard]], which can be used to encourage warnings by the compiler if a return value of a function is not used.
+C++17引入了属性[[nodiscard]]，若没有使用函数的返回值，可以使用该属性鼓励编译器发出警告。
 
-[[nodiscard]] should usually be used to signal misbehavior when return values are not used. The misbehavior might be:
+当返回值未被使用时，[[nodiscard]]通常用来表示错误行为。不当行为可能是:
 
 \begin{itemize}
 \item 
-Memory leaks, such as not using returned allocated memory.
+内存泄漏，例如：不使用返回的已分配内存。
 
 \item 
-Unexpected or non-intuitive behavior, such as getting different/unexpected behavior when not using the return value
+意外或非直观的行为，例如：在不使用返回值时获得不同/意外的行为
 
 \item 
-Unnecessary overhead, such as calling something that is a no-op if the return value is not used
+不必要的开销，例如：若返回值未被使用，则使用no-op的行为
 \end{itemize}
 
-However, there was no way to specify a message for a reason to explain why a programmer should use the return values. C++20 introduced an optional parameter for that.
+但是，没有办法指定一条消息来解释为什么开发者应该使用返回值。C++20为此引入了一个可选参数。
 
-For example:
+例如:
 
 \begin{cpp}
 class MyType {
@@ -196,6 +196,6 @@ class MyType {
 };
 \end{cpp}
 
-The second declaration requests that the compiler prints the warning message “Did you mean clear()?” when the return value of empty() is not used. In fact, C++20 introduced this attribute for the member function empty() of all standard containers and according to feedback, we know that compilers did indeed find errors where programmers thought they had requested making the collection empty.
+当empty()的返回值未使用时，第二条声明要求编译器打印警告消息“Did you mean clear()?”。事实上，C++20为所有标准容器的成员函数empty()引入了这个特性。根据反馈，我们知道编译器确实发现了一些错误，开发者认为他们要求将集合变为空。
 
 

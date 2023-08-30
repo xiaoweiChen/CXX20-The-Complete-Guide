@@ -4,21 +4,21 @@
 
 \mySamllsection{std::remove\_cvref\_t<T>}
 
-yields type T without being a reference, top-level const, or volatile.
+生成类型T，而不是引用、顶层const或volatile。
 
-The expression
+表达式为
 
 \begin{cpp}
 std::remove_cvref_t<T>
 \end{cpp}
 
-is equivalent to:
+等价于：
 
 \begin{cpp}
 std::remove_cv_t<remove_reference_t<T>>
 \end{cpp}
 
-For example:
+例如:
 
 \begin{cpp}
 std::remove_cvref_t<const std::string&> // std::string
@@ -29,13 +29,13 @@ std::remove_cvref_t<const char* const> // const char*
 
 \mySamllsection{std::unwrap\_reference\_t<T>}
 
-yields the wrapped type of T if it is a std::reference\_wrapper<> (created with std::ref() or std::cref()) or otherwise T.
+若T是std::reference\_wrapper<>(使用std::ref()或std::cref()创建)，则返回T的包装类型，否则为T。
 
 \mySamllsection{std::unwrap\_ref\_decay\_t<T>}
 
-yields the wrapped type of T if it is a std::reference\_wrapper<> (created with std::ref() or std::cref()) or otherwise the decayed type of T.
+若T是std::reference\_wrapper<>(使用std::ref()或std::cref()创建)，则返回已封装的T类型，否则返回已封装的T类型。
 
-For example:
+例如:
 
 \begin{cpp}
 std::unwrap_reference_t<decltype(std::ref(s))> // std::string&
@@ -56,9 +56,9 @@ std::unwrap_ref_decay_t<int[4]> // int*
 
 \mySamllsection{std::common\_reference\_t<T...>}
 
-yields the common type (if there is one) of all types T... to which you can assign a value. Therefore, given types T1, T2, and T3, the trait yields the type where you can assign values of all three types. Ideally, it is a reference type. However, if a type conversion is involved and that creates a temporary object, it is a value type.
+生成所有类型T…的通用类型(若有的话)，可以给它赋值。因此，给定类型T1、T2和T3, 特性生成的类型可以同时赋值这三种类型。理想情况下，其是引用类型。但弱涉及到类型转换并创建临时对象，则为值类型。
 
-For example:
+例如:
 
 \begin{cpp}
 std::common_reference_t<int&, int> // int
@@ -75,13 +75,13 @@ std::common_reference_t<char, std::string> // ERROR
 
 \mySamllsection{std::type\_identity\_t<T>}
 
-yields just type T.
+只生成T类型。
 
-This type trait has a surprising number of use cases:
+这个类型特性有大量的用例:
 
 \begin{itemize}
 \item 
-You can disable the fact that a parameter is used to deduce a template parameter. For example:
+可以禁用使用参数来推断模板参数。例如:
 
 \begin{cpp}
 template<typename T>
@@ -95,10 +95,10 @@ std::vector<double> coll;
 insert(coll, 42); // OK: type of 42 not used to deduce type T
 \end{cpp}
 
-If the parameter value were to be declared with just const T\&, the compiler would raise an error because it would deduce two different types for type T.
+若只使用const T\&声明形参值，则编译器会引发错误，其会为类型T推断出两种不同的类型。
 
 \item 
-You can use it as a building block to define type traits that yield types. For example, you could define a type trait that removes constness simply as follows: [See the talk Modern Template Metaprogramming: A Compendium by Walter E. Brown at CppCon 2014 (\url{http: //www.youtube.com/watch?v=Am2is2QCvxY}) for a source of this example.]
+可以使用它作为构建块来定义生成类型的类型特征。例如，可以简单地定义一个类型特性来删除常量化:[可参见CppCon 2014 (\url{http: //www.youtube.com/watch?v=Am2is2QCvxY})上Walter E. Brown的演讲现代模板元编程]。
 
 \begin{cpp}
 template<typename T>

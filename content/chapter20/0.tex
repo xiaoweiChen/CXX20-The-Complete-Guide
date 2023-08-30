@@ -1,6 +1,6 @@
-This chapter presents several type traits (and two low-level functions for types) that C++20 introduces in its standard library.
+本章将介绍C++20在其标准库中引入的几个类型特征(以及两个用于类型的底层函数)。
 
-Table New type traits lists these new type traits of C++20 (all are defined in the namespace std).
+“新类型特征”表列出了C++20的这些新类型特征(都定义在命名空间std中)。
 
 
 % Please add the following required packages to your document preamble:
@@ -8,44 +8,44 @@ Table New type traits lists these new type traits of C++20 (all are defined in t
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Trait}                                                                                                                 & \textbf{Effect}                                                                                                           \\ \hline
+\textbf{特征}                                                                                                                 & \textbf{效果}                                                                                                           \\ \hline
 \endfirsthead
 %
 \endhead
 %
-is\_bounded\_array\_v\textless{}T\textgreater{}                                                                                & Yields true if type T is an array type with known extent                                                                  \\ \hline
-is\_unbounded\_array\_v\textless{}T\textgreater{}                                                                              & Yields true if type T is an array type with unknown extent                                                                \\ \hline
-is\_nothrow\_convertible\_v\textless{}T, T2\textgreater{}                                                                      & Yields true if type T is convertible to type T2 without throwing                                                          \\ \hline
-is\_layout\_compatible\_v\textless{}T1, T2\textgreater{}                                                                       & Yields true if T1 is layout-compatible with type T2                                                                       \\ \hline
-\begin{tabular}[c]{@{}l@{}}is\_pointer\_interconvertible...\\   \_base\_of\_v\textless{}BaseT, DerT\textgreater{}\end{tabular} & Yields true if a pointer to DerT can safely be converted to a pointer to its base type BaseT                              \\ \hline
-remove\_cvref\_t\textless{}T\textgreater{}                                                                                     & Yields type T without reference, top-level const, volatile                                                                \\ \hline
-unwrap\_reference\_t\textless{}T\textgreater{}                                                                                 & Yields the wrapped type of type T if it is a std::reference\_wrapper\textless{}\textgreater or otherwise T                \\ \hline
-unwrap\_ref\_decay\_t\textless{}T\textgreater{}                                                                                & Yields the wrapped type of type T if it is a std::reference\_wrapper\textless{}\textgreater or otherwise its decayed type \\ \hline
-common\_reference\_t\textless{}T...\textgreater{}                                                                              & Yields the common type pf all types T... to which you can assign a value                                                  \\ \hline
-type\_identity\_t\textless{}T\textgreater{}                                                                                    & Yields type T as it is                                                                                                    \\ \hline
-iter\_difference\_t\textless{}T\textgreater{}                                                                                  & Yields the difference type of the incrementable/iterator type T                                                           \\ \hline
-iter\_value\_t\textless{}T\textgreater{}                                                                                       & Yields the value/element type of the pointer/iterator type T                                                              \\ \hline
-iter\_reference\_t\textless{}T\textgreater{}                                                                                   & Yields the reference type of the pointer/iterator type T                                                                  \\ \hline
-iter\_rvalue\_reference\_t\textless{}T\textgreater{}                                                                           & Yields the rvalue reference type of the pointer/iterator type T                                                           \\ \hline
-is\_clock\_v\textless{}T\textgreater{}                                                                                         & Yields true if T is a clock type                                                                                          \\ \hline
-compare\_three\_way\_result\_t\textless{}T\textgreater{}                                                                       & Yields the type of comparing two values with operator \textless{}=\textgreater{}                                          \\ \hline
+is\_bounded\_array\_v\textless{}T\textgreater{}                                                                                & 若类型T是已知范围的数组类型，则返回true                                                                  \\ \hline
+is\_unbounded\_array\_v\textless{}T\textgreater{}                                                                              & 若类型T是范围未知的数组类型，则返回true                                                                \\ \hline
+is\_nothrow\_convertible\_v\textless{}T, T2\textgreater{}                                                                      & 若类型T可转换为类型T2而不抛出，则返回true                                                          \\ \hline
+is\_layout\_compatible\_v\textless{}T1, T2\textgreater{}                                                                       & 若T1与类型T2的布局兼容，则返回true                                                                       \\ \hline
+\begin{tabular}[c]{@{}l@{}}is\_pointer\_interconvertible...\\   \_base\_of\_v\textless{}BaseT, DerT\textgreater{}\end{tabular} & \begin{tabular}[c]{@{}l@{}} 若指向DerT的指针可以安全地转换为指向其基类型 \\ BaseT的指针，则返回true\end{tabular}                              \\ \hline
+remove\_cvref\_t\textless{}T\textgreater{}                                                                                     & 产生类型T，没有引用，const, volatile                                                                \\ \hline
+unwrap\_reference\_t\textless{}T\textgreater{}                                                                                 & \begin{tabular}[c]{@{}l@{}}若类型T是std::reference\_wrapper\textless{}\textgreater，则返回T的包 \\ 装类型，否则为T     \end{tabular}           \\ \hline
+unwrap\_ref\_decay\_t\textless{}T\textgreater{}                                                                                & \begin{tabular}[c]{@{}l@{}}若类型T是std::reference\_wrapper\textless{}\textgreater，则返回T的包 \\ 装类型，否则返会T的衰退类型 \end{tabular} \\ \hline
+common\_reference\_t\textless{}T...\textgreater{}                                                                              & 产生通用类型pf所有类型T…可以为其赋值                                                  \\ \hline
+type\_identity\_t\textless{}T\textgreater{}                                                                                    & 生成类型T                                                                                                    \\ \hline
+iter\_difference\_t\textless{}T\textgreater{}                                                                                  & 生成可增量/迭代器类型的差异类型 T                                                           \\ \hline
+iter\_value\_t\textless{}T\textgreater{}                                                                                       & 返回指针/迭代器类型T的值/元素类型                                                             \\ \hline
+iter\_reference\_t\textless{}T\textgreater{}                                                                                   & 生成指针/迭代器类型的引用类型 T                                                                  \\ \hline
+iter\_rvalue\_reference\_t\textless{}T\textgreater{}                                                                           & 生成指针/迭代器类型T的右值引用类型                                                           \\ \hline
+is\_clock\_v\textless{}T\textgreater{}                                                                                         & 若T是时钟类型，则返回true                                                                                          \\ \hline
+compare\_three\_way\_result\_t\textless{}T\textgreater{}                                                                       & 使用操作符\textless{}=\textgreater{}比较两个值的类型。                                          \\ \hline
 \end{longtable}
 
 \begin{center}
-Table 20.1. New type traits
+表20.1 新类型特征
 \end{center}
 
-The following sections discuss these traits in detail, except for the following traits:
+以下章节将详细讨论这些特征，除了以下特征:
 
 \begin{itemize}
 \item 
-std::is\_clock\_v<> is discussed in the section about new chrono features.
+std::is\_clock\_v<>将在关于新计时特性的部分中讨论。
 
 \item 
-std::compare\_three\_way\_result\_t<> is discussed in the section about the new three-way comparisons.
+std::compare\_three\_way\_result\_t<>将在有关新三路比较的一节中讨论。
 \end{itemize}
 
-Note that in addition, the type trait std::is\_pod<> was deprecated with C++20.
+另外请注意，类型特性std::is\_pod<>在C++20中已弃用。
 
 
 

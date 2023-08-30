@@ -1,35 +1,35 @@
 
 
-This section lists the traits for iterators as listed in the section about basic type functions for iterators.
+本节列出了迭代器的特征，这些特征在关于迭代器的基本类型函数一节中列出。
 
 \mySubsubsection{20.4.1}{iter\_difference\_t<>}
 
 \mySamllsection{std::iter\_difference\_t<T>}
 
-yields the difference type that corresponds to the incrementable/iterator type T.
+生成与可递增类型/迭代器类型T对应的差值类型。
 
-The trait is especially provided to deal with the value type of two objects of an indirectly readable type. In contrast to the traditional iterator traits (std::iterator\_traits<>), this trait can deal correctly with the new iterator categories. 
+该特性特别用于处理间接可读类型的两个对象的值类型，与传统的迭代器特征(std::iterator\_traits<>)相比，这个特征可以正确地处理新的迭代器类别。
 
-Note that there is no corresponding data structure std::iter\_difference with a member named type. Instead, the type trait is defined by trying to use the member difference\_type of the new auxiliary type std::incrementable\_traits<>, which is already defined as follows:
+请注意，与名为type的成员没有相应的数据结构std::iter\_difference。相反，类型特性是通过尝试使用新辅助类型std::incrementable\_traits<>的成员difference\_type来定义的，该成员difference\_type已经定义如下:
 
 \begin{itemize}
 \item 
-If specialized, std::incrementable\_traits<T>::difference\_type is used.
+若特化，则使用std::incrementable\_traits<T>::difference\_type。
 
 \item
-For raw pointers, std::ptrdiff\_t is used.
+对于原始指针，使用std::ptrdiff\_t。
 
 \item
-Otherwise, if defined, T::difference\_type is used.
+否则，若定义了，则使用T::difference\_type。
 
 \item
-Otherwise, the signed integral difference type of the difference between two Ts is used.
+否则，使用两个T之间的有符号整数差分类型。
 
 \item
-For a const T, the difference type of T is used.
+对于const T，使用T的不同类型。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 using T1 = std::iter_difference_t<int*>; // std::ptrdiff_t
@@ -43,30 +43,30 @@ using T5 = std::iter_difference_t<std::chrono::sys_seconds>; // ERROR
 
 \mySamllsection{std::iter\_value\_t<T>}
 
-yields the non-const value/element type that corresponds to the pointer/iterator type T.
+生成非const值/元素类型，对应指针/迭代器类型T。
 
-The trait is especially provided to deal with the value type of an indirectly readable type. In contrast to the traditional iterator traits (std::iterator\_traits<>), this trait can deal correctly with the new iterator categories.
+该特性特别用于处理间接可读类型的值类型，与传统的迭代器特性(std::iterator\_traits<>)相比，这个特性可以正确处理新迭代器的类别。
 
-Note that there is no corresponding data structure std::iter\_value with a member named type. Instead, the type trait is defined by trying to use the member value\_type of the new auxiliary type std::indirectly\_readable\_traits<>, which is already defined as follows:
+注意，在名为type的成员中没有相应的数据结构std::iter\_value。相反，类型特性是通过尝试使用新的辅助类型std::indirectly\_readable\_traits<>的成员value\_type来定义的，该成员值已经定义如下:
 
 \begin{itemize}
 \item 
-If specialized, std::indirectly\_readable\_traits<T>::value\_type is used.
+若特化，则使用std::indirectly\_readable\_traits<T>::value\_type。
 
 \item 
-For raw pointers, the non-const/volatile type it refers to is used.
+对于原始指针，使用它所引用的非const/volatile类型。
 
 \item 
-Otherwise, if defined, remove\_cv\_t<T::value\_type> is used.
+否则，若定义了，则使用remove\_cv\_t<T::value\_type>。
 
 \item 
-Otherwise, if defined, remove\_cv\_t<T::element\_type> is used.
+否则，若定义了，则使用remove\_cv\_t<T::element\_type>。
 
 \item 
-For a const T, the value type of T is used.
+对于const T，使用T的值类型。
 \end{itemize}
 
-For example:
+例如:
 
 \begin{cpp}
 using T1 = std::iter_value_t<int*>; // int
@@ -80,7 +80,7 @@ using T5 = std::iter_value_t<int>; // ERROR
 
 \mySamllsection{std::iter\_reference\_t<T>}
 
-yields the lvalue reference type that corresponds to the dereferenceable pointer/iterator type T. It is equivalent to
+生成对应于可解引用指针/迭代器类型T的左值引用类型。其等价于：
 
 \begin{cpp}
 decltype(*declval<T&>())
@@ -88,17 +88,17 @@ decltype(*declval<T&>())
 
 \mySamllsection{std::iter\_rvalue\_reference\_t<T>}
 
-yields the rvalue value type that corresponds to the dereferenceable pointer/iterator type T. It is equivalent to
+产生对应于可解引用指针/迭代器类型T的右值类型
 
 \begin{cpp}
 decltype(std::ranges::iter_move(declval<T&>()))
 \end{cpp}
 
-The traits are especially provided to deal with the value type of an indirectly writable type. In contrast to the traditional iterator traits (std::iterator\_traits<>), these traits can deal correctly with the new iterator categories.
+这些特性是专门用来处理间接可写类型的值类型的，与传统的迭代器特征(std::iterator\_traits<>)不同，这些特征可以正确处理新的迭代器类别。
 
-Note that there is no corresponding data structure std::iter\_value with a type member. Instead, the traits are defined directly as described above.
+请注意，没有带有类型成员的相应数据结构std::iter\_value。相反，这些特征是按照上面描述的那样直接定义。
 
-For example:
+例如:
 
 \begin{cpp}
 using T1 = std::iter_reference_t<int*>; // int&
