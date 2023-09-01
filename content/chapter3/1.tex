@@ -1,6 +1,6 @@
 
 
-考虑下面的函数模板，它返回两个值中的最大值:
+下面的函数模板，返回两个值中的最大值:
 
 \begin{cpp}
 template<typename T>
@@ -9,9 +9,9 @@ T maxValue(T a, T b) {
 }
 \end{cpp}
 
-此函数模板可以为具有相同类型的两个实参调用，前提是对形参执行的操作(与operator<和复制进行比较)有效。
+此函数模板可以为具有相同类型的两个实参调用，前提是对形参执行的操作(使用小于操作符进行比较，并进行复制)有效。
 
-然而，传递两个指针将比较它们的地址，而不是其所引用的值。
+当传递的是两个指针时，将比较它们的地址，而不是所引用的值。
 
 \mySubsubsection{3.1.1}{逐步完善模板}
 
@@ -29,9 +29,9 @@ T maxValue(T a, T b)
 }
 \end{cpp}
 
-这里，约束是在requires子句中表述的，该子句是通过关键字requires引入的(还有其他方式来表述约束)。
+约束是在requires子句中表述的，该子句是通过关键字requires引入的(还有其他方式可用来表述约束)。
 
-为了指定模板不能用于原始指针的约束，可以使用标准类型特征std::is\_pointer\_v<>(产生标准类型特征std::is\_pointer<>的值成员)[类型特征是在C++11中作为标准类型函数引入的，在C++17中引入了以\_v后缀的使用方式]。有了这个约束，就不能再为原始指针使用函数模板了:
+为了指定模板不能用于原始指针的约束，可以使用标准类型特征std::is\_pointer\_v<>(生成标准类型特征std::is\_pointer<>的值成员)[类型特征是在C++11中作为标准类型函数引入的，C++17中引入了以\_v后缀的使用方式]。有了这个约束，就不能再为原始指针使用函数模板了:
 
 \begin{cpp}
 int x = 42;
@@ -44,16 +44,16 @@ std::cout << maxValue(&x, &y) << '\n'; // ERROR: constraint not met
 
 \mySamllsection{定义和使用概念}
 
-可能，我们将不止一次地需要指针约束，所以可以为约束引入一个概念:
+可能，要不止一次地需要指针约束，所以可以为约束引入一个概念:
 
 \begin{cpp}
 template<typename T>
 concept IsPointer = std::is_pointer_v<T>;
 \end{cpp}
 
-概念是一个模板，应用于传递的模板参数的一个或多个需求引入一个名称，以便可以将这些需求用作约束。在等号之后(这里不能使用大括号)，必须将需求指定为在编译时求值的布尔表达式。这种情况下，我们要求用于特化IsPointer<>的模板实参必须是一个裸指针。
+概念是一个模板，应用于传递的模板参数的一个或多个需求引入一个名称，以便可以将这些需求用作约束。在等号之后(这里不能使用大括号)，必须将需求指定为在编译时求值的布尔表达式，则要求用于特化IsPointer<>的模板实参必须是裸指针。
 
-我们可以使用这个概念来约束maxValue()模板，如下所示:
+可以使用这个概念来约束maxValue()模板:
 
 \begin{cpp}
 template<typename T>
@@ -66,7 +66,7 @@ T maxValue(T a, T b)
 
 \mySamllsection{重载概念}
 
-通过使用约束和概念，甚至可以重载maxValue()模板，为指针和其他类型分别提供一个实现:
+通过使用约束和概念，甚至可以重载maxValue()模板，为指针和其他类型分别提供实现:
 
 \begin{cpp}
 template<typename T>
@@ -95,9 +95,9 @@ std::cout << maxValue(x, y) << '\n'; // calls maxValue() for non-pointers
 std::cout << maxValue(&x, &y) << '\n'; // calls maxValue() for pointers
 \end{cpp}
 
-因为指针的实现将返回值的计算委托给指针所引用的对象，所以第二次调用同时使用了maxValue()模板。将指针传递给int时，实例化T为int*的指针模板，以及将T为int的非指针基本模板maxValue()。
+指针的实现将返回值的计算委托给指针所引用的对象，所以第二次调用同时使用了maxValue()模板。将指针传递给int时，实例化T为int*的指针模板，并将T为int的非指针基本模板maxValue()。
 
-现在它甚至可以递归地工作，可以请求指向int类型指针的指针的最大值:
+现在可以进行递归了，可以请求指向int类型指针的指针的最大值:
 
 \begin{cpp}
 int* xp = &x;
@@ -107,7 +107,7 @@ std::cout << maxValue(&xp, &yp) << '\n'; // calls maxValue() for int**
 
 \mySamllsection{使用概念解析的重载}
 
-重载解析认为有约束的模板比没有约束的模板更特化，所以只对指针约束实现就足够了:
+重载解析认为有约束的模板比没有约束的模板更特化，所以只约束对指针实现就够了:
 
 \begin{cpp}
 template<typename T>
@@ -124,13 +124,13 @@ auto maxValue(T a, T b) // maxValue() for pointers (higher priority)
 }
 \end{cpp}
 
-但要小心:重载一旦使用引用和使用非引用可能引起歧义。
+重载一旦使用引用和非引用就可能出现歧义，所以要谨慎。
 
-通过使用概念，甚至可以偏爱某些约束，但这需要使用包含其他概念的概念。
+通过使用概念，甚至可以使用某些约束，但这需要使用包含其他概念的概念。
 
 \mySamllsection{类型约束}
 
-若约束是应用于参数的单个概念，则有几种方法可以简化约束的说明。首先，可以在声明模板形参时直接将其指定为类型约束:
+若约束是应用于参数的单个概念，则有几种方法可以简化约束的说明。可以在声明模板形参时，直接将其指定为类型约束:
 
 \begin{cpp}
 template<IsPointer T> // only for pointers
@@ -158,7 +158,7 @@ auto maxValue3(const IsPointer auto& a, const IsPointer auto& b)
 }
 \end{cpp}
 
-注意，通过直接约束这两个形参，我们改变了模板的规范:不再要求a和b必须具有相同的类型。只要求两者都是任意类型的类指针对象。
+注意，通过直接约束这两个形参，我们改变了模板的规范:不再要求a和b必须具有相同的类型，只要求两者都是类指针对象就好。
 
 当使用模板语法时，等效代码如下所示:
 
@@ -170,7 +170,7 @@ auto maxValue(T1 a, T2 b)
 }
 \end{cpp}
 
-我们可能还应该允许比较值的基本函数模板使用不同的类型。一种方法是指定两个模板参数:
+还应该允许比较值的基本函数模板使用不同的类型。一种方法是指定两个模板参数:
 
 \begin{cpp}
 template<typename T1, typename T2>
@@ -202,9 +202,9 @@ auto maxValue(IsPointer auto a, IsPointer auto b)
 }
 \end{cpp}
 
-还有一个不明显的隐含要求:在解引用之后，值必须可比较。
+还有一个不明显的隐含要求:解引用之后，值必须可比较。
 
-编译器在(递归地)实例化maxValue()模板时检测到该需求。但错误消息可能是一个问题，因为错误发生较晚，并且在指针的maxValue()声明中该要求不可见。
+编译器在(递归地)实例化maxValue()模板时检测到该需求。错误消息有一个问题，因为错误发生较晚，并且在指针的maxValue()声明中该要求是不可见的。
 
 为了让指针版本在声明中直接要求指针所指向的值必须具有可比性，可以在函数中添加另一个约束:
 
@@ -216,11 +216,11 @@ requires IsComparableWith<decltype(*a), decltype(*b)>
 }
 \end{cpp}
 
-这里，我们使用后面的requires子句，可以在参数列表之后指定。好处是可以使用一个参数的名称，甚至可以组合多个参数名称来制定约束。
+这里，使用后面的requires子句，可以在参数列表之后指定。好处是可以使用一个参数的名称，甚至可以组合多个参数名称来制定约束。
 
 \mySamllsection{标准概念}
 
-前面的例子中，我们没有定义IsComparableWith这个概念。可以使用require表达式(稍后会介绍)，但也可以使用C++标准库的概念。例如，如下声明:
+前面的例子中，没有定义IsComparableWith这个概念。可以使用require表达式(稍后会介绍)，也可以使用C++标准库的概念:
 
 \begin{cpp}
 auto maxValue(IsPointer auto a, IsPointer auto b)
@@ -234,13 +234,13 @@ requires std::totally_ordered_with<decltype(*a), decltype(*b)>
 
 标准库为常见约束提供了许多标准概念，它们在命名空间std中提供(有时使用子命名空间)。
 
-例如，还可以使用概念std::three\_way\_comparable\_with，这还要求支持操作符<=>(为概念提供了名称)。要检查是否支持对相同类型的两个对象进行比较，可以使用std::totally\_ordered这个概念。
+例如，还可以使用概念std::three\_way\_comparable\_with，这要求支持操作符<=>(为概念提供了名称)。要检查是否支持对相同类型的两个对象进行比较，可以使用std::totally\_ordered这个概念。
 
 \mySamllsection{requires表达式}
 
-目前为止，maxValue()模板不适用于非原始指针的类指针类型，例如智能指针。若代码也要为这些类型编译，最好将指针定义为可以调用operator*的对象。
+目前为止，maxValue()模板不适用于非原始指针的类指针类型，例如：智能指针。若代码也要为这些类型编译，最好将指针定义为可以调用操作符*的对象。
 
-C++20起，这样的需求很容易指定:
+C++20起，很容易指定:
 
 \begin{cpp}
 template<typename T>
@@ -249,9 +249,9 @@ concept IsPointer = requires(T p) { *p; }; // expression *p has to be well-forme
 
 这个概念没有对原始指针使用类型特性，而是提出了一个简单的要求:表达式*p必须对类型T的对象p有效。
 
-这里，再次使用requires关键字来引入一个requires表达式，其可以定义类型和参数的一个或多个需求。通过声明类型为T的形参p，就可以简单地指定必须支持这种对象的哪些操作。
+这里，再次使用requires关键字来引入一个requires表达式，其可以定义类型和参数的一个或多个需求。通过声明类型为T的形参p，就可以指定必须支持这种对象的哪些操作。
 
-我们还可以要求多个操作、类型成员以及表达式产生约束类型。例如:
+还可以要求多个操作、类型成员以及表达式产生约束类型。例如:
 
 \begin{cpp}
 template<typename T>
@@ -269,19 +269,19 @@ concept IsPointer = requires(T p) {
 该类型必须支持操作符*。
 
 \item
-该类型必须支持<操作符，该操作符必须产生bool类型。
+该类型必须支持小于操作符，该操作符必须产生bool类型。
 
 \item
 该类型的对象必须与nullptr比较。
 \end{itemize}
 
-注意，不需要两个T类型的形参来检查是否可以调用<，运行时值无关紧要。但请注意，对于如何指定表达式产生的结果有一些限制(例如，不能只指定bool而，不指定std::same\_as<>)。
+注意，不需要两个T类型的形参来检查是否可以调用小于操作符，运行时值无关紧要，但对于如何指定表达式产生的结果有一些限制(例如，不能只指定bool而，不指定std::same\_as<>)。
 
-还需要注意的是，这里不要求p是一个等于nullptr的指针，只要求可以将p与nullptr进行比较。但这就排除了迭代器，因为一般来说，它们不能与nullptr进行比较(除非碰巧实现为原始指针，例如std::array<>类型通常就是这种情况)。
+这里不要求p是一个等于nullptr的指针，只要求可以将p与nullptr进行比较。通常，这就排除了迭代器，它们不能与nullptr进行比较(除非碰巧实现为原始指针，例如std::array<>类型通常就是这种情况)。
 
-同样，这是一个编译时约束，对生成的代码没有影响，我们只决定代码编译哪种类型。因此，将形参p声明为值还是引用都无关紧要。
+同样，这是一个编译时约束，对生成的代码没有影响，只决定代码编译哪种类型，所以将形参p声明为值还是引用就无关紧要了。
 
-也可以直接在requires子句中使用requires表达式作为临时约束(这看起来有点滑稽，但当你理解了requires子句和requires表达式之间的区别，并且两者都需要关键字requires，就有意义了):
+也可以直接在requires子句中使用requires表达式作为临时约束(这看起来有点滑稽，但当理解了requires子句和requires表达式之间的区别，并且两者都需要关键字requires，就有意义了):
 
 \begin{cpp}
 template<typename T>
@@ -292,9 +292,9 @@ auto maxValue(T a, T b)
 }
 \end{cpp}
 
-\mySamllsection{一个使用概念的完整例子}
+\mySamllsection{使用概念的完整例子}
 
-现在，我们已经介绍了所有必要的内容，以查看一个完整的示例程序，用于计算普通值和指针类对象的最大值:
+现在，已经介绍了所有必要的内容，再来看一个完整的示例程序，用于计算普通值和指针类对象的最大值:
 
 \filename{lang/maxvalue.cpp}
 
@@ -347,7 +347,7 @@ if (pos != coll.end()) {
 }
 \end{cpp}
 
-原因是我们要求形参与nullptr可比较，而迭代器不需要支持nullptr。这是否是一个设计问题？所以，这个例子表明，仔细考虑一般概念的定义非常重要。
+原因是我们要求形参与nullptr可比较，而迭代器不需要支持nullptr。这是否是一个设计问题？所以对于概念的定义非常重要。
 
 
 

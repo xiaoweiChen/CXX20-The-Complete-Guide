@@ -1,6 +1,6 @@
 
 
-使用需求作为约束可能有用的原因有很多:
+使用需求作为约束可能有有很多原因:
 
 \begin{itemize}
 \item
@@ -20,11 +20,11 @@
 约束可用于重载或特化泛型代码，以便针对不同的类型编译不同的代码。
 \end{itemize}
 
-通过逐步开发另一个示例来进一步了解这些原因。这样，我们还可以引入一些关于约束、需求和概念的更多细节。
+通过逐步开发另一个示例来进一步了解这些原因，还可以引入一些关于约束、需求和概念的更多细节。
 
 \mySubsubsection{3.3.1}{理解代码和错误消息}
 
-假设要编写将对象的值插入到集合中的泛型代码。多亏了模板，可以将其实现为泛型代码，当知道传递的对象类型，就会对其进行编译:
+假设要编写将对象的值插入到集合中的泛型代码，可以将其实现为泛型代码。当明确了传递的对象类型，就会对其进行编译:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -46,11 +46,10 @@ void add(Coll& coll, const T& val)
 必须进行从类型T到Coll元素类型的转换。
 
 \item
-若传递的实参具有元素类型Coll，则该类型必须支持复制(使用传递的值初始化新元素)。
+若传递的实参具有元素类型Coll，则该类型必须支持复制(使用传递值初始化)。
 \end{itemize}
 
-若这些要求中的任意一个被打破，代码将无法编译。例如:
-
+若违反这些要求中的任意一个，代码将无法编译。例如:
 
 \begin{cpp}
 std::vector<int> vec;
@@ -66,7 +65,7 @@ add(aiVec, ai); // ERROR: cannot copy/move atomics
 \end{cpp}
 
 
-当编译失败时，错误消息可能非常清楚，例如在模板的顶层没有找到成员push\_back():
+当编译失败时，错误消息会非常清楚，例如：模板的参数类型没有找到成员push\_back()时:
 
 {\footnotesize
 \begin{shell}
@@ -79,7 +78,7 @@ prog.cpp:11:8: error: ’class std::set<int>’ has no member named ’push_back
 \end{shell}
 }
 
-然而，一般的错误消息也很难阅读和理解。例如，当编译器必须处理不支持复制的坏要求时，问题就会在std::vector<>实现的深处检测到。我们会得到40到90行错误信息，从而必须仔细寻找被破坏的需求:
+然而，一般的错误消息也很难阅读和理解。例如，当编译器必须处理不支持复制的需求时，问题就会在std::vector<>实现的深处出现。会看到得到40到90行错误信息，从而必须仔细寻找违反的需求:
 
 {\footnotesize
 \begin{shell}
@@ -96,8 +95,7 @@ prog.cpp:25:18:     required from here
 \end{shell}
 }
 
-
-你可能认为可以通过定义和使用一个检查，确定是否可以执行push\_back()调用的概念来改善这种情况:
+读者们可能认为可以通过定义和使用一个检查，确定是否可以执行push\_back()调用的概念来改善这种情况:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -140,7 +138,7 @@ prog.cpp:9:16: note: the required expression ’c.push_back(v)’ is invalid
 
 然而，在传递原子类型时，仍然会在std::vector<>的代码深处检测可复制性检查(这一次是在检查概念时，而不是在编译代码时)。
 
-这种情况下，当指定使用push\_back()的基本约束作为要求时，情况会有所改善:
+当指定使用push\_back()的基本约束作为要求时，情况会有所改善:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -153,7 +151,7 @@ void add(Coll& coll, const T& val)
 
 这里，使用标准概念std::convertible\_to来要求，(隐式或显式)将传递的实参T的类型转换为集合的元素类型。
 
-现在，若需求被破坏，就可以得到一条错误消息，其中包含被破坏的概念和位置。例如[这只是一种可能的消息例子，不一定与特定编译器的情况相匹配]:
+现在，若违背需求，就可以得到一条错误消息，其中包含违反的概念和位置。例如[这只是一种可能的消息例子，不一定与特定编译器的情况相匹配]:
 
 {\footnotesize
 \begin{shell}
@@ -200,7 +198,7 @@ void add(Coll& coll, double val) // for floating-point value types
 }
 \end{cpp}
 
-正如预期的那样，当传递一个double类型的参数作为第二个参数时，第二个函数被调用;否则，使用泛型参数:
+正如预期的那样，当传递一个double类型的参数作为第二个参数时，调用第二个函数;否则，使用泛型参数:
 
 \begin{cpp}
 std::vector<int> iVec;
@@ -212,7 +210,7 @@ add(dVec, 0.7); // OK: calls 2nd add() for double
 
 当传递double类型时，两个函数重载匹配。首选第二个重载，因为其与第二个参数完美匹配。
 
-然而，若传递一个浮点数，可以有以下效果:
+若传递一个浮点数，可以有以下效果:
 
 \begin{cpp}
 float f = 0.7;
@@ -229,7 +227,7 @@ add(dVec, f); // OOPS: calls 1st add() for T being float
 调用普通函数优于调用函数模板。
 \end{itemize}
 
-在这里，重载解析必须在调用类型转换和调用函数模板之间做出决定。按照规则，优先选择带有模板参数的版本。
+这里，重载解析必须在调用类型转换和调用函数模板之间做出决定。按照规则，优先选择带有模板参数的版本。
 
 \mySamllsection{修复重载解析}
 
@@ -256,7 +254,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-或者，可以使用auto参数:
+或者，使用auto参数:
 
 \begin{cpp}
 void add(auto& coll, const std::floating_point auto& val)
@@ -266,7 +264,7 @@ void add(auto& coll, const std::floating_point auto& val)
 }
 \end{cpp}
 
-对于add()，现在有两个可以调用的函数模板:一个不带特定要求，一个带特定要求:
+对于add()，现在有两个可以调用的函数模板:一个不带特定需求，一个带特定需求:
 
 \begin{cpp}
 uirement:
@@ -296,7 +294,7 @@ add(dVec, 0.7); // OK: calls add() for floating-point types
 
 \mySamllsection{非必须，则相同}
 
-若两个重载或特化都有约束，重载解析可以决定哪一个更好，这一点很重要。为了支持这一点，签名不应超过必要的差异。
+若两个重载或特化都有约束，重载解析可以决定哪一个更好，这一点很重要。为了支持这一点，签名不应有太大的差异。
 
 若签名差异太大，则可能不适用更受约束的重载。例如，如声明浮点值的重载以按值接受实参，则传递浮点值会产生二义性:
 
@@ -318,7 +316,7 @@ std::vector<double> dVec;
 add(dVec, 0.7); // ERROR: both templates match and no preference
 \end{cpp}
 
-后一项声明不再是前一项声明的特例。我们只有两个不同的函数模板，都可以调用。
+后一项声明不再是前一项声明的特例，只有两个不同的函数模板，都可以调用。
 
 若确实希望使用不同的签名，则必须约束第一个函数模板不能用于浮点值。
 
@@ -332,9 +330,9 @@ std::vector<int> iVec;
 add(iVec, 1.9); // OOPS: add 1
 \end{cpp}
 
-原因是我们有从double到int的隐式类型转换(由于与编程语言C兼容)，这种可能丢失部分值的隐式转换称为窄化。所以上面的代码在插入之前编译，会将值1.9转换为1。
+原因是有从double到int的隐式类型转换(由于与编程语言C兼容)，这种可能丢失部分值的隐式转换称为数据窄化。所以上面的代码在插入之前编译，会将值1.9转换为1。
 
-若不希望支持窄化，可有多个选项。一种选择是通过要求传递的值类型与集合的元素类型匹配，来完全禁用类型转换:
+若不希望数据窄化，可有多个选项。一种选择是通过要求传递的值类型与集合的元素类型匹配，来完全禁用类型转换:
 
 \begin{cpp}
 requires std::same_as<typename Coll::value_type, T>
@@ -342,7 +340,7 @@ requires std::same_as<typename Coll::value_type, T>
 
 但是，这也会禁用有用和安全的类型转换。
 
-出于这个原因，最好定义一个概念来确定一个类型是否可以在不缩小的情况下转换为另一个类型，这在一个简短的棘手需求中是可能的[感谢Giuseppe D 'Angelo和Zhihao Yuan在\url{http://wg21.link/p0870}中介绍的检查窄化转换的技巧]:
+出于这个原因，最好定义一个概念来确定一个类型是否可以在不缩小的情况下转换为另一个类型，这在一个简短的棘手需求中是可能的[感谢Giuseppe D 'Angelo和Zhihao Yuan在\url{http://wg21.link/p0870}中介绍检查窄化转换的技巧]:
 
 \begin{cpp}
 template<typename From, typename To>
@@ -367,7 +365,7 @@ void add(Coll& coll, const T& val)
 
 \mySamllsection{包含约束}
 
-定义上面的窄化转换的概念可能就足够了，而不需要std::convertible\_to概念，因为剩下的部分会隐式地进行检查:
+定义上面的窄化转换的概念可能就足够了，而不需要std::convertible\_to概念，剩下的部分会隐式地检查:
 
 \begin{cpp}
 template<typename From, typename To>
@@ -376,7 +374,7 @@ concept ConvertsWithoutNarrowing = requires (From&& x) {
 };
 \end{cpp}
 
-但若ConvertsWithoutNarrowing概念也检查std::convertible\_to概念，则有一个重要的好处。这种情况下，编译器可以检测到ConvertsWithoutNarrowing比std::convertible\_to更受约束。术语是ConvertsWithoutNarrowing包含std::convertible\_to。
+但若ConvertsWithoutNarrowing概念也检查std::convertible\_to概念，则有一个重要的好处，编译器可以检测到ConvertsWithoutNarrowing比std::convertible\_to更受约束。术语是ConvertsWithoutNarrowing包含std::convertible\_to。
 
 这允许开发者做以下事情:
 
@@ -396,25 +394,25 @@ void foo(F, T)
 }
 \end{cpp}
 
-若没有指定ConvertsWithoutNarrowing 包含std::convertible\_to，编译器在调用带有两个参数的foo()时将引发歧义错误，这两个参数相互转换而不进行窄化。
+若没有指定ConvertsWithoutNarrowing包含std::convertible\_to，编译器在调用带有两个参数的foo()时将引发歧义错误，这两个参数相互转换而不进行窄化。
 
-以同样的方式，概念可以包含其他概念，多以它们更特化地用于重载解析。事实上，C++标准概念构建了一个相当复杂的包含图。
+以同样的方式，概念可以包含其他概念，多以更特化地用于重载解析。事实上，C++标准概念构建了一个相当复杂的包含图。
 
 稍后我们将讨论包含的细节。
 
 \mySubsubsection{3.3.3}{使用需求调用不同的函数}
 
-最后，我们应该让add()函数模板更灵活:
+最后，应该让add()函数模板更灵活:
 
 \begin{itemize}
 \item
-可能还希望支持只提供insert()而不是push\_back()来插入新元素的集合。
+支持只提供insert()而不是push\_back()来插入新元素的集合。
 
 \item
-可能希望支持传递一个集合(容器或范围)来插入多个值。
+支持传递一个集合(容器或范围)来插入多个值。
 \end{itemize}
 
-可以争辩说这些是不同的函数，应该有不同的名字，可以的话，通常使用不同的名字会更好。然而，C++标准库是一个很好的例子，说明如果协调不同的API。例如，可以使用相同的泛型代码遍历所有容器，尽管在内部，容器使用非常不同的方式转到下一个元素并访问其值。
+这些是不同的函数，应该有不同的名字，通常使用不同的名字会更好。然而，C++标准库是一个很好的例子，说明如果协调不同的API。例如，可以使用相同的泛型代码遍历所有容器，尽管在内部，容器使用非常不同的方式转到下一个元素并访问其值。
 
 \mySamllsection{使用概念调用不同的函数}
 
@@ -427,7 +425,7 @@ concept SupportsPushBack = requires(Coll c, T v) {
 };
 \end{cpp}
 
-注意，我们也可以定义一个只需要集合作为模板形参的概念:
+注意，也可以定义一个只需要集合作为模板形参的概念:
 
 \begin{cpp}
 template<typename Coll>
@@ -436,9 +434,9 @@ concept SupportsPushBack = requires(Coll coll, Coll::value_type val) {
 };
 \end{cpp}
 
-注意，我们不必在这里使用typename来使用Coll::value\_type。从C++20开始，当上下文明确限定成员必须是类型时，不再需要typename。
+注意，不必在这里使用typename来使用Coll::value\_type。从C++20开始，当上下文明确限定成员必须是类型时，不再需要typename。
 
-还有各种其他方式来声明这个概念:
+还有其他方式来声明这个概念:
 
 \begin{itemize}
 \item
@@ -451,12 +449,12 @@ concept SupportsPushBack = requires(Coll coll) {
 };
 \end{cpp}
 
-这里，可以看到概念和需求的定义并没有创建代码。它是一个未求值的上下文，可以使用std::declval<>()来表示“假设有一个这种类型的对象”，无论将coll声明为值，还是非const引用都无关紧要。
+这里，可以看到概念和需求的定义并没有创建代码，是一个未求值的上下文，可以使用std::declval<>()来表示“假设有一个这种类型的对象”，无论将coll声明为值，还是非const引用都无关紧要。
 
 注意，这里的\&很重要。若没有\&，只需要使用移动语义插入一个右值(比如一个临时对象)。对于\&，我们创建了一个左值，因此需要push\_back()进行复制。
 
 \item
-您可以使用std::ranges::range\_value\_t来代替value\_type的成员:
+可以使用std::ranges::range\_value\_t来代替value\_type的成员:
 
 \begin{cpp}
 template<typename Coll>
@@ -465,7 +463,7 @@ concept SupportsPushBack = requires(Coll coll) {
 };
 \end{cpp}
 
-通常，当需要集合的元素类型时，使用std::ranges::range\_value\_t<>使代码更具泛型(例如，也适用于原始数组)。但因为这里需要成员push\_back()，所以也需要成员的value\_type。
+通常，当需要集合的元素类型时，使用std::ranges::range\_value\_t<>使代码更具泛型(例如，也适用于原始数组)。因为这里需要成员push\_back()，所以也需要成员的value\_type。
 
 \end{itemize}
 
@@ -486,7 +484,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-这种情况下，这里不需要命名需求SupportsInsert，因为带有附加需求的add()更特殊，所以重载解析更喜欢它。但只有少数容器支持只使用一个参数调用insert()，为了避免其他重载和add()调用的问题，最好在这里也有一个约束。
+这里不需要命名需求SupportsInsert，因为带有附加需求的add()更特殊，所以重载解析更偏向它。但只有少数容器支持只使用一个参数调用insert()，为了避免其他重载和add()调用的问题，最好在这里也有一个约束。
 
 因为这里将需求定义为一个概念，甚至可以将它用作模板形参的类型约束:
 
@@ -498,7 +496,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-作为一个概念，也可以将它用作auto作为参数类型的类型约束:
+作为一个概念，也可以将其用作auto作为参数类型的类型约束:
 
 \begin{cpp}
 void add(SupportsPushBack auto& coll, const auto& val)
@@ -515,7 +513,7 @@ void add(auto& coll, const auto& val)
 
 \mySamllsection{if constexpr的概念}
 
-我们也可以在if constexpr条件中直接使用SupportsPushBack这个概念:
+也可以在if constexpr条件中直接使用SupportsPushBack这个概念:
 
 \begin{cpp}
 if constexpr (SupportsPushBack<decltype(coll)>) {
@@ -539,9 +537,9 @@ else {
 }
 \end{cpp}
 
-这在泛型代码中切换两个不同函数调用的好方法。当引入一个不值得的概念时，特别建议这样做。
+这是在泛型代码中切换两个不同函数调用的好方法。当引入一个不值得的概念时，建议这样做。
 
-\mySamllsection{概念vs变量模板}
+\mySamllsection{概念与变量模板}
 
 你可能想知道，为什么使用概念比使用bool类型的变量模板更好(就像类型特性一样)，比如:
 
@@ -565,11 +563,11 @@ constexpr bool SupportsPushBack = requires(T coll) {
 若使用特殊需求，可以与编译时一起使用。
 \end{itemize}
 
-若不需要这些好处，那么选择概念定义还是bool类型的变量模板的问题就变得有趣了，稍后将详细讨论这个问题。
+若不需要这些，那么选择概念定义还是bool类型的变量模板的问题就变得有趣了，稍后将详细讨论这个问题。
 
 \mySamllsection{插入单个和多个值}
 
-为了提供处理作为一个集合传递的多个值的重载，可以简单地为它们添加约束。标准概念std::ranges::input\_range可用于此:
+为了提供处理作为一个集合传递的多个值的重载，可以简单地添加约束。标准概念std::ranges::input\_range可用于此:
 
 \begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
@@ -585,7 +583,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-同样，只要重载将此作为附加约束，这些函数将是首选的。
+同样，只要重载将此作为附加约束，这些函数将是首选。
 
 概念std::ranges::input\_range是一个用于处理范围的概念，范围是可以使用begin()和end()迭代的集合。但范围不需要将begin()和end()作为成员函数，所以处理范围的代码应该使用范围库提供的std::ranges::begin()和std::ranges::end():
 
@@ -602,11 +600,11 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-这些帮助程序是函数对象，因此使用它们可以避免ADL问题。
+这些辅助程序是函数对象，因此使用它们可以避免ADL问题。
 
 \mySamllsection{处理多重约束}
 
-通过汇集所有有用的概念和需求，可以将它们放在不同位置的一个功能中。
+通过汇集所有有用的概念和需求，可以将它们放在不同位置的函数中。
 
 \begin{cpp}
 template<SupportsPushBack Coll, std::ranges::input_range T>
@@ -636,11 +634,11 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-声明函数模板的两种方式是等价的。
+声明函数模板的两种方式等价。
 
 \mySubsubsection{3.3.4}{完整的例子}
 
-前面的小节提供了很大的灵活性，让我们把所有的选项放在一起，至少有一个完整的例子:
+前面的小节提供了很大的灵活性，现在把所有的选项放在一起，就有一个完整的例子:
 
 \filename{lang/add.cpp}
 
@@ -733,7 +731,7 @@ C++20前，约束模板已经成为可能。但这样做的方法通常不容易
 
 \mySamllsection{SFINAE}
 
-C++20前禁用模板可用性的主要方法是SFINAE。术语“SFINAE”(发音类似于sfee-nay)代表“替换失败不是错误”，若泛型代码的声明格式不佳，就忽略它，而不是引发编译时错误。
+C++20前禁用模板可用性的主要方法是SFINAE。术语“SFINAE”(发音类似于sfee-nay)代表“替换失败不是错误”，若泛型代码的声明格式不佳，就忽略它，而非引发编译时错误。
 
 例如，要在push\_back()和insert()之间切换，可以在C++20之前的代码中声明如下的函数模板:
 
@@ -751,17 +749,17 @@ auto add(Coll& coll, const T& val) -> decltype(coll.insert(val))
 }
 \end{cpp}
 
-因为我们把这里的push\_back()调用作为第一个模板声明的一部分，所以若不支持push\_back()，则忽略此模板。对应的声明在insert()的第二个模板中是必需的(重载解析不会忽略返回类型，若两个函数模板都可以使用，则会报错)。
+因为把这里的push\_back()调用作为第一个模板声明的一部分，所以若不支持push\_back()，则忽略此模板。对应的声明在insert()的第二个模板中是必需的(重载解析不会忽略返回类型，若两个函数模板都可以使用，则会报错)。
 
-然而，这是放置需求的一种非常微妙的方式，开发者可能很容易忽略它。
+然而，这是放置需求的一种隐蔽的方式，开发者可能很容易忽略它。
 
 \mySamllsection{std::enable\_if<>}
 
 对于更复杂的禁用泛型代码的情况，从C++11开始，C++标准库提供了std::enable\_if<>。
 
-这是一个接受布尔条件的类型特性，若为false则产生无效代码。通过在声明中的某个地方使用std::enable\_if<>，这也可以“SFINAE out”泛型代码。
+这是一个接受布尔条件的类型特性，若为false则产生无效代码。通过在声明中的某个地方使用std::enable\_if<>，这也可以是“SFINAE out”的泛型代码。
 
-例如，可以使用std::enable\_if<>类型特性，以以下方式排除调用add()函数模板的类型:
+例如，可以使用std::enable\_if<>类型特性，排除调用add()函数模板的类型:
 
 \begin{cpp}
 // disable the template for floating-point values:
@@ -773,11 +771,11 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-诀窍是插入一个额外的模板参数，以便能够使用trait std::enable\_if<>。若特性没有禁用模板，将产生void(可以指定它产生另一种类型，作为可选的第二个模板参数)。
+诀窍是插入一个额外的模板参数，以便能够使用特性std::enable\_if<>。若特性没有禁用模板，将产生void(可以指定它产生另一种类型，作为可选的第二个模板参数)。
 
-这样的代码也很难编写和阅读，并且有一些缺点。例如，要用不同的约束提供add()的另一个重载，还需要另一个模板参数。否则，将对同一个函数进行两次不同的重载，因为对于编译器std::enable\_if<>不会更改签名。此外，必须注意，对于每个调用，只有一个不同的重载是可用的。
+这样的代码也很难编写和阅读，并且有一些缺点。例如，要用不同的约束提供add()的另一个重载，还需要另一个模板参数。否则，将对同一个函数进行两次不同的重载，因为对于编译器std::enable\_if<>不会更改签名。此外，对于每个调用，只有一个不同的重载是可用的。
 
-概念提供了一种更具可读性的表述约束的方式。包括只要只满足一个约束，具有不同约束的模板的重载就不会违反一个定义规则，只要一个约束包含另一个约束，甚至可以满足多个约束。
+概念提供了一种更具可读性的表述约束的方式。包括只满足一个约束，具有不同约束的模板的重载就不会违反一个定义规则，只要一个约束包含另一个约束，甚至可以满足多个约束。
 
 
 

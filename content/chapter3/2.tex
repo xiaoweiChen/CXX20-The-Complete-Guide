@@ -30,19 +30,19 @@ class MyType {
 变量模板
 
 \item
-甚至可以约束成员函数
+(甚至可以约束)成员函数
 \end{itemize}
 
 对于这些模板，可以约束类型和值参数。
 
-但请注意，这里不能约束概念:
+但这里不能约束概念:
 
 \begin{cpp}
 template<std::ranges::sized_range T> // ERROR
 concept IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
 \end{cpp}
 
-相反，这里必须这样指定:
+必须这样指定:
 
 \begin{cpp}
 template<typename T>
@@ -68,7 +68,7 @@ requires std::ranges::range<T>
 using ValueType = std::ranges::range_value_t<T>;
 \end{cpp}
 
-类型ValueType<>现在只对范围类型定义:
+类型ValueType<>现在只可对范围类型进行定义:
 
 \begin{cpp}
 ValueType<int> vt1; // ERROR
@@ -93,7 +93,7 @@ requires std::ranges::range<T>
 constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
 \end{cpp}
 
-布尔变量template现在只在范围中定义:
+类型IsIntegralValType<>现在只可在范围中定义:
 
 \begin{cpp}
 bool b1 = IsIntegralValType<int>; // ERROR
@@ -104,8 +104,6 @@ bool b3 = IsIntegralValType<std::list<double>>; // false
 \mySubsubsection{3.2.3}{约束成员函数}
 
 requires子句也可以是成员函数声明的一部分，开发者就可以根据需求和概念指定不同的API。
-
-考虑下面的例子:
 
 \filename{lang/valorcoll.hpp}
 
@@ -137,14 +135,14 @@ class ValOrColl {
 };
 \end{cpp}
 
-这里，我们定义了一个类ValOrColl，可以保存一个值或一个值的集合，作为T类型的值。提供了两个print()成员函数，类使用标准概念std::ranges::range来决定调用哪一个:
+这里，定义了一个类ValOrColl，可以保存一个值或一个值的集合，作为T类型的值。提供了两个print()成员函数，类使用标准概念std::ranges::range来决定使用哪一个:
 
 \begin{itemize}
 \item
-若类型T是一个集合，则满足约束，因此两个print()成员函数都可用。然而，重载解析首选第二个print()，将遍历集合的元素，因为该成员函数有约束。
+若类型T是一个集合，则满足约束，所以两个print()成员函数都可用。但重载解析首选第二个print()，将遍历集合的元素，因为该成员函数有约束。
 
 \item
-若类型T不是集合，则只有第一个print()可用，因此使用它。
+若类型T不是集合，则只有第一个print()可用，因此可以使用。
 \end{itemize}
 
 例如，可以这样使用这个类:
@@ -198,7 +196,7 @@ template<auto Val>
 concept LessThan10 = Val < 10;
 \end{cpp}
 
-这个概念可以如下使用:
+可以这样使用:
 
 \begin{cpp}
 template<typename T, int Size>
@@ -208,7 +206,7 @@ class MyType {
 };
 \end{cpp}
 
-稍后我们将讨论更多的示例。
+稍后将讨论更多的示例。
 
 
 
