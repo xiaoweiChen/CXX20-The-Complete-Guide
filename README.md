@@ -63,7 +63,7 @@ C++20是现代C++编程的下一代发展，现在主要的C++编译器g++、Cla
   
   * 使用xelatex编译时需要添加`-shell-escape`和`-8bit`选项，例如：
   
-    `xelatex.exe -synctex=1 -interaction=nonstopmode -shell-escape -8bit "C++20-The-Complete-Guide".tex`
+    `xelatex -synctex=1 -interaction=nonstopmode -shell-escape -8bit "C++20-The-Complete-Guide".tex`
   
   * 为了内容中表格和目录索引能正常生成，需要至少两次连续编译
   

@@ -1,6 +1,6 @@
 下面几节解释自C++20后比较操作符的详细情况。
 
-\mySubsubsection{1.2.1}{使用<=>}
+\mySubsubsection{1.2.1}{使用<=>操作符}
 
 <=>操作符是一个新的二元操作符。所有基本数据类型都有定义，对于其中定义了关系运算符的数据类型，也可以由用户自行重载定义。
 
@@ -10,7 +10,7 @@
 std::cout << (0 < x <=> y) << '\n'; // calls 0 < (x <=> y)
 \end{cpp}
 
-请注意，必须包含一个特定的头文件来处理运算符<=>的结果:
+请注意，必须包含一个特定的头文件来处理<=>操作符的结果:
 
 \begin{cpp}
 #include <compare>
@@ -24,13 +24,13 @@ std::cout << (0 < x <=> y) << '\n'; // calls 0 < (x <=> y)
 auto x = 3 <=> 4; // does not compile without header <compare>
 \end{cpp}
 
-大多数标准类型(字符串、容器、<utility>)的头文件都包含这个头文件。但要对不需要此头的值或类型使用操作符，必须包含<compare>。
+大多数标准类型(字符串、容器、<utility>)的头文件都包含这个头文件，但要对不需要此头的值或类型使用操作符，必须包含<compare>。
 
-注意，操作符<=>用于实现类型。在操作符<=>的实现之外，开发者不应该直接调用<=>。虽然这样做是可以，但永远不要用a<=>b < 0来代替a<b。
+注意，<=>操作符用于实现类型。在<=>操作符的实现之外，开发者不应该直接调用<=>。虽然这样做没问题，但永远不要用a<=>b < 0来代替a<b。
 
 \mySubsubsection{1.2.2}{比较类别类型}
 
-新的操作符<=>不返回布尔值，但其作用类似于三向比较，产生负值表示信号较少，正值表示信号较大，0表示信号相等或等效。这种行为类似于C函数strcmp()的返回值，也有一个重要的区别:返回值不是整数值，C++标准库提供了三种可能的返回类型，其反映了相应的比较类别。
+<=>操作符不返回布尔值，但其作用类似于三向比较，产生负值表示信号较少，正值表示信号较大，0表示信号相等或等效。这种行为类似于C函数strcmp()的返回值，也有一个重要的区别:返回值不是整数值，C++标准库提供了三种可能的返回类型，其反映了相应的比较类别。
 
 \mySamllsection{比较类别}
 
@@ -42,19 +42,19 @@ auto x = 3 <=> 4; // does not compile without header <compare>
 
 这一类的典型例子是整数值或常见的字符串类型，字符串s1小于等于或大于字符串s2。
 
-若此类别的一个值既不小于也不大于另一个值，则两个值相等。如有多个对象，可以按升序或降序进行排序(相等的值彼此之间可以是任意顺序)。
+若此类别的一个值既不小于也不大于另一个值，则两个值相等。若有多个对象，可以按升序或降序进行排序(相等值的顺序任意)。
 
 \item
 对于\textbf{弱排序}，给定类型的任何值都小于、等于或大于该类型的任何其他值(包括其本身)，但相等的值不一定是相等的(具有相同的值)。
 
-此类别的典型示例是用于不区分大小写的字符串的类型。字符串"hello"小于"hello1"且大于"hell"。尽管，"hello"与"HELLO"这两个字符串不相等但等价。
+此类别的典型示例是用于不区分大小写的字符串的类型，字符串"hello"小于"hello1"且大于"hell"。尽管，"hello"与"HELLO"这两个字符串不相等但等价。
 
-若这个类别的值既不小于也不大于另一个值，那么这两个值至少是相等的(甚至可能是相等的)。若有多个对象，则可以按升序或降序进行排序(等效值之间的顺序可以任意)。
+若这个类别的值既不小于也不大于另一个值，那么这两个值至少是相等的(甚至可能是相等的)。若有多个对象，则可以按升序或降序进行排序(相等值的顺序可以任意)。
 
 \item
 对于\textbf{偏排序}，给定类型的任何值都可以小于、等于或大于该类型的任何其他值(包括其本身)，可能根本不能指定两个值之间的特定顺序。
 
-这种类型的典型示例是浮点类型，因为它们可能具有特殊值NaN(“非数字”)。任何与NaN的比较结果都为false。因此，比较可能导致两个值是无序的，并且比较操作符可能返回四个值中的一个。
+这种类型的典型示例是浮点类型，因为可能需要处理特殊值NaN(“非数字”)，任何值与NaN的比较结果都为false。因此，比较可能导致两个值是无序的，并且比较操作符可能返回四个值中的一个。
 
 若有多个对象，可能无法按升序或降序对其进行排序(除非确保不存在无法排序的值)。
 \end{itemize}
@@ -105,13 +105,13 @@ std::partial\_ordering::unordered
 \end{itemize}
 \end{itemize}
 
-注意，所有类型都有less、greater和equivalent值。但strong\_ordering也有equal，这与这里的equal相同，而partial\_ordering的值为unordered，既不表示小于，也不表示等于，也不表示大于。
+注意，所有类型都有less、greater和equivalent值。但strong\_ordering也有equal，这与这里的equal相同，而partial\_ordering的值为unordered，既不表示小于，等于和大于。
 
-较强比较类型具有向较弱比较类型的隐式类型转换，所以可以将任何strong\_ordering值用作weak\_ordering值，或partial\_ordering值(相等则为equivalent)。
+较强比较类型具有向较弱比较类型的隐式类型转换，可以将strong\_ordering值用作weak\_ordering值，或partial\_ordering值(相等则为equivalent)。
 
-\mySubsubsection{1.2.3}{使用运算符<=>比较类别}
+\mySubsubsection{1.2.3}{使用<=>操作符比较类别}
 
-<=>操作符应该返回比较类别类型之一的值，表示比较的结果以及该结果是否能够创建强/全、弱或偏排序的信息。
+<=>操作符应该返回比较类别类型的值，表示比较结果，以及该结果是否能够创建强/全、弱或偏排序的信息。
 
 例如，为MyType类型定义的<=>如下所示:
 
@@ -137,7 +137,7 @@ class MyType {
 };
 \end{cpp}
 
-但通过将操作符映射到底层类型的结果，通常更容易定义操作符。所以，上面的成员操作符<=>最好只输出其成员值的值和类别:
+通过将操作符映射到底层类型的结果，通常更容易定义操作符。所以，上面的成员<=>操作符最好只输出其成员值的值和类别:
 
 \begin{cpp}
 class MyType {
@@ -150,7 +150,7 @@ class MyType {
 
 这不仅返回正确的值，还确保根据成员值的类型，返回值具有正确的比较类别类型。
 
-\mySubsubsection{1.2.4}{直接调用<=>}
+\mySubsubsection{1.2.4}{直接调用<=>操作符}
 
 也可以直接使用已定义的<=>操作符:
 
@@ -160,7 +160,7 @@ MyType x, y;
 x <=> y // yields a value of the resulting comparison category type
 \end{cpp}
 
-如前所述，在实现<=>操作符时，应该只直接调用operator<=>，了解返回的比较类别会非常有意义。
+如前所述，实现<=>操作符时，应该只直接调用<=>操作符，了解返回的比较类别会非常有意义。
 
 <=>操作符是为定义了关系操作符的所有基本类型预定义的。例如:
 
@@ -172,14 +172,14 @@ x <=> 17.0 // yields std::partial_ordering::equivalent
 &x <=> nullptr // ERROR: relational comparison with nullptr not supported
 \end{cpp}
 
-此外，所有提供关系操作符的C++标准库类型现在也提供了operator<=>。例如:
+此外，所有提供关系操作符的C++标准库类型现在也提供了<=>操作符。例如:
 
 \begin{cpp}
 std::string{"hi"} <=> "hi" // yields std::strong_ordering::equal;
 std::pair{42, 0.0} <=> std::pair{42, 7.7} // yields std::partial_ordering::less
 \end{cpp}
 
-对于自己的类型，只需将operator<=>定义为成员或独立函数即可。
+对于自己的类型，只需将<=>操作符定义为成员或独立函数即可。
 
 因为返回类型取决于比较类别，所以可以根据特定的返回值进行检查:
 
@@ -187,9 +187,9 @@ std::pair{42, 0.0} <=> std::pair{42, 7.7} // yields std::partial_ordering::less
 if (x <=> y == std::partial_ordering::equivalent) // always OK
 \end{cpp}
 
-由于隐式类型转换为较弱排序类型，若operator<=>产生strong\_ordering或weak\_ordering类型的值，这也是可以编译的。
+由于隐式类型转换为较弱排序类型，若<=>操作符产生strong\_ordering或weak\_ordering类型的值，这也是可以编译的。
 
-反过来是不行的。若比较产生weak\_ordering或partial\_ordering类型的值，则不能将其与strong\_ordering类型的值进行比较。
+反过来不行。若比较产生weak\_ordering或partial\_ordering类型的值，则不能将其与strong\_ordering类型的值进行比较。
 
 \begin{cpp}
 if (x <=> y == std::strong_ordering::equal) // might not compile
@@ -201,7 +201,7 @@ if (x <=> y == std::strong_ordering::equal) // might not compile
 if (x <=> y == 0) // always OK
 \end{cpp}
 
-此外，由于关系型操作符调用的新重写，操作符<=>可以间接调用:
+此外，由于关系型操作符调用的新重写，<=>操作符可以间接调用:
 
 \begin{cpp}
 if (!(x < y || y < x)) // might call operator<=> to check for equality
@@ -213,7 +213,7 @@ if (!(x < y || y < x)) // might call operator<=> to check for equality
 if (x <= y && y <= x) // might call operator<=> to check for equality
 \end{cpp}
 
-注意操作符!=，永远不会重写为调用operator<=>，但它可能调用由于默认操作符<=>成员而隐式生成的操作符==。
+注意!=操作符，永远不会重写为调用<=>操作符的方式，但可能调用由于默认操作符<=>成员隐式生成的操作符==。
 
 \mySubsubsection{1.2.5}{处理多种排序条件}
 
@@ -247,7 +247,7 @@ class Person {
 };
 \end{cpp}
 
-可以使用到最弱比较类型的转换。若已知最弱的比较类型，可以把它声明为返回类型:
+可以使用到最弱比较类型的转换。若已知最弱的比较类型，可以声明为返回类型:
 
 \begin{cpp}
 class Person {
@@ -262,7 +262,7 @@ class Person {
 };
 \end{cpp}
 
-若不知道比较类型(例如，类型是模板形参)，可以使用一个新的类型特征std::common\_comparison\_category<>来计算最强的比较类型:
+若不知道比较类型(例如，类型是模板形参)，可以使用新的类型特征std::common\_comparison\_category<>来计算最强的比较类型:
 
 \begin{cpp}
 class Person {
@@ -279,7 +279,7 @@ class Person {
 };
 \end{cpp}
 
-通过使用尾部返回类型语法(auto在前面，返回类型在->后面)，可以使用参数来计算比较类型。这种情况下，可以只使用name，而非rhs.name，这种方法通常是有效的(例如，也适用于独立的函数)。
+通过使用尾部返回类型语法(auto在前面，返回类型在->后面)，可以使用参数来计算比较类型。这种情况下，可以只使用name，而非rhs.name，这种方法通常是有效的(例如，也适用于独立函数)。
 
 若希望提供比内部使用的类别更强的类别，则必须将内部比较的所有可能值映射到返回类型的值。若不能映射某些值，这可能包括一些错误处理。例如:
 
@@ -327,14 +327,14 @@ class Person {
 否则，若传递的值是浮点类型，则使用ISO/IEC/IEEE 60559中指定的totalOrder()的值(例如，-0小于+0，-NaN小于任何非NaN值和+NaN)
 
 \item
-若是为传递的类型定义的，使用新的函数对象std::compare\_three\_way\{\}(val1, val2)，
+若是为传递的类型定义的，可使用新的函数对象std::compare\_three\_way\{\}(val1, val2)，
 \end{itemize}
 
 这为浮点类型提供强排序的最简单方法，即使在运行时，若一个或两个操作数可能具有值NaN，这种方法也可以工作。
 
-std::compare\_three\_way是用于调用operator <=>的新函数对象类型，就像std::less是用于调用operator <的函数对象类型一样。
+std::compare\_three\_way是用于调用<=>操作符的新函数对象类型，就像std::less是用于小于操作符的函数对象类型一样。
 
-对于其他具有较弱排序和操作符==和<定义的类型，可以使用函数对象std::compare\_strong\_order\_fallback():
+对于其他具有较弱排序和==和<操作符定义的类型，可以使用函数对象std::compare\_strong\_order\_fallback():
 
 \begin{cpp}
 class Person {
@@ -352,4 +352,4 @@ class Person {
 
 用于映射比较类别类型的表，函数对象列出了用于映射比较类型的所有的辅助函数。
 
-要为泛型类型定义运算符<=>，还应该考虑使用函数对象std::compare\_three\_way或算法std::lexicographical\_compare\_three\_way()。
+要为泛型类型定义<=>操作符，还应该考虑使用函数对象std::compare\_three\_way或算法std::lexicographical\_compare\_three\_way()。
