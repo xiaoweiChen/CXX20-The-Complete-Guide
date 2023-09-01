@@ -1,9 +1,9 @@
 
-泛型代码中，使用<=>时就有了一些挑战。因为可能存在提供操作符<=>的类型，也可能存在提供偏或全基本比较操作符的类型。
+泛型代码中，使用<=>就有了一些挑战了。可能存在提供操作符<=>的类型，也可能存在提供偏或全基本比较操作符的类型。
 
 \mySubsubsection{1.5.1}{compare\_three\_way}
 
-std::compare\_three\_way是用于调用<=>的函数对象类型，就像std::less是用于调用<的函数对象类型一样。
+std::compare\_three\_way是用于调用<=>的函数对象类型，就像std::less是用于调用小于操作符的函数对象类型一样。
 
 可以这样使用:
 
@@ -28,9 +28,9 @@ struct Value {
 };
 \end{cpp}
 
-使用std::compare\_three\_way(与std::less一样)的好处是，定义了原始指针的总顺序(操作符<=>或<不是这种情况)。因此，当使用可以是原始指针类型的泛型类型时，应该使用。
+使用std::compare\_three\_way(与std::less一样)的好处是，定义了原始指针的总序(操作符<=>或<不是这种情况)，所以当使用是原始指针类型的泛型类型时可以使用。
 
-允许程序员前向声明operator<=>()，C++20还引入了类型特性std::compare\_three\_way\_result和别名模板std::compare\_three\_way\_result\_t:
+允许开发者前向声明operator<=>()，C++20还引入了类型特性std::compare\_three\_way\_result和别名模板std::compare\_three\_way\_result\_t:
 
 \begin{cpp}
 template<typename T>

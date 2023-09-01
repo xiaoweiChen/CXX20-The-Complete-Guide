@@ -1,4 +1,4 @@
-最后，让我们详细说明，如何使用重写调用支持的比较操作符对表达式求值。
+最后，介绍一下如何使用重写支持的比较操作符，对表达式进行求值。
 
 
 \mySamllsection{相等操作符}
@@ -36,11 +36,11 @@ operator!=(x, y) // calling a free-standing operator!= for x and y
 \item
 操作符==:!operator==(x, y)或成员operator==: !x.operator==(y)
 
-注意，成员operator==可以使用默认操作符<=>成员生成。
+注意，成员==操作符可以使用默认操作符<=>成员生成。
 
 同样，同时定义两个操作符==会导致歧义错误，这也适用于成员函数。
 
-operator==是由于默认操作符<=>生成。
+==操作符是由于默认操作符<=>生成。
 \end{itemize}
 
 当需要对第一个操作数v进行隐式类型转换时，编译器还会尝试对操作数重新排序:
@@ -49,11 +49,11 @@ operator==是由于默认操作符<=>生成。
 42 != y // 42 implicitly converts to the type of y
 \end{cpp}
 
-这种情况下，编译器尝试按顺序调用:
+这种情况下，编译器会按顺序调用:
 
 \begin{itemize}
 \item
-独立的或成员操作符!=
+独立或成员操作符!=
 
 \item
 独立的或成员操作符==(注意，成员操作符==可以使用默认的<=>成员生成)[最初的C++20标准在\url{http://wg21.link/p2468r2}中进行了修复。]
@@ -71,7 +71,7 @@ operator==是由于默认操作符<=>生成。
 x <= y
 \end{cpp}
 
-编译器现在可能会尝试以下的操作:
+编译器现在会尝试以下的操作:
 
 \begin{cpp}
 x.operator<=(y) // calling member operator<= for x
@@ -83,7 +83,7 @@ operator<=>(x, y) <= 0 // calling a free-standing operator<=> for x and y
 0 <= y.operator<=>(x) // calling member operator<=> for y
 \end{cpp}
 
-同样，最后一种形式试图支持第一个操作数的隐式类型转换，其必须成为第一个操作数的参数。
+同样，最后一种形式试图支持第一个操作数的隐式类型转换，所以相应的值必须成为第一个操作数的参数。
 
 
 
