@@ -1,7 +1,7 @@
 
-参数使用auto是有一些好处的。
+参数使用auto有什么好处呢？
 
-\mySubsubsection{2.2.1}{使用auto进行延迟类型检查}
+\mySubsubsection{2.2.1}{进行延迟类型检查}
 
 使用auto参数，实现具有循环依赖关系的代码会容易得多。
 
@@ -28,7 +28,7 @@ class C2 {
 };
 \end{cpp}
 
-虽然可以在类定义中实现C2::foo()，但不能实现C1::foo()，因为要检查C2.print()的调用是否有效，编译器需要类C2的定义。
+虽然可以在类定义中实现C2::foo()，但不能实现C1::foo()，因为要检查C2.print()的调用是否有效，编译器需要知道类C2的定义。
 
 因此，必须在声明两个类结构之后实现C2::foo():
 
@@ -75,9 +75,9 @@ class C2 {
 };
 \end{cpp}
 
-这没什么新鲜的，将C1::foo()声明为成员函数模板时也会有同样的效果，但使用auto会更容易做到这一点。
+将C1::foo()声明为成员函数模板时也会有同样的效果，但使用auto会更容易一些。
 
-注意，auto允许调用者传递任何类型的参数，只要该类型提供成员函数print()。若不想这样做，可以使用标准概念std::same\_as来约束这个成员函数只对C2类型的形参使用:
+注意，auto允许调用者传递任何类型的参数，只要该类型提供成员函数print()。若不想这样，可以使用标准概念std::same\_as来约束这个成员函数只对C2类型的形参使用:
 
 \begin{cpp}
 #include <concepts>
@@ -118,14 +118,14 @@ bool lessByNameFunc(const T1& c1, const T2& c2) { // sorting criterion
 }
 \end{cpp}
 
-因为没有直接调用函数模板，编译器不能推断模板参数来编译调用。所以在传递函数模板作为形参时，必须显式指定模板形参:
+因为没有直接调用函数模板，编译器不能推断模板参数来编译调用。所以在传递函数模板作为形参时，必须显式指定模板的形参:
 
 \begin{cpp}
 std::sort(persons.begin(), persons.end(),
 		  lessByName<Customer, Customer>); // OK
 \end{cpp}
 
-通过使用Lambda表达式，可以按原样传递表达式:
+使用Lambda表达式，可以按原样传递表达式:
 
 \begin{cpp}
 auto lessByNameLambda = [] (const auto& c1, const auto& c2) { // sorting criterion
@@ -136,7 +136,7 @@ std::sort(persons.begin(), persons.end(),
 		  lessByNameLambda); // OK
 \end{cpp}
 
-因为Lambda是一个没有泛型类型的对象，所以只有将对象作为函数使用才可通用。
+Lambda是一个没有泛型类型的对象，所以只有将对象作为函数使用才可通用。
 
 另外，显式指定(缩写)函数模板参数更容易:
 
@@ -153,7 +153,7 @@ printFunc<std::string>("hello"); // call function template compiled for std::str
 \end{cpp}
 
 \item
-对于泛型Lambda表达式，必须做以下操作:
+对于泛型Lambda表达式，必须完成以下操作:
 
 \begin{cpp}
 auto printFunc = [] (const auto& arg) {

@@ -8,7 +8,7 @@ auto printColl = [] (const auto& coll) { // generic lambda
 }
 \end{cpp}
 
-这些占位符允许传递任何类型的参数，只要支持Lambda内部的操作:
+只要支持Lambda内部的操作，占位符允许传递任何类型的参数:
 
 \begin{cpp}
 std::vector coll{1, 2, 4, 5};
@@ -29,7 +29,7 @@ void printColl(const auto& coll) // generic function
 }
 \end{cpp}
 
-这样的声明只是声明模板的快捷方式，如下所示:
+声明只是声明模板的快捷方式:
 
 \begin{cpp}
 template<typename T>
@@ -41,9 +41,9 @@ void printColl(const T& coll) // equivalent generic function
 }
 \end{cpp}
 
-唯一的区别是，通过使用auto，不再拥有模板参数T。因此，该特性也称为简化函数模板的语法。
+使用auto替代模板参数T，所以该特性也称为“化函数模板”的语法。
 
-因为带有auto的函数是函数模板，所以使用函数模板的所有规则都适用。所以不能在一个翻译单元(CPP文件)中实现带有自动参数的函数，同时在另一个翻译单元中调用。对于具有auto参数的函数，整个实现属于头文件，以便它们可以在多个CPP文件中使用(否则，必须在一个翻译单元中显式地实例化函数)。另一方面，它们不需要声明为内联，因为函数模板总是内联。
+因为带有auto的函数是函数模板，所以适用于函数模板的所有规则。从而不能在一个翻译单元(CPP文件)中实现带有自动参数的函数，并在另一个翻译单元中调用。对于具有auto参数的函数，实现存在于头文件，以便可以在多个CPP文件中使用(否则，必须在一个翻译单元中显式地实例化函数)。另一方面，因为函数模板总是内联，所以不需要声明为内联函数。
 
 另外，可以显式地指定模板参数:
 
@@ -57,10 +57,9 @@ print(64); // val has type int
 print<char>(64); // val has type char
 \end{cpp}
 
-
 \mySubsubsection{2.1.1}{auto用于成员函数的参数}
 
-也可以使用这个特性来定义成员函数:
+可以使用这个特性来定义成员函数:
 
 \begin{cpp}
 class MyType {
@@ -90,4 +89,4 @@ void foo()
 }
 \end{cpp}
 
-有关带有auto的成员操作符==的示例，请参阅sentinel1.cpp。
+有关带有auto的成员==操作符的示例，请参阅sentinel1.cpp。
