@@ -72,13 +72,13 @@
 
 \mySubsubsection{5.2.2}{对象概念}
 
-对于对象(既不是引用也不是函数也不是void的类型)，有一个所需基本操作的层次结构。
+对于对象(既不是引用，也不是函数，也不是void的类型)，有一个所需基本操作的层次结构。
 
 \mySamllsection{std::movable<T>}
 
 \begin{itemize}
 \item
-保证类型T是可移动和可交换的。可以移动构造、移动赋值以及与该类型的另一个对象交换。
+保证类型T是可移动和可交换的。可以移动构造、移动赋值，以及与该类型的另一个对象交换。
 
 \item
 要求:
@@ -127,7 +127,7 @@ T既不是引用，也不是函数，也不是void
 
 \begin{itemize}
 \item
-保证类型T是半常规的(可以默认初始化、复制、移动和交换)。
+保证类型T是半常规的类型(可以默认初始化、复制、移动和交换)。
 
 \item
 要求:
@@ -239,7 +239,7 @@ T既不是引用，也不是函数，也不是void
 
 \begin{itemize}
 \item
-保证D类型是从B类型公开派生的(或者D和B是相同的)，D类型的指针都可以转换为B类型的指针。换句话说:这个概念保证了D引用/指针可以用作B引用/指针。
+保证D类型是从B类型公开派生的(或者D和B是相同的)，D类型的指针都可以转换为B类型的指针。换句话说:保证了D引用/指针可以用作B引用/指针。
 
 \item
 要求:
@@ -287,7 +287,7 @@ To必须是一个左值引用
 std::common\_reference\_with<To, From>满足类型的const左值引用
 
 \item
-必须支持运算符=，并产生与To相同的类型
+必须支持赋值运算符，并产生与To相同的类型
 \end{itemize}
 \end{itemize}
 
@@ -357,10 +357,10 @@ std::common\_reference\_with<To, From>满足类型的const左值引用
 
 \begin{itemize}
 \item
-保证类型T的对象与操作符==和!=可比较，与顺序无关。
+保证类型T的对象可使用==和!=操作符比较，与顺序无关。
 
 \item
-T的运算符==应该是对称的和可传递的:
+T的==操作符应该是对称的和可传递的:
 \begin{itemize}
 \item
 当t2==t1时，t1==t2为真
@@ -375,7 +375,7 @@ T的运算符==应该是对称的和可传递的:
 要求:
 \begin{itemize}
 \item
-==和!=都受支持，并产生可转换为bool的值
+==和!=操作符都受支持，并产生可转换为bool的值
 \end{itemize}
 \end{itemize}
 
@@ -383,7 +383,7 @@ T的运算符==应该是对称的和可传递的:
 
 \begin{itemize}
 \item
-保证类型T1和T2的对象可以使用操作符==和!=进行比较。
+保证类型T1和T2的对象可以使用==和!=操作符进行比较。
 
 \item
 要求:
@@ -397,10 +397,10 @@ T的运算符==应该是对称的和可传递的:
 
 \begin{itemize}
 \item
-保证类型T的对象可与操作符==、!=、<、<=、>和>=进行比较，以便两个值总是相互等于、小于或大于对方。
+保证类型T的对象可与==、!=、<、<=、>和>=操作符进行比较，以便两个值总是相互等于、小于或大于对方。
 
 \item
-这个概念并没有声称类型T具有所有值的总顺序。实际上，表达式std::totally\_ordered<double>的结果为真，即使浮点值没有顺序:
+这个概念并没有声称类型T具有所有值的总顺序，即使浮点值没有顺序，但表达式std::totally\_ordered<double>的结果仍然为true:
 
 \begin{cpp}
 std::totally_ordered<double> // true
@@ -408,7 +408,7 @@ std::totally_ordered<std::pair<double, double>> // true
 std::totally_ordered<std::complex<int>> // false
 \end{cpp}
 
-因此，提供这个概念是为了检查能够对元素进行排序的正式需求。由std::ranges::less使用，这是排序算法的默认排序条件。这样，若类型没有所有值的总顺序，排序算法就不会编译失败，支持所有六个基本比较运算符就足够了。要排序的值应该是全序或弱序，但这是在编译时无法检查的语义约束。
+提供这个概念是为了检查能够对元素进行排序的正式需求，因使用了std::ranges::less，这是排序算法的默认排序条件。若类型没有所有值的总顺序，排序算法就不会编译失败，支持所有六个基本比较运算符就足够了。要排序的值应该是全序或弱序，但这是在编译时无法检查的语义约束。
 
 \item
 要求:
@@ -417,7 +417,7 @@ std::totally_ordered<std::complex<int>> // false
 需要满足std::equality\_comparable<T>
 
 \item
-与操作符==、!=、<、<=、>和>=的所有比较都会产生可转换为bool的值
+与==、!=、<、<=、>和>=操作符的所有比较都会产生可转换为bool的值
 \end{itemize}
 \end{itemize}
 
@@ -425,13 +425,13 @@ std::totally_ordered<std::complex<int>> // false
 
 \begin{itemize}
 \item
-保证类型T1和T2的对象与操作符==、!=、<、<=、>和>=具有可比性，以便两个值总是相互等于、小于或大于对方。
+保证类型T1和T2的对象与==、!=、<、<=、>和>=操作符具有可比性，以便两个值总是相互等于、小于或大于对方。
 
 \item
 要求:
 \begin{itemize}
 \item
-对于涉及T1和/或T2对象的所有比较，都支持==，!=，<，<=，>和>=，并产生可转换为bool的相同类型的值
+对于涉及T1和/或T2对象的所有比较，都支持==，!=，<，<=，>和>=操作符，并产生可转换为bool的相同类型的值
 \end{itemize}
 \end{itemize}
 
@@ -441,13 +441,13 @@ std::totally_ordered<std::complex<int>> // false
 
 \begin{itemize}
 \item
-保证类型T的对象与操作符==、!=、<、<=、>、>=和操作符<=>可比较(并且至少具有比较类别类型Cat)。若没有传递Cat，则需要std::partial\_ordering。
+保证类型T的对象与==、!=、<、<=、>、>=和<=>操作符可比较(并且至少具有比较类别类型Cat)。若没有传递Cat，则需要std::partial\_ordering。
 
 \item
 这个概念在头文件<compare>中定义。
 
 \item
-注意，这个概念并不包含std::equality\_comparable，因为后者要求操作符==只对两个相等的对象产生真值。对于弱序或偏序，情况可能不是这样。
+注意，这个概念并不包含std::equality\_comparable，因为后者要求==操作符只对两个相等的对象产生真值。对于弱序或偏序，情况可能不是这样。
 
 \item
 注意，这个概念并不暗示和包含std::totally\_ordered，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
@@ -456,10 +456,10 @@ std::totally_ordered<std::complex<int>> // false
 要求:
 \begin{itemize}
 \item
-与操作符==、!=、<、<=、>和>=的所有比较都会产生可转换为bool的值
+与==、!=、<、<=、>和>=操作符的所有比较都会产生可转换为bool的值
 
 \item
-与操作符<=>的任何比较都会产生一个比较类别(至少是Cat)。
+与<=>操作符的任何比较都会产生一个比较类别(至少是Cat)。
 \end{itemize}
 \end{itemize}
 
@@ -467,13 +467,13 @@ std::totally_ordered<std::complex<int>> // false
 
 \begin{itemize}
 \item
-保证任意两个T1和T2类型的对象都可以与操作符==、!=、<、<=、>、>=和操作符<=>进行比较(并且至少具有比较类别类型Cat)。若没有传递Cat，则需要std::partial\_ordering。
+保证任意两个T1和T2类型的对象都可以与==、!=、<、<=、>、>=和<=>操作符进行比较(并且至少具有比较类别类型Cat)。若没有传递Cat，则需要std::partial\_ordering。
 
 \item
 这个概念在头文件<compare>中定义。
 
 \item
-注意，这个概念并不包含std::equality\_comparable\_with，因为后者要求操作符==只对两个相等的对象产生真值。对于弱序或偏序，情况可能并不是这样。
+注意，这个概念并不包含std::equality\_comparable\_with，因为后者要求==操作符只对两个相等的对象产生真值。对于弱序或偏序，情况可能并不是这样。
 
 \item
 注意，这个概念并不暗示和包含std::totally\_ordered\_with，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
@@ -485,10 +485,10 @@ std::totally_ordered<std::complex<int>> // false
 std::three\_way\_comparable满足T1和T2(以及Cat)的值和公共引用
 
 \item
-与操作符==、!=、<、<=、>和>=的所有比较都会产生可转换为bool的值
+与==、!=、<、<=、>和>=操作符的所有比较都会产生可转换为bool的值
 
 \item
-与操作符<=>的任何比较都会产生一个比较类别(至少是Cat)。
+与<=>操作符的任何比较都会产生一个比较类别(至少是Cat)。
 
 \item
 与T1和T2的顺序无关

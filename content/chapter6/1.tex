@@ -15,7 +15,7 @@ std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
 std::sort(coll.begin(), coll.end()); // sort all elements of the collection
 \end{cpp}
 
-C++20引入了范围的概念，表示一系列值的单个对象。任何容器都可以用作这样的范围。
+C++20引入了范围的概念，表示一系列值的单个对象。任何容器都可以这样使用范围。
 
 因此，可以将容器作为一个整体传递给算法:
 
@@ -28,7 +28,7 @@ std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
 std::ranges::sort(coll); // sort all elements of the collection
 \end{cpp}
 
-这里，我们将vector coll传递给范围算法sort()，以便对vector中的所有元素进行排序。
+这里，将vector coll传递给范围算法sort()，以便对vector中的所有元素进行排序。
 
 自C++20以来，大多数标准算法都支持将范围作为一个参数传递，但目前还不支持并行算法和数值算法。除了在整个范围内只接受一个参数外，新算法可能有一些细微的区别:
 
@@ -40,7 +40,7 @@ std::ranges::sort(coll); // sort all elements of the collection
 可能有不同的返回类型。
 
 \item
-可能返回借来的迭代器，因为传递了一个临时范围(右值)，从而表明没有有效的迭代器。
+可能返回租借迭代器，因为传递了一个临时范围(右值)，从而没有有效的迭代器。
 \end{itemize}
 
 详细信息请参见C++20中的算法概述。
@@ -57,7 +57,7 @@ range库的新算法，如sort()在命名空间std::ranges中提供。一般来�
 其中一些在std::views中提供，这是std::ranges::views的别名。
 \end{itemize}
 
-新的名称空间是必要的，因为ranges库引入了几个使用相同符号名称的新API，但C++20不应该破坏现有的代码，所以命名空间可以避免歧义和其他与现有API的冲突。
+新的命名空间是必要的，因为ranges库引入了几个使用相同符号名称的新API，但C++20不应该破坏现有代码，所以命名空间可以避免歧义和其他与现有API的冲突。
 
 看到哪些属于ranges库及其命名空间std::ranges，哪些属于std，有时会感到惊讶。粗略地说，std::ranges用于作为一个整体处理范围的工具。
 
@@ -67,12 +67,12 @@ range库的新算法，如sort()在命名空间std::ranges中提供。一般来�
 \item
 有些概念属于std，有些属于std::range。
 
-例如，对于迭代器，我们有std::forward\_iterator概念，但对于范围，相应的概念是std::ranges::forward\_range。
+例如，对于迭代器，我们有std::forward\_iterator概念，相应的范围概念是std::ranges::forward\_range。
 
 \item
 有些类型函数属于std，有些属于std::range。
 
-例如，我们有类型特性std::iter\_value\_t，但是range对应的类型特性是std::ranges::range\_value\_t。
+例如，有类型特性std::iter\_value\_t，对应的范围类型特性是std::ranges::range\_value\_t。
 
 \item
 有些符号甚至在std和std::ranges中都提供了。
@@ -80,9 +80,9 @@ range库的新算法，如sort()在命名空间std::ranges中提供。一般来�
 例如，独立函数std::begin()和std::ranges::begin()。
 \end{itemize}
 
-若两者都可以使用，最好使用名称空间std::ranges的符号和工具。这样做的原因是ranges库的新工具可以修复旧工具所具有的缺陷，例如：最好在命名空间std::ranges中使用begin()或cbegin()。
+若两者都可以使用，最好使用std::ranges命名空间中的符号和工具，原因是ranges库的新工具可以修复旧工具所具有的缺陷，例如：最好在命名空间std::ranges中使用begin()或cbegin()。
 
-为命名空间std::ranges引入快捷方式是很常见的，比如rg或rng。所以，上面的代码也可以如下所示:
+为命名空间std::ranges引入快捷方式很常见，比如rg或rng。所以，上面的代码也可以如下所示:
 
 \begin{cpp}
 #include <vector>
@@ -96,13 +96,13 @@ rg::sort(coll); // sort all elements of the collection
 
 不要使用using namespace指令来避免限定范围符号。否则，很容易得到具有编译时冲突或使用错误查找的代码，可能会发生严重的错误。
 
-\mySamllsection{范围的头文件}
+\mySamllsection{范围库的头文件}
 
-ranges库的许多新特性都在新的头文件<ranges>中提供，但其中一些是在现有的头文件中提供的。范围算法就是一个例子，在<algorithm>中声明。
+范围库的许多新特性都在新的头文件<ranges>中提供，但其中一些是在现有的头文件中提供的。范围算法就是一个例子，在<algorithm>中声明。
 
-因此，要使用为范围提供的算法作为单个参数，仍然只需要包含<algorithm>。
+因此，要使用为范围提供的算法作为单个参数，只需要包含<algorithm>。
 
-但对于ranges库提供的一些附加特性，需要头文件<ranges>。所以，在使用std::ranges或std::views命名空间中的内容时，应该始终包含<ranges>:
+但对于范围库提供的一些附加特性，需要头文件<ranges>。所以，在使用std::ranges或std::views命名空间中的内容时，应该始终包含<ranges>:
 
 \begin{cpp}
 #include <vector>
@@ -116,7 +116,7 @@ std::ranges::sort(coll); // sort all elements of the collection
 
 \mySubsubsection{6.1.2}{范围的约束和工具}
 
-范围的新标准算法将范围参数声明为模板参数(没有可用于它们的通用类型)，为了在处理这些范围参数时指定和验证必要的要求，C++20引入了几个范围概念。此外，工具有助于应用这些概念。
+范围的新标准算法将范围参数声明为模板参数(没有可用于它们的通用类型)，为了在处理这些范围参数时指定和验证必要的要求，C++20引入了几个范围概念。此外，工具可用于使用这些概念。
 
 例如，考虑用于范围的sort()算法。原则上，其定义如下(缺少一些细节，将在后面补充):
 
@@ -127,7 +127,7 @@ requires std::sortable<std::ranges::iterator_t<R>, Comp>
 ... sort(R&& r, Comp comp = {});
 \end{cpp}
 
-这个声明已经有了range的多个新特性:
+这个声明已经有了范围的多个新特性:
 
 \begin{itemize}
 \item
@@ -135,7 +135,7 @@ requires std::sortable<std::ranges::iterator_t<R>, Comp>
 
 \begin{itemize}
 \item
-概念std::ranges::random\_access\_range要求R是提供随机访问迭代器的范围(可以使用迭代器在元素之间来回跳转，并计算其距离)。这个概念包括(包含)ranges: std::range的基本概念，要求对于传递的参数，可以从begin()到end()遍历元素(至少使用std::ranges::begin()和std::ranges::end()，所以数组也满足这个概念)。
+概念std::ranges::random\_access\_range要求R是提供随机访问迭代器的范围(可以使用迭代器在元素之间来回跳转，并计算其距离)。这个概念包括(包含)范围:std::range的基本概念，要求对于传递的参数，可以从begin()到end()遍历元素(至少使用std::ranges::begin()和std::ranges::end()，所以数组也满足这个概念)。
 
 \item
 sortable概念要求范围R中的元素可以用排序条件Comp进行排序。
@@ -145,7 +145,7 @@ sortable概念要求范围R中的元素可以用排序条件Comp进行排序。
 新的类型工具std::ranges::iterator\_t用于将迭代器类型传递给std::sortable。
 
 \item
-Comp std::ranges::less用作默认的比较条件，其定义了排序算法使用<操作符对元素进行排序。std::ranges::less是一种概念约束的Std::less，确保支持所有比较操作符(==、!=、<、<=、>和>=)，并确保值具有总排序。
+比较谓词std::ranges::less用作默认的比较条件，其定义了排序算法使用<操作符对元素进行排序。std::ranges::less是一种概念约束的std::less，确保支持所有比较操作符(==、!=、<、<=、>和>=)，并确保值具有总排序。
 \end{itemize}
 
 所以，可以通过随机访问迭代器和可排序元素传递任何范围。例如:
@@ -186,14 +186,14 @@ Beilnr New York Rio Tokyo
 0 7 8 15 42
 \end{shell}
 
-若传递没有随机访问迭代器的容器/范围，会得到一个错误消息，指出不满足概念std::ranges::random\_access\_range:
+若传递没有随机访问迭代器的容器/范围，会得到一个错误消息：不满足概念std::ranges::random\_access\_range:
 
 \begin{cpp}
 std::list<std::string> coll2{"New York", "Rio", "Tokyo"};
 std::ranges::sort(coll2); // ERROR: concept random_access_range not satisfied
 \end{cpp}
 
-若传递的容器/范围不能与<操作符进行比较，则不满足std::sortable:
+若传递的容器/范围不能与小于操作符进行比较，则不满足std::sortable:
 
 \begin{cpp}
 std::vector<std::complex<double>> coll3;
@@ -213,7 +213,7 @@ std::ranges::sort(coll3); // ERROR: concept sortable not satisfied
 \endhead
 %
 \begin{tabular}[c]{@{}l@{}}range\\ output\_range\\ input\_range\\ forward\_range\\ bidirectional\_range\\ random\_access\_range\\ contiguous\_range\\ sized\_range\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}可以从头到尾迭代吗\\ 要写入值的元素的范围\\ 读取元素值的范围\\ 范围可多次迭代这些元素\\ 可以向前和向后遍历元素\\ 随机访问范围(在元素之间来回跳转)\\ 连续内存中包含所有元素的范围\\ 具有恒定时间size()的范围\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}可以从头到尾迭代吗\\ 写入值的元素的范围\\ 读取元素值的范围\\ 范围可多次迭代这些元素\\ 可以向前和向后遍历元素\\ 随机访问范围(在元素之间来回跳转)\\ 连续内存中包含所有元素的范围\\ 具有恒定时间size()的范围\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
@@ -236,9 +236,9 @@ std::ranges::consecuous\_range是一个新的范围/迭代器类别，其保证�
 std::ranges::sized\_range独立于其他约束，只是它是一个范围。
 \end{itemize}
 
-注意，迭代器和相应的范围类别在C++20中略有变化。事实上，C++标准现在支持两个版本的迭代器类别:C++20之前的版本和C++20之后的版本，它们可能不一样。
+注意，迭代器和相应的范围类别在C++20中略有变化，C++标准现在支持两个版本的迭代器类别:C++20之前的版本和C++20之后的版本，它们可能不一样。
 
-“其他范围概念”列出了稍后将介绍的用于特殊情况的其他一些范围概念。
+“其他范围概念”表列出了稍后将介绍的用于特殊情况的其他一些范围概念。
 
 \begin{longtable}[c]{|l|l|}
 \hline
@@ -276,10 +276,10 @@ std::ranges::sized\_range独立于其他约束，只是它是一个范围。
 生成转换后的元素值
 
 \item
-生成一系列值
+生成一系列的值
 \end{itemize}
 
-视图通常用于在特定的基础上，处理基础范围的元素子集和/或经过一些可选转换后的它们的值。例如，可以使用一个视图来迭代一个范围的前五个元素，如下所示:
+视图通常用于在特定的基础上，处理基础范围的元素子集和/或经过一些可选转换后的值。例如，可以使用一个视图来迭代一个范围的前五个元素，如下所示:
 
 \begin{cpp}
 for (const auto& elem : std::views::take(coll, 5)) {
@@ -287,7 +287,7 @@ for (const auto& elem : std::views::take(coll, 5)) {
 }
 \end{cpp}
 
-Std::views::take()是一个范围适配器，用于创建对传递的范围coll进行操作的视图。在这种情况下，take()创建了传递范围(如果有)的前n个元素的视图。所以，可将一个视图传递给coll，该视图以它的第六个元素结束(若元素较少，则以最后一个元素结束)。
+std::views::take()是一个范围适配器，用于创建对传递的范围coll进行操作的视图，take()创建了传递范围(若有)的前n个元素的视图，则可将一个视图传递给coll，该视图以其第六个元素结束(若元素较少，则以最后一个元素结束)。
 
 \begin{cpp}
 std::views::take(coll, 5)
@@ -305,7 +305,7 @@ for (const auto& elem : coll | std::views::take(5)) {
 }
 \end{cpp}
 
-这两种形式是等价的，但管道语法使得在范围上创建视图序列更加方便，稍后将详细讨论这一点。这样，简单的视图就可以用作更复杂的元素集合处理的构建块。
+这两种形式等价，但管道语法使得在范围上创建视图序列更加方便，稍后将详细讨论这一点。这样，简单的视图就可以用作更复杂的元素集合处理的构建块。
 
 假设想使用以下三个视图:
 
@@ -324,7 +324,7 @@ std::views::transform(coll, [] (auto elem) {
 std::views::take(coll, 3)
 \end{cpp}
 
-因为视图是一个范围，可以使用一个视图作为另一个视图的参数:
+因为视图是一个范围，可以使用视图作为另一个视图的参数:
 
 \begin{cpp}
 // view with first three squared values of the elements in coll that are multiples of 3:
@@ -336,7 +336,7 @@ auto v = std::views::take(
 	3);
 \end{cpp}
 
-这种嵌套很难阅读和维护，我们可以从另一种管道语法中让视图对范围进行操作。通过使用操作符|，可以创建视图的管道:
+这种嵌套很难阅读和维护，可以从另一种管道语法中让视图对范围进行操作。通过使用操作符|，可以创建视图的管道:
 
 \begin{cpp}
 // view with first three squared values of the elements in coll that are multiples of 3:
@@ -360,7 +360,7 @@ std::vector coll{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 9 36 81
 \end{shell}
 
-下面是另一个完整的程序，演示了视图与管道语法的组合性:
+下面是另一个完整的程序，演示了视图与管道语法的组合:
 
 \filename{ranges/viewspipe.cpp}
 
@@ -394,7 +394,7 @@ int main()
 }
 \end{cpp}
 
-这个例子中，对作composers的映射应用了两个视图，其中的元素有他们的名字和出生年份(注意，之类引入了vws作为std::views的快捷方式):
+例子中，对作composers的映射应用了两个视图，其中的元素有他们的名字和出生年份(注意，之类引入了vws作为std::views的快捷方式):
 
 \begin{cpp}
 std::map<std::string, int> composers{ ... };
@@ -415,7 +415,7 @@ composers
 
 \mySamllsection{生成视图}
 
-视图本身也可以生成一系列值。例如，通过使用iota视图，可以遍历从1到10的所有值，如下所示:
+视图本身也可以生成一系列值。例如，通过使用iota视图，可以遍历从1到10的所有值:
 
 \begin{cpp}
 for (int val : std::views::iota(1, 11)) { // iterate from 1 to 10
@@ -437,9 +437,9 @@ for (int val : v1) {
 std::ranges::sort(v2);
 \end{cpp}
 
-然而，大多数关于左值(有名称的范围)的视图都有引用语义，所以必须确保视图的引用范围和迭代器存在并且有效。
+大多数关于左值(有名称的范围)的视图都有引用语义，所以必须确保视图的引用范围和迭代器存在并且有效。
 
-应该使用auto来声明视图，因为指定确切的类型可能很棘手，例如：对于具有std::vector<int>类型的coll, v1和v2都是以下类型:
+指定确切的类型可能很棘手，可以使用auto来声明视图，例如：对于具有std::vector<int>类型的coll, v1和v2都是以下类型:
 
 \begin{cpp}
 std::ranges::take_view<std::ranges::ref_view<std::vector<int>>>
@@ -447,21 +447,21 @@ std::ranges::take_view<std::ranges::ref_view<std::vector<int>>>
 
 在内部，适配器和构造函数可以创建嵌套视图类型，例如std::ranges::take\_view或std::ranges::iota\_view，引用std::ranges::ref\_view，后者用于引用传入的外部容器的元素。
 
-也可以直接声明和初始化真实的视图，但通常应该使用提供的适配器和工厂来创建和初始化视图。使用适配器和工厂通常更好，因为它们更容易使用，通常更智能，并且可以提供优化。例如，若传递的范围已经是std::string\_view, take()可能只产生一个std::string\_view。
+也可以直接声明和初始化真实的视图，但通常应该使用提供的适配器和工厂来创建和初始化视图。使用适配器和工厂通常更好，因为更容易使用、更智能，并且可以提供优化。例如，若传递的范围已经是std::string\_view，take()可能只产生一个std::string\_view。
 
 现在，可能想知道所有这些视图类型是否会在代码大小和运行时间上产生巨大的开销。注意，视图类型只使用小的或不重要的内联函数，所以至少在通常情况下，优化编译器可以避免显著的开销。
 
 \mySamllsection{写入视图}
 
-左值视图通常具有引用语义，原则上，视图既可以用于读取，也可以用于写入。
+左值视图通常具有引用语义，所以视图既可以用于读取，也可以用于写入。
 
-例如，我们只能对coll的前五个元素进行排序，如下所示:
+例如，只能对coll的前五个元素进行排序:
 
 \begin{cpp}
 std::ranges::sort(std::views::take(coll, 5)); // sort the first five elements of coll
 \end{cpp}
 
-或如下:
+或:
 
 \begin{cpp}
 std::ranges::sort(coll | std::views::take(5)); // sort the first five elements of coll
@@ -479,7 +479,7 @@ std::ranges::sort(coll | std::views::take(5)); // sort the first five elements o
 
 \mySamllsection{延迟计算}
 
-除了具有引用语义之外，视图还使用延迟求值。所以当视图的迭代器调用begin()或++或请求元素的值时，视图会对下一个元素进行处理:
+除了具有引用语义之外，视图还使用延迟求值。所以当视图的迭代器调用begin()、自加操作符或请求元素的值时，视图会对下一个元素进行处理:
 
 \begin{cpp}
 auto v = coll | std::views::take(5); // neither goes to the first element nor to its value
@@ -495,7 +495,7 @@ std::cout << *pos; // goes to its value
 
 \mySamllsection{缓存}
 
-此外，一些视图使用缓存。若使用begin()访问视图的第一个元素需要一些计算(因为我们跳过了前导元素)，视图可能会缓存begin()的返回值，以便下次调用begin()时，不必再次计算第一个元素的位置。
+此外，一些视图使用缓存。若使用begin()访问视图的第一个元素需要一些计算(因为跳过了前导元素)，视图可能会缓存begin()的返回值，以便下次调用begin()时，不必再次计算第一个元素的位置。
 
 然而，这种优化有一些后果:
 
@@ -504,20 +504,20 @@ std::cout << *pos; // goes to its value
 当视图为const时，可能无法遍历视图。
 
 \item
-即使没有修改任何东西，并发迭代也会导致未定义的行为。
+即使没有修改任何东西，并发迭代也会导致未定义行为。
 
 \item
 早期的读访问可能会使视图元素的后期迭代失效或更改。
 \end{itemize}
 
-我们将在后面详细讨论所有这些。现在，当修改发生时，标准视图是有害的:
+我们将在后面详细讨论所有这些。当修改发生时，标准视图是有害的:
 
 \begin{itemize}
 \item
-在基础范围中插入或删除元素，可能会对视图的功能产生重大影响。经过这样的修改后，视图的行为可能会有所不同，甚至不再有效。
+在范围中插入或删除元素，可能会对视图的功能产生重大影响。经过这样的修改后，视图的行为可能会有所不同，甚至不再有效。
 \end{itemize}
 
-因此，强烈建议在需要视图之前使用它们——创建视图并使用。若在初始化视图和使用视图之间发生修改，则必须小心。
+因此，强烈建议在需要视图之前使用它们——创建视图并使用。若在初始化视图和使用视图之间发生修改，则必须谨慎。
 
 \mySubsubsection{6.1.4}{哨兵}
 
@@ -536,24 +536,24 @@ nullptr标记链表的结束
 -1表示非负整数列表的结束
 \end{itemize}
 
-在ranges库中，哨兵定义范围的结束。在STL的传统方法中，哨兵将是end迭代器，通常与迭代集合的迭代器具有相同的类型。然而，在C++20范围中，不再需要这种类型。
+在范围库中，哨兵定义范围的结束。在STL的传统方法中，哨兵将是end迭代器，通常与迭代集合的迭代器具有相同的类型。但在C++20范围中，不再需要这种类型。
 
-end迭代器必须与定义范围的开始迭代器和用于遍历元素的迭代器具有相同的类型，这一要求导致了一些缺陷。创建一个end迭代器可能很昂贵，甚至是不可能的:
+end迭代器必须与定义范围的开始迭代器和用于遍历元素的迭代器具有相同的类型，这一要求导致了一些缺陷。创建一个end迭代器可能很昂贵，甚至不可能:
 
 \begin{itemize}
 \item
-若要使用C字符串或字符串字面值作为范围，首先必须通过遍历字符来计算end迭代器，直到找到'\verb|\|0'。因此，在使用字符串作为范围之前，必须已经完成了第一次迭代，处理所有的元素需要第二次迭代。
+若要使用C字符串或字符串字面值作为范围，首先必须通过遍历字符来计算end迭代器，直到找到'\verb|\|0'，所以在使用字符串作为范围之前，必须已经完成了第一次迭代，处理所有的元素需要第二次迭代。
 
 \item
-通常，若用某个值定义范围的结束，则适用此原则。若需要一个end迭代器来处理范围，首先必须遍历整个范围以找到它的end。
+通常，若用某个值定义范围的结束，则适用此原则。若需要一个end迭代器来处理范围，首先必须遍历整个范围以找到其end。
 
 \item
 有时，不可能迭代两次(一次查找末尾，一次处理范围的元素)。这适用于使用纯输入迭代器的范围，例如：使用从其读取的输入流作为范围。为了计算输入的末尾(可能是EOF)，必须读取输入。再次读取输入是不可能的，或者会产生不同的值。
 \end{itemize}
 
-end迭代器作为哨兵的泛化解决了这个难题。C++20范围支持不同类型的哨兵(end迭代器)，可以表示“直到'\verb|\|0'”，“直到EOF”，或直到任何其他值，甚至可以发出“没有终点”的信号来定义无限的范围，或说“嘿，迭代器，自己检查是否有终点。”
+end迭代器作为哨兵的泛化解决了这个难题。C++20范围支持不同类型的哨兵(end迭代器)，可以表示“直到'\verb|\|0'”，“直到EOF”，或直到任何值，甚至可以发出“没有终点”的信号来定义无限的范围，或说“嘿，迭代器，自己检查是否有终点。”
 
-注意，C++20前，也可以有这些类型的哨兵，但必须与迭代器具有相同的类型。输入流迭代器就是一个例子:一个std::istream\_iterator<>类型的默认构造迭代器被用来创建一个流结束迭代器，这样就可以用算法处理流中的输入，直到文件结束或出现错误:
+注意，C++20前，也可以有这些类型的哨兵，但必须与迭代器具有相同的类型。输入流迭代器就是一个例子:std::istream\_iterator<>类型的默认构造迭代器可用来创建一个流结束迭代器，这样就可以用算法处理流中的输入，直到文件结束或出现错误:
 
 \begin{cpp}
 // print all int values read from standard input:
@@ -564,7 +564,7 @@ std::for_each(std::istream_iterator<int>{std::cin}, // read ints from cin
 		});
 \end{cpp}
 
-通过放宽哨兵(end迭代器)现在必须与迭代迭代器具有相同类型的要求，可获得了几个好处:
+通过放宽哨兵(end迭代器)现在必须与迭代迭代器具有相同类型的要求，有几个好处:
 
 \begin{itemize}
 \item
@@ -577,7 +577,7 @@ std::for_each(std::istream_iterator<int>{std::cin}, // read ints from cin
 定义end迭代器变得更加容易。
 \end{itemize}
 
-让我们看一个简单的例子，使用不同类型的哨兵来迭代迭代器类型不同的“范围”:
+来看一个简单的例子，使用不同类型的哨兵来迭代迭代器类型不同的“范围”:
 
 \filename{ranges/sentinel1.cpp}
 
@@ -619,7 +619,7 @@ h e l l o   w o r l d
 h e l l o   w o r l d
 \end{shell}
 
-在程序中，首先定义一个end迭代器，将end定义为具有等于'\verb|\|0'的值:
+首先定义一个end迭代器，将end定义为具有等于'\verb|\|0'的值:
 
 \begin{cpp}
 struct NullTerm {
@@ -633,10 +633,10 @@ struct NullTerm {
 
 \begin{itemize}
 \item
-定义成员函数operator==()时，使用auto作为形参类型，就使成员函数具有泛型，这样操作符==就可以与任意类型的对象pos进行比较(前提是pos引用的值与'\verb|\|0'的比较是有效的)。
+定义成员函数==操作符时，使用auto作为形参类型，就使成员函数具有泛型，这样==操作符就可以与任意类型的对象pos进行比较(前提是pos引用的值与'\verb|\|0'的比较是有效的)。
 
 \item
-只将操作符==定义为泛型成员函数，尽管算法通常使用操作符!=来比较迭代器和哨兵，C++20现在可以用任意顺序的操作数将操作符!=映射到操作符==。
+只将==操作符定义为泛型成员函数，尽管算法通常使用!=操作符来比较迭代器和哨兵，C++20现在可以用任意顺序的操作数将!=映射到==操作符。
 \end{itemize}
 
 \mySamllsection{直接使用哨兵}
@@ -649,9 +649,9 @@ for (auto pos = rawString; pos != NullTerm{}; ++pos) {
 }
 \end{cpp}
 
-将pos初始化为一个迭代器，该迭代器遍历字符并使用*pos输出其值。当其与NullTerm\{\}的比较产生pos的值不等于'\verb|\|0'时，循环运行。这样，NullTerm\{\}就起到了哨兵的作用。其类型与pos不同，但支持与pos进行比较，从而检查pos所引用的当前值。
+将pos初始化为一个迭代器，该迭代器遍历字符并使用*pos输出其值。当其与NullTerm\{\}的比较产生pos的值不等于'\verb|\|0'时，循环运行。因此，NullTerm\{\}就起到了哨兵的作用。其类型与pos不同，但支持与pos进行比较，从而检查pos所引用的当前值。
 
-这里可以看到哨兵是end迭代器的泛化。它们可能与遍历元素的迭代器类型不同，但支持与迭代器进行比较，以确定是否位于范围的末端。
+这里可以看到哨兵是end迭代器的泛化。可能与遍历元素的迭代器类型不同，但支持与迭代器进行比较，以确定是否位于范围的末端。
 
 \mySamllsection{将哨兵传递给算法}
 
@@ -663,14 +663,14 @@ std::ranges::for_each(rawString, // begin of range
 						... );
 \end{cpp}
 
-命名空间std中的算法仍然要求开始迭代器和结束迭代器具有相同的类型，不能这样使用:
+命名空间std中的算法仍然要求开始和结束迭代器具有相同的类型，不能这样使用:
 
 \begin{cpp}
 std::for_each(rawString, NullTerm{}, // ERROR: begin and end have different types
 			... );
 \end{cpp}
 
-若有两个不同类型的迭代器，则类型std::common\_iterator为传统算法提供了一种协调它们的方法。这很有用，因为数字算法、并行算法和容器仍然要求开始迭代器和结束迭代器具有相同的类型。
+若有两个不同类型的迭代器，则类型std::common\_iterator为传统算法提供了一种协调方法，因为数字算法、并行算法和容器仍然要求开始和结束迭代器具有相同的类型。
 
 \mySubsubsection{6.1.5}{用哨兵计数和定义范围}
 
@@ -678,19 +678,19 @@ std::for_each(rawString, NullTerm{}, // ERROR: begin and end have different type
 
 \begin{itemize}
 \item
-同一类型的开始迭代器和结束迭代器
+同一类型的开始和结束迭代器
 
 \item
-一个开始迭代器和一个哨兵(可能是不同类型的结束标记)
+开始迭代器和哨兵(可能是不同类型的结束标记)
 
 \item
-一个begin迭代器和一个count
+开始迭代器和count
 
 \item
 数组
 \end{itemize}
 
-ranges库支持所有这些范围的定义和使用。
+范围库支持所有这些范围的定义和使用。
 
 首先，算法以这样一种方式实现:范围可以是数组。例如:
 
@@ -704,7 +704,7 @@ std::ranges::sort(rawArray); // sort elements in the raw array
 
 \mySamllsection{子范围}
 
-为了定义迭代器和哨兵的范围，ranges库提供了std::ranges::subrange<>类型。
+为了定义迭代器和哨兵的范围，范围库提供了std::ranges::subrange<>类型。
 
 来看一个使用子范围的简单例子:
 
@@ -746,13 +746,13 @@ int main()
 
 作为一个哨兵的例子，定义了类型NullTerm作为哨兵的类型，用于检查字符串的空结束符是否作为范围的结束。
 
-通过使用std::ranges::subrange，程序定义了一个range对象，表示字符串的开始，哨兵作为字符串的结束:
+通过使用std::ranges::subrange，代码定义了一个范围对象，表示字符串的开始，哨兵作为字符串的结束:
 
 \begin{cpp}
 std::ranges::subrange rawStringRange{rawString, NullTerm{}};
 \end{cpp}
 
-子范围是泛型类型，可将迭代器和哨兵定义的范围转换为表示该范围的单个对象。实际上，range甚至是一个视图，在内部只存储迭代器和哨兵。所以子范围具有引用语义，并且复制成本很低。
+子范围是泛型类型，可将迭代器和哨兵定义的范围转换为表示该范围的单个对象。实际上，范围甚至是一个视图，在内部只存储迭代器和哨兵。所以子范围具有引用语义，并且复制成本很低。
 
 作为子范围，可以将范围传递给将范围作为单个参数的新算法:
 
@@ -760,7 +760,7 @@ std::ranges::subrange rawStringRange{rawString, NullTerm{}};
 std::ranges::for_each(rawStringRange, ... ); // OK
 \end{cpp}
 
-注意，子范围并不总是通用范围，对它们调用begin()和end()可能会产生不同的类型，子范围只产生被传递来定义范围的内容。
+子范围并不总是通用范围，对它们调用begin()和end()可能会产生不同的类型，子范围只产生传递定义范围的内容。
 
 即使子范围不是公共范围，也可以将其传递给基于范围的for循环。基于范围的for循环接受开始迭代器和哨兵(结束迭代器)类型不同的范围(该特性已经在C++17中引入，但是对于范围和视图):
 
@@ -770,7 +770,7 @@ for (char c : std::ranges::subrange{rawString, NullTerm{}}) {
 }
 \end{cpp}
 
-通过定义一个类模板，可以在其中指定范围结束的值，从而使这种方法更加通用。考虑下面的例子:
+通过定义一个类模板，可以在其中指定范围结束的值，从而使这种方法更加通用:
 
 \filename{ranges/sentinel3.cpp}
 
@@ -811,7 +811,7 @@ int main()
 }
 \end{cpp}
 
-这里，将EndValue<>定义为结束迭代器，检查作为模板形参传递的结束值。EndValue<7>\{\}创建一个结束迭代器，其中7结束范围，EndValue<-1>\{\}创建一个结束迭代器，其中-1结束范围。
+将EndValue<>定义为结束迭代器，检查作为模板形参传递的结束值。EndValue<7>\{\}创建一个结束迭代器，其中7结束范围，EndValue<-1>\{\}创建一个结束迭代器，其中-1结束范围。
 
 程序输出如下:
 
@@ -820,7 +820,7 @@ int main()
 0 8 15 42 7
 \end{shell}
 
-可以定义任何受支持的非类型模板参数类型的值。
+可以定义受支持的非类型模板参数类型的值。
 
 作为哨兵的另一个例子，请查看std::unreachable\_sentinel。这是C++20定义的一个值，用来表示无限范围的“结束”，可以优化代码，使其永远不会与末尾进行比较(因为若总是产生false，则比较是无用的)。
 
@@ -828,9 +828,9 @@ int main()
 
 \mySamllsection{范围的开始和计数}
 
-ranges库提供了多种处理定义为起始和计数的范围的方法。
+范围库提供了多种处理定义为起始和计数的范围的方法。
 
-使用begin迭代器和计数创建范围的最方便方法，是使用范围适配器std::views:: counts()。创建了一个指向begin迭代器/指针的前n个元素的低成本视图。
+使用begin迭代器和计数创建范围的最方便方法，是使用范围适配器std::views::counted()。创建了一个指向begin迭代器/指针的前n个元素的低成本视图。
 
 例如:
 
@@ -845,9 +845,9 @@ if (std::ranges::distance(pos5, coll.end()) >= 3) {
 }
 \end{cpp}
 
-这里，std::views:: counts (pos5, 3)创建了一个视图，该视图表示从pos5所引用的元素开始的三个元素。注意，counts()不会检查是否存在元素(传递的计数过高会导致未定义的行为)，开发者要确保代码是有效的。因此，使用std::ranges::distance()，检查是否有足够的元素(注意，若集合没有随机访问迭代器，这种检查的开销可能会很大)。
+这里，std::views::counted(pos5, 3)创建了一个视图，该视图表示从pos5所引用的元素开始的三个元素。注意，counted()不会检查是否存在元素(传递的计数过高会导致未定义行为)，开发者要确保代码的有效性。因此，需要使用std::ranges::distance()，检查是否有足够的元素(注意，若集合没有随机访问迭代器，这种检查的开销可能会很大)。
 
-若知道有一个值为5的元素后面至少有两个元素，也可以这样写:
+若知道有一个值为5的元素后面至少有两个元素，也可以这样:
 
 \begin{cpp}
 // if we know there is a 5 and at least two elements behind:
@@ -858,9 +858,9 @@ for (int val : std::views::counted(std::ranges::find(coll, 5), 3)) {
 
 计数可能为0，则该范围为空。
 
-注意，只有当你确实有一个迭代器和一个计数时，才可以使用counts()。若已经有了一个范围，并且只想处理前n个元素，请使用std::views::take()。
+注意，只有当你确实有一个迭代器和一个计数时，才可以使用counted()。若已经有了一个范围，并且只想处理前n个元素，请使用std::views::take()。
 
-详细信息请参见对std::views::counts()的描述。
+详细信息请参见对std::views::counted()的描述。
 
 \mySubsubsection{6.1.6}{投影}
 
@@ -901,7 +901,7 @@ std::ranges::sort(coll,
 
 用户定义的投影只需要接受一个参数并为转换后的参数返回一个值。
 
-正您所见，元素必须可排序的要求考虑了投影:
+元素必须可排序的要求考虑了投影:
 
 \begin{cpp}
 requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
@@ -909,14 +909,14 @@ requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
 
 \mySubsubsection{6.1.7}{实现范围代码的工具}
 
-为了方便针对所有不同类型的范围进行编程，ranges库提供了以下工具:
+为了方便针对所有不同类型的范围进行编程，范围库提供了以下工具:
 
 \begin{itemize}
 \item
-泛型函数，例如，生成迭代器或范围的大小
+泛型函数，生成迭代器或范围的大小
 
 \item
-类型函数，例如，产生迭代器的类型或元素的类型
+类型函数，生成迭代器的类型或元素的类型
 \end{itemize}
 
 假设想要实现一个在一个范围内产生最大值的算法:
@@ -943,7 +943,7 @@ std::ranges::range_value_t<Range> maxValue(const Range& rg)
 }
 \end{cpp}
 
-这里，我们使用几个标准实用程序来处理范围rg:
+这里，使用几个标准实用程序来处理范围rg:
 
 \begin{itemize}
 \item
@@ -962,7 +962,7 @@ std::ranges::range_value_t<Range> maxValue(const Range& rg)
 辅助函数std::ranges::end()产生范围的哨兵(结束迭代器)
 \end{itemize}
 
-在这些类型工具的帮助下，该算法甚至适用于所有范围(包括数组)，因为也为它们定义了工具。
+在这些类型工具的帮助下，因为也为它们定义了工具，所以该算法甚至适用于所有范围(包括数组)。
 
 例如，std::ranges::empty()尝试调用成员函数empty()、成员函数size()、独立函数size()，或者检查开始迭代器和哨兵(结束迭代器)是否相等。稍后将详细记录范围的工具函数。
 
@@ -973,7 +973,7 @@ template<std::ranges::input_range Range>
 std::ranges::range_value_t<Range> maxValue(Range&& rg)
 \end{cpp}
 
-稍后将详细讨论这一点。
+稍后将详细讨论。
 
 \mySubsubsection{6.1.8}{范围的局限性和缺点}
 
@@ -996,7 +996,7 @@ std::ranges::sort(std::execution::par, cont); // ERROR: not provided
 std::sort(std::execution::par, cont.begin(), cont.end()); // OK
 \end{cpp}
 
-但请注意，在通过向视图传递begin()和end()来使用现有的并行算法时，应该非常小心。对于某些视图，并发迭代会导致未定义的行为，只有在将视图声明为const之后才这样做。
+通过向视图传递begin()和end()来使用现有的并行算法时，应该谨慎。对于某些视图，并发迭代会导致未定义行为，只有在将视图声明为const之后才这样做。
 
 \item
 一些由开始迭代器和结束迭代器定义的范围的传统api要求迭代器具有相同的类型(例如，这适用于容器和命名空间std中的算法)。可能需要与std::views::common()或std::common\_iterator协调其类型。
@@ -1005,13 +1005,13 @@ std::sort(std::execution::par, cont.begin(), cont.end()); // OK
 对于某些视图，当视图为const时，不能遍历元素，所以泛型代码可能必须使用通用/转发引用。
 
 \item
-cbegin()和cend()函数的设计目的是确保不会(意外地)修改所遍历的元素，但对于引用非const对象的视图来说，是无效的。
+cbegin()和cend()函数的设计目的是确保不会(意外地)修改所遍历的元素，但对于引用非const对象的视图来说无效。
 
 \item
-当视图引用容器时，它们的const性传播可能会被破坏。
+当视图引用容器时，可能会破坏const的传播。
 
 \item
-范围会导致严重的名称空间混乱。例如，看看下面的std::find()声明，但所有标准名称都是完全限定的:
+范围会导致严重的命名空间混乱。例如，下面的std::find()声明，所有标准名称都是完全限定的:
 
 \begin{cpp}
 template<std::ranges::input_range Rg,
@@ -1026,7 +1026,7 @@ constexpr std::ranges::borrowed_iterator_t<Rg>
 
 要知道在哪里应该使用哪个命名空间确实不容易。
 
-此外，在命名空间std和命名空间std::ranges中，有些符号的行为略有不同。上面的声明中，equal\_to就是这样一个例子。也可以使用std::equal\_to，但一般来说，std::ranges中的工具提供了更好的支持，并且对于极端情况会更健壮。
+此外，在命名空间std和命名空间std::ranges中，有些符号的行为略有不同。上面的声明中，equal\_to就是这样一个例子。也可以使用std::equal\_to，但std::ranges中的工具提供了更好的支持，并且对于极端情况的处理会更健壮。
 \end{itemize}
 
 

@@ -90,7 +90,7 @@ std::constructible\_from和std::convertible\_to适用于任何T、T\&、const T�
 \item
 保证类型T的对象可析构而不抛出异常。
 
-注意，即使是实现的析构函数也会自动保证不抛出，除非你显式地用noexcept(false)标记。
+注意，即使是实现的析构函数也会自动保证不抛出，除非显式地用noexcept(false)标记。
 
 \item
 要求:
@@ -123,7 +123,7 @@ std::ranges::swap()可以为两个类型为T的对象调用
 保证类型T支持自增操作符。
 
 \item
-注意，这个概念并不要求相同值的两次增量产生相同的结果，所以这只是单通迭代的要求。
+注意，这个概念并不要求相同值的两次增量产生相同的结果，所以这只是单向迭代的要求。
 
 \item
 与std::incrementable相比，若满足以下条件，这个概念也能得到满足:
@@ -163,21 +163,21 @@ std::iter\_difference\_t<T>是一个有效的有符号整型
 保证类型T是一个可递增的类型，这样您就可以对相同的值序列进行多次迭代。
 
 \item
-与std::weak \_incrementable不同，这个概念要求:
+与std::weak\_incrementable不同，这个概念要求:
 
 \begin{itemize}
 \item
 相同值的两次增量产生相同的结果(就像前向迭代器的情况一样)
 
 \item
-类型T是默认可构造的、可复制的和相等可比的
+类型T是默认可构造的、可复制的和可比较的
 
 \item
 后置自增操作符返回迭代器的副本(返回类型为T)。
 \end{itemize}
 
 \item
-注意，与概念std::weak \_incrementable的区别纯粹是语义上的区别，所以于增量产生不同结果的类型，在技术上可能仍然满足概念incrementable。要针对这种语义差异实现不同的行为，您应该使用迭代器概念。
+注意，与概念std::weak \_incrementable的区别纯粹是语义上的区别，所以于增量产生不同结果的类型，在技术上可能仍然满足概念incrementable。要针对这种语义差异实现不同的行为，应该使用迭代器概念。
 
 \item
 要求:
@@ -186,6 +186,6 @@ std::iter\_difference\_t<T>是一个有效的有符号整型
 满足std::weakly\_incrementable<T>
 
 \item
-满足std::regular<T>，使得该类型是默认可构造的、可复制的和相等可比较的
+满足std::regular<T>，使得该类型是默认可构造的、可复制的和可比较的
 \end{itemize}
 \end{itemize}

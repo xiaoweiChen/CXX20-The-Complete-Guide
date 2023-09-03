@@ -27,7 +27,7 @@ Lambda表达式
 Op可以是函数、函数对象、Lambda或指向成员的指针。
 
 \item
-要证明操作和传递的参数都没有修改，可以使用std::regular\_invocable代替。但请注意，这两个概念之间只有语义上的差异，不能在编译时进行检查，所以概念上的差异只说明了意图。
+要证明操作和传递的参数都没有修改，可以使用std::regular\_invocable代替，这两个概念之间只有语义上的差异，不能在编译时进行检查，所以概念上的差异只说明了意图。
 
 \item
 例如:
@@ -49,7 +49,7 @@ void testCallable()
 }
 \end{cpp}
 
-注意，作为类型约束，只需要指定参数类型:
+作为类型约束，只需要指定参数类型:
 
 \begin{cpp}
 void callWithIntAndString(std::invocable<int, std::string> auto op);
@@ -92,7 +92,7 @@ std::invoke(op, args)对Op类型和ArgTypes...类型的args有效
 保证可调用的(函数，函数对象，Lambda)Op是一个谓词，可以为ArgTypes...类型的参数所调用。
 
 \item
-若依调用既不改变所传递操作的状态，也不改变所传递参数的状态。
+调用既不改变所传递操作的状态，也不改变所传递参数的状态。
 
 \item
 要求:
@@ -245,7 +245,7 @@ Op::min()小于Op::max()
 Op\&和Pos的值，以及(常见)引用类型都满足std::regular\ _invocation
 
 \item
-同时使用值和引用调用Op的结果具有共同的引用类型
+同时使用值和引用调用Op的结果是，具有共同的引用类型
 \end{itemize}
 \end{itemize}
 
@@ -291,7 +291,7 @@ Pos1和Pos2满足了std::indirect\_readable
 若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-所有这些对Pred的调用都会产生一个可作为布尔值使用的值
+所有这些对Pred的调用都会产生一个可作为布尔值的值
 \end{itemize}
 \end{itemize}
 
@@ -317,7 +317,7 @@ Pos1和Pos2满足了std::indirect\_readable
 若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-所有这些对Pred的调用都会产生一个可以作为布尔值使用的值
+所有这些对Pred的调用都会产生一个可以作为布尔值的值
 \end{itemize}
 \end{itemize}
 
@@ -343,7 +343,7 @@ Pos1和Pos2满足了std::indirect\_readable
 若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-所有这些对Pred的调用都会产生一个可以作为布尔值使用的值
+所有这些对Pred的调用都会产生一个可以作为布尔值的值
 \end{itemize}
 \end{itemize}
 

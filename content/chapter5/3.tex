@@ -1,7 +1,7 @@
 
-本节列出迭代器和范围的所有基本概念，这些概念在算法和类似函数中很有用。
+本节列出迭代器和范围的所有基本概念，在算法和类似函数中都很有用。
 
-注意，范围的概念是在命名空间std::ranges中提供的，不是在std中。并在头文件<ranges>中声明。
+注意，范围的概念是在命名空间std::ranges中提供的(不是在std中)，并在头文件<ranges>中声明。
 
 迭代器的概念在头文件<iterator>中声明。
 
@@ -21,14 +21,14 @@
 \item
 Rg类型的对象支持通过使用std::ranges::begin()和std::ranges::end()对元素进行迭代。
 
-若范围是一个数组，或者提供begin()和end()成员，或者可以与独立的begin()和end()函数一起使用，就会出现这种情况。
+若范围是一个数组，或者提供begin()和end()成员，或与独立的begin()和end()函数一起使用，就会出现这种情况。
 
 \item
 此外，对于std::ranges::begin()和std::ranges::end()，适用以下约束:
 
 \begin{itemize}
 \item
-必须在(平摊的)常数时间内运行。
+必须在(平均的)常数时间内运行。
 
 \item
 不修改范围。
@@ -37,7 +37,7 @@ Rg类型的对象支持通过使用std::ranges::begin()和std::ranges::end()对�
 begin()在多次调用时产生相同的位置(除非该范围至少不提供前向迭代器)。
 \end{itemize}
 
-可以以良好的性能迭代所有元素(甚至多次迭代，除非有纯输入迭代器)。
+以良好的性能迭代所有元素(甚至多次迭代，除非有纯输入迭代器)。
 
 \item
 要求:
@@ -52,7 +52,7 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 
 \begin{itemize}
 \item
-保证Rg至少可提供接受T类型值的输出迭代器(可以用来编写的迭代器)的范围。
+保证Rg可提供接受T类型值的输出迭代器(可以用来编写的迭代器)的范围。
 
 \item
 要求:
@@ -71,7 +71,7 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 
 \begin{itemize}
 \item
-保证Rg是一个至少提供输入迭代器(可用于读取的迭代器)的范围。
+保证Rg是一个输入迭代器(可用于读取的迭代器)的范围。
 
 \item
 要求:
@@ -89,10 +89,10 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 
 \begin{itemize}
 \item
-保证Rg是一个至少提供前向迭代器(可用于读写和多次迭代的迭代器)的范围。
+保证Rg是一个前向迭代器(可用于读写和多次迭代的迭代器)的范围。
 
 \item
-注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，它是std::input\_iterator\_tag(若可用)。
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，是std::input\_iterator\_tag(若可用)。
 
 \item
 要求:
@@ -110,10 +110,10 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 
 \begin{itemize}
 \item
-保证Rg是一个至少提供双向迭代器的范围(可以用于读写和向后迭代的迭代器)。
+保证Rg是一个双向迭代器的范围(可以用于读写和向后迭代的迭代器)。
 
 \item
-注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，它是std::input\_iterator\_tag(若可用)。
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，是std::input\_iterator\_tag(若可用)。
 
 \item
 要求:
@@ -134,7 +134,7 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 保证Rg是一个提供随机访问迭代器(可用于读写、前后跳转和计算距离的迭代器)的范围。
 
 \item
-注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，它是std::input\_iterator\_tag(若可用)。
+注意，迭代器的iterator\_category成员可能不匹配。对于产生左值的迭代器，是std::input\_iterator\_tag(若可用)。
 
 \item
 要求:
@@ -168,7 +168,7 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 迭代器类型满足std::contiguous\_iterator
 
 \item
-调用std::ranges::data()将生成指向第一个元素的裸指针
+std::ranges::data()将生成指向第一个元素的裸指针
 \end{itemize}
 \end{itemize}
 
@@ -179,7 +179,7 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 保证Rg是可以在常量时间内计算出元素数量的范围(通过调用成员size()或通过计算开始和结束之间的差值)。
 
 \item
-若满足这个概念，std::ranges::size()对于Rg类型的对象是快速且定义良好的。
+若满足这个概念，std::ranges::size()对于Rg类型的对象是定义良好的。
 
 \item
 注意，这个概念的性能方面是一个语义约束，不能在编译时检查。为了表明一个类型即使提供了size()也不满足这个概念，可以定义std::disable\_size\_range<Rg>产生true[disable\_size\_range的真正含义是“忽略size\_range的size()”。]。
@@ -203,7 +203,7 @@ begin()在多次调用时产生相同的位置(除非该范围至少不提供前
 保证Rg是一个范围，其中开始迭代器和哨兵(结束迭代器)具有相同的类型。
 
 \item
-保证总是由:
+保证是由:
 
 \begin{itemize}
 \item
@@ -250,13 +250,13 @@ std::ranges::iterator\_t<Rg>和std::ranges::sentinel\_t<Rg>具有相同类型
 
 \begin{itemize}
 \item
-保证在当前上下文中传递的范围Rg，产生即使该范围不再存在也可以使用的迭代器。若传递左值或传递的范围始终是借来的范围，则满足该概念。
+保证在当前上下文中传递的范围Rg，产生即使该范围不再存在也可以使用的迭代器。若传递左值或传递的范围始终是租借范围，则满足该概念。
 
 \item
 若满足这个概念，则范围的迭代器与范围的生命周期无关。所以当创建迭代器的范围被销毁时，迭代器不能挂起。但若范围的迭代器指向基础范围，并且基础范围不再存在，则其仍然可以悬挂。
 
 \item
-形式上，若Rg是左值(例如有名称的对象)，或者变量模板std::ranges::enable\_borrow\_range<Rg>为真，则满足该概念，以下视图都是如此:subrange、ref\_view、string\_view、span、iota\_view和empty\_view。
+形式上，若Rg是左值(有名称的对象)，或者变量模板std::ranges::enable\_borrow\_range<Rg>为真，则满足该概念，以下视图都是如此:subrange、ref\_view、string\_view、span、iota\_view和empty\_view。
 
 \item
 要求:
@@ -274,10 +274,10 @@ Rg是左值或enable\_borrow\_range<Rg>产生true
 
 \begin{itemize}
 \item
-保证Rg是一个视图(复制、移动、赋值和销毁代价很低的范围)。
+保证Rg是一个视图(复制、移动、赋值和销毁成本很低的范围)。
 
 \item
-视图有以下要求:[最初，C++20要求视图也应该是默认可构造的，并且销毁应该是低开销的，但\url{http://wg21.link/p2325r3}和\url{http://wg21.link/p2415r2}删除了这些要求。]
+视图有以下要求:[最初，C++20要求视图也应该是默认可构造的，并且销毁应该是低成本的，但\url{http://wg21.link/p2325r3}和\url{http://wg21.link/p2415r2}删除了这些要求。]
 
 \begin{itemize}
 \item
@@ -290,7 +290,7 @@ Rg是左值或enable\_borrow\_range<Rg>产生true
 移动构造函数和复制构造函数(若可用)必须具有恒定的复杂性。
 
 \item
-移动赋值运算符和复制赋值运算符(若可用的话)都必须是低开销的(保持不变的复杂度，或者不比销毁加创建的复杂度更低)。
+移动赋值运算符和复制赋值运算符(若可用的话)，必须是低成本的(保持不变的复杂度，或者不比销毁加创建的复杂度更低)。
 \end{itemize}
 
 除最后一个要求外，所有要求都通过相应的概念进行检查。最后一个要求是语义约束，必须由类型的实现者通过从std::ranges::view\_interface公开派生或特化std::ranges::enable\_view<Rg>生成true来保证。
@@ -331,12 +331,11 @@ Rg是左值或enable\_borrow\_range<Rg>产生true
 
 \mySubsubsection{5.3.2}{类指针对象的概念}
 
-本节列出了对象的所有标准概念，可以使用操作符*来处理它们所指向的值。这通常适用于裸指针、智能指针和迭代器，所以这些概念通常用作处理迭代器和算法的概念的基本约束。
+本节列出了对象的所有标准概念，可以使用解引用操作符来处理它们所指向的值。这通常适用于裸指针、智能指针和迭代器，所以这些概念通常用作处理迭代器和算法的概念的基本约束。
 
 注意，这些概念不需要支持操作符->。
 
 这些概念在头文件<iterator>中声明。
-
 
 \mySamllsection{基本概念的间接支持}
 
@@ -355,7 +354,7 @@ Rg是左值或enable\_borrow\_range<Rg>产生true
 
 \begin{itemize}
 \item
-保证P是一个类似指针的对象，支持*的读访问方式。
+保证P是一个类似指针的对象，支持解引用操作符的读访问方式。
 
 \item
 满足裸指针，智能指针和迭代器。
@@ -365,7 +364,7 @@ Rg是左值或enable\_borrow\_range<Rg>产生true
 要求:
 \begin{itemize}
 \item
-结果值对于const和非const对象具有相同的引用类型(排除了std::optional<>)，这确保了P的constness不会传播到所指向的位置(当操作符返回对成员的引用时通常不会出现这种情况)。
+结果值对于const和非const对象具有相同的引用类型(排除了std::optional<>)，这确保了P的常量性不会传播到所指向的位置(当操作符返回对成员的引用时通常不会出现这种情况)。
 
 \item
 std::iter\_value\_t<P>必须有效，该类型不必支持操作符->。
@@ -383,7 +382,7 @@ std::iter\_value\_t<P>必须有效，该类型不必支持操作符->。
 保证InP的值可以直接赋值给OutP。
 
 \item
-有了这个概念，以下代码是有效的:
+有了这个概念，以下代码则有效:
 
 \begin{cpp}
 void foo(InP inPos, OutP, outPos) {
@@ -409,7 +408,7 @@ std::indirectly\_writable满足从InP值到OutP的右值引用
 保证InP的值可以间接赋值给OutP，即使在使用OutP指向的类型的(临时)对象时也是如此。
 
 \item
-有了这个概念，以下代码是有效的:
+有了这个概念，以下代码则有效:
 
 \begin{cpp}
 void foo(InP inPos, OutP, outPos) {
@@ -442,7 +441,7 @@ InP引用的右值是可复制/移动的、可构造的和可赋值的
 保证InP的值可以直接赋值给OutP。
 
 \item
-有了这个概念，以下代码是有效的:
+有了这个概念，以下代码则有效:
 
 \begin{cpp}
 void foo(InP inPos, OutP outPos) {
@@ -468,7 +467,7 @@ std::indirectly\_writable满足于对InP值的引用(OutP值)可赋值
 保证InP的值可以间接赋值给OutP，即使在使用OutP指向类型的(临时)对象时也是如此。
 
 \item
-有了这个概念，以下代码是有效的:
+有了这个概念，以下代码则有效:
 
 \begin{cpp}
 void foo(InP inPos, OutP outPos) {
@@ -507,7 +506,7 @@ InP引用的值是可复制/移动的、可构造的和可赋值的
 满足std::indirect\_readable<P1>(和std::indirect\_readable<P2>)
 
 \item
-对于任意两个类型为P1和P2的对象，支持std::ranges::iter\_swap()
+任意两个类型为P1和P2的对象，支持std::ranges::iter\_swap()
 \end{itemize}
 \end{itemize}
 
@@ -530,7 +529,7 @@ std::projected<P1, Proj1>和std::projected<P2, Proj2>满足std::identity为默�
 
 \mySubsubsection{5.3.3}{迭代器的概念}
 
-本节列出了需要不同类型迭代器的概念。其处理的是自C++20起的新迭代器类别，它们与范围的概念相对应。
+本节列出了需要不同类型迭代器的概念。其处理的是自C++20起的新迭代器类别，与范围的概念相对应。
 
 这些概念在头文件<iterator>中提供。
 
@@ -538,7 +537,7 @@ std::projected<P1, Proj1>和std::projected<P2, Proj2>满足std::identity为默�
 
 \begin{itemize}
 \item
-保证Pos支持所有迭代器的基本接口:operator++和operator*，其中operator*必须引用一个值。
+保证Pos支持所有迭代器的基本接口:自加和解引用操作符，其中解引用操作符必须引用一个值。
 
 这个概念并不要求迭代器可复制(所以，这低于算法使用的迭代器的基本要求)。
 
@@ -549,7 +548,7 @@ std::projected<P1, Proj1>和std::projected<P2, Proj2>满足std::identity为默�
 满足std::weakly\_incrementable<pos>
 
 \item
-操作符*产生了一个引用
+解引用操作符生成了一个引用
 \end{itemize}
 \end{itemize}
 
@@ -567,7 +566,7 @@ Pos类型的迭代器可用于赋值T类型的值val:
 \end{cpp}
 
 \item
-这些迭代器只适用于单遍迭代。
+这些迭代器只适用于单向迭代。
 
 \item
 要求:
@@ -587,7 +586,7 @@ Pos类型的迭代器可用于赋值T类型的值val:
 保证Pos是一个输入迭代器(可以从元素中读取值的迭代器)。
 
 \item
-若std::forward\_iterator也不满足，这些迭代器只适用于单通迭代。
+若std::forward\_iterator也不满足，这些迭代器只适用于单向迭代。
 
 \item
 要求:
@@ -697,7 +696,7 @@ Pos有一个派生自std::random\_access\_iterator\_tag的迭代器类别
 Pos有一个派生自std::consecuous\_iterator\_tag的迭代器类别
 
 \item
-元素的to\_address()是指向该元素的裸指针
+元素的to\_address()可指向该元素的裸指针
 \end{itemize}
 \end{itemize}
 
@@ -717,7 +716,7 @@ Pos有一个派生自std::consecuous\_iterator\_tag的迭代器类别
 满足std::input\_or\_output\_iterator<Pos> 
 
 \item
-可以使用操作符==和!=比较Pos和S
+可以使用==和!=操作符比较Pos和S
 \end{itemize}
 \end{itemize}
 
@@ -750,7 +749,7 @@ std::disable\_size\_sentinel\_for<S, Pos>未定义为返回true
 
 \begin{itemize}
 \item
-保证您可以使用操作符++向前迭代，并通过移动和交换元素来重新排序
+保证您可以使用向前自加操作符迭代，并通过移动和交换元素来重新排序
 
 \item
 要求:
