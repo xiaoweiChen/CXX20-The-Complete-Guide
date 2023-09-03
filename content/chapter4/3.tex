@@ -1,4 +1,4 @@
-为模板制定约束的基本方法是使用requires子句:requires后跟一个布尔表达式。在requires之后，约束可以使用编译时布尔表达式，而不仅仅是概念或requires表达式。这些表达可以使用:
+为模板制定约束的基本方法是使用requires子句:requires后跟一个布尔表达式。requires之后，约束可以使用编译时布尔表达式，而不仅是概念或requires表达式。这些表达可以使用:
 
 \begin{itemize}
 \item
@@ -15,7 +15,7 @@
 
 \begin{itemize}
 \item
-仅当int和long的大小不同时可用:
+当int和long的大小不同时:
 
 \begin{cpp}
 template<typename T>
@@ -24,7 +24,7 @@ requires (sizeof(int) != sizeof(long))
 \end{cpp}
 
 \item
-仅当sizeof(T)不是太大时可用:
+仅当sizeof(T)不是太大时:
 
 \begin{cpp}
 template<typename T>
@@ -33,7 +33,7 @@ requires (sizeof(T) <= 64)
 \end{cpp}
 
 \item
-仅当非类型模板参数Sz大于零时可用:
+仅当非类型模板参数Sz大于零时:
 
 \begin{cpp}
 template<typename T, std::size_t Sz>
@@ -42,7 +42,7 @@ requires (Sz > 0)
 \end{cpp}
 
 \item
-仅对裸指针和nullptr可用:
+仅对裸指针和nullptr时:
 
 \begin{cpp}
 template<typename T>
@@ -50,7 +50,7 @@ requires (std::is_pointer_v<T> || std::same_as<T, std::nullptr_t>)
 ...
 \end{cpp}
 
-Std::same\_as是一个新的标准概念，也可以使用标准类型trait std::is\_same\_v<>:
+std::same\_as是一个新的标准概念，也可以使用标准类型特性std::is\_same\_v<>:
 
 \begin{cpp}
 template<typename T>
@@ -59,7 +59,7 @@ requires (std::is_pointer_v<T> || std::is_same_v<T, std::nullptr_t>)
 \end{cpp}
 
 \item
-仅当参数不能用作字符串时可用:
+当参数不能用作字符串时:
 
 \begin{cpp}
 template<typename T>
@@ -84,14 +84,14 @@ requires std::integral<std::remove_reference_t<decltype(*std::declval<T>())>>
 ...
 \end{cpp}
 
-注意，操作符*通常产生一个非整型的引用，所以我们做了以下工作:
+注意，操作符*通常产生一个非整型的引用，所以做了以下工作:
 
 \begin{itemize}
 \item
 假设有一个类型为T的对象:std::declare<T>()
 
 \item
-为对象调用operator*:*
+为对象调用解引用操作符:*
 
 \item
 获取其类型:decltype()
@@ -100,15 +100,15 @@ requires std::integral<std::remove_reference_t<decltype(*std::declval<T>())>>
 删除引用:std::remove \_reference\_v<>
 
 \item
-检查是否为整型: std::integral<>
+检查是否为整型:std::integral<>
 \end{itemize}
 
-这个约束也可以通过std::optional<int>来进行。
+约束也可以通过std::optional<int>进行。
 
 std::integral是一个新的标准概念，也可以使用标准类型特征:std::is\_integral\_v<>.
 
 \item
-仅当非类型模板参数Min和Max的最大公约数(GCD)大于1时可用:
+当非类型模板参数Min和Max的最大公约数(GCD)大于1时:
 
 \begin{cpp}
 template<typename T>

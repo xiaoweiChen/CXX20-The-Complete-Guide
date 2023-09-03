@@ -1,16 +1,16 @@
 
 
-需求表达式(不同于requires子句)提供了一种简单而灵活的语法，用于在一个或多个模板参数上指定多个需求。可以指定:
+需求表达式(不同于requires子句)提供了一种简单而灵活的语法，用于在一个或多个模板参数上指定多个需求:
 
 \begin{itemize}
 \item
 必需的类型定义
 
 \item
-表达式必须是有效的
+表达式必须有效
 
 \item
-对表达式产生的类型的要求
+对表达式产生类型的要求
 \end{itemize}
 
 表达式以requires开头，后跟一个可选的参数列表，然后是一个需求块(都以分号结束)。例如:
@@ -33,7 +33,7 @@ template<typename T>
 	}
 \end{cpp}
 
-这些形参永远不会被实参取代，所以通过值或引用声明它们并不重要。
+这些形参永远不会被实参取代，所以通过值或引用声明它们都可以。
 
 参数还允许引入子类型(参数):
 
@@ -48,7 +48,7 @@ template<typename Coll>
 
 注意，此参数列表中的类型成员不必用typename限定。
 
-当使用此方法仅检查Coll::value\_type是否有效时，在需求块的主体中不需要任何内容，但不能为空。因此，可以简单地使用true:
+当使用此方法检查Coll::value\_type是否有效时，在需求块的主体中不需要任何内容，但不能为空。因此，可以简单地使用true:
 
 \begin{cpp}
 template<typename Coll>
@@ -60,8 +60,6 @@ template<typename Coll>
 \mySubsubsection{4.4.1}{简单的需求}
 
 简单的需求就是必须格式良好的表达式，必须进行编译。调用不会执行，从而操作产生的结果并不重要。
-
-例如:
 
 \begin{cpp}
 template<typename T1, typename T2>
@@ -76,13 +74,13 @@ template<typename T1, typename T2>
 
 最后一个调用不要求p是nullptr(要做到这一点，必须检查T2是否是类型std::nullptr\_t)。相反，可以要求将T2类型的对象与nullptr类型的对象进行比较。
 
-通常使用运算符||是没有意义的。一个简单的需求，例如
+通常使用运算符||没什么意义。一个简单的需求，例如
 
 \begin{cpp}
 *p > val || p == nullptr;
 \end{cpp}
 
-不要求左子表达式或右子表达式是可能的，其规定了可以用运算符||组合两个子表达式的结果的要求。
+不要求左子表达式或右子表达式可能成立，其规定了可以用运算符||组合两个子表达式结果的要求。
 
 要满足这两个子表达式中的一个，必须使用:
 
@@ -116,7 +114,7 @@ template<typename T>
 	};
 \end{cpp}
 
-或者，如下所示:
+或者:
 
 \begin{cpp}
 template<typename T>
@@ -130,8 +128,6 @@ template<typename T>
 
 类型需求是在使用类型名称时必须格式良好的表达式，所以名称必须定义为有效类型。
 
-例如:
-
 \begin{cpp}
 template<typename T1, typename T2>
 ... requires {
@@ -143,7 +139,7 @@ template<typename T1, typename T2>
 
 对于所有类型需求，若类型存在但为空，则满足需求。
 
-注意，只能检查给定类型的名称(类名、枚举类型的名称，来自typedef或using)。不能使用类型检查其他类型声明:
+只能检查给定类型的名称(类名、枚举类型的名称，来自typedef或using)，不能使用类型检查其他类型声明:
 
 \begin{cpp}
 template<typename T>
@@ -153,7 +149,7 @@ template<typename T>
 }
 \end{cpp}
 
-测试后者的方法是声明一个相应的形参:
+测试后者的方法是声明相应的形参:
 
 \begin{cpp}
 template<typename T>
@@ -162,7 +158,7 @@ template<typename T>
 };
 \end{cpp}
 
-同样，需求检查使用传递的类型来定义另一个类型是否有效。例如:
+同样，需求检查使用传递的类型来定义另一个类型是否有效:
 
 \begin{cpp}
 template<std::integral T>
@@ -182,7 +178,7 @@ mytype1(42); // OK
 mytype1(7.7); // ERROR
 \end{cpp}
 
-因此，以下要求不检查类型T是否存在标准哈希函数:
+因此，以下需求不检查类型T是否存在标准哈希函数:
 
 \begin{cpp}
 template<typename T>
@@ -200,7 +196,7 @@ concept StdHash = requires {
 };
 \end{cpp}
 
-注意，简单需求只检查需求是否有效，而不检查需求是否满足。出于这个原因:
+注意，简单的需求只检查需求是否有效，而不检查需求是否满足。出于这个原因:
 
 \begin{itemize}
 \item
@@ -223,7 +219,7 @@ template<typename T>
 requires表达式中，可以使用嵌套的需求(见下文)。
 
 \item
-使用总是产生类型的类型函数没有意义:
+使用产生类型的类型函数没有意义:
 
 \begin{cpp}
 template<typename T>
@@ -235,7 +231,7 @@ template<typename T>
 需求只检查类型表达式是否产生类型，这总是正确的。
 \end{itemize}
 
-使用可能具有未定义行为的类型函数也没有意义。例如，类型特性std::make\_unsigned<>要求传递的参数是整型而不是bool型。若传递的类型不是整型，则会得到未定义的行为，所以不应该使用std::make\_unsigned<>作为要求，而不限制调用其类型:
+使用可能具有未定义行为的类型函数也没有意义。例如，类型特性std::make\_unsigned<>要求传递的参数是整型，而非bool型。若传递的类型不是整型，则会得到未定义的行为，所以不应该使用std::make\_unsigned<>作为需求，而不限制调用其类型:
 
 \begin{cpp}
 template<typename T>
@@ -256,7 +252,7 @@ template<typename T>
 
 \mySubsubsection{4.4.3}{复合需求}
 
-复合需求允许将简单需求和类型需求结合起来，可以指定一个表达式(在大括号内)，然后添加以下一个或两个:
+复合需求允许将简单需求和类型需求结合起来，可以指定一个表达式(大括号内)，然后添加以下一个或两个:
 
 \begin{itemize}
 \item
@@ -292,10 +288,10 @@ template<typename T>
 \end{cpp}
 
 \item
-最后一个需求中，需求可以将两个T类型对象的operator==的结果用作bool(当将两个T类型对象和bool类型对象的operator==的结果作为参数传递时，满足std::convertible\_to的概念)。
+最后一个需求中，需求可以将两个T类型对象的==操作符的结果用作bool(当将两个T类型对象和bool类型对象的==操作符的结果作为参数传递时，满足std::convertible\_to的概念)。
 \end{itemize}
 
-需求表达式还可以表达对关联类型的需求。例如:
+需求表达式还可以表达对关联类型的需求:
 
 \begin{cpp}
 template<typename T>
@@ -304,13 +300,13 @@ template<typename T>
 }
 \end{cpp}
 
-但是，不能使用嵌套类型指定类型需求。例如，不能使用它们来要求调用运算符*的返回值产生整数值。问题是，返回值是一个引用，必须先解除引用:
+但不能使用嵌套类型指定类型需求，例如：不能使用它们来要求调用运算符*的返回值产生整数值。其中的问题是，返回值是一个引用，必须先解除引用:
 
 \begin{cpp}
 std::integral<std::remove_reference_t<T>>
 \end{cpp}
 
-而且不能在requires表达式的结果中使用带有类型特性的嵌套表达式:
+而且不能在requires表达式的结果中，使用带有类型特性的嵌套表达式:
 
 \begin{cpp}
 template<typename T>
@@ -320,7 +316,7 @@ concept Check = requires(T p) {
 };
 \end{cpp}
 
-要么先定义一个相应的概念:
+要么先定义相应的概念:
 
 \begin{cpp}
 template<typename T>
@@ -336,7 +332,7 @@ concept Check = requires(T p) {
 
 \mySubsubsection{4.4.4}{嵌套需求}
 
-嵌套需求可用于在requires表达式中指定附加约束。以requires开头，后跟一个编译时布尔表达式，该表达式本身也可能是或使用一个requires表达式。嵌套需求的好处是，可以确保编译时表达式(使用所需表达式的参数或子表达式)产生特定的结果，而不是仅仅确保表达式有效。
+嵌套需求可用于在requires表达式中指定附加约束。以requires开头，后跟一个编译时布尔表达式，该表达式本身也可能是或使用requires表达式。嵌套需求的好处是，可以确保编译时表达式(使用所需表达式的参数或子表达式)产生特定的结果，而不是仅仅确保表达式有效。
 
 例如，考虑一个概念，必须确保对于给定类型，操作符*和操作符[]产生相同的类型。通过使用嵌套需求，可以这样指定:
 
@@ -356,7 +352,7 @@ concept DerefAndIndexMatch = std::same_as<decltype(*std::declval<T>()),
 			 decltype(std::declval<T>()[0])>;
 \end{cpp}
 
-作为另一个例子，可以使用嵌套需求来解决刚才介绍的，在表达式上指定复杂类型需求的问题:
+另一个例子，可以使用嵌套需求来解决刚才，在表达式上指定复杂类型需求的问题:
 
 \begin{cpp}
 template<typename T>
@@ -379,7 +375,7 @@ template<typename T>
 
 \begin{itemize}
 \item
-第一个表达式只要求检查const性并对结果取反有效，这个需求总是可满足(即使T是const int)，因为做这个检查总是有效的。所以，这个需求毫无价值。
+第一个表达式只要求检查const性并对结果取反有效，这个需求总是可满足(即使T是const int)，因为做这个检查总是有效的，所以这个需求毫无价值。
 
 \item
 第二个需求表达式必须满足。若T是int则满足要求，但若T是const int则不满足。

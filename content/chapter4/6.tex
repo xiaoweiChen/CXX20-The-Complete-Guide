@@ -29,11 +29,11 @@ concept MyConcept = requires(T x) {
 	};
 \end{cpp}
 
-这里，我们使用一元约束，对表达式返回的单个参数或类型调用一元约束。
+这里，使用一元约束，对表达式返回的单个参数或类型调用一元约束。
 
 \mySamllsection{具有多参数的类型约束}
 
-也可以使用带有多个参数的约束，然后将参数类型或返回值用作第一个参数:
+也可以使用带有多个参数的约束，将参数类型或返回值用作第一个参数:
 
 \begin{cpp}
 template<std::convertible_to<int> T> // conversion to int required
@@ -51,7 +51,7 @@ concept MyConcept = requires(T x) {
 	};
 \end{cpp}
 
-另一个经常使用的例子是约束可调用对象(函数、函数对象、Lambda)的类型，可以使用std::invocable或std::regular\_invocable概念传递一定数量的特定类型的参数。例如，要求传递一个接受int和std::string的操作，则必须声明:
+另一个经常使用的例子是约束可调用对象(函数、函数对象、Lambda)的类型，可以使用std::invocable或std::regular\_invocable概念传递一定数量的特定类型的参数，例如：要求传递一个接受int和std::string的操作，则必须声明:
 
 \begin{cpp}
 template<std::invocable<int, std::string> Callable>
@@ -77,7 +77,7 @@ void foo(const std::integral auto& val)
 }
 \end{cpp}
 
-然而，也可以对auto使用类型约束，如下所示:
+然而，也可以对auto使用类型约束:
 
 \begin{itemize}
 \item
@@ -111,7 +111,7 @@ class SizedColl {
 \end{cpp}
 \end{itemize}
 
-这也适用于接受多个参数的概念:
+也适用于接受多个参数的概念:
 
 \begin{cpp}
 template<typename T, std::convertible_to<T> auto DefaultValue>

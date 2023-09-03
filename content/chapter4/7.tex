@@ -22,7 +22,7 @@ concept ColoredGeoObject =
 
 因为它显式地规定了类型T也必须满足概念GeoObject的约束，所以概念ColoredGeoObject显式地包含了概念GeoObject。
 
-因此，当为两个概念重载模板并且两个概念都满足时，不会得到歧义错误，重载解析更倾向于包含其他概念的概念:
+当为两个概念重载模板并且两个概念都满足时，不会得到歧义错误，重载解析更倾向于包含其他概念的概念:
 
 \begin{cpp}
 template<GeoObject T>
@@ -40,7 +40,7 @@ void process(T) // called for objects that provide setColor() and getColor()
 
 约束包含仅在使用概念时起作用。当一个概念/约束比另一个更特殊时，不存在自动包含。
 
-约束和概念不会仅仅基于需求进行包含。考虑下面的例子:
+约束和概念不会仅仅基于需求进行包含:
 
 \begin{cpp}
 // declared in a header file:
@@ -57,7 +57,7 @@ concept Cowboy = requires(T obj) {
 				};
 \end{cpp}
 
-假设为GeoObject和Cowboy重载一个函数模板:
+假设为GeoObject和Cowboy重载函数模板:
 
 \begin{cpp}
 template<GeoObject T>
@@ -109,7 +109,7 @@ void print(T) {
 print(42); // OK
 \end{cpp}
 
-产生这种行为的一个原因是，详细处理概念之间的依赖关系需要编译时间。
+产生这种行为的一个原因是，处理概念之间的依赖关系需要更多编译的时间。
 
 C++标准库提供的概念经过精心设计，以便在有意义时包含其他概念。事实上，标准概念构建了一个相当复杂的包含图。例如:
 
@@ -117,7 +117,7 @@ C++标准库提供的概念经过精心设计，以便在有意义时包含其�
 \item
 std::random\_access\_range包含了std::bidirectional\_range，两者都包含了std::forward\_range，三者都包含了std::input\_range，所以都包含了std::range。
 
-但是，std::sized\_range只包含std::range，而不包含其他的。
+但是，std::sized\_range只包含std::range，而不包含其他的概念。
 
 \item
 std::regular包含了std::semiregular，而两者都包含了std::copyable和std::default\_initializable(其中包含了其他几个概念，如std::movable、std::copy\_constructible和std::destructible)。
@@ -140,7 +140,7 @@ template<typename T>
 concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
 \end{cpp}
 
-现在，当我们为这两个概念重载两个函数，并传递一个同时适合这两个概念的对象时，这并不具有二义性:
+现在，当为这两个概念重载两个函数，并传递一个同时适合这两个概念的对象时，这并不具有二义性:
 
 \begin{cpp}
 template<RgSwap T>
@@ -156,7 +156,7 @@ void foo1(T) {
 foo1(std::vector<int>{}); // OK: both fit, ContCopy is more constrained
 \end{cpp}
 
-原因是ContCopy包含RgSwap，因为:
+原因是ContCopy包含RgSwap:
 
 \begin{itemize}
 \item
@@ -192,15 +192,15 @@ template<typename T>
 concept ContMove = std::ranges::contiguous_range<T> && std::movable<T>;
 \end{cpp}
 
-一方面，ContMove更受约束，因为contiguous\_range意味着input\_range。另一方面，因为copyable包含着可移动，所以RgCopy更受约束。
+一方面，ContMove更受约束，因为contiguous\_range包含input\_range。另一方面，因为copyable包含着movable，所以RgCopy更受约束。
 
-为了避免混淆，不要对相互包含的概念做太多的假设。若有疑问，请指定所需的所有概念。
+为了避免混淆，不要对相互包含的概念做太多的假设。若有疑问，请指定所需的所有具体概念。
 
 \mySubsubsection{4.7.2}{定义交换概念}
 
-要正确地实现假设，必须非常小心。一个很好的例子是std::same\_as概念的实现，它检查两个模板形参是否具有相同的类型。
+要正确地实现假设，必须非常谨慎。一个很好的例子是std::same\_as概念的实现，检查两个模板形参是否具有相同的类型。
 
-为了理解为什么定义概念并不简单，假设定义了一个概念SameAs，如下所示:
+为了理解为什么定义概念并不简单，假设定义了概念SameAs:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -230,9 +230,9 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-这里，foo()的第二个定义包含了第一个定义，所以当传递了两个相同整型的参数并且两个foo()的约束都满足时，调用第二个foo()。
+这里，foo()的第二个定义包含了第一个定义，当传递了两个相同整型的参数，并且两个foo()的约束都满足时，会调用第二个foo()。
 
-但请注意，当在第二个foo()的约束中调用SameAs<>时，若稍微修改参数会发生什么:
+但当在第二个foo()的约束中调用SameAs<>时，若稍微修改参数会发生什么:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -252,7 +252,7 @@ void foo(T, U)
 foo(1, 2); // ERROR: ambiguity: both constraints are satisfied without one subsuming the other
 \end{cpp}
 
-问题是编译器无法检测到SameAs<>是可交换的。对于编译器来说，模板参数的顺序很重要。因此，第一个需求不一定是第二个需求的子集。
+问题是编译器无法检测到SameAs<>是可交换的。对于编译器来说，模板参数的顺序很重要，所以第一个需求不一定是第二个需求的子集。
 
 为了解决这个问题，必须以一种不影响参数顺序的方式来设计SameAs概念，这里需要一个辅助概念:
 
@@ -286,7 +286,7 @@ foo(1, 2); // OK: second foo() preferred
 
 编译器可以发现第一个构建块SameAs<U,T>是SameAs定义的子概念的一部分，因此其他构建块SameAs<T,U>和std::integral<T>是扩展，所以第二个foo()更优先使用。
 
-C++20标准库提供的概念(请参见std::same\_as)中就包含了类似这样的棘手细节。因此，应该在它们适合你的需求时使用它们，而不是定义自己的概念。
+C++20标准库提供的概念(请参见std::same\_as)中就包含了类似这样棘手的细节，所以应该在适合需求时使用，而不是定义自己的概念。
 
 \begin{cpp}
 template<typename T, typename U>
@@ -306,7 +306,7 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-对于您自己的概念，请考虑尽可能更多的使用方法(和滥用)，越多越好。就像任何好的软件一样，概念也需要好的设计和测试用例。
+对于自定义的概念，请考虑尽可能更多的使用方法(和滥用)，越多越好。就像任何好的软件一样，概念也需要好的设计和测试用例。
 
 
 

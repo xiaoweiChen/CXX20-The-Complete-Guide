@@ -2,18 +2,18 @@ requires子句使用关键字requires和编译时布尔表达式来限制模板�
 
 \begin{itemize}
 \item
-特别的布尔编译时表达式
+编译时的布尔表达式
 
 \item
-一个概念
+概念
 
 \item
-一个requires表达式
+requires表达式
 \end{itemize}
 
 可以使用布尔表达式的地方都可以使用有约束(特别是以if constexpr作为条件的)。
 
-\mySubsubsection{4.2.1}{在requires字句中使用\&\&和||}
+\mySubsubsection{4.2.1}{requires子句中使用\&\&和||}
 
 要在requires子句中组合多个约束，可以使用运算符\&\&。例如:
 
@@ -27,7 +27,7 @@ void foo(T x) {
 }
 \end{cpp}
 
-约束的顺序无关紧要。
+约束顺序无所谓。
 
 还可以使用运算符||表示“可选”约束。例如:
 
@@ -37,7 +37,7 @@ requires std::integral<T> || std::floating_point<T>
 T power(T b, T p);
 \end{cpp}
 
-很少需要指定可选约束，也不应该随意指定，因为在requires子句中过度使用运算符||可能会增加编译资源的负担(使编译明显变慢)。
+很少需要指定可选约束，也不应该随意指定，在requires子句中过度使用运算符||可能会增加编译资源的负担(使编译明显变慢)。
 
 单个约束还可以涉及多个模板参数，约束可以在多个类型(或值)之间施加影响。例如:
 
