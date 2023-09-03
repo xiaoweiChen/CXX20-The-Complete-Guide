@@ -3,13 +3,13 @@
 
 \begin{itemize}
 \item
-\textbf{语法约束}在编译时，可以检查是否满足某些功能需求(“是否支持特定的操作?或“特定操作是否产生特定类型?”)。
+\textbf{语法约束}在编译时，可以检查是否满足某些功能需求(“是否支持特定的操作?”或“特定操作是否产生特定类型?”)。
 
 \item
-\textbf{语义约束}满足了某些只能在运行时检查的需求(“操作是否具有相同的效果?”)或“对特定值执行相同的操作是否总是产生相同的结果?”)。
+\textbf{语义约束}满足了某些只能在运行时检查的需求(“操作是否具有相同的效果?”或“对特定值执行相同的操作是否总是产生相同的结果?”)。
 \end{itemize}
 
-有时，概念允许开发者通过提供接口来指定是否满足语义约束，从而将语义约束转换为语法约束。
+有时，概念允许开发者通过接口来指定是否满足语义约束，从而将语义约束转换为语法约束。
 
 \mySubsubsection{3.4.1}{语义约束的例子}
 
@@ -17,9 +17,9 @@
 
 \mySamllsection{std::ranges::sized\_range}
 
-语义约束的第一个例子是概念std::ranges::sized\_range，其保证可以在常量时间内计算一个范围内的元素数量(通过调用成员size()或通过计算开始和结束之间的差值)。
+语义约束的第一个例子是概念std::ranges::sized\_range，其保证可以在常量时间内计算一个范围内的元素数量(通过成员函数size()或计算开始和结束之间的差值)。
 
-若范围类型提供size()(作为成员函数或独立函数)，则默认情况下满足此概念。要从这个概念中选择退出(例如，迭代所有元素以产生结果)，可以将std::disable\_size \_range<Rg>设置为true:
+若范围类型提供size()(作为成员函数或独立函数)，则默认情况下满足此概念。要从这个概念中退出(例如，迭代所有元素以产生结果)，可以将std::disable\_size\_range<Rg>设置为true:
 
 \begin{cpp}
 class MyCont {
@@ -32,13 +32,13 @@ constexpr bool std::ranges::disable_sized_range<MyCont> = true;
 
 \mySamllsection{std::ranges::range与std::ranges::view}
 
-语义约束的一个类似示例是概念std::ranges::view。除了一些语法约束外，还保证移动构造函数/赋值、复制构造函数/赋值(如可用)和析构函数具有恒定的复杂性(所花费的时间不取决于元素的数量)。
+语义约束的一个示例是概念std::ranges::view。除了一些语法约束外，还保证移动构造函数/赋值、复制构造函数/赋值(如可用)和析构函数具有恒定的复杂性(所花费的时间不取决于元素的数量)。
 
 实现者可以通过公开地从std::ranges::view\_base或std::ranges::view\_interface<>派生，或者通过将模板特化std::ranges::enable\_view<Rg>设置为true来提供相应的保证。
 
 \mySamllsection{std::invocable和std::regular\_invocable}
 
-语义约束的一个简单示例是std::invocable和std::regular\_invocable概念之间的区别，后者保证不修改传递的操作和传递的参数的状态。
+语义约束的简单示例是std::invocable和std::regular\_invocable概念之间的区别，后者保证不修改传递的操作和传递的参数的状态。
 
 但不能用编译器检查这两个概念之间的区别，所以std::regular\_invocable这个概念记录了指定API的意图。简单起见，这里只使用了std::invocable。
 
@@ -64,7 +64,7 @@ weakly\_incrementable只要求类型支持自增操作符，增加相同的值�
 当仅满足weakly\_incrementable条件时，只能在一个范围内迭代一次。具有相同起始值的第二次迭代可能产生不同的结果。
 \end{itemize}
 
-这种差异对迭代器很重要:输入流迭代器(从流中读取值的迭代器)只能迭代一次，因为下一次迭代产生不同的值。因此，输入流迭代器满足weakly\_incrementable概念，但不满足可递增概念，但这些概念不能用于检查这种差异:
+这种差异对迭代器很重要:输入流迭代器(从流中读取值的迭代器)只能迭代一次，因为下一次迭代产生不同的值，所以输入流迭代器满足weakly\_incrementable概念，但不满足可递增概念，但这些概念不能用于检查这种差异:
 
 \begin{cpp}
 std::weakly_incrementable<std::istream_iterator<int>> // yields true
@@ -81,7 +81,7 @@ template<std::incrementable T>
 void algo2(T beg, T end); // multi-pass algorithm
 \end{cpp}
 
-注意，这里对算法使用了不同的名称。由于无法检查约束的语义差异，因此程开发者可以决定不传递输入流迭代器:
+注意，这里对算法使用了不同的名称。由于无法检查约束的语义差异，因此开发者可以决定不传递输入流迭代器:
 
 \begin{cpp}
 algo1(std::istream_iterator<int>{std::cin}, // OK
@@ -108,7 +108,7 @@ algo(std::istream_iterator<int>{std::cin}, // OOPS: calls the wrong overload
 	 std::istream_iterator<int>{});
 \end{cpp}
 
-幸运的是，这里有一个解决方案，因为对于这种语义差异，C++98已经引入了迭代器特性，迭代器概念使用了这些特性。若使用这些概念(或相应的范围概念)，一切都会工作的很好:
+这里有一个解决方案，因为对于这种语义差异，C++98已经引入了迭代器特性，迭代器概念使用了这些特性。若使用这些概念(或相应的范围概念)，一切都会很好:
 
 \begin{cpp}
 template<std::input_iterator T>
@@ -121,7 +121,7 @@ algo(std::istream_iterator<int>{std::cin}, // OK: calls the right overload
 	std::istream_iterator<int>{});
 \end{cpp}
 
-推荐使用更具体的迭代器和范围概念，爱也支持新的和修改过的迭代器类别。
+推荐使用更具体的迭代器和范围概念，其也支持新的和修改过的迭代器类别。
 
 
 
