@@ -16,12 +16,12 @@
 %
 \endhead
 %
-r.empty()          & 返回r是否为空(begin() == end()) & 至少是前向迭代器                 \\ \hline
-if (r)             & 若r不为空，则为True                      & 至少是前向迭代器                 \\ \hline
+r.empty()          & 返回r是否为空(begin() == end()) & 前向迭代器                 \\ \hline
+if (r)             & 若r不为空，则为True                      & 前向迭代器                 \\ \hline
 r.size()           & 产生元素的数目               & 是否可以计算和end之间的差值 \\ \hline
-r.front()          & 生成的第一个元素                    & 至少是前向迭代器                 \\ \hline
-r.back() & 生成的最后一个元素                            & 至少双向迭代器和end()产生与begin()相同的类型 \\ \hline
-r{[}idx{]}         & 生成的第n个元素                     & 至少是随机访问迭代器           \\ \hline
+r.front()          & 生成的第一个元素                    & 前向迭代器                 \\ \hline
+r.back() & 生成的最后一个元素                            & 双向迭代器和end()产生与begin()相同的类型 \\ \hline
+r{[}idx{]}         & 生成的第n个元素                     & 随机访问迭代器           \\ \hline
 r.data() & 生成指向元素内存的原始指针 & 元素位于连续内存中                                          \\ \hline
 \end{longtable}
 
@@ -31,7 +31,7 @@ r.data() & 生成指向元素内存的原始指针 & 元素位于连续内存中
 
 类view\_interface<>还为派生自它的每个类型初始化了std::ranges::enable\_view<>，这些类型满足std::ranges::view概念。
 
-当定义自己的视图类型时，应该从view\_interface<>派生，并将自己的类型作为参数传递。例如:
+当自定义视图类型时，应该从view\_interface<>派生，并将自己的类型作为参数传递。例如:
 
 \begin{cpp}
 template<typename T>
@@ -43,13 +43,13 @@ class MyView : public std::ranges::view_interface<MyView<T>> {
 };
 \end{cpp}
 
-基于begin()和end()的返回类型，类型自动提供std::ranges::view\_interface<>的操作表中列出的成员函数，若可用性的先决条件合适。这些成员函数的const版本要求视图类型的const版本是一个有效范围。
+基于begin()和end()的返回类型，类型自动提供std::ranges::view\_interface<>的操作表中列出的成员函数，若可用性的先决条件合适。这些成员函数的const版本要求，视图类型的const版本是一个有效范围。
 
 C++23将添加成员cbegin()和cend()，将其映射到std::ranges::cbegin()和std::ranges::cend()(将与\url{http://wg21.link/p2278r4}一起添加)。
 
 \mySubsubsection{8.2.2}{为什么范围适配器/工厂有自己的命名空间}
 
-范围适配器和工厂有自己的命名空间std::ranges::views，为它们定义了命名空间别名std::views:
+范围适配器和工厂有自己的命名空间std::ranges::views，为其定义了命名空间别名std::views:
 
 \begin{cpp}
 namespace std {
@@ -59,7 +59,7 @@ namespace std {
 
 这样，就可以为可能在其他命名空间(甚至在另一个标准命名空间)中使用的视图使用名称。
 
-因此，可以(也必须)在使用视图时进行限定:
+可以(也必须)在使用视图时进行限定:
 
 \begin{cpp}
 std::ranges::views::reverse // full qualification
@@ -74,7 +74,7 @@ std::vector<int> v;
 take(v, 3) | drop(2); // ERROR: can’t find views (may find different symbol)
 \end{cpp}
 
-即使视图也会产生不属于视图命名空间的对象(在std::ranges中)，在使用视图时仍然需要对视图进行限定:
+即使视图也会产生不属于视图命名空间的对象(std::ranges中)，使用视图时仍然需要对视图进行限定:
 
 \begin{cpp}
 std::vector<int> values{ 0, 1, 2, 3, 4 };
@@ -103,4 +103,4 @@ for (const auto& elem : composers | values) { // OOPS: finds wrong values
 }
 \end{cpp}
 
-本例中，将使用本地向量值，而非视图。若很幸运，会得到了一个编译时错误。若不够幸运，非限定视图会找到不同的符号，这可能会导致遇到使用，甚至覆盖其他对象内存的未定义行为。
+本例中，将使用本地vector值，而非视图。若很幸运，会得到了一个编译时错误。若不够幸运，非限定视图会找到不同的符号，这可能会导致遇到，甚至出现覆盖其他对象内存的未定义行为。

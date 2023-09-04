@@ -35,14 +35,14 @@ std::ranges::subrange s1{std::ranges::find(coll, 15),
 print(coll); // 15 47 11
 \end{cpp}
 
-你可以用结束值的特殊哨兵来初始化子范围:
+可以用结束值的特殊哨兵来初始化子范围:
 
 \begin{cpp}
 std::ranges::subrange s2{coll.begin() + 1, EndValue<-1>{}};
 print(s2); // 8 15 47 11
 \end{cpp}
 
-这两种方法在将一对迭代器转换为范围/视图时都特别有用，例如，这样范围适配器就可以处理元素:
+这两种方法在将一对迭代器转换为范围/视图时都特别有用，这样范围适配器就可以处理元素:
 
 \begin{cpp}
 void foo(auto beg, auto end)
@@ -103,9 +103,9 @@ equal\_range()返回了键为"smart"的dict中所有元素的开头和结尾，�
 std::ranges::subrange(beg, end)
 \end{cpp}
 
-然后，可以将视图传递给printPairs()，遍历元素并打印出来。
+可以将视图传递给printPairs()，遍历元素并输出。
 
-注意，子范围可以改变它的大小，以便在begin和end都有效的情况下在begin和end之间插入或删除元素:
+子范围可以改变它的大小，以便在begin和end都有效的情况下在begin和end之间插入或删除元素:
 
 \begin{cpp}
 std::list coll{1, 2, 3, 4, 5, 6, 7, 8};
@@ -120,7 +120,7 @@ print(v2); // 1 0 2 3 4 5 6 7 8 9
 
 \mySamllsection{子范围的工厂}
 
-没有范围工厂用于从begin(迭代器)和end(哨兵)初始化子范围。然而，有一个范围工厂可以从begin和count创建子范围:[C++20最初声明all()也可以产生子范围。当后来引入了所属视图时，这个选项被删除了(参见\url{http://wg21.link/p2415})]
+没有范围工厂用于从begin(迭代器)和end(哨兵)初始化子范围，但有一个范围工厂可以从begin和count创建子范围:[C++20最初声明all()也可以产生子范围。当后来引入了所属视图时，但这个选项删除了(参见\url{http://wg21.link/p2415})]
 
 \begin{cpp}
 std::views::counted(beg, sz)
@@ -198,12 +198,12 @@ trait:Merkmal car:Auto smart:klug smart:elegant smart:raffiniert strange:fremd
 trait:Merkmal car:Auto smart:klug
 \end{shell}
 
-注意，在极少数情况下，std::views::reverse()也可能产生子范围。当反转一个反转的子范围时，就会发生这种情况，将会得到原始的子范围。
+极少数情况下，std::views::reverse()也可能产生子范围。当反转一个反转的子范围时，就会发生这种情况，将会得到原始的子范围。
 
 
 \mySamllsection{子范围的特殊特征}
 
-子范围可以是也可以不是一个长度范围。实现的方式是，子范围有第三个模板形参，枚举类型std::ranges::subrange\_kind，它的值可以是std::ranges::unsized或std::ranges::sized。该模板形参的值可以指定，也可以从为迭代器和哨兵类型调用的std::sized\_sentinel\_for概念派生。
+子范围可以是也可以不是一个长度范围。实现的方式是，子范围有第三个模板形参，枚举类型std::ranges::subrange\_kind，其值可以是std::ranges::unsized或std::ranges::sized。该模板形参的值可以指定，也可以从为迭代器和哨兵类型调用的std::sized\_sentinel\_for概念派生。
 
 会有以下后果:
 
@@ -243,13 +243,13 @@ std::cout << std::ranges::sized_range<decltype(sl2)>; // true
 
 \mySamllsection{子范围的接口}
 
-“类std::ranges::subrange<>的操作表”列出了子范围的API。
+“类std::ranges::subrange<>的操作”表列出了子范围的API。
 
 只有当迭代器是默认可初始化时，才提供默认构造函数。
 
 使用szHint参数的构造函数，允许开发者将未设置长度的范围转换为设置长度的子范围，如上所示。
 
-子范围的迭代器指向底层(或临时创建的)范围，所以子范围是租借范围。但请注意，当底层范围不再存在时，迭代器仍然为悬空。
+子范围的迭代器指向底层(或临时创建的)范围，所以子范围是租借范围，但当底层范围不再存在时，迭代器仍然悬空。
 
 \mySamllsection{类似元组的子范围接口}
 
@@ -321,7 +321,7 @@ std::same_as<decltype(std::ranges::subrange{a1}),
 			 decltype(std::ranges::subrange{a2})> // true
 \end{cpp}
 
-注意，这只适用于原始数组。对于std::array<>和其他容器，迭代器(可能)具有不同的类型，所以协调的类型与子范围是不可移植的。
+这只适用于原始数组，对于std::array<>和其他容器，迭代器(可能)具有不同的类型，所以协调的类型与子范围不可移植。
 
 \mySubsubsection{8.3.2}{参考视图}
 
@@ -332,7 +332,7 @@ std::same_as<decltype(std::ranges::subrange{a1}),
 %
 \endhead
 %
-\textbf{内容:}              & 一个范围的所有元素   \\ \hline
+\textbf{内容:}              & 范围的所有元素   \\ \hline
 \textbf{工厂:}      & \begin{tabular}[c]{@{}l@{}}std::views::all() and all other adaptors on lvalues\end{tabular} \\ \hline
 \textbf{元素类型:}         & 与传入的范围类型相同                 \\ \hline
 \textbf{要求:}             & 至少为输入范围                     \\ \hline
@@ -409,7 +409,7 @@ int main()
 
 \mySamllsection{参考视图的范围适配器}
 
-参考视图也可以(通常应该)用range工厂创建:
+参考视图也可以(通常应该)用范围工厂创建:
 
 \begin{cpp}
 std::views::all(rg)
@@ -419,7 +419,7 @@ std::views::all()创建一个ref\_view到传入的范围rg，前提是rg是左�
 
 此外，若传递的左值还不是视图，几乎所有其他范围适配器也会创建一个参考视图。
 
-上面的示例程序使用这种间接的方式，通过最后一次调用printByVal()创建了一个参考视图。它传递一个std::ranges::ref\_view<std::vector<std::string>{}>{}>:
+上面的示例程序使用这种间接的方式，通过最后一次调用printByVal()创建了一个参考视图，其传递一个std::ranges::ref\_view<std::vector<std::string>{}>{}>:
 
 \begin{cpp}
 std::vector<std::string> coll{"love", "of", "my", "life"};
@@ -427,7 +427,7 @@ std::vector<std::string> coll{"love", "of", "my", "life"};
 printByVal(std::views::all(coll));
 \end{cpp}
 
-请注意，所有其他接受范围的视图都间接地为传递的范围调用all()(通过使用std::views::all\_t<>)。出于这个原因，若传递一个不是视图的左值给其中一个视图，一个参考视图总是自动创建的。例如，调用:
+请注意，所有其他接受范围的视图都间接地为传递的范围调用all()(通过使用std::views::all\_t<>)。出于这个原因，若传递一个不是视图的左值给其中一个视图，一个参考视图总是自动创建的:
 
 \begin{cpp}
 std::views::take(coll, 3)
@@ -445,11 +445,11 @@ std::ranges::take_view{std::ranges::ref_view{coll}, 3};
 
 \mySamllsection{参考视图的特点}
 
-参考视图存储对基础范围的引用，所以参考视图是一个租借范围。只要引用的视图有效，就可以使用它。例如，若底层视图是一个vector，重新分配并不会使该视图失效。但请注意，当底层范围不再存在时，迭代器仍然可以悬空。
+参考视图存储对基础范围的引用，所以参考视图是一个租借范围。只要引用的视图有效，就可以使用它。例如，若底层视图是一个vector，重新分配并不会使该视图失效。但当底层范围不再存在时，迭代器仍然可以悬空。
 
 \mySamllsection{参考视图的接口}
 
-“类std::ranges::ref\_view<>的操作表”列出了ref\_view的API。
+“类std::ranges::ref\_view<>的操作”表列出了ref\_view的API。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -505,9 +505,9 @@ r.base()           & 生成对r所引用的范围的引用               \\ \hli
 \textbf{传播常量性:} & 总是                                              \\ \hline
 \end{longtable}
 
-类模板std::ranges::owning\_view<>定义了一个获取另一个范围元素所有权的视图。[最初，C++20没有拥有视图，该视图是在后来的修复中引入的(参见\url{http://wg21.link/p2415})。]
+类模板std::ranges::owning\_view<>定义了一个获取另一个范围元素所有权的视图。[最初，C++20没有归属视图，该视图是在后来的修复中引入的(参见\url{http://wg21.link/p2415})。]
 
-这是(到目前为止)唯一可能拥有多个元素的视图，但构造成本仍然很低，因为初始范围必须是右值(临时对象或用std::move()标记的对象)。然后，构造函数将范围移动到视图的内部成员。
+这是(到目前为止)唯一可能拥有多个元素的视图，但构造成本仍然很低，因为初始范围必须是右值(临时对象或用std::move()标记的对象)，构造函数将范围移动到视图的内部成员。
 
 例如:
 
@@ -525,7 +525,7 @@ print(v2); // "tic" "tac" "toe"
 print(arr); // "" "" ""
 \end{cpp}
 
-这是C++20中唯一一个完全不支持复制的标准视图，只能移动它。例如:
+这是C++20中唯一一个完全不支持复制的标准视图，只能移动。例如:
 
 \begin{cpp}
 std::vector coll{0, 8, 15};
@@ -555,7 +555,7 @@ foo(std::ranges::owning_view{std::move(coll)}); // OK: move coll as view
 
 将范围转换为归属视图，通常是通过将临时容器传递给范围适配器来隐式地完成的(见下文)。
 
-\mySamllsection{所属视图的范围适配器}
+\mySamllsection{归属视图的范围适配器}
 
 归属视图也可以(通常应该)用范围工厂创建:
 
@@ -565,7 +565,7 @@ std::views::all(rg)
 
 std::views::all()为传入的范围rg创建一个owning\_view，前提是rg是一个右值而不是一个视图(若已经是一个视图则返回rg，否则传递左值则返回ref视图)。
 
-此外，若传递的右值还不是视图，几乎所有其他范围适配器也会创建一个所属视图。
+此外，若传递的右值还不是视图，几乎所有其他范围适配器也会创建一个归属视图。
 
 因此，上面的例子可以像下面这样对foo()的调用:
 
@@ -623,13 +623,13 @@ std::ranges::drop_view<std::ranges::owning_view<std::vector<std::string>>>
 详细信息请参见std::views::all()的描述。
 
 
-\mySamllsection{所属视图的特殊特性}
+\mySamllsection{归属视图的特殊特性}
 
-拥有视图将传递的范围移动到自身，若拥有的范围是租借范围，则拥有视图是租借范围。
+归属视图将传递的范围移动到自身，若拥有的范围是租借范围，则拥有视图是租借范围。
 
-\mySamllsection{所属视图的接口}
+\mySamllsection{归属视图的接口}
 
-类std::ranges::owning\_view<>的表操作列出了owning\_view的API。
+“类std::ranges::owning\_view<>的操作”表列出了owning\_view的API。
 
 只有当迭代器是默认可初始化时，才提供默认构造函数。
 
@@ -686,7 +686,7 @@ r.base()             & 生成对生成区域的引用                  \\ \hline
 \textbf{传播常量性:} & 只有在右值范围内     \\ \hline
 \end{longtable}
 
-类模板std::ranges::common\_view<>是一个视图，其协调范围的开始迭代器和结束迭代器类型，以便能够将它们传递给需要相同迭代器类型的代码(例如容器的构造函数或传统算法)。
+类模板std::ranges::common\_view<>是一个视图，其协调范围的开始迭代器和结束迭代器类型，以便能够将其传递给需要相同迭代器类型的代码(例如容器的构造函数或传统算法)。
 
 注意，视图的构造函数要求传递的范围不是通用范围(迭代器有不同的类型)。例如:
 
@@ -699,7 +699,7 @@ auto take5 = std::ranges::take_view{lst, 5}; // yields no common view
 auto v2 = std::ranges::common_view{take5}; // OK
 \end{cpp}
 
-相应的范围适配器还可以处理已经很常见的范围，所以最好使用范围适配器std::views::common()来创建通用视图。
+相应的范围适配器还可以处理已经很常见的范围，最好使用范围适配器std::views::common()来创建通用视图。
 
 \mySamllsection{通用视图的范围适配器}
 
@@ -723,7 +723,7 @@ auto v2 = std::views::common(take5); // v2 is common view
 std::vector<int> coll{v2.begin(), v2.end()}; // OK
 \end{cpp}
 
-请注意，通过使用适配器，从已经很常见的范围中创建通用视图并不是编译时错误。这是选择适配器，而非直接初始化视图的关键原因。
+通过使用适配器，从已经很常见的范围中创建通用视图并不是编译时错误。这是选择适配器，而非直接初始化视图的关键原因。
 
 下面是使用通用视图的完整示例程序:
 
@@ -764,7 +764,7 @@ int main()
 }
 \end{cpp}
 
-这里，首先创建一个视图，若不是一个随机访问范围，这是不常见的，所以不能用它来初始化容器的元素:
+这里，首先创建一个视图，若不是一个随机访问范围。这是不常见的，所以不能用它来初始化容器的元素:
 
 \begin{cpp}
 std::vector<std::string> coll2{tv.begin(), tv.end()}; // ERROR: begin/end types differ
@@ -786,7 +786,7 @@ std::vector<int> coll{v2.begin(), v2.end()}; // OK
 
 \mySamllsection{通用视图的接口}
 
-“类std::ranges::common\_view<>的操作表”列出了通用视图的API。
+“类std::ranges::common\_view<>的操作”表列出了通用视图的API。
 
 
 % Please add the following required packages to your document preamble:

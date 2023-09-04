@@ -1,11 +1,11 @@
 
 C++20提供了大量不同的视图。其中一些封装了现有源的元素，其中一些本身生成值，还有许多对元素或值进行操作(过滤或转换)。
 
-本章简要概述了C++ 20中所有可用的视图类型。请注意，对于几乎所有这些类型，都有辅助的范围适配器/工厂，允许开发者通过调用函数或管道来创建视图。通常，应该使用这些适配器和工厂，而不是直接初始化视图，因为适配器和工厂执行额外的优化(例如在不同的视图中选择最佳的)，可以在更多的情况下工作，对需求进行双重检查，并且更容易使用。
+本章简要概述了C++20中所有可用的视图类型，对于几乎所有这些类型，都有辅助的范围适配器/工厂，允许开发者通过调用函数或管道来创建视图。应该使用这些适配器和工厂，而不是直接初始化视图，因为适配器和工厂执行额外的优化(例如在不同的视图中选择最佳的)，可以在更多的情况下工作，对需求进行双重检查，并且更容易使用。
 
 \mySubsubsection{8.1.1}{概述包装和生成视图}
 
-表“包装和生成视图”列出了只能作为管道源元素的标准视图。
+“包装和生成视图”表列出了只能作为管道源元素的标准视图。
 
 这些观点可能是
 
@@ -46,7 +46,7 @@ std::ranges::empty\_view  & empty\textless{}T\textgreater{}                     
 
 该表列出了视图的类型和可用于创建视图的范围适配器/工厂的名称(若有的话)。
 
-对于字符串视图，在C++17中作为std::basic\_string\_view<>类型引入，C++提供了别名类型std::string\_view, std::u8string\_view, std::u16string\_view, std::u32string\_view和std::wstring\_view。
+对于字符串视图，C++17中作为std::basic\_string\_view<>类型引入，C++提供了别名类型std::string\_view, std::u8string\_view, std::u16string\_view, std::u32string\_view和std::wstring\_view。
 
 对于istream视图，其类型std::basic\_istream\_view<>，C++提供了别名std::istream\_view和std::wistream\_view。
 
@@ -63,11 +63,11 @@ span和string\_view在命名空间std中。
 所有其他视图类型都在命名空间std::ranges中提供。
 \end{itemize}
 
-一般来说，最好使用范围适配器和工厂。例如，你应该总是倾向于使用适配器std::views::all()，而不是直接使用类型std::ranges::ref\_view<>和std::ranges::owning\_view<>。然而，在某些情况下，没有提供适配器/工厂，必须直接使用视图类型。最重要的例子是当您必须从一对迭代器创建视图时。在这种情况下，必须直接初始化std::ranges::子范围。
+一般来说，最好使用范围适配器和工厂。应该倾向于使用适配器std::views::all()，而不是直接使用类型std::ranges::ref\_view<>和std::ranges::owning\_view<>。然而，在某些情况下，没有提供适配器/工厂，必须直接使用视图类型。最重要的例子是当必须从一对迭代器创建视图时，必须直接初始化std::ranges::subrange。
 
 \mySubsubsection{8.1.2}{自适应视图概述}
 
-表“适应视图”列出了以某种方式适应给定范围的元素的标准视图(过滤掉元素、修改元素的值、改变元素的顺序，或者组合或创建子范围)，尤其可以在视图的管道中使用。
+“适应视图”表列出了以某种方式适应给定范围的元素的标准视图(过滤掉元素、修改元素的值、改变元素的顺序，或者组合或创建子范围)，尤其可以在视图的管道中使用。
 
 
 \begin{longtable}[c]{|l|l|l|}
@@ -82,14 +82,14 @@ std::ranges::owning\_view    & all(rg)          & 包含范围的视图         
 std::ranges::take\_view      & take(num)        & 第一个(最多)num个元素                \\ \hline
 std::ranges::take\_while\_view & take\_while(pred)                    & 匹配谓词的所有前置元素                   \\ \hline
 std::ranges::drop\_view      & drop(num)        & 除第一个num元素外的所有元素            \\ \hline
-std::ranges::drop\_while\_view & drop\_while(pred)                    & 除了与谓词匹配的前导元素之外的所有元素            \\ \hline
+std::ranges::drop\_while\_view & drop\_while(pred)                    & 除了与谓词匹配的前置元素之外的所有元素            \\ \hline
 std::ranges::filter\_view    & filter(pred)     & 匹配谓词的所有元素           \\ \hline
 std::ranges::transform\_view & transform(func)  & 所有元素转换后的值        \\ \hline
 std::ranges::elements\_view    & elements\textless{}idx\textgreater{} & 所有元素的idxth的成员/属性                       \\ \hline
 std::ranges::keys\_view      & keys             & 所有元素的第一个成员              \\ \hline
 std::ranges::values\_view    & values           & 所有元素的第二个成员             \\ \hline
 std::ranges::reverse\_view   & reverse          & 所有元素按倒序排列                 \\ \hline
-std::ranges::split\_view     & split(sep)       & 范围中的所有元素被分割为子范围 \\ \hline
+std::ranges::split\_view     & split(sep)       & 范围中的所有元素分割为子范围 \\ \hline
 std::ranges::lazy\_split\_view & lazy\_split(sep)                     & 输入范围或常量范围的所有元素拆分为子范围 \\ \hline
 std::ranges::join\_view      & join             & 多个范围的范围中的所有元素    \\ \hline
 std::ranges::common\_view      & common()                             & 迭代器和哨兵中所有类型相同的元素          \\ \hline
@@ -99,7 +99,7 @@ std::ranges::common\_view      & common()                             & 迭代�
 表8.2 适应视图
 \end{center}
 
-同样，推荐使用范围适配器，而不是直接使用视图类型。例如，应该总是倾向于使用适配器std::views::take()，而不是类型std::ranges::take\_view<>，因为当可以简单地跳转到底层范围的第n个元素时，适配器可能根本不会创建take视图。作为另一个例子，应该总是更喜欢使用适配器std::views::common()，而不是类型std::ranges::common\_view<>，因为只有适配器允许传递已经通用的范围(只是接受它们的原样)。用common\_view包装公共范围会导致编译时错误。
+同样，推荐使用范围适配器，而不是直接使用视图类型。应该倾向于使用适配器std::views::take()，而不是类型std::ranges::take\_view<>，当可以简单地跳转到底层范围的第n个元素时，适配器可能根本不会创建获取视图。作为另一个例子，应该总是更喜欢使用适配器std::views::common()，而不是类型std::ranges::common\_view<>，因为只有适配器允许传递已经通用的范围(只是接受它们的原样)，用common\_view包装公共范围会导致编译时错误。
 
 
 
