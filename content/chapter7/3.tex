@@ -6,7 +6,7 @@
 std::counted\_iterator用于迭代器，该迭代器本身有一个计数来指定范围的结束
 
 \item
-std::common\_iterator用于公共迭代器类型，可用于具有不同类型的两个迭代器
+std::common\_iterator用于公共迭代器类型，可用于不同类型的两个迭代器
 
 \item
 std::default\_sentinel\_t用于结束迭代器，强制迭代器检查其结束
@@ -45,10 +45,10 @@ pos != std::default_sentinel; ++pos) {
 }
 \end{cpp}
 
-当视图适配器std::ranges:: counts()为非随机访问迭代器生成子范围时，就会使用此功能。
+当视图适配器std::ranges::counted()为非随机访问迭代器生成子范围时，就会使用此功能。
 \end{itemize}
 
-类std:: counts \_iterator<>的表操作列出了计数迭代器的API。
+“类std::counted\_iterator<>的操作”表列出了计数迭代器的API。
 
 \begin{longtable}[c]{|l|l|}
 \hline
@@ -63,7 +63,7 @@ pos != std::default_sentinel; ++pos) {
 \end{longtable}
 
 \begin{center}
-表7.2 std::counted\_iterator<>类的操作
+表7.2 类std::counted\_iterator<>的操作
 \end{center}
 
 开发者则负责确保:
@@ -81,9 +81,9 @@ pos != std::default_sentinel; ++pos) {
 
 \mySubsubsection{7.3.2}{std::common\_iterator}
 
-类型std::common\_iterator<>用于协调两个迭代器的类型，其包装两个迭代器，以便从外部看，两个迭代器具有相同的类型。在内部，存储两种类型之一的值(为此，迭代器通常使用std::variant<>)。
+类型std::common\_iterator<>用于协调两个迭代器的类型，其包装两个迭代器，以便从外部看，两个迭代器具有相同的类型。在内部，存储两种类型之一的值(迭代器通常使用std::variant<>)。
 
-例如，接受开始迭代器和结束迭代器的传统算法要求这些迭代器具有相同的类型。若有不同类型的迭代器，可以使用这个类型函数来调用这些算法:
+接受开始迭代器和结束迭代器的传统算法要求这些迭代器具有相同的类型，若有不同类型的迭代器，可以使用这个类型函数来调用这些算法:
 
 \begin{cpp}
 algo(beg, end); // if this is an error due to different types
@@ -92,7 +92,7 @@ algo(std::common_iterator<decltype(beg), decltype(end)>{beg}, // OK
 std::common_iterator<decltype(beg), decltype(end)>{end});
 \end{cpp}
 
-注意，若传递给common\_iterator<>的类型相同，则会导致编译时错误，所以在泛型代码中，必须调用:
+若传递给common\_iterator<>的类型相同，则会导致编译时错误，所以在泛型代码中:
 
 \begin{cpp}
 template<typename BegT, typename EndT>
@@ -131,9 +131,9 @@ namespace std {
 }
 \end{cpp}
 
-提供类型和值作为伪哨兵(结束迭代器)，当迭代器无需查看结束迭代器就知道其结束时。对于这些迭代器，定义了与std::default\_sentinel的比较，但从未使用默认的哨兵。相反，迭代器在内部检查它是否在结束处(或距离结束处有多远)。
+提供类型和值作为伪哨兵(结束迭代器)，迭代器无需查看结束迭代器就知道其结束点。对于这些迭代器，定义了与std::default\_sentinel的比较，但从未使用默认的哨兵。相反，迭代器在内部检查它是否在结束处(或距离结束处有多远)。
 
-例如，计数迭代器为自己定义了一个操作符==，并带有一个默认的哨兵来检查其是否位于末尾:
+例如，计数迭代器为自己定义了一个==操作符，并带有一个默认的哨兵来检查其是否位于末尾:
 
 \begin{cpp}
 namespace std {
@@ -174,7 +174,7 @@ std::counted\_iterator:
 \end{itemize}
 
 \item
-std::views:: counts()可以创建一个被计数迭代器的子范围和一个默认的哨兵
+std::views::counted()可以创建一个计数迭代器的子范围和一个默认的哨兵
 
 \item
 std::istream\_iterator:
@@ -184,7 +184,7 @@ std::istream\_iterator:
 默认哨兵可以用作初始值，其效果与默认构造函数相同
 
 \item
-使用操作符==和!=进行比较
+使用==和!=操作符进行比较
 \end{itemize}
 
 \item
@@ -195,7 +195,7 @@ std::istreambuf\_iterator:
 默认哨兵可以用作初始值，其效果与默认构造函数相同
 
 \item
-使用操作符==和!=进行比较
+使用==和!=操作符进行比较
 \end{itemize}
 
 \item
@@ -206,7 +206,7 @@ std::ranges::basic\_istream\_view<>:
 Istream视图生成std::default\_sentinel作为end()
 
 \item
-Istream视图迭代器可以使用==和!=进行比较
+Istream视图迭代器可以使用==和!=操作符进行比较
 \end{itemize}
 
 \item
@@ -214,7 +214,7 @@ std::ranges::take\_view<>:
 
 \begin{itemize}
 \item
-Take视图可能产生std::default\_sentinel作为end()
+获取视图可能产生std::default\_sentinel作为end()
 \end{itemize}
 
 \item
@@ -222,10 +222,10 @@ std::ranges::split\_view<>:
 
 \begin{itemize}
 \item
-Split视图可能产生std::default\_sentinel作为end()
+拆分视图可能产生std::default\_sentinel作为end()
 
 \item
-Split视图迭代器可以使用==和!=进行比较
+拆分视图迭代器可以使用==和!=操作符进行比较
 \end{itemize}
 \end{itemize}
 
@@ -233,16 +233,16 @@ Split视图迭代器可以使用==和!=进行比较
 
 std::unreachable\_sentinel\_t类型的值std::unreachable\_sentinel是在C++20中引入的，用于指定不可达的哨兵(范围的结束迭代器)，其实际上是在说:“不要和我比较。”此类型和值可用于指定无限范围。
 
-使用时，它可以优化生成的代码，因为编译器可以检测到它与另一个迭代器进行比较时永远不会返回true，所以它可能会跳过对末尾的任何检查。
+使用时，它可以优化生成的代码，编译器可以检测到它与另一个迭代器进行比较时永远不会返回true，所以可能会跳过对末尾的检查。
 
-例如，若知道一个值42存在于一个集合中，就可以这样进行搜索:
+例如，若知道42存在于一个集合中，就可以这样进行搜索:
 
 \begin{cpp}
 auto pos42 = std::ranges::find(coll.begin(), std::unreachable_sentinel,
 					42);
 \end{cpp}
 
-通常，该算法将同时比较42和coll.end()(或作为结束/前哨传递的任何内容)。因为使用了unreachable\_sentinel(与迭代器的任何比较总是产生false)，编译器可以优化代码，只与42进行比较，所以开发者必须确保42是存在的。
+该算法将同时比较42和coll.end()(或作为结束/前哨传递的内容)。因为使用了unreachable\_sentinel(与迭代器的任何比较总是产生false)，编译器可以优化代码，只与42进行比较，所以开发者必须确保42是存在的。
 
 iota视图提供了一个对无限范围使用unreachable\_sentinel的示例。
 
@@ -273,7 +273,7 @@ pos != std::move_sentinel(coll.end()); ++pos) {
 }
 \end{cpp}
 
-注意，这样做的效果是迭代器和哨兵具有不同的类型，所以不能直接初始化vector，因为它要求begin和end类型相同。在这种情况下，还必须为end使用move迭代器:
+这样做的效果是迭代器和哨兵具有不同的类型，所以不能直接初始化vector，因为要求begin和end类型相同，所以还必须为end使用移动迭代器:
 
 \begin{cpp}
 std::vector<std::string> v3{std::move_iterator{coll.begin()},

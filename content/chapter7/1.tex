@@ -1,7 +1,7 @@
 
 正如视图及其使用方式所介绍的那样，C++提供了几个范围适配器和范围工厂，以便可以简单地创建具有最佳性能的视图。
 
-其中几个适配器适用于特定的视图类型。然而，根据传递范围的特征，其中一些可能会创建不同的东西。例如，若适配器已经具有结果的特征，则可能只生成传递的范围。
+其中几个适配器适用于特定的视图类型。然而，根据传递范围的特征，其中一些可能会创建不同的东西。若适配器已经具有结果的特征，可能只生成可传递的范围。
 
 有一些关键的范围适配器和工厂，可以很容易地创建视图，或将范围转换为具有特定特征(独立于内容)的视图:
 
@@ -13,16 +13,16 @@ std::views::all()是将传递的范围转换为视图的主要范围适配器。
 std::views::counted()可将传入的begin和count/size转换为视图的主要范围工厂。
 
 \item
-std::views::common()是一个范围适配器，它将(开始)迭代器和哨兵(结束迭代器)具有不同类型的范围转换为具有统一的开始和结束类型的视图。
+std::views::common()是一个范围适配器，将(开始)迭代器和哨兵(结束迭代器)具有不同类型的范围转换为具有统一的开始和结束类型的视图。
 \end{itemize}
 
 本节将介绍这些适配器。
 
 \mySubsubsection{7.1.1}{std::views::all()}
 
-范围适配器std::views::all()是将任何还不是视图的范围转换为视图的适配器。这样，就有一个低成本句柄来处理范围的元素。
+范围适配器std::views::all()是将任何还不是视图的范围转换为视图的适配器，可由一个低成本的句柄来处理范围中的元素。
 
-all(rg)的生成以下结果[C++20最初声明all()可以产生子范围，但不能产生所属视图]。然而，在C++20发布后，这个问题已经修复了(参见\url{http://wg21.link/p2415}):
+all(rg)的生成以下结果[C++20最初声明all()可以产生子范围，但不能产生所属视图]。但在C++20发布后，这个问题已经修复了(参见\url{http://wg21.link/p2415}):
 
 \begin{itemize}
 \item
@@ -49,13 +49,13 @@ auto v4 = std::views::all(getColl()); // owning_view<decltype(coll)>
 auto v5 = std::views::all(std::move(coll)); // owning_view<decltype(coll)>
 \end{cpp}
 
-all()适配器通常用于将范围作为轻量级对象传递。将一个范围转换成一个视图有两个原因:
+all()适配器通常用于将范围作为轻量级对象传递。将范围转换成视图有两个原因:
 
 \begin{itemize}
 \item
 性能:
 
-当复制范围时(例如，因为形参按值接受实参)，使用视图要廉价得多。这样做的原因是移动或(若支持的话)复制一个视图保证是廉价的，所以将范围作为视图传递会使调用变得低成本。
+当复制范围时(形参按值接受实参)，使用视图要廉价得多。这样做的原因是移动或(若支持的话)复制一个视图保证是廉价的，所以将范围作为视图传递会使调用变得低成本。
 
 例如:
 
@@ -77,7 +77,7 @@ foo(std::views::all(coll)); // OK: passes coll by reference
 
 但all()的好处是传递的内容，仍然支持通常的范围接口。
 
-将容器传递给协程(协程通常必须按值接受参数)可能是这种技术的另一种应用。
+将容器传递给协程(协程通常必须按值接受参数)可能是另一种应用。
 
 \item
 视图的支持性要求:
@@ -120,13 +120,13 @@ std::views::all_t<decltype(v)&> a5{std::move(v)}; // ERROR
 std::views::all_t<decltype(v)&&> a6{std::move(v)}; // owning_view<vector<int>>
 \end{cpp}
 
-接受范围的视图通常使用类型std::views::all\_t<>来确保传递的范围确实是一个视图。因此，若传递的范围还不是视图，则会隐式创建视图。例如，调用:
+接受范围的视图通常使用类型std::views::all\_t<>来确保传递的范围确实是一个视图。因此，若传递的范围还不是视图，则会隐式创建视图。例如:
 
 \begin{cpp}
 std::views::take(coll, 3)
 \end{cpp}
 
-具有与调用相同的效果:
+具有相同的效果:
 
 \begin{cpp}
 std::ranges::take_view{std::ranges::ref_view{coll}, 3};
@@ -136,7 +136,7 @@ std::ranges::take_view{std::ranges::ref_view{coll}, 3};
 
 \begin{itemize}
 \item
-视图类型要求传递一个视图:
+视图类型要求传递视图:
 
 \begin{cpp}
 namespace std::ranges {
@@ -150,7 +150,7 @@ namespace std::ranges {
 \end{cpp}
 
 \item
-推断指南要求视图的元素类型为std::views::all\_t:
+推导指南要求视图的元素类型为std::views::all\_t:
 
 \begin{cpp}
 namespace std::ranges {
@@ -161,7 +161,7 @@ namespace std::ranges {
 \end{cpp}
 
 \item
-当传递容器时，视图的范围类型必须具有std::views::all\_t<>类型，所以容器会隐式地转换为ref\_view(若是左值)或owned \_view(若是右值)。其效果就好像我们调用了下面的语句:
+当传递容器时，视图的范围类型必须具有std::views::all\_t<>类型，所以容器会隐式地转换为ref\_view(若是左值)或owned \_view(若是右值)。其效果就好像下面的语句:
 
 \begin{cpp}
 std::ranges::ref_view rv{coll}; // convert to a ref_view<>
@@ -169,7 +169,7 @@ std::ranges::take_view tv(rv, 3); // and use view and count to initialize the ta
 \end{cpp}
 \end{itemize}
 
-概念viewable\_range可用于检查类型是否可用于all\_t<>(因此对应的对象可以传递给all())[对于仅移动视图类型的左值，尽管viewable\_range是满足的，但all()任存在格式错误的问题]:
+概念viewable\_range可用于检查类型是否可用于all\_t<>(因此对应的对象可以传递给all())[对于仅移动视图类型的左值，尽管viewable\_range是满足的，但all()仍存在格式错误的问题]:
 
 \begin{cpp}
 std::ranges::viewable_range<std::vector<int>> // true
@@ -181,13 +181,13 @@ std::ranges::viewable_range<std::queue<int>> // false
 
 \mySubsubsection{7.1.2}{std::views::counted()}
 
-范围工厂std::views::counted()提供了从begin迭代器和计数创建视图的最灵活的方式。通过调用
+范围工厂std::views::counted()提供了从begin迭代器和计数创建视图的最灵活的方式。
 
 \begin{cpp}
 std::views::counted(beg, sz)
 \end{cpp}
 
-它创建一个以beg开头的范围的前sz个元素的视图。
+创建一个以beg开头的范围的前sz个元素的视图。
 
 使用视图时，由开发者来确保begin和count是有效的。否则，程序具的行为未定义。
 
@@ -205,7 +205,7 @@ lst.insert(++lst.begin(), 0); // insert new second element in lst
 print(c); // 1 0 2 3 4
 \end{cpp}
 
-请注意，若想查看一个范围的前num个元素，take视图提供了一种更方便、更安全的方式来获取:
+若想查看一个范围的前num个元素，获取视图提供了一种更方便、更安全的方式来获取:
 
 \begin{cpp}
 std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
@@ -214,7 +214,7 @@ auto v1 = std::views::take(lst, 3); // view to first three elements (if they exi
 
 视图检查是否有足够的元素，若没有，则产生更少的元素。
 
-通过使用drop视图，甚至可以跳过特定数量的前置元素:
+通过使用丢弃视图，甚至可以跳过特定数量的前置元素:
 
 \begin{cpp}
 std::list lst{1, 2, 3, 4, 5, 6, 7, 8};
@@ -227,13 +227,13 @@ counted(beg, sz)根据所调用的范围特征，会产生不同类型的结果:
 
 \begin{itemize}
 \item
-如果传递的开始迭代器是一个contiguous\_iterator(指存储在连续内存中的元素)，则会产生一个std::span。这适用于std::vector<>或std::array<>的原始指针、原始数组和迭代器。
+若传递的开始迭代器是一个contiguous\_iterator(指存储在连续内存中的元素)，则会产生一个std::span。这适用于std::vector<>或std::array<>的原始指针、原始数组和迭代器。
 
 \item
 否则，若传递的begin迭代器是一个random\_access\_iterator(支持在元素之间来回跳转)，就会产生std::ranges::subrange。这适用于std::deque<>的迭代器。
 
 \item
-否则，它将产生一个std::ranges::subrange，以std::counts\_iterator作为开始，并以std::default\_sentinel\_t类型的伪哨兵作为结束，所以子范围中的迭代器在迭代时计数。这适用于列表、关联容器和无序容器(哈希表)的迭代器。
+否则，将产生std::ranges::subrange，以std::counts\_iterator作为开始，并以std::default\_sentinel\_t类型的伪哨兵作为结束，所以子范围中的迭代器在迭代时计数。这适用于列表、关联容器和无序容器(哈希表)的迭代器。
 \end{itemize}
 
 例如:
@@ -254,13 +254,13 @@ auto v3 = std::views::counted(lst5, 3); // view to element 5 and two more elems 
 	// std::default_sentinel_t>
 \end{cpp}
 
-注意，这段代码有风险，因为若集合中没有5，后面有两个元素，会在创建时出现未定义的行为。因此，若不确定情况是否如此，则应该检查此选项。
+注意，这段代码有风险，因为若集合中没有5，后面有两个元素，会在创建时出现未定义行为。因此，若不确定情况是否如此，则应该检查此选项。
 
 \mySubsubsection{7.1.3}{std::views::common()}
 
-范围适配器std::views::common()为传递的范围生成一个具有统一类型的视图，用于开始迭代器和哨兵(结束迭代器)。其行为类似于范围适配器std::views::all()，弱其迭代器具有不同的类型，则会从传递的参数创建std::ranges::common\_view。
+范围适配器std::views::common()为传递的范围生成一个具有统一类型的视图，用于开始迭代器和哨兵(结束迭代器)。其行为类似于范围适配器std::views::all()，若其迭代器具有不同的类型，则会从传递的参数创建std::ranges::common\_view。
 
-例如，假设想调用传统算法algo()，该算法要求开始迭代器和结束迭代器的类型相同。然后，可以为不同类型的迭代器进行调用，如下所示:
+假设想调用传统算法algo()，该算法要求开始迭代器和结束迭代器的类型相同。然后，可以为不同类型的迭代器进行调用，如下所示:
 
 \begin{cpp}
 template<typename BegT, typename EndT>
@@ -300,7 +300,7 @@ auto vt = std::views::take(lst, 5); // begin() and end() have different types
 auto v4 = std::views::common(vt); // std::ranges::common_view<decltype(vt)>
 \end{cpp}
 
-注意，std::ranges::common\_view的构造函数和辅助类型std::common:iterator都要求传递的迭代器具有不同的类型。因此，若不知道迭代器类型是否不同，则应该使用此适配器。
+注意，std::ranges::common\_view的构造函数和辅助类型std::common:iterator都要求传递的迭代器具有不同的类型，所以若不知道迭代器类型是否不同，则应该使用此适配器。
 
 
 

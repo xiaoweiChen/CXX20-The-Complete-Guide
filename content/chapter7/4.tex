@@ -1,17 +1,17 @@
 
-range库在命名空间std::ranges和std中提供了几个通用的辅助函数。
+范围库在命名空间std::ranges和std中提供了几个通用的辅助函数。
 
-其中一些在C++20之前就已经存在了，它们在命名空间std中具有相同的名称或略有不同的名称(并且仍然提供向后兼容性)。但范围工具通常为特定的功能提供更好的支持，可能会修复旧版本的缺陷，或者使用一些概念来限制旧版本的使用。
+其中一些在C++20之前就已经存在了，在命名空间std中具有相同的名称或略有不同的名称(并且仍然提供向后兼容性)。但范围工具通常为特定的功能提供更好的支持，可能会修复旧版本的缺陷，或者使用一些概念来限制旧版本的使用。
 
 这些“函数”需要是函数对象或函子，甚至是定制点对象(CPO是要求是半常规的，并保证所有实例相等的函数对象)。
 
-它们不支持依赖参数的查找(ADL)，所以说只调用函数对象是不正确的。但因为它们像函数一样使用，所以我仍然推荐于这样做，其余的就是实现细节了。]
+它们不支持依赖参数的查找(ADL)，所以只调用函数对象不正确。但因为它们像函数一样使用，所以我仍然推荐于这样做，其余的就是实现细节了。]
 
-出于这个原因，应该选择std::ranges中的工具，而不是std中的工具了。
+出于这个原因，应该选择std::ranges中的工具，而不是std中的工具。
 
 \mySubsubsection{7.4.1}{处理范围(和数组)元素的函数}
 
-表“处理范围元素的泛型函数”列出了处理范围及其元素的新的独立函数，它们也适用于原始数组。
+“处理范围元素的泛型函数”表列出了处理范围及其元素的新的独立函数，它们也适用于原始数组。
 
 C++20之前，几乎所有相应的工具函数都可以直接在命名空间std中使用。唯一的例外是:
 
@@ -23,11 +23,11 @@ ssize()，C++20中引入了std::ssize()
 cdata()，不存在于命名空间std中
 \end{itemize}
 
-读者们可能想知道为什么命名空间std::ranges中会有新函数，而不是修复命名空间std中的现有函数。好吧，问题是若修复现有的函数，现有的代码可能会被破坏，而向后兼容是C++的一个重要目标。
+读者们可能想知道为什么命名空间std::ranges中会有新函数，而不是修复命名空间std中的现有函数。好吧，问题是若修复现有的函数，可能会破坏现有的代码，而向后兼容是C++的一个重要目标。
 
 下一个问题是什么时候使用哪个函数。这里的指导原则非常简单:优先使用命名空间std::ranges中的函数/工具，而不是命名空间std中的函数/工具。
 
-原因不仅在于命名空间std::ranges中的函数/工具使用了概念，这有助于在编译时发现问题和bug;更腿甲命名空间std::ranges中的新函数的另一个原因是，命名空间std::ranges中的函数有时存在缺陷，std::ranges中的新实现实则修复了这些缺陷:
+原因不仅在于命名空间std::ranges中的函数/工具使用了概念，这有助于在编译时发现问题和bug;更推荐命名空间std::ranges中的新函数的另一个原因是，命名空间std::ranges中的函数有时存在缺陷，std::ranges中的新实现实则修复了这些缺陷:
 
 \begin{itemize}
 \item
@@ -46,7 +46,7 @@ cdata()，不存在于命名空间std中
 \endhead
 %
 \begin{tabular}[c]{@{}l@{}}std::ranges::empty(rg)\\ std::ranges::size(rg)\\ std::ranges::ssize(rg)\\ std::ranges::begin(rg)\\ std::ranges::end(rg)\\ std::ranges::cbegin(rg)\\ std::ranges::cend(rg)\\ std::ranges::rbegin(rg)\\ std::ranges::rend(rg)\\ std::ranges::crbegin(rg)\\ std::ranges::crend(rg)\\ std::ranges::data(rg)\\ std::ranges::cdata(rg)\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}生成的范围是否为空\\ 生成范围的大小\\ 将范围的大小作为signed类型的值\\ 生成指向该范围的第一个元素的迭代器\\ 产生范围的哨兵(一个迭代器)\\ 生成指向范围第一个元素的常量迭代器\\ 生成范围的一个常量哨兵(一个到末尾的常量迭代器)\\ 生成范围内第一个元素的反向迭代器\\ 产生范围的反向前哨(一个迭代器到末尾)\\ 生成指向范围第一个元素的反向常量迭代器\\ 生成范围的反向常量哨兵(一个到末尾的常量迭代器)\\ 生成该范围的原始数据\\ 生成具有const元素的范围的原始数据\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}生成的范围是否为空\\ 生成范围的大小\\ 将范围的大小作为signed类型的值\\ 生成指向该范围的第一个元素的迭代器\\ 生成范围哨兵(一个迭代器)\\ 生成指向范围第一个元素的常量迭代器\\ 生成范围的一个常量哨兵(一个到末尾的常量迭代器)\\ 生成范围内第一个元素的反向迭代器\\ 生成范围的反向前哨(一个迭代器到末尾)\\ 生成指向范围第一个元素的反向常量迭代器\\ 生成范围的反向常量哨兵(一个到末尾的常量迭代器)\\ 生成该范围的原始数据\\ 生成具有const元素的范围的原始数据\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
@@ -57,7 +57,7 @@ cdata()，不存在于命名空间std中
 
 来看看为什么在处理泛型代码中的范围时，使用std::ranges::begin()比使用std::begin()更好。问题是，若不巧妙地使用std::begin()，依赖于参数的查找并不总是有效。
 
-假设要编写泛型代码，调用为任意类型的范围对象obj定义的begin()函数。std::begin()的问题如下:
+假设要编写泛型代码，调用为范围对象obj定义的begin()函数。std::begin()的问题如下:
 
 \begin{itemize}
 \item
@@ -70,7 +70,7 @@ obj.begin(); // only works if a member function begin() is provided
 但对于只有独立begin()的类型(例如原始数组)，这不起作用。
 
 \item
-不幸的是，若使用独立的begin()，则有一个问题:
+但若使用独立的begin()，则有一个问题:
 
 \begin{itemize}
 \item
@@ -99,7 +99,7 @@ begin(obj); // OK, works in all these cases
 \end{cpp}
 \end{itemize}
 
-新的std::ranges::begin()则没有这个问题:
+std::ranges::begin()则没有这个问题:
 
 \begin{cpp}
 std::ranges::begin(obj); // OK, works in all these cases
@@ -111,7 +111,7 @@ std::ranges::begin(obj); // OK, works in all these cases
 
 \mySubsubsection{7.4.2}{用于处理迭代器的函数}
 
-表“处理迭代器的泛型函数“列出了所有用于移动迭代器、向前或向后查找以及计算迭代器之间距离的泛型函数。注意，下一小节描述了交换和移动迭代器引用的元素的函数。
+“处理迭代器的泛型函数”表列出了所有用于移动迭代器、向前或向后查找以及计算迭代器之间距离的泛型函数。注意，下一小节描述了交换和移动迭代器引用的元素的函数。
 
 \begin{longtable}[c]{|l|l|}
 \hline
@@ -133,7 +133,7 @@ std::ranges::begin(obj); // OK, works in all these cases
 
 \mySubsubsection{7.4.3}{用于交换和移动元素/值的函数}
 
-ranges库还提供了交换和移动值的函数。这些函数列在表中，用于交换和移动元素/值的通用函数，其不能只用于范围。
+范围库还提供了交换和移动值的函数。这些函数列在表中，用于交换和移动元素/值的通用函数，其不能只用于范围。
 
 \begin{longtable}[c]{|l|l|}
 \hline
@@ -144,18 +144,18 @@ ranges库还提供了交换和移动值的函数。这些函数列在表中，�
 \endhead
 %
 \begin{tabular}[c]{@{}l@{}}std::ranges::swap(val1, val2)\\ std::ranges::iter\_swap(pos1, pos2)\\ std::ranges::iter\_move(pos)\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}交换值val1和val2(使用move语义)\\ 交换迭代器pos1和pos2所引用的值(使用move语义)\\ 产生迭代器pos在移动时所引用的值\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}交换值val1和val2(使用移动语义)\\ 交换迭代器pos1和pos2所引用的值(使用移动语义)\\ 产生迭代器pos在移动时所引用的值\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
 表7.5 用于交换和移动元素/值的通用函数
 \end{center}
 
-函数std::ranges::swap()在<concepts>中定义(std::swap()在<utility>中定义)，因为标准概念std::swappable和std::swappable\_with使用了它。函数std::ranges::iter\_swap()和std::ranges::iter\_move()在<iterator>中定义。
+因为标准概念std::swappable和std::swappable\_with使用了它，所以函数std::ranges::swap()在<concepts>中定义(std::swap()在<utility>中定义)。函数std::ranges::iter\_swap()和std::ranges::iter\_move()在<iterator>中定义。
 
 std::ranges::swap()修复了在泛型代码中，std::swap()可能找不到为某些类型提供的最佳交换函数的问题(类似于begin()和cbegin()所存在的问题)。
 
-但由于存在泛型回退，所以此修复不会修复无法编译的代码。相反，可能只会有更好的性能。
+但由于存在泛型回退，所以此修复不会修复无法编译的代码，而可能只会有更好的性能。
 
 考虑下面的例子:
 
@@ -226,7 +226,7 @@ namespace std {
 }
 \end{cpp}
 
-您应该更改此代码。最好的选择是使用“隐藏友元”：
+应该更改此代码。最好的选择是使用“隐藏友元”：
 
 \begin{cpp}
 class Foo {
@@ -237,7 +237,7 @@ class Foo {
 };
 \end{cpp}
 
-函数std::ranges::iter\_move()和std::ranges::iter\_swap()与解引用迭代器和调用std::move()或swap()相比有一个好处:它们与代理迭代器一起工作得很好，所以要在泛型代码中支持代理迭代器，请使用:
+函数std::ranges::iter\_move()和std::ranges::iter\_swap()与解引用迭代器和调用std::move()或swap()相比有一个好处:它们与代理迭代器一起工作得很好，所以要在泛型代码中支持代理迭代器:
 
 \begin{cpp}
 auto val = std::ranges::iter_move(it);
@@ -254,7 +254,7 @@ swap(*it1, *it2);
 
 \mySubsubsection{7.4.4}{用于值比较的函数}
 
-表“用于比较标准的通用函数”列出了现在可以用作比较标准的所有范围实用程序，其在<functional>中定义。
+“用于比较标准的通用函数”表列出了现在可以用作比较标准的所有范围工具，其在<functional>中定义。
 
 
 \begin{longtable}[c]{|l|l|}
@@ -266,16 +266,16 @@ swap(*it1, *it2);
 \endhead
 %
 \begin{tabular}[c]{@{}l@{}}std::ranges::equal\_to(val1, val2)\\ std::ranges::not\_equal\_to(val1, val2)\\ std::ranges::less(val1, val2)\\ std::ranges::greater(val1, val2)\\ std::ranges::less\_equal(val1, val2)\\ std::ranges::greater\_equal(val1, val2)\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}产生的val1是否等于val2\\ 产生的val1是否不等于val2\\ 产生的val1是否小于val2\\产生的val1是否大于val2\\ 产生的val1是否小于或等于val2\\ 产生的val1是否大于或等于val2\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}生成的val1是否等于val2\\ 生成的val1是否不等于val2\\ 生成的val1是否小于val2\\生成的val1是否大于val2\\ 生成的val1是否小于或等于val2\\ 生成的val1是否大于或等于val2\end{tabular} \\ \hline
 \end{longtable}
 
 \begin{center}
 表7.6 用于比较标准的通用函数
 \end{center}
 
-在检查相等性时，可以使用概念std::equality\_comparable\_with。
+检查相等性时，可以使用概念std::equality\_comparable\_with。
 
-在检查顺序时，使用std::totally\_ordered\_with概念。注意，这并不要求必须支持操作符<=>。还要注意，该类型不必支持全序。若可以用<、>、<=和>=比较这些值就足够了，但这是一个在编译时无法检查的语义约束。
+在检查顺序时，使用std::totally\_ordered\_with概念。注意，这并不要求必须支持<=>操作符，并且该类型不必支持全序。若可以用<、>、<=和>=比较这些值就足够了，但这是一个在编译时无法检查的语义约束。
 
 注意，C++20还引入了函数对象类型std::compare\_three\_way，可以用它来使用新的操作符<=>。
 
