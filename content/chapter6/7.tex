@@ -1,9 +1,9 @@
-在第一个C++标准采用Standard Template Llibrary(该标准引入了一对迭代器作为容器/集合的抽象，以便在算法中处理)之后，一直有关于如何处理单个范围对象而不是传递begin迭代器和end迭代器的讨论。Boost的Range库和Adobe源库(ASL)是最早提出具体库的两种方法。
+第一个C++标准采用Standard Template Llibrary(该标准引入了一对迭代器作为容器/集合的抽象，以便在算法中处理)之后，一直有关于如何处理单个范围对象，而不是传递begin迭代器和end迭代器的讨论。Boost的Range库和Adobe源库(ASL)是最早提出具体库的两种方法。
 
-2005年，Thorsten Ottosen在\url{http://wg21.link/n1871}上提出了将range作为C++标准的第一个建议。Eric Niebler花了数年时间(得到了许多人的支持)推动这一进程，并于2014年由Eric Niebler、Sean Parent和Andrew Sutton在\url{http://wg21.link/n4128}上提出了另一项提案(该文档包含了许多关键设计决策的基本原理)。因此，2015年10月，range技术规范以\url{http://wg21.link/n4560}起点。
+2005年，Thorsten Ottosen在\url{http://wg21.link/n1871}上提出了将“范围”作为C++标准的第一个建议。Eric Niebler花了数年时间(得到了许多人的支持)推动这一进程，并于2014年由Eric Niebler、Sean Parent和Andrew Sutton在\url{http://wg21.link/n4128}上提出了另一项提案(该文档包含了许多关键设计决策的基本原理)。因此，2015年10月，范围技术规范以\url{http://wg21.link/n4560}起点。
 
-range库最终通过将range TS合并到由Eric Niebler、Casey Carter和Christopher Di Bella在\url{http://wg21.link/p0896r4}中提出的C++标准中采用。
+范围库最终通过，并将范围的TS合并到由Eric Niebler、Casey Carter和Christopher Di Bella在\url{http://wg21.link/p0896r4}中提出的C++标准中。
 
 采用之后，针对C++20的一些建议、论文，甚至是缺陷改变了重要的方面，特别是视图方面。例如，由Barry Revzin, Tim Song和Nicolai Josuttis提出的\url{http://wg21.link/p2210r2}(修复分割视图)，\url{http://wg21.link/p2325r3}(修复视图的定义)，\url{http://wg21.link/p2415r2}(引入右值范围的拥有视图)，和\url{http://wg21.link/p2432r1}(修复istream视图)。
 
-此外，请注意，至少视图的几个const问题中的一些可能会在C++23中通过\url{http://wg21.link/p2278r4}修复。希望厂商能在C++23之前提供这个修复。否则，C++20的代码可能与C++23不兼容。
+此外，视图的几个const问题中的一些可能会在C++23中通过\url{http://wg21.link/p2278r4}修复。希望厂商能在C++23之前提供这个修复。否则，C++20的代码可能与C++23不兼容。

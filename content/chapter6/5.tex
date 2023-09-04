@@ -1,5 +1,5 @@
 
-在使用视图(以及一般的ranges库)时，有一些关于常量性的事情令人惊讶，甚至是不正常的。
+在使用视图(以及一般的范围库)时，有一些关于常量性的事情令人惊讶，甚至是不正常的。
 
 \begin{itemize}
 \item
@@ -9,16 +9,16 @@
 视图消除了对元素常量性的传播。
 
 \item
-像cbegin()和cend()这样的函数的目标是确保元素在迭代时为const，要么没有提供，要么已被破坏。
+像cbegin()和cend()这样的函数的目标是确保元素在迭代时为const，要么没有提供，要么已破坏。
 \end{itemize}
 
-这些问题或多或少都有充分的理由，其中一些与视图的性质和所做的一些基本设计决策有关。我认为这是一个严重的设计错误。然而，C++标准委员会中的其他人有不同的观点。
+这些问题或多或少都有充分的理由，其中一些与视图的性质和所做的一些基本设计决策有关。我认为这是一个严重的设计错误，但C++标准委员会中的其他人有不同的观点。
 
-目前正在进行修复，至少修复了cbegin()和cend()的连续性。不幸的是，C++标准委员会决定不在C++20中进行应用。这些将在C++23中实现(并改变行为)，详见\url{http://wg21.link/p2278r4}。
+目前正在进行修复，至少修复了cbegin()和cend()的连续性，但C++标准委员会决定不在C++20中进行应用。这些将在C++23中实现(并改变行为)，详见\url{http://wg21.link/p2278r4}。
 
 \mySubsubsection{6.5.1}{视图及其范围之间的生命周期依赖关系}
 
-实现一个可以遍历每种类型的容器和视图的元素，并具有良好性能的泛型函数是非常复杂的。例如，像下面这样声明一个打印所有元素的函数并不总是有效:
+实现一个可以遍历每种类型的容器和视图的元素，并具有良好性能的泛型函数是非常复杂的。像下面这样声明一个打印所有元素的函数并不总有效:
 
 \begin{cpp}
 template<typename T>
@@ -65,7 +65,7 @@ int main()
 }
 \end{cpp}
 
-首先，声明一个非常简单的泛型函数print()，打印作为const引用传递的范围的所有元素:
+声明一个非常简单的泛型函数print()，输出作为const引用传递的范围的所有元素:
 
 \begin{cpp}
 void print(const auto& rg)
@@ -117,47 +117,47 @@ print(vec | std::views::filter(isEven)); // ERROR
 
 \mySamllsection{const\&并不适用于所有视图}
 
-这种非常奇怪和意外的行为的原因是，当视图为const时，一些视图并不总是支持遍历元素。这是这样一个事实的结果:迭代这些视图的元素有时需要能够修改视图的状态(例如，由于缓存)。对于某些视图(如过滤器视图)永远不会工作，对于某些视图(例如drop视图)，只是有时会起作用。
+这种非常奇怪和意外的行为的原因是，当视图为const时，视图并不总是支持遍历元素。这是这样一个事实的结果:迭代这些视图的元素有时需要能够修改视图的状态(例如，由于缓存)。对于某些视图(如过滤器视图)永远不会工作，对于某些视图(例如drop视图)，只是有时会起作用。
 
-实际上，若用const声明了以下标准视图中的元素，则不能迭代它们:
-
-\begin{itemize}
-\item
-永远不能迭代的Const视图:
+若用const声明了以下标准视图中的元素，则不能迭代:
 
 \begin{itemize}
 \item
-Filter视图
+永远不能迭代的const视图:
+
+\begin{itemize}
+\item
+过滤视图
 
 \item
-Drop-while视图
+丢弃段视图
 
 \item
-Split视图
+拆分视图
 
 \item
 IStream视图
 \end{itemize}
 
 \item
-只能偶尔迭代的Const视图:
+只能偶尔迭代的const视图:
 
 \begin{itemize}
 \item
-Drop视图，若引用的范围没有随机访问或没有size()
+丢弃视图，若引用的范围没有随机访问或没有size()
 
 \item
-Reverse视图，若引用的范围对于开始迭代器和前哨(结束迭代器)具有不同的类型
+反向视图，若引用的范围对于开始迭代器和前哨(结束迭代器)具有不同的类型
 
 \item
-Join视图，若引用的范围生成值而不是引用，则使用该视图
+连接视图，若引用的范围生成值而不是引用，则使用该视图
 
 \item
 若引用的范围本身不是const可迭代的，则引用其他范围的所有视图
 \end{itemize}
 \end{itemize}
 
-对于这些视图，begin()和end()作为const成员函数只能有条件地提供，或者根本不提供。例如，对于drop视图，只有当传递的范围满足随机访问范围和大小范围的要求时，才会提供const对象的begin():[可能会对模板参数V被限制为视图这一事实感到惊讶，但它可能是一个从传递的容器中隐式创建的refview，而不是视图]。
+对于这些视图，begin()和end()作为const成员函数只能有条件地提供，或者根本不提供。对于丢弃视图，只有当传递的范围满足随机访问范围和大小范围的要求时，才会提供const对象的begin():[可能会将模板参数V限制为视图这一事实感到惊讶，但它可能是一个从传递的容器中隐式创建的视图引用，而不是视图]。
 
 
 \begin{cpp}
@@ -184,7 +184,7 @@ template<typename T>
 void foo(const T& coll); // not callable for all views
 \end{cpp}
 
-是否对range参数的类型有约束并不重要:
+是否对范围参数的类型有约束并不重要:
 
 \begin{cpp}
 void print(const std::ranges::input_range auto& coll); // not callable for all views
@@ -196,7 +196,7 @@ void foo(const T& coll); // not callable for all views
 
 \mySamllsection{非const\&\&对所有视图都有效}
 
-为了在泛型代码中支持这些视图，应该将范围参数声明为通用引用(也称为转发引用)。这些引用可以引用所有表达式，同时保留引用对象不是const的事实[C++标准中，通用引用称为转发引用，这很不幸，因为在std::forward<>()调用之前并不真正的转发，并且完美转发并不总是使用这些引用的原因(如本例所示)]。例如:
+为了在泛型代码中支持这些视图，应该将范围参数声明为通用引用(也称为转发引用)。这些引用可以引用所有表达式，同时保留引用对象不是const的事实[C++标准中，通用引用称为转发引用，但在std::forward<>()调用之前并不真正的转发，并且完美转发并不总是使用这些引用的原因(如本例所示)]。例如:
 
 \begin{cpp}
 void print(std::ranges::input_range auto&& coll); // can in principle pass all views
@@ -320,9 +320,9 @@ int main()
 
 现在想知道如何声明一个泛型函数，可以调用所有const和非const范围和视图，并保证元素不被修改?好吧，再一次，这里有一个重要的教训:
 
-\textbf{C++20起，不再有一种方法可以声明一个泛型函数来接受所有标准集合类型(const和非const容器和视图)，并保证元素不被修改。}
+\textbf{C++20起，不再有一种方法可以声明一个泛型函数来接受所有标准集合类型(const和非const容器和视图)，并保证不修改元素。}
 
-所能做的就是获取范围/视图，并确保在函数体中元素没有被修改。然而，这样做可能会很复杂，将看到:
+所能做的就是获取范围/视图，并确保不在函数体中修改元素，但这样做可能会很复杂:
 
 \begin{itemize}
 \item
@@ -364,7 +364,7 @@ auto sum = std::accumulate(v.begin(), v.end(), // fatal runtime ERROR
 0L);
 \end{cpp}
 
-通过使用std::jthread，启动了一个线程，该线程遍历视图v的元素并打印它们。同时，遍历v来计算元素值的和。对于标准容器，只进行读操作的并行迭代是安全的(对于容器来说，调用begin()可以保证作为读访问计数)。但是，此保证不适用于标准视图。因为我们可能并发地为视图v调用begin()，所以这段代码会导致未定义的行为(可能的数据竞争)。
+使用std::jthread，启动了一个线程，该线程遍历视图v的元素并进行输出。同时，遍历v来计算元素值的和。对于标准容器，只进行读操作的并行迭代是安全的(对于容器来说，调用begin()可以保证作为读访问计数)，但此保证不适用于标准视图。因为可能会并发地为调用视图v的begin()，所以这段代码会导致未定义行为(可能的数据竞争)。
 
 执行只读并发迭代的函数应该使用const视图，将可能的运行时错误转换为编译时错误:
 
@@ -383,21 +383,21 @@ auto sum = std::accumulate(v.begin(), v.end(), // compile-time ERROR
 
 \mySamllsection{视图的重载}
 
-读者们可能会声称可以简单地重载容器和视图的泛型函数。对于视图，可能只需要添加一个重载来约束视图的函数并按值接受参数就足够了:
+读者们可能会声称可以简单地重载容器和视图的泛型函数。对于视图，可能只需要添加一个重载来约束视图的函数，并按值接受参数就足够了:
 
 \begin{cpp}
 void print(const auto& rg); // for containers
 void print(std::ranges::view auto rg) // for views
 \end{cpp}
 
-然而，当一次按值传递，一次按引用传递时，重载解析规则可能会变得棘手。在这种情况下，会导致歧义:
+但当一次按值传递，一次按引用传递时，重载解析规则可能会变得棘手，可能会导致歧义:
 
 \begin{cpp}
 std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // ERROR: ambiguous
 \end{cpp}
 
-对于包含用于一般情况的概念的视图使用概念也没有帮助:
+对于包含用于一般情况的概念的视图，使用概念也没有帮助:
 
 \begin{cpp}
 void print(const std::ranges::range auto& rg); // for containers
@@ -420,11 +420,11 @@ std::vector vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 print(vec | std::views::take(3)); // OK
 \end{cpp}
 
-但请记住，复制视图可能会创建一个与源视图具有不同状态和行为的视图。由于这个原因，无论如何，按值传递所有视图都是有问题的。
+复制视图可能会创建一个与源视图具有不同状态和行为的视图，所以按值传递所有视图都会有问题。
 
 \mySubsubsection{6.5.2}{具有写访问权限的视图}
 
-容器具有很深的稳定性，它们具有值语义并拥有自己的元素，所以可将任何常量性传播给它们的元素。当容器为const类型时，其元素也是const类型。因此，以下代码无法编译:
+容器具有很深的稳定性，具有值语义并拥有自己的元素，所以可将任何常量性传播给其元素。当容器为const类型时，其元素也是const类型，所以以下代码无法编译:
 
 \begin{cpp}
 template<typename T>
@@ -454,9 +454,9 @@ std::array<int, 10> coll{}; // array of 10 ints with value 0
 modifyConstRange(coll); // compile-time ERROR (thank goodness)
 \end{cpp}
 
-知道元素不能修改也有助于优化(例如避免备份和检查更改)，或者确保在使用多个线程时，元素访问不会因数据竞争而导致未定义的行为。
+知道元素不能修改也有助于优化(避免备份和检查更改)，或者确保在使用多个线程时，元素访问不会因数据竞争而导致未定义行为。
 
-有了视图来说，情况就复杂多了。作为左值传递的范围的视图具有引用语义，引用存储在其他地方的元素。按照设计，这些视图不会将常量性传播到它们的元素。他们有浅薄的忠诚;
+有了视图来说，情况就复杂多了。作为左值传递的范围的视图具有引用语义，引用存储在其他地方的元素。按照设计，这些视图不会将常量性传播到其元素上。
 
 \begin{cpp}
 std::array<int, 10> coll{}; // array of 10 ints with value 0
@@ -479,14 +479,14 @@ modifyConstRange(coll); // compile-time ERROR: elements are const
 modifyConstRange(std::views::all(coll)); // OK, elements of coll are not const
 \end{cpp}
 
-请注意，对右值的视图(如果它们是有效的)通常仍然传播常量:
+对右值的视图(如果它们是有效的)通常仍然传播常量性:
 
 \begin{cpp}
 readConstRange(getColl() | std::views::drop(5)); // compile-time ERROR (good)
 readConstRange(getColl() | std::views::take(5)); // compile-time ERROR (good)
 \end{cpp}
 
-另外，请注意，不能使用视图修改const容器的元素:
+另外，不能使用视图修改const容器的元素:
 
 \begin{cpp}
 const std::array<int, 10> coll{}; // array of 10 ints with value 0
@@ -507,21 +507,21 @@ modifyConstRange(std::as_const(coll) | std::views::take(5)); // compile-time ERR
 
 函数std::as\_const()从C++17开始在头文件<utility>中提供，但在创建视图后调用std::as\_const()没有效果(除了少数视图，不再能够遍历元素)。
 
-C++23将引入一个带有范围适配器std::views::as\_const()的辅助视图std::ranges::as\_const\_view，这样就可以简单地将视图的元素设置为const，如下所示(参见\url{http://wg21.link/p2278r4}):
+C++23将引入一个带有范围适配器std::views::as\_const()的辅助视图std::ranges::as\_const\_view，就可以简单地将视图的元素设置为const，如下所示(参见\url{http://wg21.link/p2278r4}):
 
 \begin{cpp}
 std::views::as_const(v); // make elements of view v const
 \end{cpp}
 
-但注意，不能忘记这里的命名空间视图:
+不能忘记这里的命名空间视图:
 
 \begin{cpp}
 std::as_const(v); // OOPS: no effect on views
 \end{cpp}
 
-命名空间std和命名空间std::ranges中的函数as\_const()都使某些东西成为const，但前者使对象成为const，而后者使元素成为const[C++标准委员会的成员有时决定支持看起来相同的特性，即使细节不同，也可能成为麻烦的来源。]您可能想知道为什么使用引用语义的视图没有被设计成传播常量的方式。一个论点是它们在内部使用指针，因此应该表现得像指针。
+命名空间std和命名空间std::ranges中的函数as\_const()都使某些东西成为const，但前者使对象成为const，而后者使元素成为const[C++标准委员会的成员有时决定支持看起来相同的特性，即使细节不同，也可能成为麻烦的来源。]读者们可能想知道，为什么使用引用语义的视图没有被设计成传播常量的方式。一个论点是在内部使用指针，因此应该表现得像指针。
 
-然而，奇怪的是，右值的视图不是这样工作的。另一种说法是，const几乎一文不值，它可以很容易地通过将视图复制到非const视图来删除:
+然而，奇怪的是，右值的视图不是这样工作的。另一种说法是，const几乎没什么作用，其可以很容易地通过将视图复制到非const视图来删除:
 
 \begin{cpp}
 void foo(const auto& rg) // if rg would propagate constness for views on lvalues
@@ -531,7 +531,7 @@ void foo(const auto& rg) // if rg would propagate constness for views on lvalues
 }
 \end{cpp}
 
-初始化的行为类似于const\_cast<>。但若这是容器的泛型代码，开发者已经习惯不复制传递的集合，这样做的代价很高。因此，现在有了另一个不复制传递的范围的好理由，并将范围(容器和视图)声明为const的效果将更加一致。然而，现在设计决策已经完成，作为开发者，你必须处理它。
+初始化的行为类似于const\_cast<>。但若这是容器的泛型代码，开发者已经习惯不复制传递的集合，这样做的代价很高。因此，现在有了另一个不复制传递的范围的好理由，并将范围(容器和视图)声明为const的效果将更加一致。然而，现在设计决策已经完成，作为开发者必须处理。
 
 \mySubsubsection{6.5.3}{更改范围的视图}
 
@@ -545,15 +545,15 @@ const可以禁用元素的迭代
 const可能不会传播到视图的元素
 \end{itemize}
 
-那么显而易见的问题是如何确保代码在使用视图时不能修改范围的元素。
+显而易见的问题是如何确保代码在使用视图时不能修改范围的元素。
 
 \mySamllsection{使元素为const}
 
-确保视图中的元素不能被修改的唯一简单方法是，在元素访问时强制使用常量:
+确保视图中的元素不能修改的唯一方法是，在元素访问时强制使用const:
 
 \begin{itemize}
 \item
-在基于范围的for循环中使用const:
+基于范围的for循环中使用const:
 
 \begin{cpp}
 for (const auto& elem : rg) {
@@ -579,7 +579,7 @@ for (const auto& elem : myZipView) {
 }
 \end{cpp}
 
-也许我们还能阻止这一切。但请注意，使用C++标准视图时，将集合或其元素设置为const可能不起作用。
+也许还能阻止这一切，但使用C++标准视图时，将集合或其元素设置为const可能不起作用。
 
 \mySamllsection{const\_iterator和cbegin()未提供或无效}
 
@@ -611,7 +611,7 @@ callTraditionalAlgo(rg.cbegin(), rg.cend()); // not for views
 \end{cpp}
 \end{itemize}
 
-有的读者可能会建议使用独立的辅助函数std::cbegin()和std::cend()，从C++11开始就提供了。引入它们是为了确保元素在迭代时是const的，但这里的情况更糟，因为std::cbegin()和std::cend()对于视图来说是无效的。其规范没有考虑到具有浅常量的类型(在内部，调用const成员函数begin()，并且不向值类型添加constness)。因此，对于不传播常量的视图，这些函数被简单地破坏了[std::cbegin()和std::cend()应该被修复，但目前为止，C++标准委员会已经拒绝了所有修正它们的提案。]
+有的读者可能会建议使用独立的辅助函数std::cbegin()和std::cend()，从C++11开始就提供了。引入它们是为了确保元素在迭代时是const的，因为std::cbegin()和std::cend()对于视图来说是无效的，所以里的情况会更糟。其规范没有考虑到具有浅常量的类型(在内部，调用const成员函数begin()，并且不向值类型添加constness)。对于不传播常量的视图，这些函数被破坏了[这时应该修复std::cbegin()和std::cend()，但目前为止，C++标准委员会已经拒绝了所有修正它们的提案。]
 
 \begin{cpp}
 for (auto pos = std::cbegin(range); pos != std::cend(range); ++pos) {
@@ -619,7 +619,7 @@ for (auto pos = std::cbegin(range); pos != std::cend(range); ++pos) {
 }
 \end{cpp}
 
-还要注意，在使用这些辅助函数时，ADL存在一些问题。因此，C++20在命名空间std::ranges中引入了range库的相应帮助函数。不幸的是，std::ranges::cbegin()和std::ranges::cend()在C++20中的视图中也被破坏了(这将在C++23中修复):
+还要注意，在使用这些辅助函数时，ADL存在一些问题。C++20在命名空间std::ranges中引入了range库的相应帮助函数，但C++20中的视图中破坏了std::ranges::cbegin()和std::ranges::cend()(这将在C++23中修复):
 
 \begin{cpp}
 for (auto pos = std::ranges::cbegin(rg); pos != std::ranges::cend(rg); ++pos) {
@@ -629,11 +629,11 @@ for (auto pos = std::ranges::cbegin(rg); pos != std::ranges::cend(rg); ++pos) {
 
 因此，C++20中，当输入使视图的所有元素都为const时，还会遇到另一个严重的问题:
 
-\textbf{在泛型代码中使用cbegin()，cend()，cdata()时要小心，因为这些函数在某些视图中不可用或被破坏。}
+\textbf{在泛型代码中使用cbegin()，cend()，cdata()时要谨慎，这些函数在某些视图中不可用或已破坏。}
 
-我不知道哪个更糟:是我们有这个问题，还是C++标准委员会，及其ranges库的子小组不愿意在C++20中修复这个问题。例如，可以在std::ranges::view\_interface<>中提供const\_iterator和cbegin()成员，其作为所有视图的基类。有趣的是，到目前为止只有一个视图提供了const\_iterator支持:std::string\_view。具有讽刺意味的是，这或多或少是唯一不需要它的视图，因为在字符串视图中，字符总是const。
+不管这是我们有这个问题，还是C++标准委员会的，及其范围库的子小组不愿意在C++20中修复这个问题。可以在std::ranges::view\_interface<>中提供const\_iterator和cbegin()成员，其作为所有视图的基类。有趣的是，到目前为止只有视图提供了const\_iterator支持:std::string\_view。具有讽刺意味的是，这或多或少是唯一不需要的视图，因为在字符串视图中，字符总是const。
 
-然而，还是有一些希望的:\url{http://wg21.link/p2278}提供了一种方法来修复C++23中这个损坏的常量(不幸的是，std::cbegin()和std::cend()不适用)使用这种方法，在泛型函数内部，可以将元素设为const，如下所示:
+然而，还是有一些希望的:\url{http://wg21.link/p2278}提供了一种方法来修复C++23中这个损坏的常量(而std::cbegin()和std::cend()不适用)使用这种方法，在泛型函数内部，可以将元素设为const，如下所示:
 
 \begin{cpp}
 void print(auto&& rgPassed)
