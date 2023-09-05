@@ -40,13 +40,13 @@ split\_view<>只能处理至少具有前向迭代器的范围(必须满足forwar
 \item
 split\_view<>元素只是引用范围的迭代器类型的std::ranges::subrange(保持引用范围的类别)。
 
-lazy\_split\_views<>元素是std::ranges::lazy\_split\_view类型的视图，其总是前向范围，甚至不支持size()。
+lazy\_split\_views<>元素是std::ranges::lazy\_split\_view类型的视图，其总是向前范围，甚至不支持size()。
 
 \item
 split\_view<>具有更好的性能。
 \end{itemize}
 
-因为只使用输入范围或视图被用作const范围，所以应该使用split\_view<>，除非不能这样做。例如:
+只使用输入范围或视图被用作const范围，应该使用split\_view<>，除非不能这样做。例如:
 
 \begin{cpp}
 std::vector<int> rg{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
@@ -66,11 +66,11 @@ for (const auto& sub : std::ranges::split_view{rg, 5}) {
 6 7 8 9 10 11 12 13
 \end{shell}
 
-也就是说，只要在rg中找到值为5的元素，就结束前一个视图并开始一个新视图。
+只要在rg中找到值为5的元素，就结束前一个视图并开始一个新视图。
 
 \mySamllsection{用于拆分和延迟拆分视图的范围适配器}
 
-拆分视图和延迟拆分视图也可以(通常应该)使用范围适配器来创建，适配器只是将它们的参数传递给相应的视图构造函数:
+拆分视图和延迟拆分视图也可以(通常应该)使用范围适配器来创建，适配器只是将其参数传递给相应的视图构造函数:
 
 \begin{cpp}
 std::views::split(rg, sep)
@@ -112,7 +112,7 @@ for (const auto& sub : std::ranges::split_view{rg, 5}) {
 }
 \end{cpp}
 
-这里，输出如下:[最初的C++20标准指定最后一个分隔符可忽略，所以我们将在最后只得到一个空子视图。这是修复于\url{http://wg21.link/p2210r2}。]
+输出如下:[最初的C++20标准指定最后一个分隔符可忽略，所以我们将在最后只得到一个空子视图，修复于\url{http://wg21.link/p2210r2}。]
 
 \begin{shell}
 subview:
@@ -157,7 +157,7 @@ for (const auto& sub : std::views::split(rg, std::views::all(pattern))) {
 }
 \end{cpp}
 
-可以使用拆分视图来拆分字符串。例如:
+可以使用拆分视图来拆分字符串:
 
 \begin{cpp}
 std::string str{"No problem can withstand the assault of sustained thinking"};
@@ -168,11 +168,11 @@ for (auto sub : std::views::split(str, "th"sv)) { // split by "th"
 
 每个子字符串sub的类型为std::ranges::subrange<decltype(str.begin())>，这样的代码将不能用于延迟拆分视图。
 
-拆分或延迟拆分视图会在内部存储传入的范围(也可以像all()那样转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
+拆分或延迟拆分视图会在内部存储传入的范围(也可以像all()那样转换为视图)，只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
 begin迭代器和哨兵(end迭代器)都是特殊的内部辅助类型，若传递的范围是通用的，则是通用的。
 
-这里是一个使用拆分视图的完整示例:
+这里是使用拆分视图的完整示例:
 
 \filename{ranges/splitview.cpp}
 
@@ -220,7 +220,7 @@ int main()
 
 \mySamllsection{拆分视图和const}
 
-注意，不能在const的拆分视图上迭代。
+不能在const的拆分视图上迭代。
 
 例如:
 
@@ -233,7 +233,7 @@ for (const auto& sub : sv) { // ERROR for const split view
 }
 \end{cpp}
 
-这是一个问题，特别是若将视图传递给一个将参数作为const引用的泛型函数:
+特别是若将视图传递给一个将参数作为const引用的泛型函数:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -242,7 +242,7 @@ void printElems(const auto& coll) {
 printElems(std::views::split(rg, 5)); // ERROR
 \end{cpp}
 
-要在泛型代码中支持这个视图，必须使用通用/转发引用:
+要在泛型代码中支持视图，必须使用通用/转发引用:
 
 \begin{cpp}
 void printElems(auto&& coll) {
@@ -250,7 +250,7 @@ void printElems(auto&& coll) {
 }
 \end{cpp}
 
-或者，可以使用lazy\_split\_view。然后，子视图元素只能用作前向范围，所以不能调用size()、向后迭代或对元素排序的事情:
+或者，可以使用lazy\_split\_view，从而子视图元素只能用作前向范围，所以不能调用size()、向后迭代或对元素排序:
 
 \begin{cpp}
 std::vector<int> coll{5, 1, 5, 1, 2, 5, 5, 1, 2, 3, 5, 5, 5};
@@ -290,7 +290,7 @@ r.front()           & 生成的第一个元素(若转发可用)               \\
 r.back()            & 生成的最后一个元素(若范围为双向且通用，则可用)  \\ \hline
 r{[}idx{]}          & 生成的第n个元素(若随机访问可用)            \\ \hline
 r.data()          & 生成一个指向元素内存的原始指针(若元素在连续内存中可用) \\ \hline
-r.base()            & 产生对r所引用或归属范围的引用        \\ \hline
+r.base()            & 生成对r所引用或归属范围的引用        \\ \hline
 \end{longtable}
 
 \begin{center}
@@ -367,7 +367,7 @@ for (const auto& elem : coll | std::views::join) {
 }
 \end{cpp}
 
-下面是一个使用连接视图的完整示例:
+下面是使用连接视图的完整示例:
 
 \filename{ranges/joinview.cpp}
 
@@ -392,7 +392,7 @@ int main()
 }
 \end{cpp}
 
-使用一个可以递归打印集合的辅助函数:
+使用可以递归输出集合的辅助函数:
 
 \filename{ranges/printcoll.cpp}
 
@@ -432,7 +432,7 @@ void printColl(T&& obj, int level = 0)
 [h e h i h o - - - | - - - h e h i h o]
 \end{shell}
 
-结合类型std::ranges::subrange，可以使用连接视图来连接多个数组的元素。
+结合类型std::ranges::subrange，可以使用连接视图来连接多个数组。
 
 例如:
 
@@ -455,13 +455,13 @@ std::array coll{std::ranges::subrange{arr1},
 				std::ranges::subrange{arr3}};
 \end{cpp}
 
-连接视图是唯一视图在c++中20处理范围的范围，所以它有外部迭代器和内部迭代器，结果视图的属性可能依赖于两者。
+连接视图是唯一视图在c++中20处理范围的范围，所以有外部迭代器和内部迭代器，结果视图的属性可能依赖于两者。
 
-注意，内部迭代器不支持迭代器特性。出于这个原因，应该更像std::ranges::next()这样的工具，而非std::next()。否则，代码可能无法编译。
+注意，内部迭代器不支持迭代器特性，应该使用像std::ranges::next()这样的工具，而非std::next()。否则，代码可能无法编译。
 
 \mySamllsection{连接视图和const}
 
-注意，不能总是迭代const连接视图。若范围不是const可迭代的，或者内部范围产生普通值而不是引用，就会发生这种情况。
+不能总是迭代const连接视图。若范围不是const可迭代的，或者内部范围产生普通值而不是引用，就会发生这种情况。
 
 对于后一种情况，请考虑以下示例:
 
@@ -503,9 +503,9 @@ int main()
 [1 2 3 4 0 8 15 5 4 3 2 1 0]
 \end{shell}
 
-然而，当我们将整个数组传递给一个转换视图，该视图按值返回所有内部范围，调用printConstColl()是一个错误。
+然而，将整个数组传递给一个转换视图，该视图按值返回所有内部范围，调用printConstColl()会导致错误。
 
-调用视图的printColl()，其内部范围产生普通值，工作得很好。注意，这要求printColl()使用std::ranges::next()，而非std::next()。否则，即使下面的代码也不能编译:
+调用视图的printColl()，其内部范围产生普通值，工作得很好。这要求printColl()使用std::ranges::next()，而非std::next()。否则，即使下面的代码也不能编译:
 
 \begin{cpp}
 printColl(coll2values | std::views::join); // ERROR if std::next() used
@@ -513,7 +513,7 @@ printColl(coll2values | std::views::join); // ERROR if std::next() used
 
 \mySamllsection{连接视图的特殊特征}
 
-若外部范围和内部范围是双向的，并且内部范围是通用范围，则产生的类别是双向的。否则，若外部范围和内部范围至少是前向范围，则生成的类别是前向的。否则，生成的类别为输入范围。
+若外部范围和内部范围是双向的，并且内部范围是通用范围，则产生的类别是双向的。若外部范围和内部范围至少是前向范围，则生成的类别是前向的。否则，生成的类别为输入范围。
 
 \mySamllsection{连接视图的接口}
 

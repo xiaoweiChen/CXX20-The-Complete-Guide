@@ -25,7 +25,7 @@
 \textbf{传播常量性:} & 从不(但元素不是左值)              \\ \hline
 \end{longtable}
 
-类模板std::ranges::iota\_view<>是一个生成一系列值的视图。这些值可以是整型的，例如
+类模板std::ranges::iota\_view<>是一个生成一系列值的视图。这些值可以是整型，例如
 
 \begin{itemize}
 \item
@@ -35,9 +35,9 @@
 ‘a’, ‘b’, ‘c’ ...
 \end{itemize}
 
-也可以使用操作符++生成指针或迭代器序列。
+也可以使用自加操作符生成指针或迭代器序列。
 
-这个序列可能是有限的，也可能是无限的。
+这个序列可能有限，也可能无限。
 
 iota视图的主要用例是提供在一系列值上迭代的视图。例如:
 
@@ -65,7 +65,7 @@ for (auto val : std::views::iota(1, 100)) { // iterate over values 1, 2, ... 99
 }
 \end{cpp}
 
-下面是一个使用iota视图的完整示例程序:
+下面是使用iota视图的完整示例程序:
 
 \filename{ranges/iotaview.cpp}
 
@@ -128,9 +128,9 @@ a b c d e f g h i j k l m n o p q r s t u v w x y z
 
 \mySamllsection{iota视图的特殊特征}
 
-因为迭代器持有当前值，所以iota视图是租借范围(其迭代器的生命周期不依赖于视图)。若iota视图是有限的，并且结束值与开始值具有相同的类型，则该视图是一个通用范围。
+迭代器持有当前值，所以iota视图是租借范围(其迭代器的生命周期不依赖于视图)。若iota视图有限，并且结束值与开始值具有相同的类型，则该视图是一个通用范围。
 
-若iota视图无限大，或者结束的类型不同于开始的类型，则它不是通用范围，可能必须使用一个通用视图来协调开始迭代器和哨兵(结束迭代器)的类型。
+若iota视图无限大，或者结束的类型不同于开始的类型，则不是通用范围，可能必须使用一个通用视图来协调开始迭代器和哨兵(结束迭代器)的类型。
 
 \mySamllsection{iota视图的接口}
 
@@ -142,7 +142,7 @@ a b c d e f g h i j k l m n o p q r s t u v w x y z
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
 \begin{longtable}[c]{|l|l|}
 \hline
-\textbf{Operation}       & \textbf{Effect}                                                    \\ \hline
+\textbf{操作}       & \textbf{效果}                                                    \\ \hline
 \endfirsthead
 %
 \endhead
@@ -152,10 +152,10 @@ iota\_view v\{begVal\}   & 创建一个以begVal开头的无限序列           
 iota\_view v\{begVal, endVal\}          & 创建一个从begVal开始直到endVal之前的值的序列               \\ \hline
 iota\_view v\{beg, end\} & 启用子视图的辅助构造函数                             \\ \hline
 v.begin()                & 生成begin迭代器(指向起始值)         \\ \hline
-v.end()                  & 产生哨兵(end迭代器)，若无限制，则为std::unreachable\_sentinel \\ \hline
+v.end()                  & 生成哨兵(end迭代器)，若无限制，则为std::unreachable\_sentinel \\ \hline
 v.empty()                & 表示v是否为空                                          \\ \hline
 if (v)                   & 若v不为空，则为true                                             \\ \hline
-v.size()                 & 产生元素的数量(若有限且可计算，则可用) \\ \hline
+v.size()                 & 生成元素的数量(若有限且可计算，则可用) \\ \hline
 v.front()                & 生成第一个元素                                           \\ \hline
 v.back()                 & 生成最后一个元素(若有限且通用，则可用)           \\ \hline
 v{[}idx{]}               & 生成的第n个元素                                            \\ \hline
@@ -165,13 +165,13 @@ v{[}idx{]}               & 生成的第n个元素                               
 表8.8 类std::ranges::iota\_view<>操作
 \end{center}
 
-当声明iota视图时，如下所示:
+声明iota视图时:
 
 \begin{cpp}
 std::ranges::iota_view v1{1, 100}; // range with values: 1, 2, ... 99
 \end{cpp}
 
-v1的类型由std::ranges::iota\_view<int, int>推导而出，会创建一个提供基本API的对象，并使用begin()和end()得到这些值的迭代器。迭代器在内部存储当前值，并在迭代器加1时递增当前值:
+v1的类型由std::ranges::iota\_view<int, int>推导而出，会创建提供基本API的对象，并使用begin()和end()得到这些值的迭代器。迭代器在内部存储当前值，并在迭代器加1时递增当前值:
 
 \begin{cpp}
 std::ranges::iota_view v1{1, 100}; // range with values: 1, 2, ... 99
@@ -181,9 +181,9 @@ std::cout << *pos; // print current value (here, value 1)
 std::cout << *pos; // print current value (here, value 2)
 \end{cpp}
 
-因此，值的类型必须支持自增操作符++，所以bool或std::string这样的类型就不可能了。
+因此，值的类型必须支持自增操作符，所以bool或std::string这样的类型就不可能了。
 
-注意，此迭代器的类型取决于iota\_view的实现，所以在使用时必须使用auto。或者，可以用std::ranges::iterator\_t<>声明pos:
+注意，此迭代器的类型取决于iota\_view的实现，所以在使用时必须使用auto，或用std::ranges::iterator\_t<>也可以声明pos:
 
 \begin{cpp}
 std::ranges::iterator_t<decltype(v1)> pos = v1.begin();
@@ -198,7 +198,7 @@ for (auto c : letters) {
 }
 \end{cpp}
 
-注意，这个循环的输出取决于字符集。只有当小写字母具有连续的值(如ASCII或ISO-Latin-1或UTF-8的情况)时，视图才只迭代小写字符。通过使用char8\_t，可以确保这是可移植的UTF-8字符:
+这个循环的输出取决于字符集，只有当小写字母具有连续的值(如ASCII或ISO-Latin-1或UTF-8的情况)时，视图才只迭代小写字符。通过使用char8\_t，可以确保这是可移植的UTF-8字符:
 
 \begin{cpp}
 std::ranges::iota_view letters{u8'a', u8'z'+1}; // UTF-8 values from a to z
@@ -211,11 +211,11 @@ std::ranges::iota_view v2{10L}; // unlimited range with values: 10L, 11L, 12L, .
 std::ranges::iota_view<int> v3; // unlimited range with values: 0, 1, 2, ...
 \end{cpp}
 
-v3的类型是std::ranges::iota\_view<int, std::unreachable\_sentinel\_t>，所以end()产生std::unreachable\_sentinel。
+v3的类型是std::ranges::iota\_view<int, std::unreachable\_sentinel\_t>，所以end()会生成std::unreachable\_sentinel。
 
-无限视图是无尽的。当迭代器表示最大值并迭代到下一个值时，调用自增操作符++，这在形式上是未定义的行为(实践中，执行通常会溢出，以便下一个值是值类型的最小值)。若视图有一个永远不匹配的结束值，其行为是一样的。
+无限视图是无尽的。当迭代器表示最大值并迭代到下一个值时，调用自增操作符，这在形式上是未定义行为(实践中，执行通常会溢出，以便下一个值是值类型的最小值)。若视图有一个永远不匹配的结束值，其行为是一样的。
 
-\mySamllsection{使用iota视图对指针和迭代器进行迭代}
+\mySamllsection{iota视图对指针和迭代器进行迭代}
 
 可以用迭代器或指针初始化iota视图，可使用第一个值作为begin，最后一个值作为end，但是元素是迭代器/指针，而非值。
 
@@ -230,7 +230,7 @@ for (const auto& itorElem : std::views::iota(coll.begin(), coll.end())) {
 }
 \end{cpp}
 
-也可以使用这个特性初始化一个带有迭代器的容器，该迭代器指向集合coll的所有元素:
+也可以使用这个特性初始化带有迭代器的容器，该迭代器指向集合coll的所有元素:
 
 \begin{cpp}
 std::ranges::iota_view itors{coll.begin(), coll.end()};
@@ -244,7 +244,7 @@ std::vector<std::ranges::iterator_t<decltype(coll)>> refColl{itors.begin(),
 std::vector refColl(itors.begin(), itors.end());
 \end{cpp}
 
-提供这个构造函数的主要原因是，为了支持创建iota视图子视图的泛型代码，比如drop视图:
+提供这个构造函数的主要原因是，为了支持创建iota视图子视图的泛型代码，比如丢弃视图:
 
 \begin{cpp}
 // generic function to drop the first element from a view:
@@ -255,7 +255,7 @@ std::ranges::iota_view v1{1, 9}; // iota view with elems from 1 to 8
 auto v2 = dropFirst(v1); // iota view with elems from 2 to 8
 \end{cpp}
 
-成员函数size()和operator[]的可用性取决于，传递的范围内对这些操作符的支持情况。
+成员函数size()和[]操作符的可用性取决于传递的范围内对操作符的支持情况。
 
 \mySubsubsection{8.4.2}{单视图}
 
@@ -281,7 +281,7 @@ auto v2 = dropFirst(v1); // iota view with elems from 2 to 8
 \textbf{传播常量性:} & 总是                                             \\ \hline
 \end{longtable}
 
-类模板std::ranges::single\_view<>是一个拥有一个元素的视图。除非值类型是const，否则可以对值进行。
+类模板std::ranges::single\_view<>是拥有一个元素的视图。除非值类型是const，否则可以对值进行。
 
 总体效果是，单视图的行为大致类似于一个元素的低成本集合，不分配堆上的内存。
 
@@ -312,7 +312,7 @@ for (auto val : std::views::single(42)) { // iterate over the single int value 4
 }
 \end{cpp}
 
-下面是一个使用单视图的完整示例程序:
+下面是使用单视图的完整示例程序:
 
 \filename{ranges/singleview.cpp}
 
@@ -370,7 +370,7 @@ std::ranges::contiguous\_range
 std::ranges::sized\_range
 \end{itemize}
 
-视图始终是一个通用范围，而不是一个租借范围(其迭代器的生命周期不依赖于视图)。
+视图始终是通用范围，而不是租借范围(其迭代器的生命周期不依赖于视图)。
 
 \mySamllsection{单视图的接口}
 
@@ -471,7 +471,7 @@ std::ranges::single_view<const int> v3{42};
 
 类模板std::ranges::empty\_view<>是一个没有元素的视图，但必须指定元素类型。
 
-空视图的主要用例是调用具有低成本视图的泛型代码，该视图没有元素，并且类型系统知道它没有任何元素:
+空视图的主要用例是调用具有低成本视图的泛型代码，该视图没有元素，并且类型系统知道它没有元素:
 
 \begin{cpp}
 std::ranges::empty_view<int> v1; // empty view
@@ -539,7 +539,7 @@ int main()
 
 \mySamllsection{空视图的特殊特性}
 
-空视图的行为大致类似于空vector，它模拟了以下概念:
+空视图的行为大致类似于空vector，还模拟了以下概念:
 
 \begin{itemize}
 \item
@@ -549,13 +549,13 @@ std::ranges::contiguous\_range(暗示std::ranges::random\_access\_range)
 std::ranges::sized\_range
 \end{itemize}
 
-begin()和end()总是产生nullptr，所以该范围既是通用范围又是租借范围(其迭代器的生命周期不依赖于视图)。
+begin()和end()总是产生nullptr，所以该范围既是通用范围，又是租借范围(其迭代器的生命周期不依赖于视图)。
 
 \mySamllsection{空视图的接口}
 
 “类std::ranges::empty\_view<>的操作”表列出了空视图的API。
 
-读者们可能想知道为什么空视图提供front()、back()和operator[]，其行为总是未定义的，调用它们总会触发致命的运行时错误。然而，泛型代码在调用front()、back()或[]运算符之前总是必须检查(或知道)是否存在元素，所以泛型代码永远不会调用这些成员函数。即使是空视图，这样的代码也可以编译。
+读者们可能想知道为什么空视图提供front()、back()和[]操作符，其行为总是未定义的，调用它们总会触发致命的运行时错误。然而，泛型代码在调用front()、back()或[]操作符之前总是必须检查(或知道)是否存在元素，所以泛型代码永远不会调用这些成员函数。即使是空视图，这样的代码也可以编译。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -583,7 +583,7 @@ r.data             & 生成一个原始指针，指向用nullptr初始化的元�
 表8.10 类std::ranges::empty\_view<>的操作
 \end{center}
 
-例如，可以这样传递一个空视图:
+例如，这样传递一个空视图:
 
 \begin{cpp}
 void foo(std::ranges::random_access_range auto&& rg)
@@ -671,14 +671,14 @@ std::wistringstream mywstream{L"1.1 2.2 3.3 4.4"};
 auto vw = std::views::istream<double>(mywstream);
 \end{cpp}
 
-vw的初始化相当于以下两个初始化:
+vw的初始化相当于:
 
 \begin{cpp}
 auto vw2 = std::ranges::basic_istream_view<double, wchar_t>{myStrm};
 auto vw3 = std::ranges::wistream_view<double>{myStrm};
 \end{cpp}
 
-下面是一个使用istream视图的完整示例程序:
+下面是使用istream视图的完整示例程序:
 
 \filename{ranges/istreamview.cpp}
 
@@ -717,11 +717,11 @@ int main()
 2 4 6 8
 \end{shell}
 
-程序在用字符串s初始化的字符串流上迭代两次:
+用字符串s初始化的字符串流上迭代两次:
 
 \begin{itemize}
 \item
-istream视图vs遍历从输入字符串流mystream1读取的所有字符串，打印s的所有子字符串。
+istream视图vs遍历从输入字符串流mystream1读取的所有字符串，输出s的所有子字符串。
 
 \item
 istream视图vi遍历从输入字符串流mystream2中读取的所有整型数，读数结束时，到达Motorway。
@@ -729,7 +729,7 @@ istream视图vi遍历从输入字符串流mystream2中读取的所有整型数�
 
 \mySamllsection{istream视图和const}
 
-注意，不能迭代const istream视图。例如:
+不能迭代const istream视图:
 
 \begin{cpp}
 void printElems(const auto& coll) {
@@ -743,7 +743,7 @@ std::istringstream myStrm{"0 1 2 3 4"};
 printElems(std::views::istream<int>(myStrm)); // ERROR
 \end{cpp}
 
-问题是begin()仅为非const istream视图提供，因为值分两步处理(begin()/++和operator*)，同时值存储在视图中。
+问题是begin()仅为非const istream视图提供，因为值分两步处理(begin()/++和解引用操作符)，同时值存储在视图中。
 
 下面的例子演示了修改视图的原因，通过使用底层的方法来迭代视图的“元素”，从istream视图中读取字符串:
 
@@ -766,7 +766,7 @@ very-very-very-long
 words
 \end{shell}
 
-当迭代器pos遍历视图va时，使用begin()和++从输入流myStrm中读取字符串。这些字符串必须存储在内部，以便可以通过操作符*使用它们。若将字符串存储在迭代器中，迭代器可能必须为该字符串保存内存，复制迭代器必须复制该内存，复制迭代器的代价不应该太高，所以视图将字符串存储在视图中，其效果是在我们迭代时修改视图。
+当迭代器pos遍历视图va时，使用begin()和++从输入流myStrm中读取字符串。这些字符串必须存储在内部，以便可以通过解引用操作符使用。若将字符串存储在迭代器中，迭代器可能必须为该字符串保存内存，复制迭代器必须复制该内存，复制迭代器的代价不应该太高，所以视图将字符串存储在视图中，其效果可在迭代时修改视图。
 
 因此，必须在泛型代码中使用通用/转发引用来支持此视图:
 
@@ -801,7 +801,7 @@ v.end()            & 产生std::default\_sentinel作为结束迭代器       \\ 
 
 所能做的就是使用迭代器逐值读取，直到到达流的末尾。没有提供其他成员函数(如empty()或front())。
 
-请注意，C++20标准中istream视图的原始规范与其他视图有一些不一致，这些不一致后来修复了(参见\url{http://wg21.link/p2432})。通过这个修复，有了当前的行为:
+C++20标准中istream视图的原始规范与其他视图有一些不一致，这些不一致后来修复了(参见\url{http://wg21.link/p2432})。通过这个修复，有了当前的行为:
 
 \begin{itemize}
 \item
@@ -819,7 +819,7 @@ std::ranges::basic_istream_view<int, char> v2{myStrm}; // OK
 \end{cpp}
 
 \item
-但是，不能跳过太多参数:
+但不能跳过太多参数:
 
 \begin{cpp}
 std::ranges::basic_istream_view<int> v3{myStrm}; // ERROR
@@ -868,7 +868,7 @@ auto v6 = std::views::istream<int>(myStrm); // OK
 \textbf{传播常量性:} & 元素总是const              \\ \hline
 \end{longtable}
 
-类模板std::basic\_string\_view<>，及其特化std::string\_view、std::u16string\_view、std::u32string\_view和std::wstring\_view是C++17标准库中仅有的视图类型。然而，C++20为UTF-8字符增加了特化:std::u8string\_view。
+类模板std::basic\_string\_view<>，及其特化std::string\_view、std::u16string\_view、std::u32string\_view和std::wstring\_view是C++17标准库中仅有的视图类型，C++20为UTF-8字符增加了特化:std::u8strng\_view。
 
 字符串视图不遵循视图具有的几个约定:
 
@@ -909,7 +909,7 @@ h e l l o
 
 \mySamllsection{字符视图的特殊特性}
 
-迭代器不引用这个视图。相反，其引用底层字符序列，所以字符串视图是一个租借范围。但是，当底层字符序列不再存在时，迭代器仍然可以悬空。
+迭代器不引用这个视图。相反，其引用底层字符序列，字符串视图是一个租借范围，但当底层字符序列不再存在时，迭代器仍可以悬空。
 
 \mySamllsection{字符串视图特定于视图的接口}
 
@@ -987,7 +987,7 @@ print(std::span{vec}.last(3));
 
 这个例子将在后面关于span的章节中讨论。
 
-请注意，span不遵循视图通常具有的几个约定:
+span不遵循视图通常具有的几个约定:
 
 \begin{itemize}
 \item
@@ -1002,13 +1002,13 @@ print(std::span{vec}.last(3));
 
 \mySamllsection{span的范围工厂}
 
-没有范围工厂用于从begin(迭代器)和end(哨兵)初始化span、，但有一个range工厂可以创建一个begin和count的span:
+没有范围工厂用于从begin(迭代器)和end(哨兵)初始化span，但有范围工厂可以使用begin和count创建一个span:
 
 \begin{cpp}
 std::views::counted(beg, sz)
 \end{cpp}
 
-std::views::counted()创建一个动态大小的跨度，从迭代器beg开始，用连续范围的前sz个元素初始化(对于非连续范围，counts()创建子范围)。
+std::views::counted()创建一个动态大小的span，从迭代器beg开始，用连续范围的前sz个元素初始化(对于非连续范围，counted()创建子范围)。
 
 例如:
 
@@ -1022,7 +1022,7 @@ auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of 
 
 \mySamllsection{span的特点}
 
-迭代器不指向span。相反，其引用底层元素，所以跨度是一个租借范围。但请注意，当底层字符序列不再存在时，迭代器仍然可以悬空。
+迭代器不指向span。相反，其引用底层元素，所以span是一个租借范围。但当底层字符序列不再存在时，迭代器仍然可以悬空。
 
 \mySamllsection{span的特定视图接口}
 

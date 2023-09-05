@@ -1,6 +1,6 @@
 
 
-本节讨论产生所遍历元素修改值的视图。
+本节讨论生成所遍历元素修改值的视图。
 
 \mySubsubsection{8.6.1}{转换视图}
 
@@ -74,7 +74,7 @@ for (const auto& elem : rg | std::views::transform([](auto x) {
 }
 \end{cpp}
 
-下面是一个使用转换视图的完整示例:
+下面是使用转换视图的完整示例:
 
 \filename{ranges/transformview.cpp}
 
@@ -160,7 +160,7 @@ int main()
 2/9 9/2 3/2 4/2 3/7
 \end{shell}
 
-注意，这里传递给transform的Lambda必须返回一个引用:
+这里传递给transform的Lambda必须返回一个引用:
 
 \begin{cpp}
 [] (std::pair<int,int>& elem) -> int& {
@@ -174,7 +174,7 @@ int main()
 
 \mySamllsection{转换视图的特殊特性}
 
-与通常的标准视图一样，转换视图不会将常量性委托给元素。所以即使视图是const，传递给转换函数的元素也不是const。
+与标准视图一样，转换视图不会将常量性委托给元素。所以即使视图是const，传递给转换函数的元素也不是const。
 
 例如，使用上面的transform.cpp示例，可以完成以下实现:
 
@@ -193,7 +193,7 @@ for (auto&& member : v) {
 }
 \end{cpp}
 
-注意，若底层范围是长度范围和通用范围，则获取视图仅是通用的(迭代器和哨兵具有相同的类型)。为了协调类型，可能必须使用通用视图。
+若底层范围是长度范围和通用范围，则获取视图仅是通用的(迭代器和哨兵具有相同的类型)。为了协调类型，可能必须使用通用视图。
 
 开始迭代器和哨兵(结束迭代器)都是特殊的内部辅助类型。
 
@@ -211,7 +211,7 @@ for (auto&& member : v) {
 %
 \endhead
 %
-transform\_view r\{\}         & 创建一个transform\_view，它引用一个默认构造的范围                               \\ \hline
+transform\_view r\{\}         & 创建一个transform\_view，引用一个默认构造的范围                               \\ \hline
 transform\_view r\{rg, func\} & 创建一个transform\_view，用函数变换rg范围内所有元素的值          \\ \hline
 r.begin()          & 生成begin迭代器                                      \\ \hline
 r.end()            & 生成哨兵(end迭代器)                             \\ \hline
@@ -267,7 +267,7 @@ r.base()           & 产生对r所引用或归属范围的引用       \\ \hline
 获取std::pair元素的第一个或第二个成员(不过，对于关联容器和无序容器的元素，使用keys\_view和values\_view更方便)
 \end{itemize}
 
-注意，对于这个视图，类模板参数推导不起作用，因为必须显式地将索引指定为参数，并且类模板不支持部分参数推导。出于这个原因，必须这样书写:
+对于这个视图，类模板参数推导不起作用，因为必须显式地将索引指定为参数，并且类模板不支持部分参数推导:
 
 \begin{cpp}
 std::vector<std::tuple<std::string, std::string, int>> rg{
@@ -287,7 +287,7 @@ for (const auto& elem
 1685 1756 1770 1810
 \end{shell}
 
-请注意，若传递的范围不是视图，则必须使用范围适配器all()指定底层范围的类型:
+若传递的范围不是视图，则必须使用范围适配器all()指定底层范围的类型:
 
 \begin{cpp}
 std::ranges::elements_view<decltype(std::views::all(rg)), 2>{rg} // OK
@@ -300,13 +300,13 @@ std::ranges::elements_view<std::views::all_t<decltype(rg)&>, 2>{rg} // OK
 std::ranges::elements_view<std::views::all_t<decltype((rg))>, 2>{rg} // OK
 \end{cpp}
 
-然而，这里的细节很重要。若范围还不是视图，那么all\_t<>的参数必须是左值引用。因此，需要在rg的类型后面加上\&，或者在rg周围加上双括号(根据规则，若传递的表达式是左值，则decltype会产生一个左值引用)。没有\&的单圆括号不起作用:
+若范围还不是视图，那么all\_t<>的参数必须是左值引用，所以需要在rg的类型后面加上\&，或者在rg周围加上双括号(根据规则，若传递的表达式是左值，则decltype会产生一个左值引用)。没有\&的单圆括号不起作用:
 
 \begin{cpp}
 std::ranges::elements_view<std::views::all_t<decltype(rg)>, 2>{rg} // ERROR
 \end{cpp}
 
-因此，声明视图更简单的方法是使用相应的范围适配器。
+声明视图更简单的方法是使用相应的范围适配器。
 
 \mySamllsection{元素视图的范围适配器}
 
@@ -338,7 +338,7 @@ for (const auto& elem : rg | std::views::elements<2>) {
 std::ranges::elements_view<std::views::all_t<decltype(rg)&>, idx>{rg}
 \end{cpp}
 
-元素视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，所以只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
+元素视图在内部存储传递的范围(可选择以与all()相同的方式转换为视图)，只有在传递的范围有效的情况下才有效(除非传递了右值，则在内部使用了归属视图)。
 
 begin迭代器和哨兵(end迭代器)都是特殊的内部辅助类型，若传递的是通用范围，则是通用的。
 
@@ -385,7 +385,7 @@ golden-ratio euler-constant e pi
 0.577216 1.61803 2.71828 3.14159
 \end{shell}
 
-请注意，不应该按以下方式对coll的元素进行排序:
+不应该按以下方式对coll的元素进行排序:
 
 \begin{cpp}
 std::ranges::sort(coll | std::views::elements<2>); // OOPS
@@ -400,9 +400,9 @@ pi e golden-ratio euler-constant
 
 \mySamllsection{其他类元组类型的元素视图}
 
-为了能够将此视图用于用户定义的类型，需要为它们指定一个类似元组的API。但就目前的规范而言，这实际上并不是因为一般的类元组api的设计和相应概念的定义方式存在问题。严格地说，只能对std::pair<>和std::tuple<>使用std::ranges::elements\_view类或适配器std::views::elements<>。
+为了能够将此视图用于用户定义的类型，需要指定一个类似元组的API。但就目前的规范而言，这实际上并不是因为一般的类元组api的设计和相应概念的定义方式存在问题。严格地说，只能对std::pair<>和std::tuple<>使用std::ranges::elements\_view类或适配器std::views::elements<>。
 
-但若确保在包含头文件<ranges>之前定义了类似元组的API，就可以工作。
+但若确保在包含头文件<ranges>之前定义了类似元组的API，就可以工作了。
 
 例如:
 
@@ -449,7 +449,7 @@ namespace std {
 } // namespace std
 \end{cpp}
 
-可以这样使用:
+可以这样:
 
 \filename{ranges/elementsviewhack.cpp}
 
@@ -508,7 +508,7 @@ coll:
 %
 \endhead
 %
-elements\_view r\{\} & 创建一个elements\_view，它引用一个默认构造的范围                               \\ \hline
+elements\_view r\{\} & 创建一个elements\_view，引用一个默认构造的范围                               \\ \hline
 elements\_view r\{rg\} & 创建一个引用范围rg的elements\_view              \\ \hline
 r.begin()              & 生成begin迭代器                                      \\ \hline
 r.end()                & 生成哨兵(end迭代器)                             \\ \hline
@@ -552,11 +552,11 @@ r.base()               & 生成对r所引用或归属范围的引用       \\ \h
 \textbf{传播常量性:} & \multicolumn{1}{l|}{只有在右值范围内}    & 只有在右值范围内    \\ \hline
 \end{longtable}
 
-类模板std::ranges::keys\_view<>定义了一个视图，该视图从传递的范围的元素中选择第一个成员/属性/元素。它只是使用索引为0的元素视图的快捷方式，为每个元素调用get<0>(elem)。
+类模板std::ranges::keys\_view<>定义了一个视图，该视图从传递的范围的元素中选择第一个成员/属性/元素。只是使用索引为0的元素视图的快捷方式，为每个元素调用get<0>(elem)。
 
-类模板std::ranges::values\_view<>定义了一个视图，该视图从传递的范围的元素中选择第二个成员/属性/元素。它只是使用索引为1的元素视图的快捷方式，为每个元素调用get<1>(elem)。
+类模板std::ranges::values\_view<>定义了一个视图，该视图从传递的范围的元素中选择第二个成员/属性/元素。只是使用索引为1的元素视图的快捷方式，为每个元素调用get<1>(elem)。
 
-这些视图可以这样使用:
+可以这样使用:
 
 \begin{itemize}
 \item
@@ -569,9 +569,9 @@ r.base()               & 生成对r所引用或归属范围的引用       \\ \h
 获取std::variant元素的第一/第二个的选项
 \end{itemize}
 
-但对于最后两个应用程序，直接使用索引为0的elements\_view元素可能更具可读性。
+对于后两个，直接使用索引为0的elements\_view元素可能更具可读性。
 
-注意，类模板参数推导对这些视图还不起作用出于这个原因，必须显式地指定模板参数。例如:
+类模板参数推导对这些视图还不起作用出于这个原因，必须显式地指定模板参数。例如:
 
 \begin{cpp}
 std::map<std::string, int> rg{
