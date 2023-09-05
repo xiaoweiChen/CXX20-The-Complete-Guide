@@ -4,11 +4,11 @@
 目前的(草案)实现表明，相同甚至更好的性能是可能的。粗略的测量表明
 
 \begin{itemize}
-\item 
+\item
 std::format()应该和sprintf()一样快，甚至更好。
 
-\item 
-std::format\_to()和std::format\_to\_n()应该更好
+\item
+std::format\_to()和std::format\_to\_n()应该有更好的性能。
 \end{itemize}
 
 编译器通常可以在编译时检查格式字符串，这确实有很大帮助。有助于避免格式化错误，并获得更好的性能。
@@ -36,7 +36,7 @@ constexpr const char* fmt2 = "{:7.2f}\n"; // compile-time format string
 std::cout << std::format(fmt2, 42); // compile-time ERROR: invalid format
 \end{cpp}
 
-当然，应用程序有时必须在运行时计算格式细节(例如根据传递的值计算最佳宽度)，必须使用std::vformat()或std::vformat\_to()，并使用std::make\_format\_args()将所有参数传递给这些函数:
+当然，应用有时必须在运行时计算格式细节(例如根据传递的值计算最佳宽度)，必须使用std::vformat()或std::vformat\_to()，并使用std::make\_format\_args()将所有参数传递给这些函数:
 
 \begin{cpp}
 const char* fmt3 = "{} {}\n"; // runtime format

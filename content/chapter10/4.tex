@@ -1,16 +1,16 @@
 若为格式指定了L，则使用特定于语言环境的表示法:
 
 \begin{itemize}
-\item 
+\item
 对于bool，使用std::numpunct::truename和std::numpunct::falsename上的区域设置字符串。
 
-\item 
+\item
 对于整数值，使用依赖于语言环境的千位分隔符。
 
-\item 
+\item
 对于浮点值，使用依赖于语言环境的小数点和千位分隔字符。
 
-\item 
+\item
 对于chrono库中的几种类型表示法(持续时间、时间点等)，使用特定于语言环境的格式。
 \end{itemize}
 
@@ -32,7 +32,7 @@ std::format(locG, "{0} {0:L}", 1000.7) // yields 1000.7 1.000,7
 
 参见format/formatgerman.cpp获得完整的示例。
 
-注意，只有在使用语言环境说明符L时才会使用语言环境，否则将使用默认的语言环境“C”，它使用美式格式。
+只有在使用语言环境说明符L时才会使用语言环境，否则将使用默认的语言环境“C”，并使用美式格式。
 
 或者，可以设置全局语言环境，并使用L说明符:
 
@@ -70,7 +70,7 @@ int main()
 	// create locale with German bool names:
 	std::locale locBool{std::cin.getloc(),
 						new GermanBoolNames{""}};
-						
+
 	// use locale to print Boolean values:
 	std::cout << std::format(locBool, "{0} {0:L}\n", false); // false falsch
 }

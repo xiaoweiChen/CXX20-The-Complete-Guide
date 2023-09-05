@@ -1,4 +1,4 @@
-理想情况下，C++编译器应该在编译时。而非在运行时检测bug。因为字符串字面值在编译时已知，所以当字符串字面值被用作格式字符串时，C++可以检查格式违规，并且在std::format()中这样做[编译时检查格式字符串的要求是通过\url{http://wg21.link/p2216r3}提出的，并在C++20标准化后被接受为针对C++20的修复]:
+理想情况下，C++编译器应该在编译时检测bug，而非在运行时。因为字符串字面值在编译时已知，所以当字符串字面值被用作格式字符串时，C++可以检查格式违规，并且在std::format()中这样做[编译时检查格式字符串的要求是通过\url{http://wg21.link/p2216r3}提出的，并在C++20标准化后被接受为针对C++20的修复]:
 
 \begin{cpp}
 std::format("{:d}", 42) // OK
@@ -48,16 +48,16 @@ constexpr const char* fmt2 = "{:d}"; // compile-time format string
 std::format(fmt2, 42); // OK
 \end{cpp}
 
-使用fmt1不会编译，因为传递的参数不是编译时字符串，并且使用了std::format()。然而，使用fmt1与std::vformat()工作良好(但您必须转换所有参数与std::make\_format\_args())。将fmt2传递给std::format()时，使用fmt2不会编译，因为其可初始化为编译时字符串。
+使用fmt1不会编译，因为传递的参数不是编译时字符串，并且使用std::format()。然而，使用fmt1与std::vformat()工作良好(必须转换所有参数与std::make\_format\_args())。将fmt2传递给std::format()时，使用fmt2不会编译，因为其可初始化为编译时字符串。
 
-若想在std::vformat()中使用多个参数，必须将它们全部传递给std::make\_format\_args()的一次调用:
+若想在std::vformat()中使用多个参数，必须一次性将其传递给std::make\_format\_args():
 
 \begin{cpp}
 const char* fmt3 = "{} {}";
 std::vformat(fmt3, std::make_format_args(x, y))
 \end{cpp}
 
-若在运行时检测到格式化失败，则抛出类型为std::format\_error的异常。这个新的标准异常类型派生自std::runtime\_error，并提供了标准异常的常用API，可以使用调用what()获得的错误消息的字符串初始化异常。
+若在运行时检测到格式化失败，则抛出类型为std::format\_error的异常。这个新标准异常类型派生自std::runtime\_error，并提供了标准异常的常用API，可以使用调用what()获得的错误消息的字符串初始化异常。
 
 例如:
 

@@ -7,13 +7,13 @@
 
 \begin{itemize}
 \item
-parse()实现如何解析类型的格式字符串说明符
+parse() 实现如何解析类型的格式字符串说明符
 
 \item
-format()为自定义类型的对象/值执行实际格式化
+format() 为自定义类型的对象/值执行实际格式化
 \end{itemize}
 
-来看一下第一个最小的例子(我们将逐步改进它)，指定了如何格式化具有固定值的对象/值。假设类型是这样定义的(见format/always40.hpp):
+来看一下第一个最小的例子(将逐步改进它)，指定了如何格式化具有固定值的对象/值。假设类型是这样定义的(见format/always40.hpp):
 
 \begin{cpp}
 class Always40 {
@@ -40,7 +40,7 @@ struct std::formatter<Always40>
 	constexpr auto parse(std::format_parse_context& ctx) {
 		return ctx.begin(); // return position of } (hopefully there)
 	}
-	
+
 	// format by always writing its value:
 	auto format(const Always40& obj, std::format_context& ctx) const {
 		return std::format_to(ctx.out(), "{}", obj.getValue());
@@ -63,7 +63,7 @@ Value: 40
 Twice: 40 40
 \end{shell}
 
-我们将格式化器定义为类型std::formatter<>的特化，用于类型Always40:
+将格式化器定义为类型std::formatter<>的特化，用于类型Always40:
 
 \begin{cpp}
 template<>
@@ -75,10 +75,9 @@ struct std::formatter<Always40>
 
 因为只有public成员，所以使用struct，而非class。
 
-
 \mySamllsection{解析格式字符串}
 
-在parse()中，我们实现了解析格式字符串的函数:
+parse()中，实现了解析格式字符串的函数:
 
 \begin{cpp}
 // parse the format string for this type:
@@ -104,24 +103,24 @@ ctx.begin()指向: "\} \{0\}"
 ctx.begin()指向: "\}\verb|\|n"
 \end{itemize}
 
-还有一个ctx.end()，它指向整个格式字符串的末尾。开始的\{已经解析过了，所以必须解析所有的字符，直到对应的结束的\}。
+还有一个ctx.end()，指向整个格式字符串的末尾。开始的\{已经解析过了，所以必须解析所有的字符，直到对应的结束的\}。
 
 对于格式字符串"Val: \{1:\_>20\}cm \verb|\|n"，ctx.begin()是\_的位置，ctx.end()是\verb|\|n之后整个格式字符串的末尾。parse()的任务是解析传递的参数的指定格式，所以必须解析字符\_>20，然后返回格式说明符末尾的位置，即字符0后面的末尾\}。
 
-我们的实现中，还不支持任何格式说明符，所以可以简单地返回得到的第一个字符的位置，只有当下一个字符确实是\}时才会起作用(在结束\}之前处理字符是必须改进的第一件事)。使用任何指定的格式字符调用std::format()将不起作用:
+实现中，还不支持格式说明符，所以可以简单地返回得到的第一个字符的位置，只有当下一个字符确实是\}时才会起作用(在结束\}之前处理字符是必须改进的第一件事)。使用指定的格式字符调用std::format()将不起作用:
 
 \begin{cpp}
 Always40 val;
 std::format("'{:7}", val) // ERROR
 \end{cpp}
 
-注意，parse()成员函数应该是constexpr，以支持格式字符串的编译时计算，并且代码必须接受constexpr函数的所有限制(C++20放宽了这些限制)。
+parse()成员函数应该是constexpr，以支持格式字符串的编译时计算，并且代码必须接受constexpr函数的所有限制(C++20放宽了这些限制)。
 
-但可以看到这个API如何允许程序员解析我们为其类型指定的任何格式。例如，用于支持chrono库的格式化输出。当然，我们应该遵循标准说明符的约定，以避免混淆。
+但可以看到这个API如何允许开发者解析我们为其类型指定的格式。例如，用于支持chrono库的格式化输出。当然，应该遵循标准说明符的约定，以避免混淆。
 
 \mySamllsection{执行格式化}
 
-在format()中，实现了格式化传递值的函数:
+format()中，实现了格式化传递值的函数:
 
 \begin{cpp}
 // format by always writing its value:
@@ -140,9 +139,9 @@ auto format(const Always40& value, std::format_context& ctx) const {
 一个std::format\_context，提供API来编写格式化的结果字符(根据已解析的格式)
 \end{itemize}
 
-format上下文最重要的函数是out()，它会产生一个对象，可以将其传递给std::format\_to()来编写格式化的实际字符。该函数必须返回新的位置以获得进一步的输出，该输出由std::format\_to()返回。
+format上下文最重要的函数是out()，会产生一个对象，可以将其传递给std::format\_to()来编写格式化的实际字符。该函数必须返回新位置以获得进一步的输出，该输出由std::format\_to()返回。
 
-注意，格式化器的format()成员函数应该是const。根据最初的C++20标准，这是不需要的(参见\url{http://wg21.link/lwg3636}了解详细信息)。
+格式化器的format()成员函数应该是const。根据最初的C++20标准，这并不需要(参见\url{http://wg21.link/lwg3636}了解详细信息)。
 
 \mySubsubsection{10.6.2}{改进解析}
 
@@ -183,7 +182,7 @@ public:
 		}
 		return pos; // return position of }
 	}
-	
+
 	// format by always writing its value:
 	auto format(const Always41& obj, std::format_context& ctx) const {
 		return std::format_to(ctx.out(), "{:{}}", obj.getValue(), width);
@@ -217,7 +216,7 @@ constexpr auto parse(std::format_parse_context& ctx) {
 }
 \end{cpp}
 
-注意，循环必须检查是否还有一个字符，以及它是否是末尾的\}，因为调用std::format()的开发者可能忘记了末尾的\}。
+循环必须检查是否还有一个字符，以及它是否是末尾的\}，因为调用std::format()的开发者可能忘记了末尾的\}。
 
 在循环中，将当前宽度乘以数字字符的整数值:
 
@@ -233,7 +232,7 @@ if (*pos < '0' || *pos > '9') {
 }
 \end{cpp}
 
-注意，这里不能使用std::isdigit()，其不是一个可以在编译时调用的函数。
+这里不能使用std::isdigit()，其不是一个可以在编译时调用的函数。
 
 可以测试这样的格式化器:format/always.cpp
 
@@ -249,9 +248,9 @@ Format Error: invalid format ’f’
 
 该值是右对齐的，这是整数值的默认对齐方式。
 
-\mySubsubsection{10.6.3}{使用标准格式化程序用于自定义格式器}
+\mySubsubsection{10.6.3}{自定义格式器使用标准格式化器}
 
-我们仍然可以改进上面实现的格式化器:
+仍然可以改进上面实现的格式化器:
 
 \begin{itemize}
 \item
@@ -261,7 +260,7 @@ Format Error: invalid format ’f’
 可以支持填充字符。
 \end{itemize}
 
-幸运的是，我们不必自己实现完整的解析。相反，可以使用标准格式化器，从它们支持的格式说明符中获益。
+幸运的是，这里不必自己实现完整的解析，而可以使用标准格式化器，以便从已支持的格式说明符中获益。
 
 实际上，有两种方法:
 
@@ -288,7 +287,7 @@ Format Error: invalid format ’f’
 将format()函数将工作委托给标准格式化器
 \end{itemize}
 
-一般来说，应该如下所示:
+一般来说，应该这样:
 
 \filename{format/formatalways42ok.hpp}
 
@@ -302,12 +301,12 @@ struct std::formatter<Always42>
 {
 	// use a standard int formatter that does the work:
 	std::formatter<int> f;
-	
+
 	// delegate parsing to the standard formatter:
 	constexpr auto parse(std::format_parse_context& ctx) {
 		return f.parse(ctx);
 	}
-	
+
 	// delegate formatting of the value to the standard formatter:
 	auto format(const Always42& obj, std::format_context& ctx) const {
 		return f.format(obj.getValue(), ctx);
@@ -315,7 +314,7 @@ struct std::formatter<Always42>
 };
 \end{cpp}
 
-像往常一样，我们为Always42类型声明std::formatter<>的特化。但这一次，使用int类型的本地标准格式化程序来完成这项工作，将解析和格式化都委托给它。实际上，我们使用getValue()从类型中提取值，并使用标准int格式化器完成其余的格式化工作。
+像往常一样，为Always42类型声明std::formatter<>的特化。但这一次，使用int类型的本地标准格式化程序来完成这项工作，将解析和格式化都委托给它。实际上，使用getValue()从类型中提取值，并使用标准int格式化器完成其余的格式化工作。
 
 可以用下面的程序测试格式化器:
 
@@ -352,7 +351,7 @@ With width: ’     42’
 With all:   ’..42...’
 \end{shell}
 
-注意，默认情况下，该值仍然是右对齐的，这是int的默认对齐方式。
+默认情况下，该值仍然是右对齐的，这是int的默认对齐方式。
 
 实践中，可能需要对这段代码进行一些修改，稍后将详细讨论:
 
@@ -366,7 +365,7 @@ With all:   ’..42...’
 
 \mySamllsection{继承标准格式器}
 
-通常，可以从标准格式化器派生，以便格式化器成员及其parse()函数隐式可用:
+可以从标准格式化器派生，以便格式化器成员及其parse()函数隐式可用:
 
 \filename{format/formatalways42inherit.hpp}
 
@@ -386,26 +385,26 @@ struct std::formatter<Always42> : std::formatter<int>
 };
 \end{cpp}
 
-但请注意，在实践中，可能还需要对这段代码进行一些修改:
+实践中，可能还需要对这段代码进行一些修改:
 
 \begin{itemize}
 \item
 将format()声明为const可能无法编译。
 \end{itemize}
 
-\mySamllsection{在实践中使用标准格式化器}
+\mySamllsection{实践中使用标准格式化器}
 
-在实践中，C++20的标准化存在一些问题，之后必须澄清一些事情:
+实践中，C++20的标准化存在一些问题，之后必须说明:
 
 \begin{itemize}
 \item
-最初标准化的C++20并不要求格式化器的format()成员函数必须是const(参见\url{http://wg21.link/lwg3636}了解详细信息)。为了支持不将format()声明为const成员函数的C++标准库实现，必须将其声明为非const函数或将本地格式化器声明为mutable。
+最初标准化的C++20，并不要求格式化器的format()成员函数必须是const(参见\url{http://wg21.link/lwg3636}了解详细信息)。为了支持不将format()声明为const成员函数的C++标准库实现，必须将其声明为非const函数或将本地格式化器声明为mutable。
 
 \item
-现有的实现可能还不支持parse()成员函数为constexpr的编译时解析，因为编译时解析是在C++20标准化之后添加的(参见\url{http: //wg21.link/p2216r3})。这种情况下，不能将编译时解析委托给标准格式化器。
+现有的实现，可能还不支持parse()成员函数为constexpr的编译时解析，因为编译时解析是在C++20标准化之后添加的(参见\url{http: //wg21.link/p2216r3})。这种情况下，不能将编译时解析委托给标准格式化器。
 \end{itemize}
 
-在实践中，类型Always42的格式化程序可能必须如下所示:
+实践中，类型Always42的格式化程序必须如下所示:
 
 \filename{format/formatalways42.hpp}
 
@@ -422,7 +421,7 @@ struct std::formatter<Always42>
 	mutable // in case the standard formatters have a non-const format()
 #endif
 	std::formatter<int> f;
-	
+
 	// delegate parsing to the standard int formatter:
 #if __cpp_lib_format >= 202106
 	constexpr // in case standard formatters don’t support constexpr parse() yet
@@ -430,7 +429,7 @@ struct std::formatter<Always42>
 	auto parse(std::format_parse_context& ctx) {
 		return f.parse(ctx);
 	}
-	
+
 	// delegate formatting of the int value to the standard int formatter:
 	auto format(const Always42& obj, std::format_context& ctx) const {
 		return f.format(obj.getValue(), ctx);
@@ -450,11 +449,11 @@ struct std::formatter<Always42>
 
 对于两者，实现都使用了一个特性测试宏，该宏表示支持编译时解析(期望采用也使标准格式化器的format()成员函数为const)。
 
-\mySubsubsection{10.6.4}{为字符串使用标准格式化器}
+\mySubsubsection{10.6.4}{字符串使用标准格式化器}
 
 若要格式化更复杂的类型，一种常见的方法是创建一个字符串，然后使用字符串的标准格式化程序(若只使用字符串字面值，则使用std::string或std::string\_view)。
 
-例如，可以定义枚举类型和格式化器，如下所示:
+例如，可以定义枚举类型和格式化器:
 
 \filename{format/color.hpp}
 
@@ -492,7 +491,7 @@ struct std::formatter<Color> : public std::formatter<std::string>
 };
 \end{cpp}
 
-通过从字符串格式化器继承格式化器，继承了它的parse()函数，所以支持字符串具有的所有格式说明符。在format()函数中，执行到字符串的映射，然后让标准格式化器完成其余的格式化工作。
+通过从字符串格式化器继承格式化器，继承了parse()函数，所以支持字符串具有的所有格式说明符。format()函数中，执行到字符串的映射，然后让标准格式化器完成其余的格式化工作。
 
 可以这样使用格式化器:
 
