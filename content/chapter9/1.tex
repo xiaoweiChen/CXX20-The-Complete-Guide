@@ -1,11 +1,11 @@
 
-来看一些使用跨度的第一个例子。首先，我们必须讨论如何指定span中的元素数量。
+来看一些使用span的例子。首先，必须讨论如何指定span中的元素数量。
 
 \mySubsubsection{9.1.1}{固定和动态区段}
 
-声明span时，可以在指定的固定数量的元素之间进行选择，也可以不设置元素数量，这样span引用的元素数量就可以改变。
+声明span时，可以设置元素数量，也可以不设置，这样span引用的元素数量就可以改变。
 
-具有指定固定数量元素的span称为具有固定区段的span，可以通过指定元素类型和大小作为模板参数来声明，或者通过带有迭代器和大小的数组(raw array或std::array<>)来初始化:
+具有指定固定数量元素的span称为具有固定区段的span，可以通过指定元素类型和大小作为模板参数来声明，或者通过带有迭代器和大小的数组(C风格数组或std::array<>)来初始化:
 
 \begin{cpp}
 int a5[5] = {1, 2, 3, 4, 5};
@@ -20,9 +20,9 @@ std::span<int, 4> sp5{vec.data(), 4}; // span with fixed extent of 4 elements
 std::span sp6 = sp1; // span with fixed extent of 5 elements
 \end{cpp}
 
-对于这样的span，成员函数size()总是产生作为类型的一部分指定的大小。这里不能调用默认构造函数(除非区段为0)。
+对于这样的span，成员函数size()会生成作为类型指定部分的长度，但不能调用默认构造函数(除非区段为0)。
 
-元素数量在其生命周期内不稳定的sapn称为具有动态区段的span。元素的数量取决于span所引用的元素的顺序，并且可能由于分配了一个新的基础范围而改变(没有其他方法可以改变元素的数量)。例如:
+元素数量在其生命周期内不稳定的sapn称为具有动态区段的span。元素的数量取决于span所引用的元素的顺序，并且可能由于分配了一个新的范围而改变(没有其他方法可以改变元素的数量)。例如:
 
 \begin{cpp}
 int a5[5] = {1, 2, 3, 4, 5};
@@ -37,11 +37,11 @@ std::span sp5{arr5.data(), 3}; // span with dynamic extent (initially 3 elements
 std::span sp6{a5+1, 3}; // span with dynamic extent (initially 3 elements)
 \end{cpp}
 
-注意，需要由开发者保证span指向一个具有足够元素的有效范围。
+需要由开发者保证span指向一个具有足够元素的有效范围。
 
-对于这两种情况，让我们看一下完整的例子。
+对于这两种情况，来看一下完整的例子。
 
-\mySubsubsection{9.1.2}{使用实例使用带动态区段的span}
+\mySubsubsection{9.1.2}{使用带动态区段的span}
 
 下面是第一个使用动态区段span的例子:
 
@@ -67,17 +67,17 @@ void printSpan(std::span<T, Sz> sp)
 int main()
 {
 	std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
-	
+
 	// define view to first 3 elements:
 	std::span<const std::string> sp{vec.data(), 3};
 	std::cout << "first 3: ";
 	printSpan(sp);
-	
+
 	// sort elements in the referenced vector:
 	std::ranges::sort(vec);
 	std::cout << "first 3 after sort(): ";
 	printSpan(sp);
-	
+
 	// insert a new element:
 	// - must reassign the internal array of the vector if it reallocated new memory
 	auto oldCapa = vec.capacity();
@@ -97,7 +97,7 @@ int main()
 	sp = std::span{vec.end()-5, vec.end()};
 	std::cout << "last 5: ";
 	printSpan(sp);
-	
+
 	// let span refer to the last four elements:
 	sp = std::span{vec}.last(4);
 	std::cout << "last 4: ";
@@ -130,18 +130,18 @@ std::span<const std::string> sp{vec.data(), 3};
 
 初始化时，传递序列的开头和元素的数目。本例中，引用vec的前三个元素。
 
-关于这个声明，有很多事情需要注意:
+关于这个声明，有几件事需要注意:
 
 \begin{itemize}
 \item
-由开发者来确保元素的数量与跨度的范围相匹配，并且元素是有效的。若vector没有足够的元素，则行为未定义:
+由开发者来确保元素的数量与span的范围相匹配，并且元素是有效的。若vector没有足够的元素，则行为未定义:
 
 \begin{cpp}
 std::span<const std::string> sp{vec.begin(), 10}; // undefined behavior
 \end{cpp}
 
 \item
-指定元素为const std::string时，就不能通过span来修改它们了。注意，将span本身声明为const并不提供对引用元素的只读访问(通常对于视图，const不会传播):
+指定元素为const std::string时，就不能通过span进行修改。将span本身声明为const，并不提供对引用元素的只读访问(通常对于视图，const不会传播):
 
 \begin{cpp}
 std::span<const std::string> sp1{vec.begin(), 3}; // elements cannot be modified
@@ -149,7 +149,7 @@ const std::span<std::string> sp2{vec.begin(), 3}; // elements can be modified
 \end{cpp}
 
 \item
-为span使用不同于引用元素的元素类型，看起来就像可以为转换为基础元素类型的span使用的类型一样。然而，事实并非如此，只能添加const这样的限定符:
+为span使用不同于引用元素的元素类型，就像可以为转换为基础元素类型的span使用的类型一样。但事实并非如此，只能添加const这样的限定符:
 
 \begin{cpp}
 std::vector<int> vec{ ... };
@@ -165,7 +165,7 @@ std::span<long> sp{vec.data(), 3}; // ERROR
 printSpan(sp);
 \end{cpp}
 
-print函数可以处理任何span(只要为元素定义了输出操作符):
+print函数可以处理span(只要为元素定义了输出操作符):
 
 \begin{cpp}
 template<typename T, std::size_t Sz>
@@ -203,15 +203,15 @@ std::span<int, 5> sp{ ... };
 printSpan(sp); // calls printSpan<int, 5>(sp)
 \end{cpp}
 
-span是按值传递的。这是传递span的推荐方法，因为复制它们的成本很低，并在内部，span只是一个指针和一个长度信息。
+span是按值传递的。这是传递span的推荐方法，复制它们的成本很低。在内部，span只有一个指针和一个长度信息。
 
 print函数内部，使用基于范围的for循环遍历span的元素。因为span提供了begin()和end()的迭代器支持，所以这是可能的。
 
-但要注意:无论通过值传递还是通过const引用传递span，只要没有将元素声明为const，在函数内部仍可以修改元素。这就是为什么将span的元素声明为const是有意义的。
+但要注意:无论通过值传递还是通过const引用传递span，只要没有将元素声明为const，在函数内部仍可以修改元素。这就是为什么将span的元素声明为const有意义。
 
 \mySamllsection{处理引用语义}
 
-接下来，对容器所引用的元素进行排序(这里使用新的std::ranges::sort()，将容器作为一个整体):
+接下来，对容器所引用的元素进行排序(使用std::ranges::sort()，将容器作为一个整体):
 
 \begin{cpp}
 std::ranges::sort(vec);
@@ -221,7 +221,7 @@ std::ranges::sort(vec);
 
 若没有const元素的span，也可以调用sort()传递span。
 
-引用语义在使用span时必须非常小心，在下个示例中就会看到相关语句。这里，我们将一个新元素插入vector中，该vector中保存了跨度所引用的元素。由于span的引用语义，必须非常小心，若vector分配新的内存，会使所有迭代器和指向其元素的指针无效。因此，重新分配也会使引用vector元素的span失效。span指向的是不再存在的元素。
+引用语义在使用span时必须谨慎，在下个示例中就会看到相关语句。这里，将一个新元素插入vector中，该vector中保存了跨度所引用的元素。由于span的引用语义，若vector分配新的内存，会使所有迭代器和指向其元素的指针无效，所以重新分配也会使引用vector元素的span失效。span指向了不再存在的元素。
 
 出于这个原因，需要在插入前后都要仔细检查容量(分配内存的最大元素数量)。若容量发生变化，则重新初始化span，使其指向新内存中的前三个元素:
 
@@ -237,7 +237,7 @@ if (oldCapa != vec.capacity()) {
 
 \mySamllsection{将容器分配给span}
 
-接下来，我们将vector作为一个整体赋值给span，并将其进行输出:
+接下来，将vector作为一个整体赋值给span，并将其输出:
 
 \begin{cpp}
 std::span<const std::string> sp{vec.begin(), 3};
@@ -245,7 +245,7 @@ std::span<const std::string> sp{vec.begin(), 3};
 sp = vec;
 \end{cpp}
 
-这里，可以看到对具有动态区段span的赋值可以改变元素的数量。只要容器允许使用成员函数data()访问这些元素，则span可以使用任何类型的容器或范围来保存连续内存中的元素。
+可以看到对具有动态区段span的赋值可以改变元素的数量。只要容器允许使用成员函数data()访问这些元素，则span可以使用任何类型的容器或范围来保存连续内存中的元素。
 
 但由于模板类型推导的限制，不能将这样的容器传递给期望使用span的函数。必须明确指定要将vector转换为span:
 
@@ -267,9 +267,9 @@ std::span<const std::string> sp{vec.data(), 3};
 sp = std::span{vec.end()-5, vec.end()};
 \end{cpp}
 
-这里，还可以看到，可以使用两个迭代器指定引用的序列，将序列的开始和结束定义为半开范围(包括开始的值，不包括结束的值)。要求满足std::size\_sentinel\_for的概念，以便构造函数可以计算差值。
+这里，可以使用两个迭代器指定引用的序列，将序列的开始和结束定义为半开范围(包括开始的值，不包括结束的值)。要求满足std::size\_sentinel\_for的概念，以便构造函数可以计算差值。
 
-如下面的语句所示，最后n个元素也可以使用span的成员函数来赋值:
+下面，最后n个元素也可以使用span的成员函数来赋值:
 
 \begin{cpp}
 std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
@@ -281,7 +281,7 @@ sp = std::span{vec}.last(4);
 
 span是唯一提供在范围中间或末尾生成元素序列的视图。
 
-只要元素类型合适，就可以传递任何其他类型的元素序列。例如:
+只要元素类型合适，就可以传递任何其他类型的元素序列:
 
 \begin{cpp}
 std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
@@ -291,7 +291,7 @@ std::array<std::string, 3> arr{"Tick", "Trick", "Track"};
 sp = arr; // OK
 \end{cpp}
 
-但请注意，span不支持元素类型的隐式类型转换(除了添加const)。例如，无法编译以下代码:
+但span不支持元素类型的隐式类型转换(除了添加const)。例如，无法编译以下代码:
 
 \begin{cpp}
 std::span<const std::string> sp{vec.begin(), 3};
@@ -308,9 +308,9 @@ sp = arr; // ERROR: different element types
 std::span sp{vec.begin(), 3}; // deduces: std::span<std::string>
 \end{cpp}
 
-然后，span会声明元素的类型，使其具有基础范围的元素类型，甚至可以修改基础范围的值，前提是基础范围没有将其元素声明为const。
+然后，span会声明元素的类型，使其具有基础范围的元素类型，甚至可以修改基础范围的值(前提是基础范围没有将其元素声明为const)。
 
-此特性可用于允许span在一个语句中修改范围的元素。例如，可以对元素的一个子集进行排序，如下所示:
+此特性可用于允许span在一个语句中修改范围的元素。例如，可以对元素的一个子集进行排序:
 
 \filename{lib/spanview.cpp}
 
@@ -334,11 +334,11 @@ int main()
 {
 	std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
 	print(vec);
-	
+
 	// sort the three elements in the middle:
 	std::ranges::sort(std::span{vec}.subspan(1, 3));
 	print(vec);
-	
+
 	// print last three elements:
 	print(std::span{vec}.last(3));
 }
@@ -354,7 +354,7 @@ int main()
 "Rio" "Tokyo" "Sydney"
 \end{shell}
 
-span是视图。要处理一个范围的前n个元素，也可以使用范围工厂std::views:: counts()，若对一个连续内存中有元素的范围进行迭代器使用，会创建一个具有动态区段的span:
+span是视图。要处理一个范围的前n个元素，也可以使用范围工厂std::views::counted()，若对一个连续内存中有元素的范围进行迭代器使用，会创建一个具有动态区段的span:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -362,9 +362,9 @@ std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8, 9};
 auto v = std::views::counted(vec.begin()+1, 3); // span with 2nd to 4th elem of vec
 \end{cpp}
 
-\mySubsubsection{9.1.4}{使用实例使用固定区段的span}
+\mySubsubsection{9.1.4}{使用固定区段的span}
 
-作为具有固定区段的span的第一个示例，让我们转换前面的示例，声明具有固定区段的span:
+作为具有固定区段的span的第一个示例，让我们修改前面的示例，声明具有固定区段的span:
 
 \filename{lib/spanfix.cpp}
 
@@ -388,17 +388,17 @@ void printSpan(std::span<T, Sz> sp)
 int main()
 {
 	std::vector<std::string> vec{"New York", "Tokyo", "Rio", "Berlin", "Sydney"};
-	
+
 	// define view to first 3 elements:
 	std::span<const std::string, 3> sp3{vec.data(), 3};
 	std::cout << "first 3: ";
 	printSpan(sp3);
-	
+
 	// sort referenced elements:
 	std::ranges::sort(vec);
 	std::cout << "first 3 after sort(): ";
 	printSpan(sp3);
-	
+
 	// insert a new element:
 	// - must reassign the internal array of the vector if it reallocated new memory
 	auto oldCapa = vec.capacity();
@@ -408,12 +408,12 @@ int main()
 	}
 	std::cout << "first 3: ";
 	printSpan(sp3);
-	
+
 	// let span refer to the last three elements:
 	sp3 = std::span<const std::string, 3>{vec.end()-3, vec.end()};
 	std::cout << "last 3: ";
 	printSpan(sp3);
-	
+
 	// let span refer to the last three elements:
 	sp3 = std::span{vec}.last<3>();
 	std::cout << "last 3: ";
@@ -431,7 +431,7 @@ last 3: "Sydney" "Tokyo" "Cairo"
 last 3: "Sydney" "Tokyo" "Cairo"
 \end{shell}
 
-让我们一步一步地回顾程序示例中值得注意的部分。
+现在，一步步地回顾程序示例中值得注意的部分。
 
 \mySamllsection{声明span}
 
@@ -443,7 +443,7 @@ std::vector<std::string> vec{"New York", "Rio", "Tokyo", "Berlin", "Sydney"};
 std::span<const std::string, 3> sp3{vec.data(), 3};
 \end{cpp}
 
-对于固定区段，可指定元素的类型和大小。同样，需要由开发者来保证元素的数量与span的区段相匹配。
+对于固定区段，可指定元素的类型和大小，需要由开发者来保证元素的数量与span的区段相匹配。
 
 若作为第二个参数传递的计数与范围不匹配，则行为未定义。
 
@@ -453,9 +453,9 @@ std::span<const std::string, 3> sp3{vec.begin(), 4}; // undefined behavior
 
 \mySamllsection{分配不同的子序列}
 
-对于具有固定区段的span，只能分配具有相同数量元素的新范围。
+对于具有固定区段的span，只能分配具有相同元素数量的新范围。
 
-因此，这一次，只赋值具有三个元素的span:
+这一次，只赋值具有三个元素的span:
 
 \begin{cpp}
 std::span<const std::string, 3> sp3{vec.data(), 3};
@@ -471,7 +471,7 @@ std::span<const std::string, 3> sp3{vec.data(), 3};
 sp3 = std::span{vec}.last(3); // ERROR
 \end{cpp}
 
-这样做的原因是，赋值右侧的表达式创建了一个具有动态区段的span。但通过使用last()和指定元素数量作为模板参数的语法，则得到一个具有相应固定区段的span:
+这样做的原因是，赋值右侧的表达式创建了一个具有动态区段的span。通过使用last()和指定元素数量作为模板参数的语法，则得到一个具有相应固定区段的span:
 
 \begin{cpp}
 std::span<const std::string, 3> sp3{vec.data(), 3};
@@ -504,7 +504,7 @@ sp3 = arr; // compile-time ERROR
 sp = arr; // OK
 \end{cpp}
 
-具有固定区段的span还需要更少的内存，它们不需要具有实际大小的成员(大小是类型的一部分)。
+具有固定区段的span还需要更少的内存，其不需要具有实际大小的成员(大小是类型的一部分)。
 
 使用动态span提供了更大的灵活性:
 

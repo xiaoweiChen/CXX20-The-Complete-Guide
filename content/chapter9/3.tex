@@ -18,38 +18,38 @@ const的正确性
 支持的API
 \end{itemize}
 
-先澄清一下span不是什么:
+先说明一下span不是什么:
 
 \begin{itemize}
 \item
-span不是容器。它可能具有容器的几个特点(例如，使用begin()和end()迭代元素的能力)，但由于其引用语义已经存在几个问题:
+span不是容器，可能具有容器的几个特点(例如，使用begin()和end()迭代元素的能力)，但由于其引用语义已经存在几个问题:
 
 \begin{itemize}
 \item
-若span是const，那么元素也应该是const的吗?
+若span是const，那元素也应该是const的吗?
 
 \item
-赋值的作用是什么:给引用的元素分配一个新的序列或者赋一个新的值?
+赋值的作用是什么:给引用的元素分配新的序列或者赋一个新的值?
 
 \item
 应该提供swap()吗?它能做什么?
 \end{itemize}
 
 \item
-span不是指针(有大小)，提供操作符*和->没有意义。
+span不是指针(有大小)，提供解引用操作符和->没有意义。
 \end{itemize}
 
 std::span类型是对元素序列的一个非常特定的引用。要正确使用这种类型，有必要具体了解一下。
 
 Barry Revzin有一篇非常有用的博客文章，我强烈建议大家去阅读:\url{http://brevzin.github.io/c++/2018/12/03/span-best-span/}。
 
-请注意，C++20还提供了其他方法来处理对(子)序列的引用，例如：子序列。也适用于不存储在连续内存中的序列，使用范围工厂std::views::counted()，可以让编译器决定哪种类型最适合由开始和大小定义的范围。
+C++20还提供了其他方法来处理对(子)序列的引用，例如：子序列。也适用于不存储在连续内存中的序列，使用范围工厂std::views::counted()，可以让编译器决定哪种类型最适合由开始和大小定义的范围。
 
 \mySubsubsection{9.3.1}{span生命周期的依赖性}
 
-由于引用语义，只能在存在底层值序列的情况下遍历span，但迭代器并不与创建他们的span绑定生命周期。
+由于引用语义，只能在存在底层值序列时下遍历span，但迭代器并不与创建他们的span绑定生命周期。
 
-span的迭代器不引用创建它们的span。相反，它们直接引用基础范围，所以span是一个租借范围。因此，即使span不再存在(当然，元素序列仍然必须存在)，也可以使用迭代器。但请注意，当底层范围不再存在时，迭代器仍可悬空。
+span的迭代器不引用创建它们的span。相反，它们直接引用基础范围，所以span是一个租借范围。因此，即使span不再存在(元素序列必须存在)，也可以使用迭代器。但当底层范围不再存在时，迭代器可悬空。
 
 \mySubsubsection{9.3.2}{span的性能}
 
@@ -72,7 +72,7 @@ std::span<int> arrSpanDyn{arr};
 std::same_as<decltype(arrSpanDyn), decltype(vecSpanDyn)> // true
 \end{cpp}
 
-但请注意，span的类模板参数推导从数组推导出固定区段，从vector推导出动态区段:
+但span的类模板参数推导从数组推导出固定区段，从vector推导出动态区段:
 
 \begin{cpp}
 std::array arr{1, 2, 3, 4, 5};
@@ -89,11 +89,11 @@ std::same_as<decltype(arrSpan), decltype(vecSpan5)> // true
 
 对元素连续存储的要求是与子范围的主要区别，子范围也是C++20引入的。在内部，子范围仍然使用迭代器，因此可以引用所有类型的容器和范围，但这可能会导致更多的开销。
 
-此外，span不需要对其引用的类型支持迭代器，可以传递任何提供data()成员以访问元素序列的类型。
+此外，span不需要对其引用的类型支持迭代器，可以传递data()成员函数以访问元素序列的类型。
 
 \mySubsubsection{9.3.3}{span的const正确性}
 
-span是具有引用语义的视图。从这个意义上讲，其行为就像指针:若span是const，并不意味着该span所引用的元素也是const。
+span是具有引用语义的视图，其行为就像指针:若span是const，并不意味着该span所引用的元素也是const。
 
 并且，可以对const span的元素进行写访问(前提是这些元素不是const):
 
@@ -111,7 +111,7 @@ sp1 = a2; // ERROR
 sp2 = a2; // OK
 \end{cpp}
 
-注意，只要std::span<>的元素没有声明为const，即使对于const span，也会有一些操作提供对这些元素的写访问(遵循普通容器的规则):
+只要std::span<>的元素没有声明为const，即使对于const span，也会有一些操作提供对这些元素的写访问(遵循普通容器的规则):
 
 \begin{itemize}
 \item
@@ -130,19 +130,19 @@ std::cbegin(), std::cend(), std::crbegin(), std::crend()
 std::ranges::cbegin(), std::ranges::cend(), std::ranges::crbegin(), std::ranges::crend()
 \end{itemize}
 
-是的，所有设计用来确保元素为const的c*函数，都可被std::span替代。
+是的，所有设计用来确保元素为const的c*函数，都可使用std::span替代。
 
-例如
+例如：
 
 \begin{cpp}
 template<typename T>
 void modifyElemsOfConstColl (const T& coll)
 {
 	coll[0] = {}; // OK for spans, ERROR for regular containers
-	
+
 	auto ptr = coll.data();
 	*ptr = {}; // OK for spans, ERROR for regular containers
-	
+
 	for (auto pos = std::cbegin(coll); pos != std::cend(coll); ++pos) {
 		*pos = {}; // OK for spans, ERROR for regular containers
 	}
@@ -154,7 +154,7 @@ modifyElemsOfConstColl(arr); // ERROR: elements are const
 modifyElemsOfConstColl(std::span{arr}); // OOPS: compiles and modifies elements of a1
 \end{cpp}
 
-这里的问题不在于std::span被破坏了;问题是，像std::cbegin()和std::ranges::cbegin()这样的函数破坏了具有引用语义的集合(例如视图)。
+这里的问题不在于破坏了std::span;问题是，像std::cbegin()和std::ranges::cbegin()这样的函数破坏了具有引用语义的集合(例如视图)。
 
 为了确保函数只接受不能以这种方式修改元素的序列，可以要求const容器的begin()返回一个指向const元素的迭代器:
 
@@ -167,9 +167,9 @@ requires std::is_const_v<std::remove_reference_t<decltype(*coll.begin())>>
 }
 \end{cpp}
 
-std::cbegin()和std::ranges::cbegin()提供写访问，这是标准化C++20之后讨论的问题。提供cbegin()和cend()的全部意义在于确保元素在迭代时不能被修改。最初，span确实为const\_iterator、cbegin()和cend()类型提供了成员，以确保不能修改元素。但在C++20完成之前的最后一刻，std::cbegin()仍然迭代可变元素(std::ranges::cbegin()也有同样的问题)。然而，不是修复std::cbegin()和std::ranges::cbegin()，而是删除了span中const迭代器的成员(参见\url{http://wg21.link/lwg3320})，这使得问题更加严重，因为在C++20中，现在没有简单的方法对span进行只读迭代，除非元素是const。看起来std::ranges::cbegin()将在C++23中修复(参见\url{http://wg21.link/p2278})，但std::cbegin()仍然会被破坏(叹气)。
+std::cbegin()和std::ranges::cbegin()提供写访问，这是标准化C++20之后讨论的问题。提供cbegin()和cend()的全部意义在于确保元素在迭代时不能被修改。最初，span确实为const\_iterator、cbegin()和cend()类型提供了成员，以确保不能修改元素。但在C++20完成前的最后一刻，std::cbegin()仍然迭代可变元素(std::ranges::cbegin()也有同样的问题)。然而，不是修复std::cbegin()和std::ranges::cbegin()，而是删除了span中const迭代器的成员(参见\url{http://wg21.link/lwg3320})，这使得问题更加严重，因为在C++20中，现在没有简单的方法对span进行只读迭代，除非元素为const。std::ranges::cbegin()将在C++23中修复(参见\url{http://wg21.link/p2278})，但std::cbegin()仍然会遭到破坏(叹气)。
 
-\mySubsubsection{9.3.4}{在泛型代码中使用span作为参数}
+\mySubsubsection{9.3.4}{泛型代码中使用span作为参数}
 
 如前所述，可以通过以下声明实现所有span的泛型函数:
 
@@ -178,9 +178,9 @@ template<typename T, std::size_t Sz>
 void printSpan(std::span<T, Sz> sp);
 \end{cpp}
 
-这甚至适用于具有动态范围的span，因为其只使用特殊值std::dynamic\_extent作为大小。
+这甚至适用于具有动态范围的span，可使用特殊值std::dynamic\_extent作为大小。
 
-，在实现中，可以按以下方式处理固定与动态区段的区别:
+实现中，可以按以下方式处理固定与动态区段的区别:
 
 \filename{lib/spanprint.hpp}
 
@@ -206,7 +206,7 @@ void printSpan(std::span<T, Sz> sp)
 		std::cout << ' ' << elem;
 	}
 	std::cout << "]\n";
-	} 
+	}
 #endif // SPANPRINT_HPP
 \end{cpp}
 
@@ -220,7 +220,7 @@ printSpan<int, std::dynamic_extent>(vec); // OK (provided it is a vector of ints
 
 因此，不应将std::span<>用作处理存储在连续内存中元素序列泛型函数的词汇表类型。
 
-出于性能原因，可能会这样做:
+出于性能考虑，可以这样做:
 
 \begin{cpp}
 template<typename E>
@@ -241,9 +241,9 @@ void print(const T& t) {
 
 \mySamllsection{使用span作为范围和视图}
 
-因为span是视图，所以满足std::ranges::view[最初的C++20标准确实要求视图必须有一个默认构造函数，而固定的span则不是这样。然而，这一要求后来被删除了\url{http://wg21.link/P2325R3}。]所以跨度可以用于范围和视图的所有算法和函数中。在讨论所有视图细节的那一章中，列出了span的特定于视图的属性。
+span是视图，所以满足std::ranges::view[最初的C++20标准确实要求视图必须有一个默认构造函数，而固定的span则不是这样，但这一要求后来删除了\url{http://wg21.link/P2325R3}。]，span可以用于范围和视图的所有算法和函数中。在讨论所有视图细节的那一章中，列出了span的特定于视图的属性。
 
-span的一个属性是它们是租借范围，所以迭代器的生命周期不依赖于span。因此，可以在生成迭代器的算法中使用临时span作为范围:
+span的一个属性是租借范围，所以迭代器的生命周期不依赖于span，所以可以在生成迭代器的算法中使用临时span作为范围:
 
 \begin{cpp}
 std::vector<int> coll{25, 42, 2, 0, 122, 5, 7};
@@ -251,7 +251,7 @@ auto pos1 = std::ranges::find(std::span{coll.data(), 3}, 42); // OK
 std::cout << *pos1 << '\n';
 \end{cpp}
 
-但请注意，若span是引用的临时对象，则会出现错误。即使返回被销毁的临时对象的迭代器，以下代码也可以编译:
+但若span是引用的临时对象，则会出现错误。即使返回已销毁的临时对象的迭代器，以下代码也可以编译通过:
 
 \begin{cpp}
 auto pos2 = std::ranges::find(std::span{getData().data(), 3}, 42);

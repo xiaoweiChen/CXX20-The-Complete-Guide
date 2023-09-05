@@ -1,6 +1,6 @@
-span指的是外部值的序列，所以具有具有引用语义的类型所具有的常见问题。需要由开发者来保证span引用的序列的有效性。
+span指的是外部值的序列，所以具有具有引用语义的类型所具有的常见问题，需要由开发者来保证span引用的序列的有效性。
 
-错误发生得很快。例如，若函数getData()按值返回一个整数集合(例如，作为vector, std::array或raw array)，则以下语句会创建致命的运行时错误:
+错误出现得很快。若函数getData()按值返回一个整数集合(例如，作为vector, std::array或C风格的数组)，则以下语句会出现致命的运行时错误:
 
 \begin{cpp}
 std::span<int, 3> first3{getData()}; // ERROR: reference to temporary object
@@ -10,7 +10,7 @@ std::span sp{getData().begin(), 3}; // ERROR: reference to temporary object
 sp = getData(); // ERROR: reference to temporary object
 \end{cpp}
 
-这可能看起来更微妙，例如：使用基于范围的for循环:
+可能看起来很微妙，例如：使用基于范围的for循环:
 
 \begin{cpp}
 // for the last 3 returned elements:
@@ -23,7 +23,7 @@ for (auto s : std::span{arrayOfConst()}.last(3)) // fatal runtime ERROR
 
 此外，必须确保所引用的元素序列保持有效。若程序的其他部分在引用序列的生命周期结束时仍在使用该span，则可能会出现问题。
 
-若引用对象(比如指向一个vector)，这个有效性问题甚至可能在vector仍然存在的时候发生:
+若引用对象(比如指向一个vector)，这个有效性问题可能在vector存在的时候发生:
 
 \begin{cpp}
 std::vector<int> vec{1, 2, 3, 4, 5, 6, 7, 8};
@@ -34,9 +34,9 @@ vec.push_back(9); // might reallocate memory
 std::cout << sp[0]; // fatal runtime ERROR (referenced array no longer valid)
 \end{cpp}
 
-作为一种变通方法，必须用原始vector重新初始化跨度。
+作为一种变通方法，必须用原始vector重新初始化span。
 
-一般来说，使用span与使用原始指针和其他视图类型一样危险，小心使用。
+一般来说，使用span与使用原始指针和其他视图类型一样危险，需要谨慎。
 
 
 
