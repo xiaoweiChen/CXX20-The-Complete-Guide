@@ -3,18 +3,18 @@
 
 \mySubsubsection{11.3.1}{时间段类型}
 
-C++20引入了更多的时间段类型，包括天、周、月和年。表“C++20的标准时间段类型”列出了C++现在提供的所有时间段类型，以及可用于创建值的标准字面符后缀和打印值时使用的默认输出后缀。
+C++20引入了更多的时间段类型，包括天、周、月和年。表“C++20的标准时间段类型”列出了C++现在提供的所有时间段类型，以及可用于创建值的标准字面符后缀和输出值时使用的默认输出后缀。
 
-使用std::chrono::months和std::chrono::years时要小心。月和年表示一个月或一年的平均时间段，这是一个小数天。平均年的时间段是通过考虑闰年来计算的:
+使用std::chrono::months和std::chrono::years时要谨慎。月和年表示一个月或一年的平均时间段，这是一个小数天。平均年的时间段是通过考虑闰年来计算的:
 
 \begin{itemize}
-\item 
+\item
 每四年多一天(366天，而非365天)
 
-\item 
+\item
 每隔100年，就会多一天
 
-\item 
+\item
 每隔400年，又会多一天
 \end{itemize}
 
@@ -48,7 +48,7 @@ C++20引入了更多的时间段类型，包括天、周、月和年。表“C++
 
 \mySubsubsection{11.3.2}{时钟}
 
-C++20引入了两个新的时钟(记住，时钟定义了时间点的origin/epoch)。
+C++20引入了两个新的时钟(时钟定义了时间点的origin/epoch)。
 
 表“C++20以后的标准时钟类型”，描述了C++标准库现在提供的所有时钟的名称和含义。
 
@@ -76,22 +76,22 @@ C++20引入了两个新的时钟(记住，时钟定义了时间点的origin/epoc
 表11.2 C++20后的标准时钟类型
 \end{center}
 
-Epoch列指定时钟是否指定唯一的时间点，以便始终定义特定的UTC时间。这需要一个稳定的指定纪元。对于file\_clock, epoch是特定于系统的，但在程序的多次运行中是稳定的。steady\_clock的epoch可能会随着应用程序的每次运行而改变(例如，当系统重新启动时)。对于伪时钟local\_t,，epoch解释为“本地时间”，所以必须将它与时区结合起来才能知道其代表的是哪个时间点。
+Epoch列指定时钟是否指定唯一的时间点，以便始终定义特定的UTC时间，这需要一个稳定的特定epoch。对于file\_clock, epoch是特定于系统的，但在程序的多次运行中是稳定的。steady\_clock的epoch可能会随着应用程序的每次运行而改变(例如，当系统重新启动时)。对于伪时钟local\_t,，epoch解释为“本地时间”，所以必须将其与时区结合起来，才能知道其代表的是哪个时间点。
 
-C++标准也从C++11开始提供了一个高分辨率的时钟，但在将代码从一个平台移植到另一个平台时，使用它可能会带来一些微妙的问题。实践中，high\_resolution\_clock可能是system\_clock或steady\_clock的别名，所以时钟有时稳定，有时不稳定，并且这个时钟可能支持或不支持转换到其他时钟或time\_t。
+C++标准也从C++11开始提供了一个高分辨率的时钟，但在将代码从一个平台移植到另一个平台时，使用它会带来一些微妙的问题。实践中，high\_resolution\_clock可能是system\_clock或steady\_clock的别名，所以时钟有时稳定，有时不稳定，并且这个时钟可能支持或不支持转换到其他时钟或time\_t。
 
-因为在任何平台上，high\_resolution\_clock不比steady\_clock好，所以应该使用steady\_clock。
+在任何平台上，steady\_clock要比high\_resolution\_clock好，所以应该使用steady\_clock。
 
 稍后将讨论时钟的以下细节:
 
 \begin{itemize}
-\item 
+\item
 时钟之间的差异
 
-\item 
+\item
 时钟之间的转换
 
-\item 
+\item
 如何处理闰秒
 \end{itemize}
 
@@ -145,7 +145,7 @@ std::chrono::local_seconds y; // time_point<local_t, seconds>
 std::chrono::file_time<std::chrono::seconds> z; // time_point<file_clock, seconds>
 \end{cpp}
 
-注意，此类型的对象仍然表示一个时间点，尽管不幸的是该类型有一个复数名称。例如，sys\_days表示定义为系统时间点的一天(名称来自“粒度天的系统时间点”)。
+此类型的对象仍然表示一个时间点，尽管不幸的是该类型有一个复数名称。例如，sys\_days表示定义为系统时间点的一天(名称来自“粒度天的系统时间点”)。
 
 \mySubsubsection{11.3.4}{日历类型}
 
@@ -154,10 +154,10 @@ std::chrono::file_time<std::chrono::seconds> z; // time_point<file_clock, second
 虽然时间点指定为从epoch开始的时间段，但日历类型具有不同的组合类型和值，适用于年、月、工作日和一个月中的天数。这两种用法都很有用:
 
 \begin{itemize}
-\item 
+\item
 时间点类型很好，只要我们只计算秒、小时和天(比如在一年中的每一天做一些事情)。
 
-\item 
+\item
 日历类型对于日期计算非常有用，因为要考虑到月和年有不同的天数。此外，还可以处理诸如“本月的第三个星期一”或“本月的最后一天”之类的事情。
 \end{itemize}
 
@@ -194,7 +194,7 @@ std::chrono::file_time<std::chrono::seconds> z; // time_point<file_clock, second
 表11.4 标准日历类型
 \end{center}
 
-请记住，这些类型名称并不传递日期元素进行初始化或写入格式化输出的顺序。例如，类型std::chrono::year\_month\_day可以这样使用:
+这些类型名称并不传递日期元素进行初始化或写入格式化输出的顺序。例如，类型std::chrono::year\_month\_day可以这样使用:
 
 \begin{cpp}
 using namespace std::chrono;
@@ -210,14 +210,14 @@ std::chrono::year_month_day start = ... ; // 2021/2/5
 auto end = start + std::chrono::months{1}; // 2021/3/5
 \end{cpp}
 
-若使用像sys\_days这样的时间点，相应的代码将无法工作，因为它使用了一个月的平均时间段:
+使用像sys\_days这样的时间点，相应的代码将无法工作，因为它使用了一个月的平均时间段:
 
 \begin{cpp}
 std::chrono::sys_days start = ... ; // 2021/2/5
 auto end = start + std::chrono::months{1}; // 2021/3/7 10:29:06
 \end{cpp}
 
-请注意，在本例中，end具有不同的类型，因为对于月份，小数天数也会起作用。
+在本例中，end具有不同的类型，因为对于月份，小数天数也会起作用。
 
 当添加4周或28天时，时间点类型更好，这是一个简单的算术运算，不必考虑月或年的不同长度:
 
@@ -235,21 +235,21 @@ std::chrono::year_month_day_last start = ... ; // 2021/2/28
 auto end = start + std::chrono::months{1}; // 2021/3/31
 \end{cpp}
 
-每种类型都有一个默认的输出格式，是一个固定的英文字符序列。对于其他格式，请使用格式化的chrono输出。注意，在默认输出格式中，只有year\_month\_day使用减号作为分隔符。默认情况下，所有其他类型的都用斜杠分隔。
+每种类型都有一个默认的输出格式，是一个固定的英文字符序列。对于其他格式，请使用格式化的chrono输出。在默认输出格式中，只有year\_month\_day使用减号作为分隔符。默认情况下，所有其他类型的都用斜杠分隔。
 
 为了处理日历类型的值，定义了两个日历常量:
 
 \begin{itemize}
-\item 
+\item
 std::chrono::last指定一个月的最后一天/最后一个工作日，该常量的类型为std::chrono::last\_spec。
 
-\item 
+\item
 std::chrono::Sunday，std::chrono::Monday，…，std::chrono::Saturday指定工作日(Sunday的值为0，Saturday的值为6)。
 
 这些常量的类型为std::chrono::weekday。
 
-\item 
-std::chrono::January、std::chrono::February…、std::chrono::December指定月份(January的值为1，December的值为12)。
+\item
+std::chrono::January、std::chrono::February、…、std::chrono::December指定月份(January的值为1，December的值为12)。
 
 这些常量的类型为std::chrono::month。
 \end{itemize}
@@ -259,14 +259,14 @@ std::chrono::January、std::chrono::February…、std::chrono::December指定月
 日历类型的设计目的是在编译时检测操作是否有用或性能不佳，所以一些“显而易见”的操作不会按照表中列出的日历类型的标准操作进行编译:
 
 \begin{itemize}
-\item 
+\item
 日和月的计算取决于年份。不能添加天数/月份，也不能计算没有年份的所有月份类型的差值。
 
-\item 
+\item
 完全指定日期的日运算需要一些时间来处理不同长度的月份和闰年，可以添加/减去天数或计算这些类型之间的差异。
 
-\item 
-因为chrono不对一周的第一天做任何假设，所以无法在工作日之间获得顺序。当与工作日比较类型时，只支持==和!=。
+\item
+chrono不对一周的第一天做任何假设，所以无法在工作日之间获得顺序。当与工作日比较类型时，只支持==和!=。
 \end{itemize}
 
 % Please add the following required packages to your document preamble:
@@ -300,7 +300,7 @@ std::chrono::January、std::chrono::February…、std::chrono::December指定月
 表11.5 日历类型的标准操作
 \end{center}
 
-工作日的运算是对7取模，所以哪一天是一周的第一天并不重要。也可以计算任意两个工作日之间的差，结果总是介于0和6之间的值。将差额加到第一个工作日总是第二个工作日。例如:
+工作日的运算是对7取模，所以哪一天是一周的第一天并不重要。可以计算任意两个工作日之间的差，结果总是介于0和6之间的值。将差额加到第一个工作日总是第二个工作日。例如:
 
 \begin{cpp}
 std::cout << chr::Friday - chr::Tuesday << '\n'; // 3d (Tuesday thru Friday)
@@ -318,7 +318,7 @@ std::cout << chr::weekday(d1) - chr::weekday(d2) << '\n'; // 3d (weekday diff)
 d1 = chr::sys_days{d1} + (chr::Monday - chr::weekday(d1)); // set d1 to next Monday
 \end{cpp}
 
-请注意，若d1是日历日期类型，首先必须将其转换为类型std::chrono::sys\_days，以便支持日期算术(使用该类型声明d1可能会更好)。
+若d1是日历日期类型，首先必须将其转换为类型std::chrono::sys\_days，以便支持日期算术(使用该类型声明d1可能会更好)。
 
 同样，月的运算以12为模，则12月之后的下一个月是1月。若年份是类型的一部分，则相应地进行调整:
 
@@ -328,7 +328,7 @@ std::cout << m + chr::months{10} << '\n'; // Oct
 std::cout << 2021y/m + chr::months{10} << '\n'; // 2022/Oct
 \end{cpp}
 
-还请注意，接受整数值的时间日历类型的构造函数是显式的，所以使用整数值的显式初始化失败:
+请注意，接受整数值的时间日历类型的构造函数是显式的，所以使用整数值的显式初始化失败:
 
 \begin{cpp}
 std::chrono::day d1{3}; // OK
@@ -378,7 +378,7 @@ std::chrono::hh_mm_ss hms{dur}; // convert to data structure for attributes
 process(hms.hours(), hms.minutes()); // pass hours and minutes
 \end{cpp}
 
-若有一个时间点，必须首先将其转换为持续时间。要做到这一点，通常只需计算时间点和当天午夜之间的差值(通过将其舍入到天数粒度来计算)。例如:
+若有一个时间点，必须首先将其转换为持续时间，通常只需计算时间点和当天午夜之间的差值(通过将其舍入到天数粒度来计算)。例如:
 
 \begin{cpp}
 auto tp = getStartTime(); // process and yield some timepoint
@@ -407,7 +407,7 @@ seconds: 19s
 subsecs: 502998000ns
 \end{shell}
 
-没有办法用特定的值直接初始化hh\_mm\_ss对象的不同属性。一般来说，应该使用duration类型来处理时间:
+没有办法用特定的值直接初始化hh\_mm\_ss对象的不同属性。通常，应该使用duration类型来处理时间:
 
 \begin{cpp}
 using namespace std::literals;
@@ -415,7 +415,7 @@ using namespace std::literals;
 auto t1 = 18h + 30min; // 18 hours and 30 minutes
 \end{cpp}
 
-hh\_mm\_ss最强大的功能是，其接受任何精度时间段，并将其转换为通常的属性和持续时间类型小时、分钟和秒。此外，subseconds()将以适当的持续时间类型(如毫秒或纳秒)生成值的其余部分。即使单位不是10的幂(例如，三分之一秒)，hh\_mm\_ss将其转换为最多18位的10次方次秒。若不能表示准确的值，则使用六位数的精度，可以使用标准输出操作符将结果作为一个整体输出。例如:
+hh\_mm\_ss最强大的功能是，其接受任何精度的时间段，并将其转换为通常的属性和持续时间类型小时、分钟和秒。此外，subseconds()将以适当的持续时间类型(如毫秒或纳秒)生成值的其余部分。即使单位不是10的幂(例如，三分之一秒)，hh\_mm\_ss将其转换为最多18位的10次方次秒。若不能表示准确的值，则使用六位数的精度，可以使用标准输出操作符将结果作为一个整体输出。例如:
 
 \begin{cpp}
 std::chrono::duration<int, std::ratio<1,3>> third{1};

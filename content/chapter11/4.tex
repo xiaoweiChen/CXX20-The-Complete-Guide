@@ -1,9 +1,9 @@
 
-C++20提供了对几乎所有计时类型的直接输出和解析的新支持。
+C++20提供了对所有计时类型的直接输出和解析的新支持。
 
 \mySubsubsection{11.4.1}{默认输出格式}
 
-对于几乎所有的chrono类型，标准输出操作符从C++20开始定义。若有用，不仅输出值，而且使用适当的格式和单位。并且，依赖于地区的格式化也是可能的。
+对于所有的chrono类型，标准输出操作符从C++20开始定义。不仅输出值，而且使用适当的格式和单位，依赖于地区的格式化也是可能的。
 
 所有日历类型都会输出出带有日历类型输出格式的值。
 
@@ -50,10 +50,10 @@ ratio\textless{}num, den\textgreater{} & {[}num/den{]}s         \\ \hline
 对于所有标准时间点类型，输出操作符以以下格式输出日期和时间(可选):
 
 \begin{itemize}
-\item 
-用于可隐式转换为天数的积分粒度单位的“年-月-日”
+\item
+用于可隐式转换为天数的整数粒度单位的“年-月-日”
 
-\item 
+\item
 年-月-日\ 时:分:秒，表示小于等于天的整数粒度单位
 \end{itemize}
 
@@ -91,17 +91,17 @@ std::cout << "tpStd: " << tpStd; // ERROR: no output operator defined
 zoned\_time<>类型输出类似于timepoint类型，扩展为缩写的时区名称。以下时区缩写用于标准时钟:
 
 \begin{itemize}
-\item 
+\item
 UTC有sys\_clock, utc\_clock和file\_clock
 
-\item 
-TAI有ai\_clock
+\item
+TAI有tai\_clock
 
-\item 
+\item
 GPS有gps\_clock
 \end{itemize}
 
-最后，注意sys\_info和local\_info具有未定义格式的输出操作符，应该只用于调试。
+sys\_info和local\_info具有未定义格式的输出操作符，只用于调试。
 
 \mySubsubsection{11.4.2}{格式化输出}
 
@@ -117,7 +117,7 @@ auto t1 = std::chrono::system_clock::now();
 std::cout << std::format("From {} to {}\nit took {}\n", t0, t1, t1-t0);
 \end{cpp}
 
-这将使用日期/时间类型的默认输出格式。例如，可能有以下输出:
+使用日期/时间类型的默认输出格式。例如，可能有以下输出:
 
 \begin{shell}
 From 2021-04-03 15:21:33.197859000 to 2021-04-03 15:21:34.686544000
@@ -143,13 +143,13 @@ fill align width .prec L spec
 \end{shell}
 
 \begin{itemize}
-\item 
+\item
 fill, align, with 和 prec 表示与标准格式说明符相同。
 
-\item 
+\item
 spec 指定格式化的通用符号，以\%开头。
 
-\item 
+\item
 L 与往常一样，还为支持它的说明符打开语言环境相关的格式。
 \end{itemize}
 
@@ -167,23 +167,23 @@ std::cout << std::format("{:%Y-%m-%d}", ymd); // 2021-02-31
 若日期/时间值类型没有为转换说明符提供必要的信息，则抛出std::format\_error异常:
 
 \begin{itemize}
-\item 
+\item
 年份指定符用于month\_day
 
-\item 
+\item
 工作日指定符用于指定时间段
 
-\item 
+\item
 输出月份或工作日名称，并且该值无效
 
-\item 
+\item
 时区说明符用于本地时间点
 \end{itemize}
 
 此外，请注意以下关于转换说明符的事项:
 
 \begin{itemize}
-\item 
+\item
 负值时间段或hh\_mm\_ss值在整个值前面打印负号。例如:
 
 \begin{cpp}
@@ -249,49 +249,49 @@ std::cout << std::format("{:%H:%M:%S}", -10000s); // outputs: -02:46:40
 表11.9 计时类型的转换说明符
 \end{center}
 
-\item 
+\item
 不同的周数和年份格式可能导致不同的输出值。
 
 例如，2023年1月1日，星期天，的结果如下:
 
 \begin{itemize}
-\item 
+\item
 第00周， \%W (第一个星期一之前的第一周)
 
-\item 
+\item
 第01周， \%U(第一个星期一的周)
 
-\item 
+\item
 第52周， \%V(ISO周:第01周周一之前的一周，即1月4日)
 \end{itemize}
 
-因为ISO周可能是上一年的最后一周，所以ISO年，也就是那一周所在的年份，可能会少一个:
+ISO周可能是上一年的最后一周，所以ISO年就是那一周所在的年份，可能会少一个:
 
 \begin{itemize}
-\item 
+\item
 Year 2023 ，\%Y
 
-\item 
+\item
 Year 23 ， \%y
 
-\item 
+\item
 Year 2022 ， \%G (ISO年的ISO周\%V，即前一个月的最后一周)
 
-\item 
+\item
 Year 22 ， \%g (ISO年的ISO周\%V，即前一个月的最后一周)
 \end{itemize}
 
-\item 
+\item
 以下时区缩写用于标准时钟:
 
 \begin{itemize}
-\item 
+\item
 UTC有sys\_clock, utc\_clock和 file\_clock
 
-\item 
+\item
 TAI 有tai\_clock
 
-\item 
+\item
 GPS 有gps\_clock
 \end{itemize}
 \end{itemize}
@@ -317,13 +317,13 @@ std::cout.imbue(locG); // switch to German locale
 std::cout << dur << '\n'; // 42,2ms
 \end{cpp}
 
-使用std::format()格式化的输出像往常一样处理:[此行为指定为C++20的一个错误修复，使用\url{http://wg21.link/p2372}，从而C++20的原始措辞没有指定此行为。]
+std::format()格式化的输出像往常一样处理:[此行为指定为C++20的一个错误修复，使用\url{http://wg21.link/p2372}，从而C++20的原始措辞没有指定此行为。]
 
 \begin{itemize}
-\item 
+\item
 默认情况下，格式化输出使用独立于语言环境的“C”语言环境。
 
-\item 
+\item
 通过指定L，可以切换到通过locale参数，或作为全局locale指定的依赖于locale的输出
 \end{itemize}
 
@@ -350,10 +350,10 @@ std::string s4 = std::format("{:L%S}", dur); // "00,042s" (localized)
 某些情况下，甚至可以根据strftime()和ISO 8601:2004使用另一种语言环境的表示，可以在转换说明符前面使用前导O或E来指定:
 
 \begin{itemize}
-\item 
+\item
 E可以用作区域设置在c，C，x，X，y，Y和z前面的替代表示
 
-\item 
+\item
 O可以用作区域设置前面的替代数字符号d, e, H, I, m, M, S, u, U V, w, W, y和z
 \end{itemize}
 
@@ -362,16 +362,16 @@ O可以用作区域设置前面的替代数字符号d, e, H, I, m, M, S, u, U V,
 chrono库还支持格式化输入。这里有两个选择:
 
 \begin{itemize}
-\item 
+\item
 特定日期/时间类型提供了一个独立的函数std::chrono::from\_stream()，用于根据传入的格式字符串读取特定的值。
 
-\item 
+\item
 操纵符std::chrono::parse()允们使用from\_stream()作为带有>{}>输入操作符解析的一部分。
 \end{itemize}
 
 \mySamllsection{使用from\_stream()}
 
-下面的代码演示了如何使用from\_stream()解析完整的时间点:
+下面的代码演示了，如何使用from\_stream()解析完整的时间点:
 
 \begin{cpp}
 std::chrono::sys_seconds tp;
@@ -406,56 +406,56 @@ if (sstrm) {
 格式字符串接受除\%q和\%Q以外的格式化输出的所有转换说明符，从而提高了灵活性。例如:
 
 \begin{itemize}
-\item 
-\%d表示一个或两个字符来指定日期，使用\%4d，您可以指定最多解析四个字符。
+\item
+\%d表示一个或两个字符来指定日期，使用\%4d，可以指定最多解析四个字符。
 
-\item 
+\item
 \%n只表示一个空白字符。
 
-\item 
+\item
 \%t表示零或一个空白字符。
 
-\item 
+\item
 像空格这样的空白字符，可以表示任意数量的空白(包括零空白)。
 \end{itemize}
 
 from\_stream()可用于下列类型:
 
 \begin{itemize}
-\item 
-任何duration<>类型
+\item
+duration<>类型
 
-\item 
-任何sys\_time<>, utc\_time<>, gps\_time<>, tai\_time<>, local\_time<>或file\_time<>类型
+\item
+sys\_time<>, utc\_time<>, gps\_time<>, tai\_time<>, local\_time<>或file\_time<>类型
 
-\item 
+\item
 day, month或year类型
 
-\item 
+\item
 year\_month, month\_day, 或year\_month\_day类型
 
-\item 
+\item
 weekday类型
 \end{itemize}
 
 格式必须是const char*类型的C字符串，必须匹配输入流中的字符和要解析的值。若出现以下情况，解析失败:
 
 \begin{itemize}
-\item 
+\item
 输入的字符序列与所需的格式不匹配
 
-\item 
+\item
 该格式没有为值提供足够的信息
 
-\item 
+\item
 解析的日期无效
 \end{itemize}
 
-在这种情况下，设置了流的failbit，可以通过调用fail()或使用流作为布尔值进行测试。
+这些情况下，设置了流的failbit，可以通过调用fail()或使用流作为布尔值进行测试。
 
 \mySamllsection{解析日期/时间的通用函数}
 
-实际上，日期和时间很少硬编码。然而，在测试代码时，通常需要一种简单的方法来指定日期/时间值。
+实际上，日期和时间很少硬编码。但在测试代码时，通常需要一种简单的方法来指定日期/时间值。
 
 下面是我用来测试本书示例的一个小辅助函数:
 
@@ -475,10 +475,10 @@ auto parseDateTime(const std::string& s)
 {
 	// return value:
 	std::chrono::time_point<Clock, std::chrono::seconds> tp;
-	
+
 	// string stream to read from:
 	std::istringstream sstrm{s}; // no string_view support
-	
+
 	auto posColon = s.find(":");
 	if (posColon != std::string::npos) {
 		if (posColon != s.rfind(":")) {
@@ -494,10 +494,10 @@ auto parseDateTime(const std::string& s)
 		// no colon:
 		std::chrono::from_stream(sstrm, "%F", tp);
 	}
-	
+
 	// handle invalid formats:
 	assert((!sstrm.fail()));
-	
+
 	return tp;
 }
 \end{cpp}
@@ -514,19 +514,19 @@ int main()
 {
 	auto tp1 = parseDateTime("2021-1-1");
 	std::cout << std::format("{:%F %T %Z}\n", tp1);
-	
+
 	auto tp2 = parseDateTime<std::chrono::local_t>("2021-1-1");
 	std::cout << std::format("{:%F %T}\n", tp2);
-	
+
 	auto tp3 = parseDateTime<std::chrono::utc_clock>("2015-6-30 23:59:60");
 	std::cout << std::format("{:%F %T %Z}\n", tp3);
-	
+
 	auto tp4 = parseDateTime<std::chrono::gps_clock>("2021-1-1 18:30");
 	std::cout << std::format("{:%F %T %Z}\n", tp4);
 }
 \end{cpp}
 
-该程序有以下输出:
+程序有以下输出:
 
 \begin{shell}
 2021-01-01 00:00:00 UTC
@@ -535,7 +535,7 @@ int main()
 2021-01-01 18:30:00 GPS
 \end{shell}
 
-注意，对于本地时间点，不能使用\%Z来输出其时区(这样做会引发异常)。
+对于本地时间点，不能使用\%Z来输出其时区(这样做会引发异常)。
 
 \mySamllsection{使用parse()操纵符}
 
@@ -551,7 +551,7 @@ std::chrono::from_stream(sstrm, "%F %T", tp);
 sstrm >> std::chrono::parse("%F %T", tp);
 \end{cpp}
 
-请注意，最初的C++20标准没有直接作为字符串字面值传递格式，所以必须使用
+最初的C++20标准没有直接作为字符串字面值传递格式，所以必须使用
 
 \begin{cpp}
 sstrm >> std::chrono::parse(std::string{"%F %T"}, tp);
@@ -559,8 +559,7 @@ sstrm >> std::chrono::parse(std::string{"%F %T"}, tp);
 
 然而，这应该通过\url{http://wg21.link/lwg3554}来解决。
 
-std::chrono::parse()是一个I/O流操纵符，允许在从输入流读取的一条语句中解析多个值。此外，由于move语义，甚至可以传递一个临时输入流。例如:
-
+std::chrono::parse()是一个I/O流操纵符，允许在从输入流读取的一条语句中解析多个值。使用移动语义，可以传递一个临时输入流。例如:
 \begin{cpp}
 chr::sys_days tp;
 chr::hours h;
@@ -578,7 +577,7 @@ std::cout << tp << " at " << h << ' ' << m << '\n';
 2021-12-24 at 18h 0min
 \end{shell}
 
-再次注意，您能必须显式地将字符串字面量“\%D”、“\%H”和“:\%M”转换为字符串。
+可以显式地将字符串字面量“\%D”、“\%H”和“:\%M”转换为字符串。
 
 \mySamllsection{解析时区}
 
@@ -590,12 +589,12 @@ istream from_stream(istream, format, value, abbrevPtr)
 istream from_stream(istream, format, value, abbrevPtr, offsetPtr)
 \end{shell}
 
-您可以选择传递std::string的地址以将解析后的时区缩写存储到字符串中，也可以传递std::chrono::minutes对象的地址以将解析后的时区偏移存储到该字符串中。在这两种情况下都可以传递nullptr。
+可以选择传递std::string的地址，将解析后的时区缩写存储到字符串中，也可以传递std::chrono::minutes对象的地址以将解析后的时区偏移存储到该字符串中。在这两种情况下都可以传递nullptr。
 
-然而，仍然要小心:
+然而，仍然要谨慎:
 
 \begin{itemize}
-\item 
+\item
 以下代码可以工作:
 
 \begin{cpp}
@@ -608,7 +607,7 @@ std::cout << std::format("{:%F %R %Z}\n", tp); // 2021-04-13 12:00 UTC
 然而，工作原因只是因为系统时间点使用的是UTC。
 
 \item
-下面的命令不起作用，因为忽略了时区:
+因为忽略了时区，下面的命令不起作用:
 
 \begin{cpp}
 chr::sys_seconds tp;
@@ -631,7 +630,7 @@ std::cout << tp << '\n'; // 2021-04-13 12:00
 std::cout << tzAbbrev << '\n'; // MST
 \end{cpp}
 
-然而，若计算时区时间，会看到正在将UTC时间转换为不同的时区:
+但若计算时区时间，会看到正在将UTC时间转换为不同的时区:
 
 \begin{cpp}
 chr::zoned_time zt{tzAbbrev, tp}; // OK: MST exists
@@ -652,10 +651,10 @@ chr::zoned_time zt{tzAbbrev, tp}; // OK: MST exists
 std::cout << zt << '\n'; // 2021-04-13 12:00:00 MST
 \end{cpp}
 
-然而，MST是时区数据库中为数不多的不推荐使用的缩写之一。当将此代码与CEST或CST一起使用时，会在初始化zoned\_time时抛出异常。
+但MST是时区数据库中为数不多的不推荐使用的缩写之一，将此代码与CEST或CST一起使用时，会在初始化zoned\_time时抛出异常。
 
 \item
-因此，要么只使用tzAbbrev，而非zoned\_time和\%Z:
+要么只使用tzAbbrev，而非zoned\_time和\%Z:
 
 \begin{cpp}
 chr::local_seconds tp; // local time

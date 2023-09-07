@@ -1,40 +1,40 @@
 
 
-大国或国际交流中，仅仅说“中午见面吧”是不够的，因为我们有不同的时区。新的chrono库支持这一事实，它有一个API来处理地球上不同的时区，包括处理标准时间(“冬季”)和夏令时(“夏季”)。
+大国或国际交流中，仅仅说“中午见面吧”是不够的，因为我们有不同的时区。新chrono库支持这一情况，它有一个API来处理地球上不同的时区，包括处理标准时间(“冬季”)和夏令时(“夏季”)。
 
 \mySubsubsection{11.6.1}{时区的特点}
 
 处理时区有点棘手，因为这是一个非常复杂的主题。例如，必须考虑以下几点:
 
 \begin{itemize}
-\item 
-时区差异不一定是数小时。事实上，也有30分钟甚至15/45分钟的差异。例如，澳大利亚的很大一部分(北领地和南澳大利亚与阿德莱德)的标准时区是UTC+9:30，尼泊尔的时区是UTC+5:45。两个时区也可能相差0分钟(例如：北美和南美的时区)。
+\item
+时区差异不一定是数小时，也有30分钟甚至15/45分钟的差异。例如，澳大利亚的很大一部分(北领地和南澳大利亚与阿德莱德)的标准时区是UTC+9:30，尼泊尔的时区是UTC+5:45。两个时区也可能相差0分钟(例如：北美和南美的时区)。
 
-\item 
-时区缩写可能指不同的时区。例如，CST可能代表中央标准时间(芝加哥、墨西哥城和哥斯达黎加的标准时区)或中国标准时间(北京和上海时区的国际名称)，或古巴标准时间(哈瓦那的标准时区)。
+\item
+时区缩写可能指不同的时区，CST可能代表中央标准时间(芝加哥、墨西哥城和哥斯达黎加的标准时区)或中国标准时间(北京和上海时区的国际名称)，或古巴标准时间(哈瓦那的标准时区)。
 
-\item 
-时区变化。例如，当国家决定改变他们的时区或夏令时开始时，这种情况就会发生，所以在处理时区时，可能不得不考虑每年的多次更新。
+\item
+时区变化，当国家决定改变他们的时区或夏令时开始时。这种情况就会发生，所以在处理时区时，可能不得不考虑每年的多次更新。
 \end{itemize}
 
 \mySubsubsection{11.6.2}{IANA时区数据库}
 
-为了处理时区，C++标准库使用IANA时区数据库，该数据库可在\url{http://www.iana.org/time-zones}上获得。再次注意，时区数据库可能不是在所有平台上都可用。
+为了处理时区，C++标准库使用IANA时区数据库，该数据库可在\url{http://www.iana.org/time-zones}上获得。注意，时区数据库可能不是在所有平台上都可用。
 
-时区数据库的关键项是时区名称，通常是
+时区数据库的关键项是时区名称：
 
 \begin{itemize}
-\item 
+\item
 代表时区的某一地区或国家的城市。
 
 例如: America/Chicago, Asia/Hong\_Kong, Europe/Berlin, Pacific/Honolulu
 
-\item 
+\item
 UTC时间的负偏移GMT。
 
-例如: Etc/GMT或Etc/GMT+6表示UTC-6, 或Etc/GMT-8表示UTC+8 
+例如: Etc/GMT或Etc/GMT+6表示UTC-6, 或Etc/GMT-8表示UTC+8
 
-是的，UTC时区偏移量有意地反转为GMT，不能搜索像UTC+6或UTC+5:45这样的东西。
+UTC时区偏移量有意地反转为GMT，不能搜索像UTC+6或UTC+5:45这样的东西。
 \end{itemize}
 
 支持一些额外的规范和别名(例如，UTC或GMT)，也可以使用一些已弃用的时区(例如，PST8PDT、US/Hawaii、Canada/Central或仅日本)。但是，不能搜索单个时区缩写项，如CST或PST。我们将在后面讨论如何处理时区缩写。
@@ -45,28 +45,28 @@ UTC时间的负偏移GMT。
 
 IANA时区数据库每年都会进行多次更新，以确保在时区更改时数据库是最新的，以便程序能够做出相应的反应。
 
-系统处理时区数据库的方式是特定于实现的，操作系统必须决定如何提供必要的数据以及如何使其保持最新。时区数据库的更新通常作为操作系统更新的一部分进行，此类更新通常需要重新启动计算机，因此在更新期间不会运行C++应用程序。
+系统处理时区数据库的方式是特定于实现的，操作系统必须决定如何提供必要的数据，以及如何使其保持最新。时区数据库的更新通常作为操作系统更新的一部分进行，此类更新通常需要重新启动计算机，因此在更新期间不会运行C++应用程序。
 
 C++20标准提供了对该数据库的低级支持，用于处理时区的高级函数:
 
 \begin{itemize}
-\item 
+\item
 std::chrono::get\_tzdb\_list()产生对时区数据库的引用，该数据库是std::chrono::tzdb\_list类型的单例。
 
 它是一个时区数据库列表，能够并行支持多个版本的时区数据库。
 
-\item 
+\item
 std::chrono::get\_tzdb()产生对Std::chrono::tzdb类型的当前时区数据库的引用。该类型有以下多个成员:
 
 \begin{itemize}
-\item 
+\item
 version, 数据库版本的字符串
 
-\item 
+\item
 zones, 一个类型为std::chrono::time\_zone的时区信息向量
 \end{itemize}
 
-处理时区的标准函数(例如std::chrono::current\_zone()或std::chrono::zoned\_time类型的构造函数)在内部使用这些调用。
+处理时区的标准函数(例如std::chrono::current\_zone()或std::chrono::zoned\_time类型的构造函数)会在内部使用。
 
 例如，std::chrono::current\_zone()是以下方式的快捷方式:
 
@@ -79,15 +79,15 @@ std::chrono::get_tzdb().current_zone()
 
 对于支持更新IANA时区数据库而不需要重新启动的系统，提供了std::chrono::reload\_tzdb()。更新不会从旧数据库中删除内存，应用可能仍然有指向它的(time\_zone)指针。相反，新数据库被自动推到时区数据库列表的前面。
 
-可以使用get\_tzdb()返回的tzdb类型的字符串成员版本来检查时区数据库的当前版本。例如:
+可以使用get\_tzdb()返回的tzdb类型的字符串成员版本，来检查时区数据库的当前版本。例如:
 
 \begin{cpp}
 std::cout << "tzdb version: " << chr::get_tzdb().version << '\n';
 \end{cpp}
 
-通常，输出是年份和该年份更新的升序字母字符(例如，“2021b”)。remote\_version()提供最新可用时区数据库的版本，可以使用它来决定是否调用reload\_tzdb()。
+通常，输出是年份和该年份更新的升序字母字符(例如，“2021b”)。remote\_version()提供最新可用时区数据库的版本，使用它来决定是否调用reload\_tzdb()。
 
-若一个长时间运行的程序正在使用chrono时区数据库，但从不调用reload\_tzdb()，那么该程序将不会意识到数据库的任何更新，其将继续使用程序第一次访问数据库时存在的任何版本的数据库。
+若一个长时间运行的程序正在使用chrono时区数据库，但从不调用reload\_tzdb()，则该程序将不会意识到数据库的更新，其将继续使用程序第一次访问数据库时存在的数据库版本。
 
 有关为长时间运行的程序重新加载IANA时区数据库的详细信息和示例，请参阅\url{http://github.com/HowardHinnant/date/wiki/Examples-and-Recipes#tzdb_manage}。
 
@@ -96,11 +96,11 @@ std::cout << "tzdb version: " << chr::get_tzdb().version << '\n';
 要处理时区，要使用两种类型:
 
 \begin{itemize}
-\item 
-std::chrono::time\_zone,表示特定时区的类型。
+\item
+std::chrono::time\_zone，表示特定时区的类型。
 
-\item 
-std::chrono::zoned\_time, 表示与特定时区相关联的特定时间点的类型。
+\item
+std::chrono::zoned\_time，表示与特定时区相关联的特定时间点的类型。
 \end{itemize}
 
 详细地了解一下。
@@ -110,24 +110,24 @@ std::chrono::zoned\_time, 表示与特定时区相关联的特定时间点的类
 所有可能的时区值都由IANA时区数据库预定义，所以不能仅仅通过声明time\_zone对象来创建。这些值来自时区数据库，通常处理的是指向这些对象的指针:
 
 \begin{itemize}
-\item 
+\item
 std::chrono::current\_zone() 生成指向当前时区的指针。
 
-\item 
+\item
 std::chrono::locate\_zone(name) 生成一个指向时区名称的指针。
 
-\item 
+\item
 由std::chrono::get\_tzdb()返回的时区数据库具有包含所有时区的非指针集合:
 
 \begin{itemize}
-\item 
+\item
 成员区域拥有所有规范。
 
-\item 
+\item
 成员链接拥有所有带有链接的别名。
 \end{itemize}
 
-可以使用它根据诸如缩写名称之类的特征来查找时区。
+可以使用根据诸如缩写名称之类的特征来查找时区。
 \end{itemize}
 
 例如:
@@ -140,14 +140,14 @@ std::cout << tzHere->name() << '\n';
 std::cout << tzUTC->name() << '\n';
 \end{cpp}
 
-输出取决于当前的时区。对我来说，在德国是这样的:
+输出取决于当前的时区。对我来说，德国是这样的:
 
 \begin{shell}
 Europe/Berlin
 Etc/UTC
 \end{shell}
 
-可以搜索时区数据库中的任何条目(如“UTC”)，但得到的是它的规范。例如，"UTC"只是指向"Etc/UTC"的时区链接。若locate\_zone()没有找到与该名称对应的信息，则抛出std::runtime\_error异常。
+可以搜索时区数据库中的条目(如“UTC”)，但得到的是它的规范。例如，"UTC"只是指向"Etc/UTC"的时区链接。若locate\_zone()没有找到与该名称对应的信息，则抛出std::runtime\_error异常。
 
 time\_zone不能做很多事情，但最重要的是将它与系统时间点或本地时间点结合起来使用。
 
@@ -164,7 +164,7 @@ chrono库还允许定义和使用自定义时区的类型。
 std::chrono::zoned\_time类型的对象将时间点应用于时区。执行此转换有两个选项:
 
 \begin{itemize}
-\item 
+\item
 将系统时间点(属于系统时钟的时间点)应用于时区，将事件的时间点转换为与另一个时区的本地时间同时发生。
 
 \item
@@ -200,7 +200,7 @@ New York Office and Company Party:
   2021-09-24 13:00:00 EDT
 \end{shell}
 
-组合时间点和时区时，细节很重要。例如，考虑下面的代码:
+组合时间点和时区时。例如，下面的代码:
 
 \begin{cpp}
 auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
@@ -210,14 +210,14 @@ std::cout << "sysTp:         " << sysTp << '\n';
 std::cout << "locTime:       " << locTime << '\n';
 \end{cpp}
 
-首先，将sysTp初始化为以秒为单位的当前系统时间点，并将该时间点与当前时区结合起来。输出显示的是同一时间点的系统和本地时间点:
+首先，将sysTp初始化为以秒为单位的当前系统时间点，并将该时间点与当前时区结合起来。输出显示是同一时间点的系统和本地时间点:
 
 \begin{shell}
 sysTp:      2021-04-13 13:40:02
 locTime:    2021-04-13 15:40:02 CEST
 \end{shell}
 
-现在初始化一个本地时间点。一种方法是将系统时间点转换为本地时间点，现在需要一个时区。若使用当前时区，本地时间将被转换为UTC:
+现在初始化一个本地时间点。一种方法是将系统时间点转换为本地时间点，现在需要一个时区。若使用当前时区，本地时间将转换为UTC:
 
 \begin{cpp}
 auto sysTp = chr::floor<chr::seconds>(chr::system_clock::now()); // system timepoint
@@ -249,7 +249,7 @@ sysTp:     2021-04-13 13:40:02
 locTp:     2021-04-13 13:40:02
 \end{shell}
 
-然而，它们是不一样的。sysTp有一个相关的UTC epoch，而locTp没有。若现在将本地时间点应用于时区，则不会进行转换。我们指定时区，保持时间不变:
+然而，它们是不一样的。sysTp有一个相关的UTC epoch，而locTp没有。若现在将本地时间点应用于时区，则不会进行转换。这里指定时区，保持时间不变:
 
 \begin{cpp}
 auto timeFromSys = chr::zoned_time{chr::current_zone(), sysTp}; // converted time
@@ -258,14 +258,14 @@ std::cout << "timeFromSys: " << timeFromSys << '\n';
 std::cout << "timeFromLoc: " << timeFromLoc << '\n';
 \end{cpp}
 
-因此，输出如下:
+输出如下:
 
 \begin{shell}
 timeFromSys: 2021-04-13 15:40:02 CEST
 timeFromLoc: 2021-04-13 13:40:02 CEST
 \end{shell}
 
-现在让我们将这四个对象与纽约的时区结合起来:
+现在将这四个对象与纽约时区结合起来:
 
 \begin{cpp}
 std::cout << "NY sysTp: "
@@ -289,7 +289,7 @@ NY timeFromLoc: 2021-04-13 07:40:02 EDT
 
 系统时间点和由它导出的本地时间，都将现在的时间转换为纽约时区。与往常一样，将本地时间点应用于纽约，因此现在拥有与删除时区后的原始时间相同的值。timeFromLoc是中欧的初始当地时间13:40:02，适用于纽约时区。
 
-\mySubsubsection{11.6.4}{处理时区的缩写}
+\mySubsubsection{11.6.4}{处理时区缩写}
 
 由于时区缩写可能引用不同的时区，因此不能通过缩写定义唯一的时区。相反，必须将缩写映射到多个IANA时区项中的一个。
 
@@ -305,10 +305,10 @@ using namespace std::literals;
 int main(int argc, char** argv)
 {
 	auto abbrev = argc > 1 ? argv[1] : "CST";
-	
+
 	auto day = std::chrono::sys_days{2021y/1/1};
 	auto& db = std::chrono::get_tzdb();
-	
+
 	// print time and name of all timezones with abbrev:
 	std::cout << std::chrono::zoned_time{"UTC", day}
 			  << " maps to these '" << abbrev << "' entries:\n";
@@ -323,7 +323,7 @@ int main(int argc, char** argv)
 }
 \end{cpp}
 
-不传递命令行参数或“CST”的程序可能具有以下内容
+不传递命令行参数或“CST”的程序可能会有如下输出
 
 \begin{shell}
 2021-01-01 00:00:00 UTC maps these ’CST’ entries:
@@ -351,13 +351,13 @@ int main(int argc, char** argv)
 
 因为CST可能代表中央标准时间、中国标准时间或古巴标准时间，所以可以看到美国和中国的大多数时区之间有14个小时的差异。此外，古巴的哈瓦那与这些时区有1或13个小时的时差。
 
-注意，当我们在夏季的某一天搜索“CST”时，输出要小得多，因为美国条目和古巴的时区会切换到“CDT”(相应的夏令时)。然而，我们仍然有一些信息，因为中国和哥斯达黎加没有夏令时。
+注意，当在夏季的某一天搜索“CST”时，输出要小得多，因为美国条目和古巴的时区会切换到“CDT”(相应的夏令时)。然而，仍然需要一些信息，因为中国和哥斯达黎加没有夏令时。
 
-还要注意，对于CST，可能根本找不到任何时区，因为时区数据库不可用，或者使用GMT-6之类的东西代替了CST。
+对于CST，可能根本找不到时区，因为时区数据库不可用，或者使用GMT-6之类的东西代替了CST。
 
 \mySubsubsection{11.6.5}{自定义的时区}
 
-chrono库允许使用自定义时区。一个常见的例子是需要有一个时区，它与UTC有一个直到运行时才知道的偏移量。
+chrono库允许使用自定义时区。一个常见的例子是需要有一个时区，与UTC有一个直到运行时才知晓的偏移量。
 
 下面是一个提供自定义时区OffsetZone的示例，该时区可以保存以分钟为精度的UTC偏移量:
 
@@ -376,7 +376,7 @@ class OffsetZone
 	explicit OffsetZone(std::chrono::minutes offs)
 	: offset{offs} {
 	}
-	
+
 	template<typename Duration>
 	auto to_local(std::chrono::sys_time<Duration> tp) const {
 		// define helper type for local time:
@@ -386,7 +386,7 @@ class OffsetZone
 		// convert to local time:
 		return LT{(tp + offset).time_since_epoch()};
 	}
-	
+
 	template<typename Duration>
 	auto to_sys(std::chrono::local_time<Duration> tp) const {
 		// define helper type for system time:
@@ -396,7 +396,7 @@ class OffsetZone
 		// convert to system time:
 		return ST{(tp - offset).time_since_epoch()};
 	}
-	
+
 	template<typename Duration>
 	auto get_info(const std::chrono::sys_time<Duration>& tp) const {
 		return std::chrono::sys_info{};
@@ -419,11 +419,11 @@ int main()
 	using namespace std::literals; // for h and min suffix
 	// timezone with 3:45 offset:
 	OffsetZone p3_45{3h + 45min};
-	
+
 	// convert now to timezone with offset:
 	auto now = std::chrono::system_clock::now();
 	std::chrono::zoned_time<decltype(now)::duration, OffsetZone*> zt{&p3_45, now};
-	
+
 	std::cout << "UTC: " << zt.get_sys_time() << '\n';
 	std::cout << "+3:45: " << zt.get_local_time() << '\n';
 	std::cout << zt << '\n';
