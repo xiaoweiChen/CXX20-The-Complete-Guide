@@ -1,16 +1,16 @@
 
 
-C++20引入了两个新的原子类型(处理引用和共享指针)和原子类型的新特性。另外，我们现在有了一个类型std::atomic<char8\_t>。
+C++20引入了两个新的原子类型(处理引用和共享指针)和原子类型的新特性。另外，现在有了一个类型std::atomic<char8\_t>。
 
 \mySubsubsection{13.3.1}{原子引用std::atomic\_ref<>}
 
 C++11起，标准库提供了类模板std::atomic<>来为普通可复制类型提供原子API。
 
-C++20现在引入了类模板std::atomic\_ref<>，为普通的可复制引用类型提供原子API，允许为通常不是原子的现有对象提供临时原子API。一种应用程序是初始化对象而不关心并发性，然后在不同的线程中使用它。
+C++20现在引入了类模板std::atomic\_ref<>，为普通的可复制引用类型提供原子API，允许为通常不是原子的现有对象提供临时原子API。一种应用程序是初始化对象而不关心并发性，然后在不同的线程中使用。
 
-之所以给这个类型指定一个唯一的名称atomic\_ref，而不只是为引用类型提供std::atomic<>，是因为用户应该看到这个对象可能提供非原子访问，而且比std::atomic<>的保障更弱。
+之所以给这个类型指定的名称为atomic\_ref(而不只是为引用类型提供std::atomic<>)，是因为用户应该看到这个对象可能提供非原子访问，而且比std::atomic<>的保障更弱。
 
-\mySamllsection{使用原子引用的例子}
+\mySamllsection{使用原子引用}
 
 下面的程序演示了如何使用原子引用:
 
@@ -32,11 +32,11 @@ int main()
 	// create and initialize an array of integers with the value 100:
 	std::array<int, 1000> values;
 	std::fill_n(values.begin(), values.size(), 100);
-	
+
 	// initialize a common stop token for all threads:
 	std::stop_source allStopSource;
 	std::stop_token allStopToken{allStopSource.get_token()};
-	
+
 	// start multiple threads concurrently decrementing the value:
 	std::vector<std::jthread> threads;
 	for (int i = 0; i < 9; ++i) {
@@ -45,14 +45,14 @@ int main()
 				// initialize random engine to generate an index:
 				std::mt19937 eng{std::random_device{}()};
 				std::uniform_int_distribution distr{0, int(values.size()-1)};
-				
+
 				while (!st.stop_requested()) {
 					// compute the next index:
 					int idx = distr(eng);
-					
+
 					// enable atomic access to the value with the index:
 					std::atomic_ref val{values[idx]};
-					
+
 					// and use it:
 					--val;
 					if (val <= 0) {
@@ -63,7 +63,7 @@ int main()
 			allStopToken // pass the common stop token
 		});
 	}
-	
+
 	// after a while/event request to stop all threads:
 	std::this_thread::sleep_for(0.5s);
 	std::cout << "\nSTOP\n";
@@ -72,34 +72,34 @@ int main()
 }
 \end{cpp}
 
-首先创建并初始化一个包含1000个整数值的数组，不使用原子:
+首先创建并初始化包含1000个整数值的数组，不使用原子:
 
 \begin{cpp}
 std::array<int, 1000> values;
 std::fill_n(values.begin(), values.size(), 100);
 \end{cpp}
 
-稍后启动多个线程并发地递减这些值。关键是，只有在这种上下文中，才将值用作原子整数。为此，需要初始化std::atomic\_ref<>:
+稍后启动多个线程并发地递减这些值。关键是，只有在这种上下文中，才将值用作原子整数，所以需要初始化std::atomic\_ref<>:
 
 \begin{cpp}
 std::atomic_ref val{values[idx]};
 \end{cpp}
 
-注意，由于类模板实参推导，不必指定所引用对象的类型。
+由于类模板实参推导，不必指定所引用对象的类型。
 
 这个初始化的效果是，当使用原子引用时，对值的访问是原子地进行的:
 
 \begin{itemize}
-\item 
+\item
 --val以原子的方式递减
 
-\item 
-val <= 0以原子方式加载值，将其与0进行比较(表达式在读取值后使用隐式类型转换到基础类型)
+\item
+val <= 0 以原子方式加载值，将其与0进行比较(表达式在读取值后使用隐式类型转换到基础类型)
 \end{itemize}
 
 可以考虑将后者实现为val.load() <= 0，以使用原子接口。
 
-注意，这个程序的不同线程不使用相同的atomic\_ref<>对象。std::atomic\_ref<>保证通过为特定对象创建的任何atomic\_ref<>对该对象的所有并发访问都是同步的。[如何确保这一点取决于标准库的实现。]若需要互斥锁或锁，则可以使用全局哈希表，其中为包装对象的每个地址存储一个关联的锁。这与为用户定义类型实现std::atomic<>的方式没有什么不同。
+这个程序的不同线程不使用相同的atomic\_ref<>对象。std::atomic\_ref<>保证通过为特定对象创建的任何atomic\_ref<>对该对象的所有并发访问都是同步的[如何确保这一点取决于标准库的实现]。若需要互斥锁或锁，则可以使用全局哈希表，其中为包装对象的每个地址存储一个关联的锁，这与为用户定义类型实现std::atomic<>的方式没有什么不同。
 
 \mySamllsection{原子引用的特性}
 
@@ -108,11 +108,11 @@ val <= 0以原子方式加载值，将其与0进行比较(表达式在读取值�
 \begin{cpp}
 namespace std {
 	template<typename T> struct atomic_ref; // primary template
-	
+
 	template<typename T> struct atomic_ref<T*>; // partial specialization for pointers
-	
+
 	template<> struct atomic_ref<integralType>; // full specializations for integral types
-	
+
 	template<> struct atomic_ref<floatType>; // full specializations for floating-point types
 }
 \end{cpp}
@@ -120,7 +120,7 @@ namespace std {
 与std::atomic<>相比，原子引用有以下限制:
 
 \begin{itemize}
-\item 
+\item
 不支持volatile
 
 \item
@@ -130,10 +130,10 @@ namespace std {
 与std::atomic<>相比，原子引用有以下扩展:
 
 \begin{itemize}
-\item 
+\item
 复制构造函数，用于创建对相同基础对象的另一个引用(但提供赋值操作符仅用于赋值基础值)。
 
-\item 
+\item
 常量不会传播到包装对象，所以可以给const std::atomic\_ref<>赋一个新值:
 
 \begin{cpp}
@@ -142,25 +142,25 @@ const std::atomic_ref cr{x};
 cr = y; // OK (would not be OK for const std::atomic<>)
 \end{cpp}
 
-\item 
+\item
 线程同步支持使用wait()、notify\_one()和notify\_all()，就像现在为所有原子类型提供的那样。
 \end{itemize}
 
 其他方面，提供了与std::atomic<>相同的特性:
 
 \begin{itemize}
-\item 
-该类型既提供具有内存屏障的高级API，也提供禁用它们的底层API。
+\item
+该类型既提供具有内存屏障的高级API，也提供禁用其底层API。
 
-\item 
-静态成员is\_always\_lock\_free，非静态成员函数is\_lock\_free()表示原子支持是否无锁，这可能仍然取决于所使用的对齐方式。
+\item
+静态成员is\_always\_lock\_free，非静态成员函数is\_lock\_free()表示原子支持是否无锁，这可能取决于对齐方式。
 \end{itemize}
 
 \mySamllsection{原子引用的详情}
 
-原子引用提供与相应原子类型相同的API。对于普通的可复制类型、指针类型、整型类型或浮点类型T, c++标准库提供了std::atomic\_ref<T>与std::atomic<T>相同的原子API。原子引用类型也在头文件<atomic>中提供。
+原子引用提供与相应原子类型相同的API。对于普通的可复制类型、指针类型、整型类型或浮点类型T，C++标准库提供了std::atomic\_ref<T>与std::atomic<T>相同的原子API。原子引用类型也在头文件<atomic>中提供。
 
-所以，使用静态成员is\_always\_lock\_free()或非静态成员函数is\_lock\_free()时，可以检查原子类型是否在内部使用锁作为原子。若没有，则有对原子操作的本机硬件支持(这是在信号处理程序中使用原子的先决条件)。类型的检查如下所示:
+使用静态成员is\_always\_lock\_free()或非静态成员函数is\_lock\_free()时，可以检查原子类型是否在内部使用锁作为原子。若没有，则有对原子操作的本机硬件支持(这是在信号处理程序中使用原子的先决条件)。类型的检查如下所示:
 
 \begin{cpp}
 if constexpr(std::atomic<int>::is_always_lock_free) {
@@ -183,7 +183,7 @@ else {
 }
 \end{cpp}
 
-注意，对于类型T，尽管类型std::atomic<T>是无锁的，std::atomic\_ref<T>可能不是无锁的。
+对于类型T，尽管类型std::atomic<T>是无锁的，std::atomic\_ref<T>可能不是无锁的。
 
 由原子引用引用的对象可能还必须满足特定于架构的约束，例如：对象可能需要在内存中正确对齐，或者可能不允许缓存在GPU寄存器内存中。对于所需的对齐，有一个静态成员:
 
@@ -200,23 +200,23 @@ namespace std {
 
 \mySubsubsection{13.3.2}{原子共享指针}
 
-C++11引入了带有可选原子接口的共享指针。使用像atomic\_load()、atomic\_store()和atomic\_exchange()这样的函数，可以并发访问共享指针引用的值。然而，问题是可以将这些共享指针与非原子接口一起使用，这将破坏共享指针的所有原子使用。
+C++11引入了带有可选原子接口的共享指针。使用像atomic\_load()、atomic\_store()和atomic\_exchange()这样的函数，可以并发访问共享指针引用的值。但问题是可以将这些共享指针与非原子接口一起使用，这将破坏共享指针的所有原子使用。
 
 C++20现在为共享指针和弱指针提供了偏特化:
 
 \begin{itemize}
-\item 
+\item
 std::atomic<std::shared\_ptr<T>{}>
 
-\item 
+\item
 std::atomic<std::weak\_ptr<T>{}>
 \end{itemize}
 
 以前用于共享指针的原子API现在已弃用。
 
-注意，原子共享/弱指针不提供原子原始指针提供的额外操作，提供的API与std::atomic<>一般为普通可复制类型T提供的API相同。
+原子共享/弱指针不提供原子原始指针提供的额外操作，提供的API与std::atomic<>为普通可复制类型T提供的API相同。
 
-提供了wait()、notify()\_one()和notify\_all()的线程同步支持。还支持具有使用内存顺序参数选项的低层原子接口。
+提供了wait()、notify()\_one()和notify\_all()的线程同步支持，还支持具有使用内存顺序参数选项的低层原子接口。
 
 \mySamllsection{使用原子共享指针的例子}
 
@@ -240,7 +240,7 @@ class AtomicList {
 	std::atomic<std::shared_ptr<Node>> head;
 public:
 	AtomicList() = default;
-	
+
 	void insert(T v) {
 		auto p = std::make_shared<Node>();
 		p->val = v;
@@ -248,7 +248,7 @@ public:
 		while (!head.compare_exchange_weak(p->next, p)) { // atomic update
 		}
 	}
-	
+
 	void print() const {
 		std::cout << "HEAD";
 		for (auto p = head.load(); p; p = p->next) { // atomic read
@@ -261,7 +261,7 @@ public:
 int main()
 {
 	AtomicList<std::string> alist;
-	
+
 	// populate list with elements from 10 threads:
 	{
 		std::vector<std::jthread> threads;
@@ -274,7 +274,7 @@ int main()
 			}});
 		}
 	} // wait for all threads to finish
-	
+
 	alist.print(); // print resulting list
 	}
 \end{cpp}
@@ -312,7 +312,7 @@ using namespace std::literals; // for duration literals
 int main()
 {
 	std::atomic<std::weak_ptr<int>> pShared; // pointer to current shared value (if one exists)
-	
+
 	// loop to set shared value for some time:
 	std::atomic<bool> done{false};
 	std::jthread updates{[&] {
@@ -326,7 +326,7 @@ int main()
 							}
 							done.store(true);
 					}};
-				
+
 	// loop to print shared value (if any):
 	while (!done.load()) {
 		if (auto sp = pShared.load().lock()) { // atomic read
@@ -340,7 +340,7 @@ int main()
 }
 \end{cpp}
 
-注意，在这个程序中，不必使共享指针原子化，因为它只让一个线程使用。唯一的问题是两个线程并发地更新或使用弱指针。
+这里，不必使共享指针原子化，因为它只可让一个线程使用。唯一的问题是两个线程并发地更新或使用弱指针。
 
 该程序可能有以下输出:
 
@@ -394,14 +394,14 @@ std::atomic<>和std::atomic\_ref<>现在都为float、double和long double类型
 与任意可复制类型的主模板相比，其提供了额外的原子操作来添加和减去值[与整型的特化相反，整型的特化还提供了对自增/自减值的原子支持，并可执行按位修改]:
 
 \begin{itemize}
-\item 
+\item
 fetch\_add(), fetch\_sub()
 
-\item 
+\item
 operator+=, operator-=
 \end{itemize}
 
-因此，现在可以做到以下几点:
+因此，现在可以做到:
 
 \begin{cpp}
 std::atomic<double> d{0};
@@ -413,7 +413,7 @@ d += 10.3; // OK since C++20
 
 所有原子类型(std::atomic<>、std::atomic\_ref<>和std::atomic\_flag)现在都提供了一个简单的API，让线程阻塞并等待其他线程对其值的更改。
 
-因此，对于原子值:
+对于原子值:
 
 \begin{cpp}
 std::atomic<int> aVal{100};
@@ -426,7 +426,7 @@ int value = 100;
 std::atomic_ref<int> aVal{value};
 \end{cpp}
 
-可以定义想要等待的值，直到引用的值已经改变:
+可以定义想要等待的值，直到引用值已经改变:
 
 \begin{cpp}
 int lastValue = aVal.load();
@@ -440,9 +440,9 @@ aVal.wait(lastValue); // block unless/until value changed (and notified)
 aVal.notify_all(); // notify all threads waiting for a change
 \end{cpp}
 
-但对于条件变量，wait()可能会由于伪唤醒而结束(因此没有调用通知)。因此您应该在wait()之后再次检查该值。
+但对于条件变量，wait()可能会由于伪唤醒而结束(因此没有调用通知)，所以开发者需要在wait()之后再次检查该值。
 
-等待特定原子值的代码如下所示:
+等待特定原子值:
 
 \begin{cpp}
 while ((int val = aVal.load()) != expectedVal) {
@@ -451,7 +451,7 @@ while ((int val = aVal.load()) != expectedVal) {
 }
 \end{cpp}
 
-请注意，不能保证会将获得所有更新。考虑下面的程序:
+不能保证会将获得所有更新:
 
 \filename{lib/atomicwait.cpp}
 
@@ -512,7 +512,7 @@ READER DONE
 READER DONE
 \end{shell}
 
-注意，通知函数是const成员函数。
+通知函数是const成员函数。
 
 \mySamllsection{使用原子通知的公平票务系统}
 
@@ -532,7 +532,7 @@ READER DONE
 using namespace std::literals; // for duration literals
 int main()
 {
-	char actChar = 'a'; // character value iterating endless from ’a’ to ’z’
+	char actChar = 'a'; // character value iterating endless from 'a' to 'z'
 	std::mutex actCharMx; // mutex to access actChar
 	// limit the availability of threads with a ticket system:
 	std::atomic<int> maxTicket{0}; // maximum requested ticket no
@@ -550,7 +550,7 @@ int main()
 												val = actChar++;
 												if (actChar > 'z') actChar = 'a';
 												}
-												
+
 												// request a ticket to process it and wait until enabled:
 												int myTicket{++maxTicket};
 												int act = actTicket.load();
@@ -558,41 +558,41 @@ int main()
 												actTicket.wait(act);
 												act = actTicket.load();
 												}
-												
+
 												// print the character value 10 times:
 												for (int i = 0; i < 10; ++i) {
 												std::cout.put(val).flush();
 												auto dur = 20ms * ((idx % 3) + 1);
 												std::this_thread::sleep_for(dur);
 												}
-												
+
 												// done, so enable next ticket:
 												++actTicket;
 												actTicket.notify_all();
 											}
 										}});
 	}
-	
+
 	// enable and disable threads in the thread pool:
 	auto adjust = [&, oldNum = 0] (int newNum) mutable {
 					actTicket += newNum - oldNum; // enable/disable tickets
 					if (newNum > 0) actTicket.notify_all(); // wake up waiting threads
 					oldNum = newNum;
 					};
-					
+
 	for (int num : {0, 3, 5, 2, 0, 1}) {
 		std::cout << "\n====== enable " << num << " threads" << std::endl;
 		adjust(num);
 		std::this_thread::sleep_for(2s);
 	}
-	
+
 	for (auto& t : threads) { // request all threads to stop (join done when leaving scope)
 		t.request_stop();
 	}
 }
 \end{cpp}
 
-每个线程请求下一个字符值，然后请求一个票据来处理这个值:
+每个线程请求下一个字符值，请求一个票据来处理这个值:
 
 \begin{cpp}
 int myTicket{++maxTicket};
@@ -608,7 +608,7 @@ while (act < myTicket) {
 }
 \end{cpp}
 
-每次线程唤醒时，都会仔细检查它的票据是否启用(actTicket至少是myTicket)。通过增加actTicket的值并通知所有等待线程来启用新票据。
+每次线程唤醒时，都会仔细检查其票据是否启用(actTicket至少是myTicket)。通过增加actTicket的值并通知所有等待线程来启用新票据。
 
 这发生在线程完成处理时:
 
@@ -617,7 +617,7 @@ while (act < myTicket) {
 actTicket.notify_all();
 \end{cpp}
 
-或者当启用了新数量的票时:
+或者当启用的票数变化时:
 
 \begin{cpp}
 actTicket += newNum - oldNum; // enable/disable tickets
@@ -650,18 +650,18 @@ ccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhh
 
 \mySubsubsection{13.3.5}{std::atomic\_flag的扩展}
 
-C++20之前，若不设置std::atomic\_flag，就无法检查它的值，因此C++20添加了全局函数和成员函数来检查当前值:
+C++20之前，若不设置std::atomic\_flag，就无法检查其值，因此C++20添加了全局函数和成员函数来检查当前值:
 
 \begin{itemize}
-\item 
+\item
 atomic\_flag\_test(const atomic\_flag*) noexcept;
 
-\item 
+\item
 atomic\_flag\_test\_explicit(const atomic\_flag*, memory\_order) noexcept;
 
-\item 
+\item
 atomic\_flag::test() const noexcept;
 
-\item 
+\item
 atomic\_flag::test(memory\_order) const noexcept;
 \end{itemize}

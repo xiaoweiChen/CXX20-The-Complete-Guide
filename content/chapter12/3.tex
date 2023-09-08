@@ -41,7 +41,7 @@ hardware\_concurrency() & 带有可能的硬件线程提示的静态函数      
 表12.4 jthread类对象的操作
 \end{center}
 
-注意，std::thread和std::jthread的成员类型id和native\_handle\_type相同，所以使用decltype(mythread)::id或std::thread::id都没有关系。这样，就可以直接用std::jthread替换现有代码中的std::thread，就好了。
+std::thread和std::jthread的成员类型id和native\_handle\_type相同，所以使用decltype(mythread)::id或std::thread::id都没有关系，直接用std::jthread替换现有代码中的std::thread就好了。
 
 \mySubsubsection{12.3.1}{对std::jthread使用停止令牌}
 
@@ -64,7 +64,7 @@ ssrc.request_stop(); // request stop on stop token of t1
 
 \mySamllsection{std::jthread集合中使用停止令牌}
 
-如果启动多个jthread，每个线程都有自己的停止令牌。注意，这可能会导致停止所有线程的时间可能比预期的要长:
+若启动多个jthread，每个线程都有自己的停止令牌，这可能会导致停止所有线程的时间可能比预期的要长:
 
 \begin{cpp}
 {
@@ -111,11 +111,11 @@ for (auto& t : threads) {
 } // destructor stops all threads
 \end{cpp}
 
-首先请求所有线程停止，线程可能在析构函数调用join()让线程结束之前就结束了。协程线程池的析构函数也有使用这种技术的一个示例。
+首先请求所有线程停止，线程可能在析构函数调用join()让线程结束之前就结束了。协程线程池的析构函数也有使用这种技术。
 
 \mySamllsection{对多个std::jthread使用相同的停止令牌}
 
-可能还需要使用相同的停止令牌为多个线程请求停止。这很容易做到，只需自己创建停止令牌，或者从已经启动的第一个线程中获取停止令牌，并将此停止令牌作为第一个参数启动(其他)线程。例如:
+可能还需要使用相同的停止令牌为多个线程请求停止，只需自己创建停止令牌，或者从已经启动的第一个线程中获取停止令牌，并将此停止令牌作为第一个参数启动(其他)线程。例如:
 
 \begin{cpp}
 // initialize a common stop token for all threads:
@@ -133,7 +133,7 @@ for (int i = 0; i < 9; ++i) {
 }
 \end{cpp}
 
-记住，可调用对象通常只接受传递的所有参数。仅当存在未传递参数的附加停止令牌参数时，才使用已启动线程的内部停止令牌。
+可调用对象通常只接受传递的所有参数。仅当存在未传递参数的附加停止令牌参数时，才使用已启动线程的内部停止令牌。
 
 请参阅lib/atomicref.cpp获得完整的示例。
 

@@ -7,10 +7,10 @@ C++20提供了一种将并发输出同步到流的新机制。
 若多个线程并发地写一个流，输出通常必须同步:
 
 \begin{itemize}
-\item 
-通常，流的并发输出会导致未定义的行为(这是数据竞争，指具有未定义行为的竞争条件)。
+\item
+通常，流的并发输出会导致未定义行为(这是数据竞争，指具有未定义行为的竞争条件)。
 
-\item 
+\item
 支持并发输出到标准流(如std::cout)，但结果不是很有用，因为来自不同线程的字符可能以任意顺序混合在一起。
 \end{itemize}
 
@@ -36,7 +36,7 @@ int main()
 	std::jthread t1(squareRoots, 5);
 	std::jthread t2(squareRoots, 5);
 	std::jthread t3(squareRoots, 5);
-}	
+}
 \end{cpp}
 
 三个线程并发地写std::cout。这是有效的，因为使用了标准输出流。
@@ -89,7 +89,7 @@ int main()
 }
 \end{cpp}
 
-这里，同步输出缓冲区将输出与其他输出同步到同步输出缓冲区，以便仅在调用同步输出缓冲区的析构函数时刷新输出。
+同步输出缓冲区将输出与其他输出同步到同步输出缓冲区，以便仅在调用同步输出缓冲区的析构函数时刷新输出。
 
 结果，输出如下所示:
 
@@ -111,7 +111,7 @@ squareroot of 4 is 2
 squareroot of 4 is 2
 \end{shell}
 
-这三个线程现在逐行写入std::cout，但确切顺序仍然是开放的。可以通过实现循环得到相同的结果，如下所示:
+这三个线程现在逐行写入std::cout，但确切顺序仍然不确定。可以通过实现循环得到相同的结果:
 
 \begin{cpp}
 for (int i = 0; i < num ; ++i) {
@@ -120,9 +120,9 @@ for (int i = 0; i < num ; ++i) {
 }
 \end{cpp}
 
-请注意，' \verb|\|n '、std::endl和std::flush都不会写入输出，这里需要析构函数。若在循环外创建同步输出流，则在到达析构函数时将所有线程的输出一起打印。
+'\verb|\|n'、std::endl和std::flush都不会写入输出，这里需要析构函数。若在循环外创建同步输出流，则在到达析构函数时将所有线程的输出一起打印。
 
-然而，在调用析构函数之前，有一个新的操纵符用于写入输出:std::flush\_emit。因此，可以创建和初始化同步输出流，并逐行输出，如下所示:
+然而，在调用析构函数之前，有一个新的操纵符用于写入输出:std::flush\_emit，所以可以创建和初始化同步输出流，并逐行输出:
 
 \begin{cpp}
 std::osyncstream coutSync{std::cout};
@@ -164,11 +164,11 @@ int main()
 
 该程序使用三个并发线程逐行写入同一个文件。
 
-注意，每个线程都使用自己的同步输出流，但都必须使用相同的文件流。因此，如果每个线程都打开文件，程序将无法工作。
+每个线程都使用自己的同步输出流，但都必须使用相同的文件流。因此，若每个线程都打开文件，程序将无法工作。
 
 \mySubsubsection{13.4.4}{使用同步输出流作为输出流}
 
-同步输出流是一个流。类std::osyncstream派生自std::ostream(准确地说:与通常的流类一样，类std::basic\_osyncstream<>派生自类std::basic\_ostream<>)。因此，还可以按如下方式实现上述程序:
+同步输出流是一个流。类std::osyncstream派生自std::ostream(准确地说:与通常的流类一样，类std::basic\_osyncstream<>派生自类std::basic\_ostream<>)。还可以按如下方式实现上述程序:
 
 \filename{lib/syncfilestream2.cpp}
 
@@ -200,7 +200,7 @@ int main()
 
 操纵符std::flush\_emit通常是为输出流定义的，可以在这里使用。对于未同步的输出流，没有影响。
 
-请注意，创建一个同步输出流并将其传递给所有三个线程将无法工作，因为多个线程将写入一个流:
+创建一个同步输出流并将其传递给所有三个线程将无法工作，多个线程将写入一个流:
 
 \begin{cpp}
 // undefined behavior (concurrent writes to the same stream):

@@ -1,19 +1,19 @@
 
 C++20引入了处理信号量的新类型。信号量是轻量级同步原语，允许同步或限制对一个或一组资源的访问。
 
-可以像使用互斥锁一样使用它们，这样做的好处是，授予对资源访问权限的线程不必是获得对资源访问权限的线程。还可以使用它们来限制资源的可用性，例如启用和禁用线程池中线程的使用。
+可以像使用互斥锁一样使用，这样做的好处是，授予对资源访问权限的线程，不必是获得对资源访问权限的线程。还可以使用它们来限制资源的可用性，例如：启用和禁用线程池中线程的使用。
 
 C++标准库提供了两种信号量类型:
 
 \begin{itemize}
-\item 
+\item
 std::counting\_semaphore<>将多个资源的使用限制在最大值
 
 \item
 std::binary\_semaphore<>限制对单一资源的使用
 \end{itemize}
 
-\mySubsubsection{13.2.1}{使用计数信号量的例子}
+\mySubsubsection{13.2.1}{使用计数信号量}
 
 下面的代码演示了信号量的常规操作方式:
 
@@ -32,18 +32,18 @@ int main()
 {
 	std::queue<char> values; // queue of values
 	std::mutex valuesMx; // mutex to protect access to the queue
-	
+
 	// initialize a queue with multiple sequences from ’a’ to ’z’:
 	// - no mutex because no other thread is running yet
 	for (int i = 0; i < 1000; ++i) {
 		values.push(static_cast<char>('a' + (i % ('z'-'a'))));
 	}
-	
+
 	// create a pool of numThreads threads:
 	// - limit their availability with a semaphore (initially none available):
 	constexpr int numThreads = 10;
 	std::counting_semaphore<numThreads> enabled{0};
-	
+
 	// create and start all threads of the pool:
 	std::vector<std::jthread> pool;
 	for (int idx = 0; idx < numThreads; ++idx) {
@@ -70,20 +70,20 @@ int main()
 				}};
 		pool.push_back(std::move(t));
 	}
-	
+
 	std::cout << "== wait 2 seconds (no thread enabled)\n" << std::flush;
 	std::this_thread::sleep_for(2s);
-	
+
 	// enable 3 concurrent threads:
 	std::cout << "== enable 3 parallel threads\n" << std::flush;
 	enabled.release(3);
 	std::this_thread::sleep_for(2s);
-	
+
 	// enable 2 more concurrent threads:
 	std::cout << "\n== enable 2 more parallel threads\n" << std::flush;
 	enabled.release(2);
 	std::this_thread::sleep_for(2s);
-	
+
 	// Normally we would run forever, but let’s end the program here:
 	std::cout << "\n== stop processing\n" << std::flush;
 	for (auto& t : pool) {
@@ -92,7 +92,7 @@ int main()
 }
 \end{cpp}
 
-代码中，启动了10个线程，但限制了允许其中多少线程主动运行和处理数据。为此，将信号量初始化为允许的最大数量(10)和允许的初始资源数量(0):
+代码中，启动了10个线程，但限制了允许其中多少线程主动运行和处理数据，因此将信号量初始化为最大数量(10)和初始资源数量(0):
 
 \begin{cpp}
 constexpr int numThreads = 10;
@@ -117,7 +117,7 @@ std::jthread{[&, idx] (std::stop_token st) {
 
 因为信号量初始化为零，所以最初的情况是阻塞，因此没有可用的资源。
 
-然而，之后，使用信号量来允许三个线程进行并发操作:
+可以使用信号量来允许三个线程进行并发操作:
 
 \begin{cpp}
 // enable 3 concurrent threads:
@@ -164,13 +164,13 @@ std::jthread{[&, idx] (std::stop_token st) {
 		}}
 \end{cpp}
 
-这将可不时地再次检查停止令牌的状态。
+可不时地再次检查停止令牌的状态。
 
 \mySamllsection{线程调度不公平}
 
 注意，线程不一定是公平调度的。因此，当主线程想要结束程序时，可能需要一些时间(甚至永远)来调度。调用线程的析构函数之前请求所有线程停止也是一种很好的方法；否则，当前面的线程完成后，会在稍后请求停止。
 
-线程没有公平调度的另一个后果是，不能保证等待时间最长的线程是首选。通常情况正好相反:若线程调度器已经有一个正在运行的线程调用release()，并且立即使用acquire()，则调度器会保持线程运行(“太好了，不需要上下文切换”)。因此，无法保证acquire()会唤醒等待的多个线程中的哪一个。可能总是使用相同的线程(伪唤醒)。
+线程没有公平调度的另一个后果是，不能保证等待时间最长的线程是首选。通常情况正好相反:若线程调度器已经有一个正在运行的线程调用release()，并且立即使用acquire()，则调度器会保持线程运行(“太好了，不需要上下文切换”)，所以无法保证acquire()会唤醒等待的多个线程中的哪一个，可能总是使用相同的线程(伪唤醒)。
 
 因此，在请求运行权限之前，不应该从队列中取出下一个值。
 
@@ -197,14 +197,14 @@ enabled.acquire();
 ...
 \end{cpp}
 
-出于同样的原因，不能轻易地减少已启用线程的数量。的确，可以试着调用:
+出于同样的原因，不能轻易地减少已启用线程的数量。可以试着调用:
 
 \begin{cpp}
 // reduce the number of enabled concurrent threads by one:
 enabled.acquire();
 \end{cpp}
 
-但我们不知道这个报表是什么时候处理的。由于线程没有得到公平的调度，减少启用的线程数量的反应可能会花费很长时间，甚至可能会饿死(饥饿)。
+但不知道这个报表是什么时候处理的。由于线程没有得到公平的调度，减少启用的线程数量的反应可能会花费很长时间，甚至可能会饿死(饥饿)。
 
 为了公平地处理队列和对资源限制的即时响应，应该使用原子的新wait()和通知机制。
 
@@ -230,7 +230,7 @@ int main()
 	int sharedData;
 	std::binary_semaphore dataReady{0}; // signal there is data to process
 	std::binary_semaphore dataDone{0}; // signal processing is done
-	
+
 	// start threads to read and process values by value:
 	std::jthread process{[&] (std::stop_token st) {
 						while(!st.stop_requested()) {
@@ -238,12 +238,12 @@ int main()
 							// - timeout after 1s to check stop_token
 							if (dataReady.try_acquire_for(1s)) {
 								int data = sharedData;
-								
+
 								// process it:
 								std::cout << "[process] read " << data << std::endl;
 								std::this_thread::sleep_for(data * 0.5s);
 								std::cout << "[process] done" << std::endl;
-								
+
 								// signal processing done:
 								dataDone.release();
 							}
@@ -252,16 +252,16 @@ int main()
 							}
 							}
 						}};
-		
+
 	// generate a couple of values:
 	for (int i = 0; i < 10; ++i) {
 		// store next value:
 		std::cout << "[main] store " << i << std::endl;
 		sharedData = i;
-		
+
 		// signal to start processing:
 		dataReady.release();
-		
+
 		// wait until processing is done:
 		dataDone.acquire();
 		std::cout << "[main] processing done\n" << std::endl;
@@ -273,10 +273,10 @@ int main()
 使用两个二值信号量让一个线程通知另一个线程:
 
 \begin{itemize}
-\item 
+\item
 使用dataReady，主线程通知线程进程sharedData中有新数据需要处理。
 
-\item 
+\item
 使用dataDone，处理线程通知主线程数据已处理完成。
 \end{itemize}
 
@@ -314,7 +314,7 @@ int main()
 [process] timeout
 \end{shell}
 
-注意，处理线程只能使用try\_acquire\_for()获取有限的时间。返回值表示是否通知了它(访问资源)。这允许线程不时地检查是否发出了停止信号(就像主线程结束后那样)。
+处理线程只能使用try\_acquire\_for()获取有限的时间，返回值表示是否通知了它(访问资源)。这允许线程不时地检查是否发出了停止信号(就像主线程结束后那样)。
 
 二值信号量的另一个应用是，等待在不同线程中运行的协程结束。
 
@@ -334,7 +334,7 @@ namespace std {
 
 注意，不能复制或移动(分配)信号量。
 
-还要注意，将容器的大小(std::array除外)作为计数器的初始值传递是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会看到以下结果:
+将容器的大小(std::array除外)作为计数器的初始值是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会看到以下结果:
 
 \begin{cpp}
 std::counting_semaphore s1{10}; // OK

@@ -2,16 +2,16 @@
 两个新的类型为多线程同步异步计算/处理提供了新的机制:
 
 \begin{itemize}
-\item 
+\item
 锁存器可以进行一次性同步，线程可以等待多个任务完成。
 
-\item 
+\item
 栅栏对多个线程进行重复同步，当其都完成当前/下一个处理时，必须进行响应。
 \end{itemize}
 
 \mySubsubsection{13.1.1}{锁存器}
 
-锁存器是用于并发执行的一种新的同步机制，支持单次使用异步倒计时。从初始整数值开始，各种线程可以自动将该值计数到零。当计数器达到零时，等待此倒计时的所有线程继续。
+锁存器是用于并发执行的一种新的同步机制，支持单次使用异步倒计时。从初始整数值开始，各种线程可以自动将该值计数到零。当计数器达到零时，等待此倒计时的所有线程继续运行。
 
 考虑下面的例子:
 
@@ -35,10 +35,10 @@ void loopOver(char c) {
 int main()
 {
 	std::array tags{'.', '?', '8', '+', '-'}; // tags we have to perform a task for
-	
+
 	// initialize latch to react when all tasks are done:
 	std::latch allDone{tags.size()}; // initialize countdown with number of tasks
-	
+
 	// start two threads dealing with every second tag:
 	std::jthread t1{[tags, &allDone] {
 			for (unsigned i = 0; i < tags.size(); i += 2) { // even indexes
@@ -65,24 +65,24 @@ int main()
 }
 \end{cpp}
 
-本例中，我们启动两个线程(使用std::jthread)来执行两个任务，每个任务处理数组标记的一个字符。因此，标签的大小决定了任务的数量。主线程阻塞，直到所有任务完成。:
+本例中，启动两个线程(使用std::jthread)来执行两个任务，每个任务处理数组标记的一个字符，所以标签的大小决定了任务的数量。主线程阻塞，直到所有任务完成。:
 
 \begin{itemize}
-\item 
-我们用标签/任务的数量初始化一个锁存器:
+\item
+用标签/任务的数量初始化锁存器:
 
 \begin{cpp}
 std::latch allDone{tags.size()};
 \end{cpp}
 
-\item 
+\item
 每个任务完成后减少计数器:
 
 \begin{cpp}
 allDone.count_down();
 \end{cpp}
 
-\item 
+\item
 主线程等待直到所有任务完成(计数器为零):
 
 \begin{cpp}
@@ -100,12 +100,11 @@ waiting until all tasks are done
 all tasks done
 \end{shell}
 
-注意，主线程不应该假设任务完成后，所有线程都完成了。线程可能仍然会做其他事情，系统可能仍然会清理它们。要等到所有线程都完成，必须为两个线程调用join()。
+主线程不应该假设任务完成后，所有线程都完成了。线程可能仍然会做其他事情，系统可能仍然会清理它们。要等到所有线程都完成，必须为两个线程调用join()。
 
-还可以使用锁存器在特定点同步多个线程，然后继续。但请注意，每个锁存器只能执行一次此操作。这样做的一个应用是确保(尽可能地)多个线程一起启动它们的实际工作，即使启动和初始化线程可能需要一些时间。
+还可以使用锁存器在特定点同步多个线程，然后继续，但每个锁存器只能执行一次此操作。这样做的一个应用是确保(尽可能地)多个线程一起启动它们的实际工作，即使启动和初始化线程可能需要一些时间。
 
 看下下面的例子:
-
 
 \filename{lib/latch.cpp}
 
@@ -121,9 +120,9 @@ int main()
 {
 	std::size_t numThreads = 10;
 	// initialize latch to start the threads when all of them have been initialized:
-	
+
 	std::latch allReady = 10; // initialize countdown with number of threads
-	
+
 	// start numThreads threads:
 	std::vector<std::jthread> threads;
 	for (int i = 0; i < numThreads; ++i) {
@@ -146,18 +145,18 @@ int main()
 }
 \end{cpp}
 
-我们启动numThreads线程(使用std::jthread)，这些线程需要一些时间来初始化和启动。为了让它们一起启动它们的功能，这里使用一个锁存器来阻塞，直到所有启动的线程都被初始化并启动为止。:
+启动numThreads线程(使用std::jthread)，这些线程需要一些时间来初始化和启动。为了启动它们的功能，这里使用一个锁存器来进行阻塞，直到所有启动的线程都初始化并启动为止:
 
 \begin{itemize}
-\item 
-我们用线程数量初始化锁存器:
+\item
+用线程数量初始化锁存器:
 
 \begin{cpp}
 std::latch allReady{numThreads};
 \end{cpp}
 
 \item
-让每个线程递减计数器，直到所有线程的初始化完成:
+每个线程递减计数器，直到所有线程初始化完成:
 
 \begin{cpp}
 allReady.arrive_and_wait(); // count_down() and wait()
@@ -211,7 +210,7 @@ max()              & 产生counter最大可能值的静态函数   \\ \hline
 
 注意，不能复制或移动(分配)锁存器。
 
-还要注意，将容器的大小(std::array除外)作为计数器的初始值传递是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会得到以下结果:
+将容器的大小(std::array除外)作为计数器的初始值是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会得到以下结果:
 
 \begin{cpp}
 std::latch l1{10}; // OK
@@ -229,7 +228,7 @@ std::latch l7{ssize(coll)}; // OK (see std::ssize())
 
 栅栏是用于并发执行的新的同步机制，允许多次同步多个异步任务。设置初始计数后，多个线程可以对其进行计数，并等待计数器达到零。与锁存器相比，当达到零时，将调用一个(可选的)回调，计数器将重新初始化为初始计数。
 
-当多个线程一起重复计算/执行某些事情时，屏障是有用的。当所有线程都完成了它们的任务时，可选回调可以处理结果或新状态，之后，异步计算/处理可以继续进行下一轮。
+当多个线程一起重复计算/执行某些事情时，栅栏是有用的。当所有线程都完成了它们的任务时，可选回调可以处理结果或新状态，再异步计算/处理可以继续进行下一轮。
 
 例如，重复使用多个线程来计算多个值的平方根:
 
@@ -246,7 +245,7 @@ int main()
 {
 	// initialize and print a collection of floating-point values:
 	std::vector values{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
-	
+
 	// define a lambda function that prints all values
 	// - NOTE: has to be noexcept to be used as barrier callback
 	auto printValues = [&values] () noexcept{
@@ -257,11 +256,11 @@ int main()
 					};
 	// print initial values:
 	printValues();
-	
+
 	// initialize a barrier that prints the values when all threads have done their computations:
 	std::barrier allDone{int(values.size()), // initial value of the counter
 						 printValues}; // callback to call whenever the counter is 0
-		
+
 	// initialize a thread for each value to compute its square root in a loop:
 	std::vector<std::jthread> threads;
 	for (std::size_t idx = 0; idx < values.size(); ++idx) {
@@ -295,12 +294,12 @@ auto printValues = [&values] () noexcept{
 };
 \end{cpp}
 
-注意，回调必须用noexcept声明。
+回调必须用noexcept声明。
 
 我们的目标是使用多个线程，以便每个线程处理一个值，所以会重复计算这些值的平方根。因此:
 
 \begin{itemize}
-\item 
+\item
 初始化栅栏allDone，以便在所有线程完成下一个计算时打印所有值:标签/任务的数量:
 
 \begin{cpp}
@@ -308,20 +307,20 @@ std::barrier allDone{int(values.size()), // initial value of the counter
 					 printValues}; // callback to call whenever the counter is 0
 \end{cpp}
 
-请注意，构造函数应该接受带符号整数值。否则，代码可能无法编译。
+构造函数应该接受带符号整数值。否则，代码可能无法编译。
 
-\item 
-在循环中，每个线程在完成计算后减少计数器，并等待计数器为零(即所有其他线程也已经发出信号，表示已经完成):
+\item
+循环中，每个线程在完成计算后减少计数器，并等待计数器为零(即所有其他线程也已经发出信号，表示已经完成):
 
 \begin{cpp}
 ..
 allDone.arrive_and_wait();
 \end{cpp}
 
-\item 
-当计数器达到零时，将调用回调函数来打印结果。
+\item
+当计数器达到零时，将调用回调函数来输出结果。
 
-请注意，回调是由最终将计数器减为零的线程调用的。所以在循环中，回调由不同的线程调用。
+回调是由最终将计数器减为零的线程调用的，所以在循环中，回调由不同的线程调用。
 \end{itemize}
 
 程序的输出可能如下所示:
@@ -370,7 +369,7 @@ for (std::size_t idx = 0; idx < values.size(); ++idx) {
 allDone.arrive_and_drop();
 \end{cpp}
 
-该调用对计数器进行计数，并确保该值的下一个初始值递减。在下一轮(其他线程可能仍在运行)中，栅栏将不再等待被丢弃的线程。
+该调用对计数器进行计数，并确保该值的下一个初始值递减。下一轮(其他线程可能仍在运行)中，栅栏将不再等待丢弃的线程。
 
 参见lib/barrierstop.cpp获得完整的示例。
 
@@ -410,7 +409,7 @@ void callback() noexcept; // forward declaration
 std::barrier b{6, callback}; // deduces std::barrier<decltype(callback)>
 \end{cpp}
 
-注意，C++标准要求栅栏的回调保证不会抛出异常。为了便于移植，必须用noexcept声明函数或Lambda。若没有传递回调，则使用特定于实现的类型，表示没有效果的操作。
+C++标准要求栅栏的回调保证不会抛出异常。为了便于移植，必须用noexcept声明函数或Lambda。若没有传递回调，则使用特定于实现的类型，表示没有效果的操作。
 
 \begin{cpp}
 l.arrive_and_wait();
@@ -426,7 +425,7 @@ l.wait(l.arrive());
 
 注意，不能复制或移动(分配)栅栏。
 
-还要注意，将容器的大小(std::array除外)作为计数器的初始值传递是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会看到以下行为:
+将容器的大小(std::array除外)作为计数器的初始值是错误的。构造函数接受一个带符号的std::ptrdiff\_t，会看到以下行为:
 
 \begin{cpp}
 std::barrier b1{10, cb}; // OK

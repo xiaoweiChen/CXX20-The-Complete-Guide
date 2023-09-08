@@ -4,28 +4,28 @@ C++20不仅为线程提供了停止令牌。它是一种通用机制，可以异
 其机制如下所示:
 
 \begin{itemize}
-\item 
+\item
 C++20标准库可创建一个共享的停止状态。默认情况下，停止状态不会发出信号。
 
-\item 
+\item
 类型为std::stop\_source的停止源可以在其关联的共享停止状态下请求停止。
 
-\item 
+\item
 std::stop\_token类型的停止令牌可用于，在其关联的共享停止状态下响应停止请求。可以主动轮询是否请求了停止，或者注册一个类型为std::stop\_callback的回调，该回调将在请求停止时调用。
 
-\item 
+\item
 当停止请求发出，就不能撤销(后续的停止请求无效)。
 
-\item 
-可以复制和移动停止源和停止令牌，以允许代码在多个位置发出停止信号或对停止做出反应。复制源代码或令牌的成本相对较低，因此按值传递可避免生命周期问题。
+\item
+可以复制和移动停止源和停止令牌，允许在代码的多个位置发出停止信号或对停止做出反应。复制源代码或令牌的成本相对较低，因此按值传递可避免生命周期问题。
 
-然而，复制并不像传递整型值或原始指针那么便宜，更像是传递一个共享指针。若经常将其传递给子函数，那么通过引用传递可能会更好。
+然而，复制并不像传递整型值或原始指针那么简单，更像是传递一个共享指针。若经常将其传递给子函数，那么通过引用传递可能会更好。
 
-\item 
-该机制是线程安全的，可以在并发情况下使用。停止请求、检查请求的停止，以及对注册或取消注册回调的调用是正确同步的，并且当最后一个用户(停止源、停止令牌或停止回调)被销毁时，关联的共享停止状态将自动销毁。
+\item
+该机制是线程安全的，可以在并发情况下使用。停止请求、检查请求的停止，以及对注册或取消注册的回调调用需要同步，并且当最后一个用户(停止源、停止令牌或停止回调)销毁时，关联的共享停止状态将自动销毁。
 \end{itemize}
 
-下面的例子展示了如何建立一个停止源和一个停止令牌:
+下面的例子展示了如何创建停止源和停止令牌:
 
 \begin{cpp}
 #include <stop_token>
@@ -36,7 +36,7 @@ std::stop_source ssrc; // creates a shared stop state
 std::stop_token stok{ssrc.get_token()}; // creates a token for the stop state
 \end{cpp}
 
-第一步是简单地创建stop\_source对象，该对象提供了请求停止的API。构造函数还创建关联的共享停止状态。然后，可以向停止源请求stop\_token对象，该对象提供对停止请求作出反应的API(通过轮询或注册回调)。
+第一步是简单地创建stop\_source对象，该对象提供了请求停止的API。构造函数还创建关联的共享停止状态，就可以向停止源请求stop\_token对象，该对象提供对停止请求作出反应的API(通过轮询或注册回调)。
 
 然后，可以将令牌(和/或源)传递给位置/线程，以在可能请求停止的位置和可能对停止做出反应的位置之间建立异步通信。
 
@@ -50,9 +50,9 @@ std::stop_token stok{ssrc.get_token()}; // creates a token for the stop state
 
 “stop\_source类对象的操作”表列出了std::stop\_source的API。
 
-构造函数通常在堆上为停止状态分配内存，所有停止令牌和停止回调都使用该内存。没有办法用分配器指定不同的位置。
+构造函数通常在堆上为停止状态分配内存，所有停止令牌和停止回调都使用该内存，没有办法用分配器指定不同的位置。
 
-请注意，停止源、停止令牌和停止回调之间没有生命周期约束。当使用该状态的最后一个停止源、停止令牌或停止回调销毁时，用于停止状态的内存将自动释放。
+停止源、停止令牌和停止回调之间没有生命周期约束。当使用该状态的最后一个停止源、停止令牌或停止回调销毁时，用于停止状态的内存将自动释放。
 
 为了能够创建没有关联停止状态的停止源(这可能很有用，因为停止状态需要资源)，可以用一个特殊的构造函数创建一个停止源，并在稍后分配一个停止源:
 
@@ -65,15 +65,15 @@ ssrc = std::stop_source{}; // assign new shared stop state
 
 \mySamllsection{停止令牌的详情}
 
-“stop\_token类对象的操作表”列出了std::stop\_token的API。
+“stop\_token类对象的操作”表列出了std::stop\_token的API。
 
-请注意，stop\_possible()会产生是否仍然可以停止的错误信号。其会在两种情况下产生false:
+stop\_possible()会产生是否仍然可以停止的错误信号，其会在两种情况下产生false:
 
 \begin{itemize}
-\item 
+\item
 若没有关联的停止状态
 
-\item 
+\item
 若存在停止状态，但不再有停止源，并且从未请求过停止
 \end{itemize}
 
@@ -97,7 +97,7 @@ s.$\sim$stop\_source()        & 析构函数;若这是相关的共享停止状�
 s = s2 &
 \begin{tabular}[c]{@{}l@{}}复制赋值；复制赋值s2的状态，这样s现在也共享了s2的停止状态\\(s之前的停止状态都释放了) \end{tabular} \\ \hline
 s = move(s2) &
-\begin{tabular}[c]{@{}l@{}}移动赋值:移动赋值s2的状态，使s现在共享s2的停止状态\\(s2不再有停止状态，s之前的停止状态被释放) \end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}移动赋值:移动赋值s2的状态，使s现在共享s2的停止状态\\(s2不再有停止状态，释放s之前的停止状态) \end{tabular} \\ \hline
 s.get\_token() &
 \begin{tabular}[c]{@{}l@{}}为关联的停止状态生成一个stop\_token\\(若没有可共享的停止状态，则返回一个没有关联的停止状态的停止令牌) \end{tabular} \\ \hline
 s.request\_stop() &
@@ -175,16 +175,16 @@ registerOrStartInBackgound(task, ssrc.get_token());
 
 函数registerOrStartInBackgound()可以立即开始task()。或启动task()后通过调用std::async()初始化一个std::thread，称之为协程，或注册一个事件处理程序。
 
-现在，每当我们请求停止时:
+每当我们请求停止时:
 
 \begin{cpp}
 ssrc.request_stop();
 \end{cpp}
 
-可能发生以下情况之一:
+可能发生以下情况:
 
 \begin{itemize}
-\item 
+\item
 若task()在初始化回调时已经启动，并且仍在运行，并且还没有调用回调的析构函数，则在调用request\_stop()的线程中立即调用已注册的可调用对象。request\_stop()阻塞，直到所有注册的可调用对象调用，且调用的顺序没有定义。
 
 \item
@@ -194,7 +194,7 @@ ssrc.request_stop();
 若task()已经完成(或者至少已经调用了回调函数的析构函数)，则永远不会调用可调用对象。回调生命周期的结束表明不再需要调用可调用对象。
 \end{itemize}
 
-这些场景都是精心同步的。若正在初始化一个stop\_callback，以便注册可调用对象，就会发生上述情况之一。若在可调用对象由于破坏了停止回调而未注册时请求停止，则同样适用。若可调用对象已经用另一个线程启动，则析构函数阻塞，直到可调用对象完成。
+这些场景都会精心同步。若正在初始化一个stop\_callback，以便注册可调用对象，就会发生上述情况。若在可调用对象由于破坏了停止回调而未注册时请求停止，则同样适用。若可调用对象已经用另一个线程启动，则析构函数阻塞，直到可调用对象完成。
 
 对于编程逻辑，则从初始化回调到其销毁结束的那一刻起，可能会调用已注册的可调用对象。直到构造函数结束，回调函数在初始化的线程中运行;之后，在请求停止的线程中运行。请求停止的代码可能会立即调用已注册的可调用对象，也可能会稍后调用(若回调稍后初始化)，也可能永远不会调用(若调用回调为时已晚)。
 
@@ -219,7 +219,7 @@ void task(std::stop_token st, int num)
 {
 	auto id = std::this_thread::get_id();
 	syncOut() << "call task(" << num << ")\n";
-	
+
 	// register a first callback:
 	std::stop_callback cb1{st, [num, id]{
 		syncOut() << "- STOP1 requested in task(" << num
@@ -227,7 +227,7 @@ void task(std::stop_token st, int num)
 												: ") in main thread\n");
 	}};
 	std::this_thread::sleep_for(9ms);
-	
+
 	// register a second callback:
 	std::stop_callback cb2{st, [num, id]{
 		syncOut() << "- STOP2 requested in task(" << num
@@ -236,13 +236,13 @@ void task(std::stop_token st, int num)
 	}};
 	std::this_thread::sleep_for(2ms);
 }
-	
+
 int main()
 {
 	// create stop_source and stop_token:
 	std::stop_source ssrc;
 	std::stop_token stok{ssrc.get_token()};
-	
+
 	// register callback:
 	std::stop_callback cb{stok, []{
 			syncOut() << "- STOP requested in main()\n" << std::flush;
@@ -254,14 +254,14 @@ int main()
 								task(stok, num);
 							}
 						});
-	
+
 	// after a while, request stop:
 	std::this_thread::sleep_for(120ms);
 	ssrc.request_stop();
 }
 \end{cpp}
 
-注意，使用同步输出流来确保不同线程的print语句逐行同步。
+使用同步输出流来确保不同线程的print语句逐行同步。
 
 例如，输出可能如下所示:
 
@@ -301,7 +301,7 @@ call task(7)
 ...
 \end{shell}
 
-或者它看起来像这样:
+或者像这样:
 
 \begin{shell}
 call task(1)
@@ -318,7 +318,7 @@ call task(6)
 ...
 \end{shell}
 
-它甚至可能只是:
+甚至可能只会这样:
 
 \begin{shell}
 call task(1)
@@ -333,7 +333,7 @@ call task(9)
 
 \mySamllsection{停止回调的详情}
 
-停止回调的类型，stop\_callback，是一个具有非常有限API的类模板。实际上，只提供了一个构造函数来为停止令牌注册可调用对象，并提供了一个析构函数来取消可调用对象的注册。删除复制和移动，不提供其他成员函数。
+停止回调的类型，stop\_callback，是一个具有非常有限API的类模板，只提供了一个构造函数来为停止令牌注册可调用对象，并提供了一个析构函数来取消可调用对象的注册。删除复制和移动，不提供其他成员函数。
 
 模板形参是可调用对象的类型，通常在初始化构造函数时推导出来:
 
@@ -362,25 +362,25 @@ std::stop_callback cb3{myToken, [] { ... }}; // moves the lambda
 C++20标准库保证了以下内容:
 
 \begin{itemize}
-\item 
-所有的request\_stop()、stop\_requested()和stop\_possible()调用都是同步的。
+\item
+所有的request\_stop()、stop\_requested()和stop\_possible()调用都会同步。
 
-\item 
-保证自动执行回调注册。若另一个线程并发调用request\_stop()，那么当前线程将看到请求停止并立即调用当前线程上的回调，或者另一个线程将看到回调注册并在从request\_stop()返回之前调用回调。
+\item
+保证自动执行回调注册。若另一个线程并发调用request\_stop()，则当前线程将看到请求停止并立即调用当前线程上的回调，或者另一个线程将看到回调注册并在从request\_stop()返回之前调用回调。
 
-\item 
+\item
 stop\_callback的可调用对象保证在stop\_callback的析构函数返回后不会调用。
 
-\item 
-若回调函数的析构函数刚刚在另一个线程调用，则它等待可调用对象完成(它不等待其他可调用对象完成)。
+\item
+若回调函数的析构函数刚刚在另一个线程调用，则等待可调用对象完成(不等待其他可调用对象完成)。
 \end{itemize}
 
 然而，请注意以下限制:
 
 \begin{itemize}
-\item 
+\item
 回调不应该抛出异常，若对其可调用对象的调用通过异常退出，则调用std::terminate()。
 
-\item 
+\item
 不要在回调的可调用对象中销毁回调，析构函数不会等待回调完成的。
 \end{itemize}
