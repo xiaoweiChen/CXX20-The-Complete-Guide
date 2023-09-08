@@ -1,18 +1,18 @@
 
-C++20现在支持两个时钟，本节讨论它们之间的区别以及如何使用特殊时钟。
+C++20现在支持两种时钟，本节讨论它们之间的区别，以及如何使用特殊时钟。
 
-\mySubsubsection{11.7.1}{具有指定Epoch的时钟}
+\mySubsubsection{11.7.1}{具有指定epoch的时钟}
 
 C++20现在提供了以下与epoch相关联的时钟(以便定义唯一的时间点):
 
 \begin{itemize}
-\item 
-系统时钟是操作系统的时钟。从C++20开始，它被指定为Unix Time[有关Unix时间的详细信息，例如，\url{http://en.wikipedia.org/wiki/Unix_time}.]，计算从UTC时间1970年1月1日00:00:00开始的时间。
+\item
+系统时钟是操作系统的时钟。从C++20开始，其指定为Unix Time[有关Unix时间的详细信息，例如，\url{http://en.wikipedia.org/wiki/Unix_time}.]，计算从UTC时间1970年1月1日00:00:00开始的时间。
 
 闰秒的处理方式使得某些秒可能会花费更长的时间，所以永远不会有61秒的小时，而所有365天的年都有相同的31,536,000秒。
 
 \item
-UTC时钟是代表协调世界时的时钟，通常被称为GMT(格林威治标准时间)或祖鲁时间。本地时间与UTC的差异在于您所在时区的UTC偏移量。
+UTC时钟是代表协调世界时的时钟，通常称为GMT(格林威治标准时间)或祖鲁时间。本地时间与UTC的差异在于您所在时区的UTC偏移量。
 
 它使用与系统时钟相同的历元(1970年1月1日00:00:00 UTC)。
 
@@ -35,9 +35,9 @@ TAI时钟使用国际原子时，这是基于SI秒连续计数的国际原子时
 
 \mySubsubsection{11.7.2}{伪时钟local\_t}
 
-如前所述，有一个类型为std::chrono::local\_t的特殊时钟。这个时钟允许我们指定没有时区(甚至还没有UTC)的本地时间点。其epoch解释为“本地时间”，所以必须将它与时区结合起来才能知道它代表的是哪个时间点。
+如前所述，有一个类型为std::chrono::local\_t的特殊时钟。这个时钟允许指定没有时区(甚至还没有UTC)的本地时间点。其epoch解释为“本地时间”，所以必须将它与时区结合起来才能知道代表的是哪个时间点。
 
-Local \_t是一个“伪时钟”，因为它不满足时钟的所有要求。事实上，它现在没有提供成员函数now():
+local\_t是一个“伪时钟”，它不满足时钟的所有要求。事实上，它现在没有提供成员函数now():
 
 \begin{cpp}
 auto now1 = std::chrono::local_t::now(); // ERROR: now() not provided
@@ -71,11 +71,11 @@ std::istringstream{"2021-1-1 18:30"} >> chr::parse(std::string{"%F %R"}, tp);
 记住本地时间点与其他时间点之间的细微差别:
 
 \begin{itemize}
-\item 
-一个系统/UTC/GPS/TAI时间点表示一个特定的时间点，将应用于时区将转换它所表示的时间值。
+\item
+系统/UTC/GPS/TAI时间点表示一个特定的时间点，将应用于时区将转换它所表示的时间值。
 
-\item 
-本地时间点表示本地时间。当与时区结合，其全局时间点就会变得清晰。
+\item
+本地时间点表示本地时间。当与时区结合，全局时间点就会变得清晰。
 \end{itemize}
 
 例如:
@@ -88,7 +88,7 @@ std::cout << "Sydney: " << chr::zoned_time("Australia/Sydney", now) << '\n';
 std::cout << "Cairo: " << chr::zoned_time("Africa/Cairo", now) << '\n';
 \end{cpp}
 
-这将当前的本地时间应用于三个不同的时区:
+这里，将当前的本地时间应用于三个不同的时区:
 
 \begin{shell}
 2021-04-14 08:59:31.640004000
@@ -97,7 +97,7 @@ Sydney: 2021-04-14 08:59:31.640004000 AEST
 Cairo:  2021-04-14 08:59:31.640004000 EET
 \end{shell}
 
-请注意，当使用本地时间点时，不能对时区使用转换说明符:
+当使用本地时间点时，不能对时区使用转换说明符:
 
 \begin{cpp}
 chr::local_seconds tp; // time_point<local_t, seconds>
@@ -111,7 +111,7 @@ std::cout << std::format("{:%F %T}\n", tp); // OK
 
 前面对具有指定epoch的时钟的讨论已经介绍了处理闰秒的基本方式。
 
-为了更清楚地处理闰秒，让我们使用不同的时钟迭代闰秒的时间点:
+为了更清楚地处理闰秒，我们使用不同的时钟迭代闰秒的时间点:
 
 \filename{lib/chronoclocks.cpp}
 
@@ -123,7 +123,7 @@ int main()
 {
 	using namespace std::literals;
 	namespace chr = std::chrono;
-	
+
 	auto tpUtc = chr::clock_cast<chr::utc_clock>(chr::sys_days{2017y/1/1} - 1000ms);
 	for (auto end = tpUtc + 2500ms; tpUtc <= end; tpUtc += 200ms) {
 		auto tpSys = chr::clock_cast<chr::system_clock>(tpUtc);
@@ -155,46 +155,46 @@ int main()
 2017-01-01 00:00:00.400 SYS 2017-01-01 00:00:00.400 UTC 2017-01-01 00:00:18.400 GPS 2017-01-01 00:00:37.400 TAI
 \end{shell}
 
-在这里看到的闰秒是写这本书时的最后一个闰秒(事先不知道闰秒在未来什么时候会发生)，输出带有相应时区的时间点(对于系统时间点，这里输出的是SYS，而非其默认时区UTC)。可以观察到以下几点:
+这里的闰秒是写这本书时的最后一个闰秒(事先不知道闰秒在未来什么时候会发生)，输出带有相应时区的时间点(对于系统时间点，这里输出的是SYS，而非其默认时区UTC)。可以观察到以下几点:
 
 \begin{itemize}
-\item 
+\item
 闰秒时:
 
 \begin{itemize}
-\item 
+\item
 UTC时间的秒可到60。
 
-\item 
+\item
 系统时钟使用在插入闰秒之前最后一个可表示的sys\_time值，行为由C++标准保证。
 \end{itemize}
 
-\item 
+\item
 闰秒前:
 
 \begin{itemize}
-\item 
+\item
 GPS时间比UTC时间快17秒。
 
-\item 
+\item
 TAI时间比UTC时间早36秒(一如既往，比GPS时间早19秒)。
 \end{itemize}
 
-\item 
+\item
 闰秒后:
 
 \begin{itemize}
-\item 
+\item
 GPS时间比UTC时间快18秒。
 
-\item 
+\item
 TAI时间比UTC时间早37秒(仍比GPS时间早19秒)。
 \end{itemize}
 \end{itemize}
 
-\mySubsubsection{11.7.4}{时钟之间的转换}
+\mySubsubsection{11.7.4}{时钟间的转换}
 
-可以在时钟之间转换时间点，前提是这种转换有意义。为此，chrono库提供了一个时钟\_cast<>，其定义方式是，只能在具有指定稳定epoch (sys\_time<>、utc\_time<>、gps\_time<>、tai\_time<>)的时钟时间点和文件系统时间点之间进行转换。
+可以在时钟间转换时间点，前提是这种转换有意义。为此，chrono库提供了一个clock\_cast<>，只能在具有指定稳定epoch (sys\_time<>、utc\_time<>、gps\_time<>、tai\_time<>)的时钟时间点和文件系统时间点间进行转换。
 
 强制转换需要目标时钟，可以选择传递不同的时间段。
 
@@ -210,12 +210,12 @@ TAI时间比UTC时间早37秒(仍比GPS时间早19秒)。
 int main()
 {
 	namespace chr = std::chrono;
-	
+
 	// initialize a utc_time<> with a leap second:
 	chr::utc_time<chr::utc_clock::duration> tp;
 	std::istringstream{"2015-6-30 23:59:60"}
 		>> chr::parse(std::string{"%F %T"}, tp);
-	
+
 	// convert it to other clocks and print that out:
 	auto tpUtc = chr::clock_cast<chr::utc_clock>(tp);
 	std::cout << "utc_time: " << std::format("{:%F %T %Z}", tpUtc) << '\n';
@@ -240,18 +240,18 @@ tai_time: 2015-07-01 00:00:35.0000000 TAI
 file_time: 2015-06-30 23:59:59.9999999 UTC
 \end{shell}
 
-注意，对于所有这些时钟，都为格式化的输出提供了伪时区。
+对于所有这些时钟，都为格式化的输出提供了伪时区。
 
 转换规则如下:
 
 \begin{itemize}
-\item 
+\item
 从本地时间点进行的任何转换都只添加epoch，时间值保持不变。
 
-\item 
+\item
 UTC, GPS和TAI时间点之间的转换增加或减少必要的偏移量。
 
-\item 
+\item
 UTC和系统时间之间的转换不改变时间值，但对于UTC闰秒的时间点，使用前面的最后一个时间点作为系统时间。
 \end{itemize}
 
@@ -261,7 +261,7 @@ UTC和系统时间之间的转换不改变时间值，但对于UTC闰秒的时�
 
 \mySamllsection{内部时钟的转换}
 
-在内部，clock\_cast<>是一个“双轮毂辐条和车轮系统”。这两个中心是system\_clock和utc\_clock。每个可转换时钟都必须转换到这些中心中的一个(但不是两个)。到中心的转换是通过时钟的to\_sys()或to\_utc()静态成员函数完成的。对于来自中心的转换，提供了from\_sys()或from\_utc()。clock\_cast<>将这些成员函数串在一起，用于从任意时钟转换为任意其他时钟的数据。
+在内部，clock\_cast<>是一个“双轮毂辐条和车轮系统”。这两个中心是system\_clock和utc\_clock，每个可转换时钟都必须转换到这些中心中的一个(但不是两个)。到中心的转换是通过时钟的to\_sys()或to\_utc()静态成员函数完成的。对于来自中心的转换，提供了from\_sys()或from\_utc()。clock\_cast<>将这些成员函数串在一起，用于将一种时钟转换为其他时钟的表述。
 
 不能处理闰秒的时钟应该转换为/从system\_clock。例如，utc\_clock和local\_t提供给to\_sys()。
 
@@ -274,7 +274,7 @@ UTC和系统时间之间的转换不改变时间值，但对于UTC闰秒的时�
 
 时钟std::chrono::file\_clock是文件系统库用于文件系统(文件、目录等)的时间点的时钟，是一种特定于实现的时钟类型，反映文件系统时间值的分辨率和范围。
 
-例如，可以使用文件时钟来更新最后访问文件的时间，如下所示:
+例如，可以使用文件时钟来更新最后访问文件的时间:
 
 \begin{cpp}
 // touch file with path p (update last write access to file):
@@ -282,7 +282,7 @@ std::filesystem::last_write_time(p,
 								 std::chrono::file_clock::now());
 \end{cpp}
 
-还可以通过使用类型来使用C++17中文件系统时钟
+还可以使用C++17中的文件系统时钟
 
 \begin{cpp}
 std::filesystem::file_time_type:
@@ -317,10 +317,10 @@ file\_time类型的新定义现在允许开发者可移植地将文件系统时�
 void printFileAccess(const std::filesystem::path& p)
 {
 	std::cout << "\"" << p.string() << "\":\n";
-	
+
 	auto tpFile = std::filesystem::last_write_time(p);
 	std::cout << std::format(" Last write access: {0:%F} {0:%X}\n", tpFile);
-	
+
 	auto diff = std::chrono::file_clock::now() - tpFile;
 	auto diffSecs = std::chrono::round<std::chrono::seconds>(diff);
 	std::cout << std::format(" It is {} old\n", diffSecs);

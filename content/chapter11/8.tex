@@ -1,17 +1,16 @@
-除了我到目前为止所描述的，新的chrono库还增加了以下特性:
-
+新的chrono库还增加了以下特性:
 
 \begin{itemize}
-\item 
-为了检查一个类型是否为时钟，提供了一个新的类型trait std::chrono::is\_clock<>及其相应的变量模板std::chrono::is\_clock\_v<>。例如:
+\item
+为了检查一个类型是否为时钟，提供了一个新的类型特征，std::chrono::is\_clock<>及其相应的变量模板std::chrono::is\_clock\_v<>。例如:
 
 \begin{cpp}
 std::chrono::is_clock_v<std::chrono::system_clock> // true
 std::chrono::is_clock_v<std::chrono::local_t> // false
 \end{cpp}
 
-伪时钟local\_t在这里产生false，它不提供成员函数now()。
+伪时钟local\_t在这里产生false，不提供成员函数now()。
 
-\item 
+\item
 对于时间段和时间点，定义了操作符<=>。
 \end{itemize}
