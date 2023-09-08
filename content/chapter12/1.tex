@@ -1,11 +1,11 @@
 
-C++11引入了std::thread类型，其与操作系统提供的线程一一对应。然而，该类型有一个严重的设计缺陷:不是RAII类型。
+C++11引入了std::thread类型，其与操作系统提供的线程对应，但该类型有一个严重的设计缺陷:不是RAII类型。
 
 让我们看看为什么会有这么一个问题，以及新的线程类型如何解决这个问题。
 
 \mySubsubsection{12.1.1}{std::thread的问题}
 
-std::thread要求在其生命周期结束时，若表示正在运行的线程，则调用join()(等待线程结束)或detach()(让线程在后台运行)。若两者都没有调用，析构函数会立即导致异常的程序终止(在某些系统上导致段错误)。由于这个原因，下面的代码会出现错误(除非你不关心程序异常的终止):
+std::thread要求在其生命周期结束时，若表示正在运行的线程，则调用join()(等待线程结束)或detach()(让线程在后台运行)。若两者都没有调用，析构函数会立即导致异常的程序终止(在某些系统上导致段错误)。由于这个原因，下面的代码会出现错误(除非不关心程序异常的终止):
 
 \begin{cpp}
 void foo()
@@ -34,7 +34,7 @@ void foo()
 }
 \end{cpp}
 
-这段代码还可能导致程序异常终止，因为在线程开始和调用join()之间的foo()中发生异常时(或者由于任何其他原因控制流从未到达join()的调用)，没有调用t.join()。
+这段代码还可能导致程序异常终止，线程开始和调用join()之间的foo()中发生异常时(或者控制流从未到达join())，没有调用t.join()。
 
 代码如下所示:
 
@@ -58,9 +58,9 @@ void foo()
 }
 \end{cpp}
 
-这里，通过确保在离开作用域时调用join()来对异常作出反应，而不解决异常。不幸的是，这可能会导致阻塞(永远)。然而，调用detach()也是一个问题，因为线程在程序的后台继续运行，使用CPU时间和资源，而这些时间和资源现在可能会被销毁。
+这里，通过确保在离开作用域时调用join()来对异常作出反应，而不解决异常。不幸的是，这可能会导致阻塞(永远)。然而，调用detach()也是一个问题，因为线程在程序的后台继续运行，使用CPU时间和资源，而这些时间和资源现在可能会销毁。
 
-若在更复杂的上下文中使用多个线程，问题会变得更糟，并且会产生非常糟糕的代码。例如，当只启动两个线程时，代码必须这样写:
+若在更复杂的上下文中使用多个线程，问题会变得更糟，并且会产生非常糟糕的代码。例如，当只启动两个线程时:
 
 \begin{cpp}
 void foo()
@@ -89,7 +89,7 @@ void foo()
 }
 \end{cpp}
 
-一方面，在启动第一个线程之后，启动第二个线程可能会抛出异常，因此启动第二个线程必须在try子句中进行。另一方面，我们希望在同一范围内使用和join()两个线程。为了满足这两个需求，必须前向声明第二个线程，并在第一个线程的try子句中对其进行赋值。此外，对于异常，必须检查第二个线程是否启动，因为对没有关联线程的线程对象调用join()会导致另一个异常。
+启动第一个线程之后，启动第二个线程可能会抛出异常，因此启动第二个线程必须在try子句中进行。另一方面，可在同一范围内使用和join()两个线程。为了满足这两个需求，必须前向声明第二个线程，并在第一个线程的try子句中对其进行赋值。此外，对于异常，必须检查第二个线程是否启动，对没有关联线程的线程对象调用join()会导致异常。
 
 另一个问题是，对两个线程调用join()可能会花费大量时间(甚至永远)。注意，不能“杀死”已经启动的线程。线程不是进程，线程只能通过结束自身或结束整个程序来结束。
 
@@ -97,7 +97,7 @@ void foo()
 
 \mySubsubsection{12.1.2}{使用std::jthread}
 
-std::jthread解决了这些问题，它是RAII类型。若线程是可汇入的(“j”代表“汇入”)，析构函数会自动调用join()。这样，上面的复杂代码就变简单了:
+std::jthread解决了这些问题，它是RAII类型。若线程是可汇入的(“j”代表“汇入”)，析构函数会自动调用join()。这让上面的复杂代码变简单了:
 
 \begin{cpp}
 void foo()
@@ -115,28 +115,28 @@ void foo()
 }
 \end{cpp}
 
-通过简单地使用std::jthread，而非std::thread，就不再存在导致异常程序终止的危险，也不需要异常处理。为了支持尽可能容易地切换到std::jthread类，该类提供了与std::thread相同的API，包括:
+使用std::jthread就不再存在导致异常程序终止的危险，也不需要异常处理。为了支持尽可能容易地切换到std::jthread类，该类提供了与std::thread相同的API，包括:
 
 \begin{itemize}
-\item 
+\item
 使用相同的头文件<thread>
 
-\item 
+\item
 当调用get\_id()时返回std::thread::id (std::jthread::id类型只是一个别名类型)
 
-\item 
+\item
 提供静态成员hardware\_concurrency()
 \end{itemize}
 
-因此，只需用std::jthread替换std::thread并重新编译，代码就会变得更安全(若还没有自己实现异常处理的话)。[估计大家想知道为什么我们不直接修复std::thread，而是引入一个新的std::jthread类型。其原因很简单，即向后兼容性，可能有一些应用希望在离开正在运行的线程的作用域时终止程序。对于接下来讨论的一些新功能，我们也会打破二进制的兼容性。]
+只需用std::jthread替换std::thread并重新编译，代码就会变得更安全(若还没有自己实现异常处理的话)。[估计大家想知道为什么不直接修复std::thread，而是引入一个新的std::jthread类型。其原因很简单，即向后兼容性，可能有一些应用希望在离开正在运行的线程的作用域时终止程序。对于接下来讨论的一些新功能，我们也会打破兼容性。]
 
 \mySubsubsection{12.1.3}{停止令牌和停止回调}
 
 类std::jthread做的更多:提供了一种使用停止令牌发出取消信号的机制，这些令牌由jthreads的析构函数在调用join()之前使用，由线程启动的可调用对象(函数、函数对象或Lambda)必须支持此请求:
 
 \begin{itemize}
-\item 
-若可调用对象只为所有传递的参数提供参数，那么停止请求将被忽略:
+\item
+若可调用对象只为所有传递的参数提供参数，将忽略停止请求:
 
 \begin{cpp}
 void task (std::string s, double value)
@@ -145,7 +145,7 @@ void task (std::string s, double value)
 }
 \end{cpp}
 
-\item 
+\item
 为了响应停止请求，可调用对象可以添加一个新的可选第一个类型为std::stop\_token的参数，并不时检查是否请求了停止:
 
 \begin{cpp}
@@ -180,7 +180,7 @@ void foo()
 }
 \end{cpp}
 
-此外，还有另一种对停止请求作出反应的方法:可以为停止令牌注册回调，该回调将在请求停止时自动调用。例如:
+此外，还有另一种对停止请求作出反应的方法:可以为停止令牌注册回调，该回调将在请求停止时自动调用:
 
 \begin{cpp}
 void task (std::stop_token st,
@@ -197,26 +197,26 @@ std::string s, double value)
 
 停止回调函数cb的生命周期结束时，析构函数自动注销回调函数，以便在之后发出停止信号时不再调用该回调函数，也可以通过这种方式注册任意数量的可调用对象(函数、函数对象或Lambda)。
 
-请注意，停止机制比最初看起来更灵活:
+停止机制比最初看起来更灵活:
 
 \begin{itemize}
-\item 
+\item
 可以传递句柄来请求停止，并传递令牌来检查请求的停止。
 
-\item 
+\item
 支持条件变量，这样一个有信号的停止就可以中断一个等待。
 
-\item 
+\item
 也可以独立于std::jthread使用这种机制来请求和检查停止。
 \end{itemize}
 
 线程、停止源、停止令牌和停止回调之间也没有生命周期约束，存储停止状态的位置在堆上分配。当线程和使用此状态的最后一个停止源、停止令牌或停止回调函数销毁时，用于停止状态的内存将释放。
 
-下面几节中，我们将讨论请求停止的机制及其在线程中的应用。之后，会讨论了底层的停止令牌机制。
+下面几节中，我将讨论请求停止的机制及其在线程中的应用。之后，会讨论了底层的停止令牌机制。
 
 \mySubsubsection{12.1.4}{停止令牌和条件变量}
 
-当请求停止时，线程可能会因等待条件变量的通知而阻塞(这是避免活动轮询的重要场景)。停止令牌的回调接口也支持这种情况。可以使用传递的停止令牌为条件变量调用wait()，以便在请求停止时暂停等待。注意，由于技术原因，必须使用std::condition\_variable\_any类型作为条件变量。
+当请求停止时，线程可能会因等待条件变量的通知而阻塞(这是避免活动轮询的重要场景)。停止令牌的回调接口也支持这种情况。可以使用传递的停止令牌为条件变量调用wait()，以便在请求停止时暂停等待。由于技术原因，必须使用std::condition\_variable\_any类型作为条件变量。
 
 下面是一个演示在条件变量中使用停止令牌的例子:
 
@@ -236,7 +236,7 @@ int main()
 	std::queue<std::string> messages;
 	std::mutex messagesMx;
 	std::condition_variable_any messagesCV;
-	
+
 	// start thread that prints messages that occur in the queue:
 	std::jthread t1{[&] (std::stop_token st) {
 			while (!st.stop_requested()) {
@@ -254,7 +254,7 @@ int main()
 					msg = messages.front();
 					messages.pop();
 				}
-				
+
 				// print the next message:
 				std::cout << "msg: " << msg << std::endl;
 			}
@@ -266,7 +266,7 @@ int main()
 		messages.push(s);
 		messagesCV.notify_one();
 	}
-	
+
 	// after some time
 	// - store 1 message and notify all waiting threads:
 	std::this_thread::sleep_for(1s);
@@ -275,14 +275,14 @@ int main()
 		messages.push("done");
 		messagesCV.notify_all();
 	}
-	
+
 	// after some time
 	// - end program (requests stop, which interrupts wait())
 	std::this_thread::sleep_for(1s);
 }
 \end{cpp}
 
-我们启动一个线程，循环等待消息队列不是空的，若不为空则进行输出:
+启动一个线程，循环等待消息队列不是空的，若不为空则进行输出:
 
 \begin{cpp}
 while (!st.stop_requested()) {
@@ -300,7 +300,7 @@ while (!st.stop_requested()) {
 		msg = messages.front();
 		messages.pop();
 	}
-	
+
 	// print the next message:
 	std::cout << "msg: " << msg << std::endl;
 }
@@ -312,13 +312,13 @@ while (!st.stop_requested()) {
 std::condition_variable_any messagesCV;
 \end{cpp}
 
-我们用停止令牌调用wait()，在这里传递停止令牌信号来停止线程，所以等待现在可能会结束。原因有两个:
+用停止令牌调用wait()，在这里传递停止令牌信号来停止线程，所以等待现在可能会结束。原因有两个:
 
 \begin{itemize}
-\item 
+\item
 有一个通知(队列不再为空)
 
-\item 
+\item
 要求停止
 \end{itemize}
 
@@ -345,7 +345,7 @@ cv.wait\_until(lg, tp, st, pred) & 等待时间点tp，等待pred为真或st请�
 表12.1 condition\_variable\_any成员函数用于停止令牌
 \end{center}
 
-目前还不支持其他阻塞函数的停止令牌支持。
+目前还不支持其他阻塞函数的停止令牌。
 
 
 
