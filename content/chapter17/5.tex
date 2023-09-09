@@ -15,11 +15,11 @@ class MyType {
 		...
 		auto l0 = [val] { bar(val, name); }; // ERROR: member name not captured
 		auto l1 = [val, name=name] { bar(val, name); }; // OK, capture val and name by value
-		
+
 		auto l2 = [&] { bar(val, name); }; // OK (val and name by reference)
 		auto l3 = [&, this] { bar(val, name); }; // OK (val and name by reference)
 		auto l4 = [&, *this] { bar(val, name); }; // OK (val by reference, name by value)
-		
+
 		auto l5 = [=] { bar(val, name); }; // OK (val by value, name by reference)
 		auto l6 = [=, this] { bar(val, name); }; // ERROR before C++20
 		auto l7 = [=, *this] { bar(val, name); }; // OK (val and name by value)
@@ -39,11 +39,11 @@ class MyType {
 		...
 		auto l0 = [val] { bar(val, name); }; // ERROR: member name not captured
 		auto l1 = [val, name=name] { bar(val, name); }; // OK, capture val and name by value
-		
+
 		auto l2 = [&] { bar(val, name); }; // deprecated (val and name by ref.)
 		auto l3 = [&, this] { bar(val, name); }; // OK (val and name by reference)
 		auto l4 = [&, *this] { bar(val, name); }; // OK (val by reference, name by value)
-		
+
 		auto l5 = [=] { bar(val, name); }; // deprecated (val by value, name by ref.)
 		auto l6 = [=, this] { bar(val, name); }; // OK (val by value, name by reference)
 		auto l7 = [=, *this] { bar(val, name); }; // OK (val and name by value)
@@ -55,10 +55,10 @@ class MyType {
 C++20起，有如下的变化:
 
 \begin{itemize}
-\item 
+\item
 [=, this]现在允许作为Lambda捕获(一些编译器以前允许，尽管在形式上无效)。
 
-\item 
+\item
 不可隐式捕获*this。
 \end{itemize}
 
@@ -98,17 +98,17 @@ void foo(Args... args)
 }
 \end{cpp}
 
-然而，若想返回为以后使用而创建的Lambda，就会出现问题:
+若想返回为以后使用而创建的Lambda，就会出现问题:
 
 \begin{itemize}
-\item 
+\item
 使用[\&]，将返回一个lambda，该Lambda会引用已销毁的参数包。
 
-\item 
+\item
 使用[args…]或[=]，则复制传递的参数包。
 \end{itemize}
 
-在捕获对象时，可以使用init-capturing来使用移动语义:
+捕获对象时，可以使用init-capturing来使用移动语义:
 
 \begin{cpp}
 template<typename T>
@@ -151,7 +151,7 @@ void foo(Args... args)
 
 \mySamllsection{使用实例获取可变模板的参数包}
 
-创建并返回一个按值捕获可变数量参数的Lambda泛型函数，可以这样:
+创建并返回一个按值捕获可变数量参数的Lambda泛型函数:
 
 \begin{cpp}
 template<typename Callable, typename... Args>
@@ -163,7 +163,7 @@ auto createToCall(Callable op, Args... args)
 }
 \end{cpp}
 
-使用简化函数模板的新语法，代码如下所示:
+使用简化函数模板的新语法:
 
 \begin{cpp}
 auto createToCall(auto op, auto... args)
@@ -205,7 +205,7 @@ int main()
 
 \mySubsubsection{17.5.4}{Lambda作为协程}
 
-Lambda也可以是协程，这是在C++20引入的。但请注意，在这种情况下，Lambda不该捕获任何内容，因为协程可能比本地创建的Lambda对象存在的时间更长。
+Lambda也可以是协程，这是在C++20引入的。但这种情况下，Lambda不该捕获任何内容，因为协程可能比本地创建的Lambda对象存在的时间更长。
 
 
 

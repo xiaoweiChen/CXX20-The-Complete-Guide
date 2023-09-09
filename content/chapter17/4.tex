@@ -17,11 +17,11 @@ constexpr const char* cs = "water";
 auto hashWater = hashed(cs); // OK
 \end{cpp}
 
-注意，哈希本身并不一定是constexpr。它是Lambda的运行时对象，在编译时对其执行“函数调用”。
+哈希本身并不一定是constexpr，其是Lambda的运行时对象，在编译时对其执行“函数调用”。
 
-关于新的consteval关键字一节中对Lambda的consteval进行更加细致的讨论。
+关于新的consteval关键字一节中对Lambda的consteval进行更加详细的讨论。
 
-还可以将新的模板语法用于具有consteval的泛型Lambda。这使开发者能够在另一个函数中定义编译时函数的初始化。例如:
+还可以将新的模板语法用于具有consteval的泛型Lambda，这使开发者能够在另一个函数中定义编译时函数的初始化。例如:
 
 \begin{cpp}
 // local compile-time computation of Num prime numbers:
@@ -39,13 +39,13 @@ auto primeNumbers = [] <int Num> () consteval {
 
 请参阅lang/lambdaconsteval.cpp获取使用该Lambda的完整示例。
 
-注意，这时，模板参数没有推导出来，所以显式指定模板参数的语法会有点难看:
+这时，模板参数没有推导出来，所以显式指定模板参数的语法会有点难看:
 
 \begin{cpp}
 auto primes = primeNumbers.operator()<100>();
 \end{cpp}
 
-还要注意的是，必须在consteval之前提供参数列表(指定constexpr时也适用)。即使没有声明参数，也不能没有括号。
+必须在consteval之前提供参数列表(指定constexpr时也适用)。即使没有声明参数，也不能没有括号。
 
 
 

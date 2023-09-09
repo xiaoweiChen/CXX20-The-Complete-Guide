@@ -3,7 +3,7 @@
 
 \mySubsubsection{16.4.1}{私有模块}
 
-若在主接口中声明一个模块，有时可能需要一个私有模块。这允许程序员在主接口中拥有声明和定义，这些声明和定义对任何其他模块或翻译单元都是不可见或不可达的。使用私有模块片段的一种方法是禁用导出类或函数的定义，尽管它的声明是导出的。
+若在主接口中声明一个模块，有时可能需要一个私有模块。这允许开发者在主接口中拥有声明和定义，这些声明和定义对任何其他模块或翻译单元都是不可见或不可达的。使用私有模块片段的一种方法是禁用导出类或函数的定义，尽管声明是导出的。
 
 例如，考虑下面的主接口:
 
@@ -25,7 +25,7 @@ void print(const C& c) { // provides details of the exported function
 }
 \end{cpp}
 
-这里，首先用export声明类C和函数print():
+首先用export声明类C和函数print():
 
 \begin{cpp}
 export module MyMod;
@@ -34,7 +34,7 @@ export class C; // class C is exported
 export void print(const C& c); // print() is exported
 \end{cpp}
 
-export只能在命名空间中引入名称时指定一次，稍后还会导出详细信息。因此，翻译单元都可以导入该模块，并使用C类型的对象:
+export只能在命名空间中引入名称时指定一次，稍后还会导出详细信息。翻译单元都可以导入该模块，并使用C类型的对象:
 
 \begin{cpp}
 import MyMod;
@@ -44,7 +44,7 @@ C c; // OK, definition of class C was exported
 print(c); // OK (compiler can replace the function call with its body)
 \end{cpp}
 
-然而，若想在模块中封装定义，以便导入代码只看到声明，并且仍然希望在主接口中拥有定义，必须将定义放在私有模块中:
+若想在模块中封装定义，以便导入代码只看到声明，并且仍然希望在主接口中拥有定义，必须将定义放在私有模块中:
 
 \begin{cpp}
 export module MyMod;
@@ -72,7 +72,7 @@ void print(const C& c) { // definition not exported
 module :private;
 \end{cpp}
 
-只能发生在主接口中，并且只能发生一次。有了这个声明，文件的其余部分不再隐式导出(甚至不是隐式导出)。之后使用export来导出任何内容都是错误的。
+只能发生在主接口中，并且只能发生一次。有了这个声明，文件的其余部分不再隐式导出(甚至不是隐式导出)。之后使用export来导出内容都是错误的。
 
 通过将定义移动到私有模块中，导入代码就不能再使用其中的任何定义，只能使用类C的前向声明(类C是不完整类型)和print()。
 
@@ -86,7 +86,7 @@ C c; // ERROR (C only declared, not defined)
 print(c); // OK (compiler can replace the function call with its body)
 \end{cpp}
 
-然而，声明还是可以使用C类型的引用和指针:
+声明还是可以使用C类型的引用和指针:
 
 \begin{cpp}
 import MyMod;
@@ -99,22 +99,22 @@ void foo(const C& c) { // OK
 
 \mySubsubsection{16.4.2}{详细介绍模块的声明和导出}
 
-模块单元必须以下列之一开头(在初始注释和空格之后):
+模块单元必须以下列之一开头(初始注释和空格之后):
 
 \begin{itemize}
-\item 
+\item
 module;
 
-\item 
+\item
 export module name;
 
-\item 
+\item
 module name;
 
-\item 
+\item
 module name:partname;
 
-\item 
+\item
 export module name:partname;
 \end{itemize}
 
@@ -123,7 +123,7 @@ export module name:partname;
 模块中，可以导出所有具有名称的符号:
 
 \begin{itemize}
-\item 
+\item
 可以导出具有名称的命名空间，将导出命名空间声明中定义的所有符号。例如:
 
 \begin{cpp}
@@ -140,8 +140,7 @@ export namespace MyMod {
 }
 \end{cpp}
 
-
-\item 
+\item
 可以导出类型，这将导出所有成员(若有的话)。例如:
 
 \begin{cpp}
@@ -154,7 +153,7 @@ export using MyString = std::string;
 
 不必导出类成员或枚举值。若导出类型，则自动导出枚举类型的类成员和值。
 
-\item 
+\item
 可以导出对象。例如:
 
 \begin{cpp}
@@ -167,7 +166,7 @@ namespace MyStream {
 export auto myLambda = [] {};
 \end{cpp}
 
-\item 
+\item
 可以导出函数。例如:
 
 \begin{cpp}
@@ -179,7 +178,7 @@ export friend std::ostream& operator<< (std::ostream&, const MyType&);
 
 在未命名的命名空间、静态对象和私有模块片段中不允许导出。
 
-任何导出都不需要内联。形式上，模块中的定义总是只存在一次。
+导出都不需要内联。形式上，模块中的定义总是只存在一次。
 
 即使对象也被另一个模块重新导出，这也适用。
 
@@ -213,21 +212,19 @@ export using ::globalLogger;
 export using ::log;
 \end{cpp}
 
-
 \mySubsubsection{16.4.4}{模块导入的详情}
 
 通过import，C++源代码文件都可以导入一个模块来使用导出的函数、类型和对象。
 
-import不是一个普通的关键字，是一个上下文关键字。所以仍然可以使用标识符导入命名其他组件，尽管不建议这样做。其没有作为关键字引入，所以可能会破坏太多现有的代码。使用import的翻译单元或模块单元必须在模块预编译之后进行编译。
+import不是一个普通的关键字，是一个上下文关键字。仍然可以使用标识符导入命名其他组件，尽管不建议这样做。其没有作为关键字引入，所以可能会破坏太多现有的代码。使用import的翻译单元或模块单元，必须在模块预编译之后进行编译。
 
 否则，可能会得到模块未定义的错误，或者更糟的是，可能会针对旧版本的模块进行编译，所以不能循环导入。
 
+\mySubsubsection{16.4.5}{可达符号与可见符号的详情}
 
-\mySubsubsection{16.4.5}{可达符号与可见符号的细节}
+让我们看一些更多的详情，并举例说明导出和导入符号的可见性和可达性。
 
-让我们看一些更多的细节，并举例说明导出和导入符号的可见性和可达性。
-
-在导入模块时，还可以间接导入导出API所使用的所有类型。若没有显式导出这些类型，则可以使用包含其所有成员函数的类型，但不能使用独立函数。
+导入模块时，还可以间接导入导出API所使用的所有类型。若没有显式导出这些类型，则可以使用包含其所有成员函数的类型，但不能使用独立函数。
 
 下面的模块将getPerson()导出为一个可见的符号，将Person导出为一个可访问的类:
 
@@ -292,7 +289,7 @@ std::cout << p3 << '\n'; // ERROR: free-standing operator<< not exported
 std::cout << s2 << '\n'; // OK
 \end{cpp}
 
-若在Person类中声明operator<{}<作为一个隐藏的友元(应该这样做):
+若在Person类中声明<{}<操作符作为一个隐藏的友元(应该这样做):
 
 \begin{cpp}
 export module ModPerson;
@@ -313,11 +310,11 @@ auto p3 = getPerson("Tana"); // OK
 std::cout << p3 << '\n'; // OK (operator<< is reachable now)
 \end{cpp}
 
-再次注意，通过使用私有模块，可以限制间接导出符号的可达性。
+通过使用私有模块，可以限制间接导出符号的可达性。
 
 \mySamllsection{未导出的符号不能冲突}
 
-间接导出的符号不可见，但可访问的行为允许开发者在其导出的接口中，使用相同符号名称的不同模块。例如，有一个模块定义了一个类Person，如下所示:
+间接导出的符号不可见，但可访问的行为允许开发者在其导出的接口中，使用相同符号名称的不同模块。例如，有一个模块定义了一个类Person:
 
 \begin{cpp}
 export module ModPerson1;

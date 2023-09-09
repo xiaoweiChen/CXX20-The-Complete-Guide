@@ -1,7 +1,7 @@
 
 C++11起，C++有了关键字constexpr来支持在编译时对函数求值。若函数的所有方面在编译时都是已知的，可以在编译时上下文中使用其结果。然而，constexpr函数也可以作为“普通”运行时函数使用。
 
-C++20引入了一个类似的关键字consteval，要求进行编译时计算。与用constexpr标记的函数相反，用consteval标记的函数不能在运行时调用;相反，其需要在编译时调用。弱这是不可能的，则程序处于病态。因为这些函数是立即调用的，所以当编译器看到对它们的调用时，这些函数也称为立即函数。
+C++20引入了一个类似的关键字consteval，要求进行编译时计算。与用constexpr标记的函数相反，用consteval标记的函数不能在运行时调用;相反，其需要在编译时调用。若这不可能，则程序处于病态。因为这些函数是立即调用的，所以当编译器看到对它们的调用时，这些函数也称为立即函数。
 
 \mySubsubsection{18.2.1}{第一个consteval的示例}
 
@@ -61,7 +61,7 @@ std::array<int, Num> primeNumbers()
 }
 \end{cpp}
 
-为了计算质数，primeNumbers()使用一个辅助函数isPrime()，该函数是用constexpr声明的，在运行时和编译时都可用(也可以用consteval声明，但这样它在运行时就不可用了)。
+为了计算素数，primeNumbers()使用一个辅助函数isPrime()，该函数是用constexpr声明的，在运行时和编译时都可用(也可以用consteval声明，但这样它在运行时就不可用了)。
 
 然后使用primeNumbers<>()初始化一个包含100个素数的数组:
 
@@ -84,7 +84,7 @@ std::array<int, Num> primeNumbers()
 constinit static auto primes = primeNumbers<100>();
 \end{cpp}
 
-这两种情况下，可以看到，当要为初始化计算的素数数量显著增加时，编译时间明显变慢。
+这两种情况下，当要为初始化计算的素数数量显著增加时，编译时间明显变慢。
 
 但请注意编译器在计算常量表达式时通常有限制，C++标准只保证在一个核心常量exp内对1,048,576个表达式求值
 
@@ -107,13 +107,13 @@ int main(int argc, char* argv[])
 					}
 					return hash;
 				};
-	
+
 	// OK (requires hashed() in compile-time context):
 	enum class drinkHashes : long { beer = hashed("beer"), wine = hashed("wine"),
 									water = hashed("water"), ... };
 	// OK (hashed() guaranteed to be called at compile time):
 	std::array arr{hashed("beer"), hashed("wine"), hashed("water")};
-	
+
 	if (argc > 1) {
 		switch (hashed(argv[1])) { // ERROR: argv is not known at compile time
 			...
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
 
 这里，用一个只能在编译时使用的Lambda初始化hash。因此，Lambda的使用必须在具有编译时值的编译时上下文中进行。这些调用只有在接受字符串字面值或constexpr const char*类型的形参时才有效。
 
-若使用constexpr声明Lambda，则switch语句将生效。(没有必要使用constexpr声明，从C++17开始，若可能的话，所有的Lambda都是隐式的constexpr)。然而，这样就不能保证在编译时对arr的初始值进行计算。
+若使用constexpr声明Lambda，则switch语句将生效。(没有必要使用constexpr声明，从C++17开始，所有的Lambda都是隐式的constexpr)。然而，这样就不能保证在编译时对arr的初始值进行计算。
 
 有关更多细节，请参阅有关consteval Lambda的讨论的章节中的另一个例子。
 
@@ -133,18 +133,18 @@ int main(int argc, char* argv[])
 使用constexpr和consteval，现在有以下选项来影响何时可以调用/被调用函数:
 
 \begin{itemize}
-\item 
+\item
 既不是constexpr也不是consteval:
 
 这些函数只能在运行时上下文中使用，但编译器仍然可以在编译时进行优化。
 
-\item 
-constexpr: 
+\item
+constexpr:
 
 这些函数可以在编译时和运行时上下文中使用。即使在运行时上下文中，编译器仍然可以在编译时执行对函数求值的优化，编译器还可以在运行时对编译时上下文中的函数求值。
 
-\item 
-consteval: 
+\item
+consteval:
 
 这些函数只能在编译时使用，但结果可以在运行时上下文中使用。
 \end{itemize}
@@ -182,7 +182,7 @@ consteval int squareC(int x) {
 int main()
 {
 	int i = 42;
-	
+
 	// using the square functions at runtime with runtime value:
 	std::cout << squareR(i) << '\n'; // OK
 	std::cout << squareCR(i) << '\n'; // OK
@@ -192,7 +192,7 @@ int main()
 	std::cout << squareR(42) << '\n'; // OK
 	std::cout << squareCR(42) << '\n'; // OK
 	std::cout << squareC(42) << '\n'; // OK: square computed at compile time
-	
+
 	// using the square functions at compile time:
 	// std::array<int, squareR(42)> arr1; // ERROR
 	std::array<int, squareCR(42)> arr2; // OK: square computed at compile time
@@ -204,7 +204,7 @@ int main()
 constexpr和consteval的区别如下:
 
 \begin{itemize}
-\item 
+\item
 不允许consteval函数处理编译时未知的参数:
 
 \begin{cpp}
@@ -213,7 +213,7 @@ std::cout << squareC(i) << '\n'; // ERROR
 std::array<int, squareC(i)> arr4; // ERROR
 \end{cpp}
 
-\item 
+\item
 consteval函数必须在编译时执行计算:
 
 \begin{cpp}
@@ -226,14 +226,14 @@ std::cout << squareC(42) << '\n'; // computed at compile time
 在两种情况下使用consteval是有意义的:
 
 \begin{itemize}
-\item 
+\item
 希望强制执行编译时计算。
 
-\item 
+\item
 希望禁用在运行时使用的函数。
 \end{itemize}
 
-例如，函数square()或hashed()是constexpr还是consteval在编译时上下文中没有区别，例如:
+例如，函数square()或hashed()是constexpr还是consteval在编译时上下文中没有区别:
 
 \begin{cpp}
 enum class Drink = { water = hashed("water"), wine = hashed("wine") };
@@ -248,7 +248,7 @@ if constexpr(hashed("wine") > hashed("water")) {
 }
 \end{cpp}
 
-然而，在运行时上下文中，consteval可能会有所不同，因为那时不需要编译时计算:
+运行时上下文中，consteval可能会有所不同，因为那时不需要编译时计算:
 
 \begin{cpp}
 std::array drinks = { hashed("water"), hashed("wine") };
@@ -262,29 +262,29 @@ if (hashed("wine") > hashed("water")) {
 
 \mySubsubsection{18.2.3}{实践consteval}
 
-对于consteval函数，在实际使用时有一些限制。
+对于consteval函数，实际使用时有一些限制。
 
 \mySamllsection{consteval的限制}
 
 consteval函数与constexpr函数几乎相同(注意，C++20放宽了这些限制):
 
 \begin{itemize}
-\item 
+\item
 参数和返回类型(若不是void)必须是文字类型。
 
-\item 
+\item
 函数体只能包含既不是静态，也不是thread\_local的字面量类型的变量。
 
-\item 
+\item
 不允许使用goto和标签。
 
-\item 
+\item
 函数只能是构造函数或析构函数，类没有虚基类。
 
-\item 
+\item
 consteval函数隐式内联。
 
-\item 
+\item
 consteval函数不能用作协程。
 \end{itemize}
 
@@ -319,7 +319,7 @@ constexpr int foo(int i) {
 }
 \end{cpp}
 
-函数foo()无法编译。原因是i仍然不是编译时值，可以在运行时调用。foo()只能用编译时变量调用funcConstEval():
+函数foo()无法编译，原因是i仍然不是编译时值，可以在运行时调用。foo()只能用编译时变量调用funcConstEval():
 
 \begin{cpp}
 constexpr int foo(int i) {
@@ -327,7 +327,7 @@ constexpr int foo(int i) {
 }
 \end{cpp}
 
-注意，即使if(std::is\_constant\_evaluate())在这里也没有太大的作用。
+即使if(std::is\_constant\_evaluate())在这里也没有太大的作用。
 
 带有consteval标记的函数也不允许调用纯运行时函数(既不带有constexpr，也不带有consteval标记的函数)，但只有在真正执行调用时才会检查这一点。对于consteval函数，只要没有到达运行时函数，包含调用运行时函数的语句就不是错误(这条规则已经适用于编译时调用的constexpr函数)。
 
@@ -356,7 +356,7 @@ constexpr int i3 = nextTwoDigitValue(99); // compile-time ERROR
 constexpr int i4 = nextTwoDigitValue(-1); // compile-time ERROR
 \end{cpp}
 
-请注意，使用static\_assert()在这里不起作用，因为只能为编译时已知的值调用，并且consteval不会使val成为函数内部的编译时值:
+使用static\_assert()在这里不起作用，因为只能为编译时已知的值调用，并且consteval不会使val成为函数内部的编译时值:
 
 \begin{cpp}
 consteval int nextTwoDigitValue(int val)
@@ -366,7 +366,7 @@ consteval int nextTwoDigitValue(int val)
 }
 \end{cpp}
 
-通过使用这个技巧，可以将编译时函数约束为某些值。这样，就可以在编译时对解析的字符串发出无效格式的信号。
+通过使用这个技巧，可以将编译时函数约束为某些值，就可以在编译时对解析的字符串发出无效格式的信号。
 
 \mySubsubsection{18.2.4}{编译时值与编译时上下文}
 
@@ -380,10 +380,10 @@ consteval void process()
 	constexpr std::array a1{0, 8, 15};
 	constexpr auto n1 = std::ranges::count(a1, 0); // OK
 	std::array<int, n1> a1b; // OK
-	
+
 	std::array a2{0, 8, 15};
 	constexpr auto n2 = std::ranges::count(a2, 0); // ERROR
-	
+
 	std::array a3{0, 8, 15};
 	auto n3 = std::ranges::count(a3, 0); // OK
 	std::array<int, n3> a3b; // ERROR
@@ -392,7 +392,7 @@ consteval void process()
 
 虽然这是一个只能在编译时使用的函数，但a2不是编译时值，所以不能用于通常需要编译时值的地方，例如：初始化constexpr变量n2。
 
-出于同样的原因，只能使用n1来声明std::array的大小。使用非constexpr的n3会失败(即使将n3声明为const)。
+出于同样的原因，只能使用n1来声明std::array的大小，使用非constexpr的n3会失败(即使将n3声明为const)。
 
 若process()声明为constexpr函数，同样适用。但是否在编译时上下文中调用，则并不重要。
 

@@ -26,19 +26,19 @@ auto cmp = NameChosenByCompiler{};
 cmp(val1, val); // yields the result of 42 > obj2
 \end{cpp}
 
-然而，在C++20之前，生成的闭包类型没有可调用的默认构造函数和赋值操作符。生成类的对象最初只能由编译器创建，只可复制:
+C++20之前，生成的闭包类型没有可调用的默认构造函数和赋值操作符。生成类的对象最初只能由编译器创建，只可复制:
 
 \begin{cpp}
 auto cmp1 = [] (const auto& x, const auto& y) {
 				return x > y;
 			};
-			
+
 auto cmp2 = cmp1; // OK, copy constructor supported since C++11
 decltype(cmp1) cmp3; // ERROR until C++20: no default constructor provided
 cmp1 = cmp2; // ERROR until C++20: no assignment operator provided
 \end{cpp}
 
-因此，因为容器需要辅助函数的类型，所以不好将Lambda作为排序标准或哈希函数传递给容器。考虑一个具有以下接口的Customer类:
+因为容器需要辅助函数的类型，所以不好将Lambda作为排序标准或哈希函数传递给容器。考虑一个具有以下接口的Customer类:
 
 \begin{cpp}
 class Customer
@@ -73,13 +73,13 @@ std::unordered_set<Customer, decltype(hashName)> coll2{0, hashName};
 auto cmp1 = [] (const auto& x, const auto& y) {
 				return x > y;
 			};
-			
+
 auto cmp2 = cmp1; // OK, copy constructor supported
 decltype(cmp1) cmp3; // OK since C++20
 cmp1 = cmp2; // OK since C++20
 \end{cpp}
 
-出于这个原因，现在可以分别为排序条件或哈希函数传递Lambda的类型:
+出于这个原因，可以分别为排序条件或哈希函数传递Lambda的类型:
 
 \begin{cpp}
 // create balanced binary tree with user-defined ordering criterion:
@@ -98,7 +98,7 @@ std::unordered_set<Customer, decltype(hashName)> coll2; // OK since C++20
 
 这是有效的，因为排序条件或散列函数的参数有一个默认值，该值是排序条件或哈希列函数类型的默认构造对象。而且由于自C++20以来，没有捕获的Lambda有默认构造函数，因此使用Lambda类型的默认构造对象初始化排序条件现在可以编译了。
 
-甚至可以在容器的声明中定义Lambda，并使用decltype传递其类型。例如，可以声明一个关联容器，并在声明中定义排序，如下所示:
+甚至可以在容器的声明中定义Lambda，并使用decltype传递其类型。例如，可以声明一个关联容器，并在声明中定义排序:
 
 \begin{cpp}
 // create balanced binary tree with user-defined ordering criterion:
@@ -108,7 +108,7 @@ std::set<Customer,
 		})> coll3; // OK since C++20
 \end{cpp}
 
-以同样的方式，可以用哈希函数声明一个无序容器，如下所示:
+以同样的方式，可以用哈希函数声明一个无序容器:
 
 \begin{cpp}
 // create hash table with user-defined hash function:

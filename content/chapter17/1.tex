@@ -25,23 +25,23 @@ Lambda的模板形参有一个优点，即在声明泛型参数时为类型或�
 };
 \end{cpp}
 
-若想知道为什么在这些情况下不使用函数模板，请记住Lambda提供了一些函数无法提供的便利:
+若想知道为什么在这些情况下不使用函数模板，Lambda提供了一些函数无法提供的便利:
 
 \begin{itemize}
-\item 
+\item
 可以在函数内部定义。
 
-\item 
+\item
 可以捕获运行时的值，来指定在运行时的功能行为。
 
-\item 
+\item
 可以将它们作为参数传递，而无需指定参数类型。
 \end{itemize}
 
 
 \mySubsubsection{17.1.1}{使用泛型Lambda的模板参数}
 
-显式模板参数可用于特化(或部分限制)泛型Lambda的参数类型。考虑下面的例子:
+显式模板参数可用于特化(或部分限制)泛型Lambda的参数类型:
 
 \begin{cpp}
 []<typename T>(const std::vector<T>& vec) { // can only pass vectors
@@ -51,7 +51,7 @@ Lambda的模板形参有一个优点，即在声明泛型参数时为类型或�
 
 这个Lambda只接受vector作为参数。当使用auto时，将实参限制为vector并不容易，因为C++(还)不支持std::vector<auto>类型，但还可以使用类型约束来约束参数的类型(例如：要求可随机访问，甚至特定类型)。
 
-显式模板参数也有助于避免对decltype的需要。例如，要在Lambda中完美地转发泛型参数包，可以这样:
+显式模板参数也有助于避免对decltype的需要。例如，要在Lambda中完美地转发泛型参数包:
 
 \begin{cpp}
 []<typename... Types>(Types&&... args) {
@@ -82,7 +82,7 @@ std::visit([](const auto& val) {
 			var);
 \end{cpp}
 
-必须使用decltype()来获取参数的类型，并将该类型作为const\&进行比较(或删除const和引用)。C++20起，可以这样写代码:
+必须使用decltype()来获取参数的类型，并将该类型作为const\&进行比较(或删除const和引用)。C++20起，可以这样:
 
 \begin{cpp}
 std::visit([]<typename T>(const T& val) { // since C++20
@@ -98,7 +98,7 @@ std::visit([]<typename T>(const T& val) { // since C++20
 
 \mySubsubsection{17.1.2}{Lambda模板参数的显式规范}
 
-Lambda提供了一种方便的方式来定义函数对象(函子)。对于泛型lambda，函数调用函数操作符是一个模板。使用为参数指定名称，而不是使用auto的语法，可以在生成的函数调用操作符中为模板参数指定名称。
+Lambda提供了一种方便的方式来定义函数对象(函子)，对于泛型lambda，函数调用函数操作符是一个模板。使用为参数指定名称，而不是使用auto的语法，可以在生成的函数调用操作符中为模板参数指定名称。
 
 例如，若定义了下面的Lambda:
 
@@ -140,7 +140,7 @@ auto primes20 = primeNumbers.operator()<20>();
 
 除非使用间接调用，否则在指函数操作符的模板形参时，无法避免指定函数操作符。
 
-可以尝试将模板参数设置为编译时值，使其可推导，但最终的语法并没有好到哪里去:
+可以尝试将模板参数设置为编译时值，使其可推导，但最终的语法情况并没有好到哪里去:
 
 \begin{cpp}
 auto primeNumbers = [] <int Num> (std::integral_constant<int, Num>) {
@@ -153,7 +153,7 @@ auto primeNumbers = [] <int Num> (std::integral_constant<int, Num>) {
 auto primes20 = primeNumbers(std::integral_constant<int,20>{});
 \end{cpp}
 
-或者，可以考虑使用变量模板，这是C++14中引入的一种技术。这样，就可以将primeNumbers变量设置为泛型，而不是将Lambda设置为泛型:
+或者，可以考虑使用变量模板，这是C++14中引入的一种技术。就可以将primeNumbers变量设置为泛型，而非将Lambda设置为泛型:
 
 \begin{cpp}
 template<int Num>
@@ -167,7 +167,7 @@ auto primeNumbers = [] () {
 auto primes20 = primeNumbers<20>();
 \end{cpp}
 
-但这种情况下，不能在函数作用域中定义Lambda。泛型Lambda可以在作用域内局部定义泛型功能。
+这种情况下，不能在函数作用域中定义Lambda。泛型Lambda可以在作用域内局部定义泛型功能。
 
 
 

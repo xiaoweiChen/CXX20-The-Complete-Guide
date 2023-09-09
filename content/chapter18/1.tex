@@ -1,5 +1,5 @@
 
-C++20引入的一个新关键字是constinit，可用于强制并确保在编译时初始化可变静态或全局变量。大致说来，其效果为:
+C++20引入的一个新关键字是constinit，可用于强制并确保在编译时初始化可变静态或全局变量。大致效果为:
 
 \begin{cpp}
 constinit = constexpr - const
@@ -28,7 +28,7 @@ constexpr std::array<int, 5> getColl() {
 constinit auto globalColl = getColl();
 \end{cpp}
 
-如前所述，仍然可以修改声明的值。下面的代码是第一次使用上面的声明:
+仍然可以修改声明的值。下面的代码是第一次使用上面的声明:
 
 \begin{cpp}
 std::cout << i << " " << coll[0] << '\n'; // prints 42 1
@@ -44,7 +44,7 @@ std::cout << i << " " << coll[0] << '\n'; // prints 84 0
 84 0
 \end{shell}
 
-使用constinit的效果是，只有当初始值是编译时已知的常数值时，初始化才会编译。所以，与以下声明相反:
+使用constinit的效果是，只有当初始值是编译时已知的常数值时，初始化才会编译，与以下声明相反:
 
 \begin{cpp}
 auto x = f(); // f() might be a runtime function
@@ -65,14 +65,14 @@ constinit std::pair p{42, "ok"}; // OK constinit std::list l; // ERROR: default 
 使用constinit的原因如下所示:
 
 \begin{itemize}
-\item 
-可以在编译时要求初始化可变全局/静态对象。这样，就可以避免在运行时进行初始化，当使用thread\_local变量时，这可以提高性能。
+\item
+可以在编译时要求初始化可变全局/静态对象。就可以避免在运行时进行初始化，当使用thread\_local变量时，这可以提高性能。
 
-\item 
+\item
 可以确保全局/静态对象在使用时总是初始化。实际上，constinit可以用来修复静态初始化顺序的错误，当一个静态/全局对象的初始值依赖于另一个静态/全局对象时，就会出现这种错误。
 \end{itemize}
 
-注意，使用constinit永远不会改变程序的功能行为(除非我们遇到静态初始化顺序的惨败)，只能导致代码不再编译的结果。
+使用constinit永远不会改变程序的功能行为(除非我们遇到静态初始化顺序的惨败)，只能导致代码不再可编译。
 
 \mySubsubsection{18.1.1}{实践constinit}
 
@@ -129,7 +129,7 @@ static thread_local constinit int numCalls = 0;
 
 constinit、static和thread\_local的顺序无所谓。
 
-请注意，对于thread\_local变量，使用constinit可能会提高性能，因为其可以避免生成的代码(需要内部保护)来指示变量是否已经初始化:
+对于thread\_local变量，使用constinit可能会提高性能，因为其可以避免生成的代码(需要内部保护)来指示变量是否初始化:
 
 \begin{cpp}
 extern thread_local int x1 = 0;
@@ -140,10 +140,10 @@ extern thread_local constinit int x2 = 0; // better (might avoid an internal gua
 
 \mySubsubsection{18.1.2}{constinit如何解决静态初始化顺序的问题}
 
-C++中，有一个叫做静态初始化顺序的问题，constinit可以解决这个问题。问题是没有定义不同翻译单元中静态和全局初始化的顺序。出于这个原因，下面的代码可能是一个问题:
+C++中，有一个叫做静态初始化顺序的问题，constinit可以解决这个问题。问题是没有定义不同翻译单元中静态和全局初始化的顺序。出于这个原因，下面的代码可能有问题:
 
 \begin{itemize}
-\item 
+\item
 假设有一个带构造函数的类型来初始化对象，并引入该类型的外部全局对象:
 
 \filename{comptime/truth.hpp}
@@ -193,14 +193,14 @@ int main()
 \end{cpp}
 \end{itemize}
 
-有一个很好的机会，val初始化在theTruth初始化之前。因此，程序可能有以下输出:[例如，在使用gcc编译器时，若传递在fiasco.o前传递了truth.o给连接器，就会出现这个问题。]
+有一个很好的机会，val初始化在theTruth初始化之前。程序可能有以下输出:[例如，在使用gcc编译器时，若传递在fiasco.o前传递了truth.o给连接器，就会出现这个问题。]
 
 \begin{shell}
-0 
+0
 1
 \end{shell}
 
-当使用constinit声明val时，就不会出现这个问题。constinit确保对象总是在使用之前进行初始化，因为初始化是在编译时进行的。若不能给出保证，代码将无法编译。注意，若val用constexpr声明，初始化也会得到保证，但这种情况下，将无法再修改该值。
+当使用constinit声明val时，就不会出现这个问题。constinit确保对象总是在使用之前进行初始化，因为初始化是在编译时进行的。若不能给出保证，代码将无法编译。若val用constexpr声明，初始化也会得到保证，但这种情况下，将无法再修改该值。
 
 例子中，仅仅使用constinit首先会导致一个编译时错误(表示在编译时无法保证初始化):
 
@@ -236,7 +236,7 @@ constexpr Truth theTruth; // force compile-time initialization
 #endif // TRUTH_HPP
 \end{cpp}
 
-现在，程序编译，val可保证用theTruth的初始值进行初始化:
+现在，编译程序，val可保证用theTruth的初始值进行初始化:
 
 \filename{comptime/constinit.hpp}
 
@@ -254,7 +254,7 @@ int main()
 }
 \end{cpp}
 
-因此，程序的输出现在可以保证为:
+程序的输出现在可以保证为:
 
 \begin{shell}
 42
