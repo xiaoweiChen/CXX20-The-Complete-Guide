@@ -1,5 +1,5 @@
 
-类型std::coroutine\_handle<>是协程句柄的泛型类型，可用于引用正在执行或挂起的协程。它的模板参数是协程的promise类型，可用于放置额外的数据成员和行为。
+类型std::coroutine\_handle<>是协程句柄的泛型类型，可用于引用正在执行或挂起的协程。其模板参数是协程的promise类型，可用于放置额外的数据成员和行为。
 
 “std::coroutine\_handle<>的API”表列出了为协程句柄提供的所有操作。
 
@@ -34,13 +34,13 @@ coroutine\_handle\textless{}PrmT\textgreater{}::from\_address(addr)             
 表15.2 std::coroutine\_handle<>的API
 \end{center}
 
-静态成员函数from\_promise()方法初始化一个协同程序处理提供了协同程序。该函数只是将promise的地址存储在句柄中。若有一个promise prm:
+静态成员函数from\_promise()方法初始化一个协同程序处理提供了协同程序。该函数只是将promise的地址存储在句柄中，若有一个promise prm:
 
 \begin{cpp}
 auto hdl = std::coroutine_handle<decltype(prm)>::from_promise(prm);
 \end{cpp}
 
-from\_promise()通常在get\_return\_object()中调用，用于协程框架创建的承诺:
+from\_promise()通常在get\_return\_object()中调用，用于协程框架创建的promise:
 
 \begin{cpp}
 class CoroIf {
@@ -63,7 +63,7 @@ std::coroutine_handle<PrmType> hdl = nullptr;
 if (hdl) ... // false
 \end{cpp}
 
-复制和分配协程句柄的成本很低，只是复制并赋值内部指针。因此，协程句柄通常是按值传递的，所以多个协程句柄可以引用同一个协程。开发者必须确保当另一个协程句柄恢复或销毁该协程时，该句柄永远不会调用resume()或destroy()。
+复制和分配协程句柄的成本很低，只是复制并赋值内部指针。协程句柄通常是按值传递的，所以多个协程句柄可以引用同一个协程。开发者必须确保当另一个协程句柄恢复或销毁该协程时，该句柄永远不会调用resume()或destroy()。
 
 address()接口产生协程的内部指针为void*。这允许开发者将协程句柄导出到某个地方，然后使用from\_address()的静态函数重新创建句柄:
 
@@ -77,7 +77,7 @@ auto hdl2 = std::coroutine_handle<decltype(prm)>::from_address(hdlPtr);
 hdl == hdl2 // true
 \end{cpp}
 
-但请注意，只要协程存在，就可以使用该地址。在一个协程销毁后，该地址可以让另一个协程句柄重用。
+只要协程存在，就可以使用该地址。在一个协程销毁后，该地址可以让另一个协程句柄重用。
 
 \mySubsubsection{15.4.1}{std::coroutine\_handle<void>}
 
@@ -97,7 +97,7 @@ namespace std {
 }
 \end{cpp}
 
-因此，若不需要promise，可以使用类型std::coroutine\_handle<void>或类型std::coroutine\_handle<>，而不需要模板参数。注意std::coroutine\_handle<>没有提供promise()成员函数:
+若不需要promise，可以使用类型std::coroutine\_handle<void>或类型std::coroutine\_handle<>，而不需要模板参数。注意std::coroutine\_handle<>没有提供promise()成员函数:
 
 \begin{cpp}
 void callResume(std::coroutine_handle<> h)

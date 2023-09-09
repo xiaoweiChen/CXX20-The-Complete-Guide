@@ -30,13 +30,13 @@ co_await x + y;
 (co_await x) + y;
 \end{cpp}
 
-注意，x + y，或者只是x，在这里不一定是一个附加项。co\_await需要一个awaitable对象，而awaiter只是它们的一种(常规的)实现。事实上，co\_await接受任何类型的值，只要有一个到awaiter的API的映射。对于映射，C++标准提供了两种方法:
+注意，x + y，或者只是x，在这里不一定是一个附加项。co\_await需要一个awaitable对象，而awaiter只是一种(常规的)实现。事实上，co\_await接受任何类型的值，只要有一个到awaiter的API的映射。对于映射，C++标准提供了两种方法:
 
 \begin{itemize}
-\item 
+\item
 promise的成员函数await\_transform()
 
-\item 
+\item
 co\_await()操作符
 \end{itemize}
 
@@ -47,7 +47,7 @@ co\_await()操作符
 
 若co\_await表达式出现在协程中，编译器首先查找是否存在由协程的promise提供的成员函数await\_transform()。若是这样，则调用await\_transform()并产生一个等待器，然后使用该等待器挂起协程。
 
-例如，这意味着:
+这意味着:
 
 \begin{cpp}
 class CoroTask {
@@ -101,7 +101,7 @@ CoroTask coro()
 
 \mySamllsection{使用值让co\_await更新正在运行的协程}
 
-还记得使用awaiter来更改协程优先级的示例吗?在这里，我们使用CoroPrio类型的awaiter使协程能够请求新的优先级，如下所示:
+还记得使用awaiter来更改协程优先级的示例吗?在这里，使用CoroPrio类型的awaiter使协程能够请求新的优先级:
 
 \begin{cpp}
 co_await CoroPrio{CoroPrioRequest::less}; // SUSPEND with lower prio
@@ -145,11 +145,11 @@ inline auto CoroPrioTask::promise_type::await_transform(CoroPrioRequest pr) {
 
 这里，再次使用协程句柄from\_promise()中的静态成员函数来获取句柄，因为changePrio()需要该句柄作为其第一个参数。
 
-这样的话，我们就可以跳过整个awaiter CoroPrio了。完整代码请参见coro/coropriosched2.hpp(以及coro/coroprio2.cpp和coro/coroprio2.hpp)。
+这样的话，就可以跳过整个awaiter CoroPrio了。完整代码请参见coro/coropriosched2.hpp(以及coro/coroprio2.cpp和coro/coroprio2.hpp)。
 
 \mySamllsection{让co\_await像co\_yield一样运行}
 
-记住co\_yield的例子。要处理要产生的值，并做了以下的操作:
+看一下co\_yield的例子。要处理要产生的值，并做了以下的操作:
 
 \begin{cpp}
 struct promise_type {
@@ -196,7 +196,7 @@ co_await prm.yield_value(val);
 
 \mySubsubsection{15.8.2}{co\_await()操作符}
 
-让co\_await处理(几乎)任何类型的任何值的另一个选择是为该类型实现操作符co\_await()，所以必须传递一个类的值。
+让co\_await处理(几乎)任何类型的值的另一个选择是为该类型实现操作符co\_await()，所以必须传递一个类的值。
 
 假设已经为某些类型MyType实现了操作符co\_await():
 
@@ -218,7 +218,7 @@ CoroTask coro()
 }
 \end{cpp}
 
-呼叫接线员并使用返回的awaiter来处理暂停。这里，操作符co\_await()产生std::suspend\_always{}，则可得到:
+并使用返回的awaiter来处理暂停。这里，操作符co\_await()产生std::suspend\_always{}，则可得到:
 
 \begin{cpp}
 CoroTask coro()
@@ -230,7 +230,7 @@ CoroTask coro()
 
 也可以将参数传递给MyType\{\}，并将其传递给一个awaiter，以便将值传递给挂起的协程，立即或稍后恢复。
 
-另一个例子是将协程传递给co\_await，然后可以调用，包括实现准备工作，例如：更改线程或将协程调度到线程池中。
+另一个例子是将协程传递给co\_await，然后可以调用，包括实现准备工作，例如：在线程池中进行更改线程或协程调度。
 
 
 

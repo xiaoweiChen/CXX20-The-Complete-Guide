@@ -2,7 +2,6 @@
 
 协程需要内存来保存它们的状态。因为协程可能会切换上下文，所以通常使用堆内存。本节将讨论如何做到这一点，以及如何更改。
 
-
 \mySubsubsection{15.6.1}{协程如何分配内存}
 
 协程需要内存来存储它们从挂起到恢复的状态，但由于恢复可能发生在非常不同的上下文中，因此通常只能在堆上分配内存。事实上，C++标准规定:
@@ -14,13 +13,13 @@
 这里重要的词是“可能”，编译器可以优化掉对堆内存的需求。当然，编译器需要足够的信息，代码必须非常简单。事实上，最有可能优化的是
 
 \begin{itemize}
-\item 
+\item
 协程的生命周期保持在调用者的生命周期内。
 
-\item 
+\item
 使用内联函数使编译器至少可以看到计算帧大小的所有内容。
 
-\item 
+\item
 final\_suspend()返回std::suspend\_always{}，否则生命周期管理将变得过于复杂。
 \end{itemize}
 
@@ -72,16 +71,16 @@ coroStr(3, "hello"); // create and destroy temporary coroutine
 协程的promise类型允许开发者更改为协程分配内存的方式，只需要提供以下成员:
 
 \begin{itemize}
-\item 
+\item
 \texttt{void* operator new(std::size\_t sz)}
 
-\item 
+\item
 \texttt{void operator delete(void* ptr, std::size\_t sz)}
 \end{itemize}
 
 \mySamllsection{确保没有使用堆内存}
 
-首先，可以使用new()和delete()操作符来确定协程是否在堆上分配了内存。简单地声明new操作符而不实现它:
+首先，可以使用new()和delete()操作符来确定协程是否在堆上分配了内存。简单地声明new操作符而不实现:
 
 \begin{cpp}
 class CoroTask {
@@ -126,7 +125,7 @@ public:
 	using CoroHdl = std::coroutine_handle<promise_type>;
 private:
 	CoroHdl hdl; // native coroutine handle
-	
+
 public:
 	struct promise_type {
 		auto get_return_object() { // init and return the coroutine interface
@@ -143,7 +142,7 @@ public:
 		auto final_suspend() noexcept { // final suspend point
 			return std::suspend_always{}; // - suspend immediately
 		}
-		
+
 		// define the way memory is allocated:
 		void* operator new(std::size_t sz) {
 			return mempool.allocate(sz);
@@ -155,11 +154,11 @@ public:
 	// constructor and destructor:
 	CoroTaskPmr(auto h) : hdl{h} { }
 	~CoroTaskPmr() { if (hdl) hdl.destroy(); }
-	
+
 	// don’t copy or move:
 	CoroTaskPmr(const CoroTaskPmr&) = delete;
 	CoroTaskPmr& operator=(const CoroTaskPmr&) = delete;
-	
+
 	// API to resume the coroutine
 	// - returns whether there is still something to process
 	bool resume() const {
@@ -172,7 +171,7 @@ public:
 };
 \end{cpp}
 
-这里，我们使用多态内存资源，这是C++17引入的一个特性，通过提供标准化的内存池来简化内存管理。本例中，我们将200kb的数据段传递给内存池monobuf，使用null\_memory\_resource()作为回退确保在内存不足时抛出std::bad\_alloc异常。在最上面，放置了同步内存池mempool，其用很少的碎片来管理这个缓冲区:[详细信息请参阅我的书《C++17——完整指南》]。
+这里，使用多态内存资源，这是C++17引入的一个特性，通过提供标准化的内存池来简化内存管理。本例中，我们将200kb的数据段传递给内存池monobuf，使用null\_memory\_resource()作为回退确保在内存不足时抛出std::bad\_alloc异常。在最上面，放置了同步内存池mempool，其用很少的碎片来管理这个缓冲区:[详细信息请参阅我的书《C++17——完整指南》]。
 
 \begin{cpp}
 class [[nodiscard]] CoroTaskPmr {
@@ -229,7 +228,7 @@ int main()
 	TrackNew::reset();
 	coro(3); // initialize temporary coroutine
 	coroStr(3, "hello"); // initialize temporary coroutine
-	
+
 	auto coroTask = coro(3); // initialize coroutine
 	std::cout << "coro() started\n";
 	while (coroTask.resume()) { // RESUME
@@ -241,7 +240,7 @@ int main()
 
 不再为这些协程分配堆内存。
 
-注意，还可以提供一个特定的操作符new，在size参数之后接受协程参数。例如，对于接受int型和string型参数的协程，可以提供:
+还可以提供一个特定的操作符new，在size参数之后接受协程参数。例如，对于接受int型和string型参数的协程，可以提供:
 
 \begin{cpp}
 class CoroTaskPmr {
@@ -266,7 +265,7 @@ class CoroTaskPmr {
 
 这种情况下，用户定义的操作符new必须为noexcept，失败时返回nullptr。
 
-然后，可以使用该函数来实现变通方法，例如创建不引用协程的协程句柄:
+可以使用该函数来实现变通方法，例如创建不引用协程的协程句柄:
 
 \begin{cpp}
 class CoroTask {

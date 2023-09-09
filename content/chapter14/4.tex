@@ -1,14 +1,14 @@
 
 
-目前为止，我们已经看到了如何使用协程接口从外部控制协程(包装协程句柄及其承诺)。然而，协程可以(而且必须)提供另一个配置点:Awaitables(实现方式是使用Awaiter)。
+目前为止，已经看到了如何使用协程接口从外部控制协程(包装协程句柄及其承诺)。然而，协程可以(而且必须)提供另一个配置点:Awaitables(实现方式是使用Awaiter)。
 
 相关术语如下所示:
 
 \begin{itemize}
-\item 
+\item
 Awaitables是运算符co\_await需要作为其操作数的术语，所以awaitables是co\_await可以处理的所有对象。
 
-\item 
+\item
 Awaiter是实现Awaitables的一种特定(和典型)方式的术语。其必须提供三个特定的成员函数来处理协程的暂停和恢复。
 \end{itemize}
 
@@ -42,30 +42,30 @@ await\_resume()          & 处理恢复                                 \\ \hlin
 关键函数是await\_suspend()和await\_resume():
 
 \begin{itemize}
-\item 
+\item
 await\_ready()
 
 这个函数会在协程被挂起之前调用，提供(暂时)完全关闭挂起。若它返回true，则协程根本不会挂起。
 
 这个函数通常只返回false(“不，不要阻止/忽略任何挂起”)。为了节省挂起的成本，当挂起无意义时(例如，若挂起依赖于可用的某些数据)，可能会有条件地产生true。
 
-注意，在这个函数中，协程还没有挂起。所以，其不应该用来直接或间接地调用其所调用的协程的resume()或destroy()。
+这个函数中，协程还没有挂起。所以，其不应该用来直接或间接地调用其所调用的协程的resume()或destroy()。
 
-\item 
+\item
 auto await\_suspend(awaitHdl)
 
 在协程挂起后立即为协程调用此函数。参数awaitHdl是被挂起的协程的句柄，其的类型是std::coroutine\_handle<PromiseType>。
 
 这个函数中，可以指定下一步要做什么，包括立即恢复挂起的或等待的协程。不同的返回类型允许以不同的方式指定，还可以通过直接将控制转移到另一个协程来有效地跳过暂停。
 
-甚至可以在这里破坏协程，但请确保您不再在其他任何地方使用协程(例如：在协程接口中调用done()或destroy())。
+甚至可以破坏协程，但请确保不再在其他任何地方使用协程(例如：在协程接口中调用done()或destroy())。
 
-\item 
+\item
 auto await\_resume()
 
 当成功挂起后恢复协程时，将为协程调用此函数。
 
-它可以返回一个值，这个值就是co\_await表达式产生的值。
+可以返回一个值，这个值就是co\_await表达式产生的值。
 \end{itemize}
 
 考虑下面这个简单的awaiter使用:
@@ -81,18 +81,18 @@ class Awaiter {
 		std::cout << " await_ready()\n";
 		return false; // do suspend
 	}
-	
+
 	void await_suspend(auto hdl) const noexcept {
 		std::cout << " await_suspend()\n";
 	}
-	
+
 	void await_resume() const noexcept {
 		std::cout << " await_resume()\n";
 	}
 };
 \end{cpp}
 
-这个awaiter中，跟踪该awaiter的哪个函数何时被调用。因为await\_ready()返回false，而await\_suspend()不返回任何值，所以awaiter接受挂起(不恢复其他操作)。这是标准的await std::suspend\_always{}结合一些print语句的行为，其他返回类型/值可以提供不同的行为。
+这个awaiter中，跟踪该awaiter的哪个函数何时调用。因为await\_ready()返回false，而await\_suspend()不返回任何值，所以awaiter接受挂起(不恢复其他操作)。这是标准的await std::suspend\_always{}结合一些print语句的行为，其他返回类型/值可以提供不同的行为。
 
 协程可以像下面这样使用这个awaiter(完整代码参见coro/awaiter.cpp):
 
@@ -108,7 +108,7 @@ CoroTask coro(int max)
 }
 \end{cpp}
 
-假设我们这样使用协程:
+假设这样使用协程:
 
 \begin{cpp}
 auto coTask = coro(2);
@@ -121,7 +121,7 @@ while (coTask.resume()) { // RESUME
 std::cout << "done\n";
 \end{cpp}
 
-结果，得到以下输出:
+可得到以下输出:
 
 \begin{shell}
 started
@@ -141,21 +141,21 @@ loop
 done
 \end{shell}
 
-稍后我们将讨论更多关于awaiters更多的细节。
+稍后将讨论更多关于awaiters更多的细节。
 
 \mySubsubsection{14.4.2}{标准Awaiters}
 
-C++标准库提供了我们已经使用过的两个简单的awaiter:
+C++标准库提供了已经使用过的两个简单的awaiter:
 
 \begin{itemize}
-\item 
+\item
 std::suspend\_always
 
-\item 
+\item
 std::suspend\_never
 \end{itemize}
 
-它们的定义非常简单:
+其定义非常简单:
 
 \begin{cpp}
 namespace std {
@@ -164,7 +164,7 @@ namespace std {
 		constexpr void await_suspend(coroutine_handle<>) const noexcept { }
 		constexpr void await_resume() const noexcept { }
 	};
-	
+
 	struct suspend_never {
 		constexpr bool await_ready() const noexcept { return true; }
 		constexpr void await_suspend(coroutine_handle<>) const noexcept { }
@@ -176,14 +176,14 @@ namespace std {
 两者都没有暂停或恢复，但await\_ready()的返回值有所不同:
 
 \begin{itemize}
-\item 
+\item
 若在await\_ready()中返回false(而在await\_suspend()中没有返回任何值)，则suspend\_always接受每个挂起，并将协程返回给其调用者。
 
-\item 
+\item
 若在await\_ready()中返回true，则suspend\_never永远不会接受任何挂起，则协程继续(永远不会调用await\_suspend())。
 \end{itemize}
 
-这里，awaiter通常用作co\_await的基本awaiter:
+awaiter通常用作co\_await的基本awaiter:
 
 \begin{cpp}
 co_await std::suspend_always{};
@@ -197,10 +197,10 @@ co_await std::suspend_always{};
 
 这允许开发者避免使用嵌套循环进行恢复，如示例corocoro.cpp所介绍的那样。
 
-以CoroTask的第一个实现为例，我们只需要以下修改:
+以CoroTask的第一个实现为例，只需要以下修改:
 
 \begin{itemize}
-\item 
+\item
 协程接口必须知道它的子协程(若有的话):
 
 \begin{cpp}
@@ -288,16 +288,16 @@ int main()
 {
 	auto coroTask = callCoro(); // initialize coroutine
 	std::cout << "MAIN: callCoro() initialized\n";
-	
+
 	while (coroTask.resume()) { // RESUME
 		std::cout << "MAIN: callCoro() suspended\n";
 	}
-	
+
 	std::cout << "MAIN: callCoro() done\n";
 }
 \end{cpp}
 
-callCoro()内部，现在可以通过将其传递给co\_await()来调用coro():
+callCoro()内部，可以通过将其传递给co\_await()来调用coro():
 
 \begin{cpp}
 CoroTaskSub callCoro()
@@ -311,52 +311,52 @@ CoroTaskSub callCoro()
 这里发生了如下的事情:
 
 \begin{itemize}
-\item 
+\item
 coro()的调用初始化协程，并产生CoroTaskSub类型的协程接口。
 
-\item 
+\item
 因为这个类型有一个awaiter接口，协程接口可以作为co\_await的awaitable接口使用。
 
 然后用两个操作数调用操作符co\_await:
 
 \begin{itemize}
-\item 
+\item
 调用它的等待协程
 
-\item 
+\item
 调用的协程
 \end{itemize}
 
-\item 
+\item
 awaiter通常的行为是:
 
 \begin{itemize}
-\item 
+\item
 await\_ready()通常询问是否拒绝等待请求。答案是“不”(错误)。
 
-\item 
+\item
 await\_suspend()以等待协程句柄作为参数调用。
 \end{itemize}
 
-\item 
-通过存储子协程的句柄(调用await\_suspend()的对象)作为传递的等待句柄的子协程，callCoro()现在知道它的子协程。
+\item
+通过存储子协程的句柄(调用await\_suspend()的对象)作为传递的等待句柄的子协程，callCoro()现在知道其子协程。
 
-\item 
+\item
 通过在await\_suspend()中不返回任何值，挂起最终被接受，这意味着：
- 
+
 \begin{cpp}
 co_await coro();
 \end{cpp}
 
 挂起callCoro()并将控制流传输回main()。
- 
-\item 
+
+\item
 当main()然后恢复callCoro()时，CoroTaskSub::resume()的实现发现coro()作为其最深层的子协程并恢复它。
- 
-\item 
+
+\item
 每当子协程挂起时，CoroTaskSub::resume()返回给调用者。
 
-\item 
+\item
 这个过程一直持续到子协同程序完成，接下来将恢复callCoro()。
 \end{itemize}
 
@@ -384,7 +384,7 @@ MAIN: callCoro() done
 co_await coro(); // call sub-coroutine
 \end{cpp}
 
-有一个挂起点。我们初始化coro()，但在启动它之前，我们将控制流转移回callCoro()的调用者。
+有一个挂起点。初始化coro()，但在启动它之前，将控制流转移回callCoro()的调用者。
 
 也可以在这里直接启动coro()，只需要对await\_suspend()进行如下修改:
 
@@ -416,7 +416,7 @@ MAIN: callCoro() done
 
 \mySubsubsection{14.4.4}{挂起后将值传递回协程}
 
-awaitables和awaiter的另一个应用是允许在挂起后将值传递回协程。考虑以下协同程序:
+awaitables和awaiter的另一个应用是允许在挂起后将值传递回协程。考虑以下协程:
 
 \filename{coro/coyieldback.hpp}
 
@@ -427,21 +427,21 @@ awaitables和awaiter的另一个应用是允许在挂起后将值传递回协程
 CoroGenBack coro(int max)
 {
 	std::cout << "              CORO " << max << " start\n";
-	
+
 	for (int val = 1; val <= max; ++val) {
 		// print next value:
 		std::cout << " CORO " << val << '/' << max << '\n';
-		
+
 		// yield next value:
 		auto back = co_yield val; // SUSPEND with value with response
 		std::cout << "           CORO => " << back << "\n";
 	}
-	
+
 	std::cout << "             CORO " << max << " end\n";
 }
 \end{cpp}
 
-同样，协程迭代到最大值，并在挂起时将当前值返回给调用者。然而，这一次，co\_yield从调用者返回一个值给协程:
+同样，协程迭代到最大值，并在挂起时将当前值返回给调用者。这一次，co\_yield从调用者返回一个值给协程:
 
 \begin{cpp}
 auto back = co_yield val; // SUSPEND with value with response
@@ -463,7 +463,7 @@ public:
 	using CoroHdl = std::coroutine_handle<promise_type>;
 private:
 	CoroHdl hdl; // native coroutine handle
-	
+
 public:
 	struct promise_type {
 		int coroValue = 0; // value TO caller on suspension
@@ -473,7 +473,7 @@ public:
 			backValue.clear(); // - reinit back value
 			return BackAwaiter<CoroHdl>{}; // - use special awaiter for response
 		}
-		
+
 		// the usual members:
 		auto get_return_object() { return CoroHdl::from_promise(*this); }
 		auto initial_suspend() { return std::suspend_always{}; }
@@ -481,15 +481,15 @@ public:
 		void unhandled_exception() { std::terminate(); }
 		auto final_suspend() noexcept { return std::suspend_always{}; }
 	};
-	
+
 	// constructors and destructor:
 	CoroGenBack(auto h) : hdl{h} { }
 	~CoroGenBack() { if (hdl) hdl.destroy(); }
-	
+
 	// no copying or moving:
 	CoroGenBack(const CoroGenBack&) = delete;
 	CoroGenBack& operator=(const CoroGenBack&) = delete;
-	
+
 	// API:
 	// - resume the coroutine:
 	bool resume() const {
@@ -499,12 +499,12 @@ public:
 	hdl.resume(); // RESUME
 	return !hdl.done();
 	}
-	
+
 	// - yield value from co_yield:
 	int getValue() const {
 		return hdl.promise().coroValue;
 	}
-	
+
 	// - set value back to the coroutine after suspension:
 	void setBackValue(const auto& val) {
 		hdl.promise().backValue = val;
@@ -515,19 +515,19 @@ public:
 修改内容如下:
 
 \begin{itemize}
-\item 
+\item
 promise\_type有一个新成员backValue。
 
-\item 
+\item
 yield\_value()返回一个特殊的BackAwaiter类型。
 
-\item 
+\item
 协程接口有一个新成员setBackValue()，用于将值发送回协程。
 \end{itemize}
 
 让我们详细讨论一下这些变化。
 
-\mySamllsection{Promise的数据成员}
+\mySamllsection{promise的数据成员}
 
 通常，协程接口的promise类型是协程与调用者共享和交换数据的最佳位置:
 
@@ -547,16 +547,16 @@ class CoroGenBack {
 现在这里有两个数据成员:
 
 \begin{itemize}
-\item 
+\item
 coroValue从协程传递给调用者的值
 
-\item 
+\item
 backValue从调用者传回给协程的值
 \end{itemize}
 
-\mySamllsection{co\_yield的新Awaiter}
+\mySamllsection{co\_yield的新awaiter}
 
-要通过promise将值传递给调用者，还需要实现yield\_value()。然而，这一次，yield\_value()不会返回std::suspend\_always\{\}。相反，它会返回一个特殊的类型为BackAwaiter的awaiter对象，能够返回调用者返回的值:
+要通过promise将值传递给调用者，还需要实现yield\_value()。这一次，yield\_value()不会返回std::suspend\_always\{\}。相反，它会返回一个特殊的类型为BackAwaiter的awaiter对象，能够返回调用者返回的值:
 
 \begin{cpp}
 class CoroGenBack {
@@ -565,7 +565,7 @@ class CoroGenBack {
 	struct promise_type {
 		int coroValue = 0; // value TO caller on suspension
 		std::string backValue; // value back FROM caller after suspension
-		
+
 		auto yield_value(int val) { // reaction to co_yield
 			coroValue = val; // - store value locally
 			backValue.clear(); // - reinit back value
@@ -587,22 +587,22 @@ class BackAwaiter {
 	Hdl hdl = nullptr; // coroutine handle saved from await_suspend() for await_resume()
 	public:
 	BackAwaiter() = default;
-	
+
 	bool await_ready() const noexcept {
 		return false; // do suspend
 	}
-	
+
 	void await_suspend(Hdl h) noexcept {
 		hdl = h; // save handle to get access to its promise
 	}
-	
+
 	auto await_resume() const noexcept {
 		return hdl.promise().backValue; // return back value stored in the promise
 	}
 };
 \end{cpp}
 
-Awaiter所做的只是将传递给await\_suspend()的协程句柄存储在本地，以便在调用await\_resume()时拥有它。在await\_resume()中，使用此句柄从其承诺(由调用者使用setBackValue()存储)中产生backValue。
+awaiter所做的只是将传递给await\_suspend()的协程句柄存储在本地，以便在调用await\_resume()时拥有它。在await\_resume()中，使用此句柄从其承诺(由调用者使用setBackValue()存储)中产生backValue。
 
 yield\_value()的返回值用作co\_yield表达式的值:
 
@@ -614,8 +614,7 @@ BackAwaiter是通用的，因为它可以用于具有任意类型成员backValue
 
 \mySamllsection{挂起后返回值的协程接口}
 
-通常，我们必须决定协程接口提供的API，以让调用者返回响应。一个简单的方法是提供成员函数setBackValue():
-
+通常，必须决定协程接口提供的API，以让调用者返回响应。一个简单的方法是提供成员函数setBackValue():
 
 \begin{cpp}
 class CoroGenBack {
@@ -652,20 +651,20 @@ int main()
 	// start coroutine:
 	auto coroGen = coro(3); // initialize coroutine
 	std::cout << "**** coro() started\n";
-	
+
 	// loop to resume the coroutine until it is done:
 	std::cout << "\n**** resume coro()\n";
 	while (coroGen.resume()) { // RESUME
 		// process value from co_yield:
 		auto val = coroGen.getValue();
 		std::cout << "**** coro() suspended with " << val << '\n';
-		
+
 		// set response (the value co_yield yields):
 		std::string back = (val % 2 != 0 ? "OK" : "ERR");
 		std::cout << "\n**** resume coro() with back value: " << back << '\n';
 		coroGen.setBackValue(back); // set value back to the coroutine
 	}
-	
+
 	std::cout << "**** coro() done\n";
 }
 \end{cpp}

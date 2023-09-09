@@ -3,7 +3,7 @@
 以下几种方式来处理这些异常:
 
 \begin{itemize}
-\item 
+\item
 忽略异常
 
 unhandled\_exception()只有一个空函数体:
@@ -13,10 +13,10 @@ void unhandled_exception() {
 }
 \end{cpp}
 
-\item 
+\item
 本地处理异常
 
-unhandled\_exception()只处理异常。因为在catch子句中，必须重新抛出异常并在本地处理它:
+unhandled\_exception()只处理异常。在catch子句中，必须重新抛出异常并在本地处理:
 
 \begin{cpp}
 void unhandled_exception() {
@@ -32,7 +32,7 @@ void unhandled_exception() {
 }
 \end{cpp}
 
-\item 
+\item
 结束或终止程序(例如，通过调用std::terminate()):
 
 \begin{cpp}
@@ -42,8 +42,8 @@ void unhandled_exception() {
 }
 \end{cpp}
 
-\item 
-使用std::current\_exception()存储异常以供以后使用 
+\item
+使用std::current\_exception()存储异常以供以后使用
 
 需要在promise类型中设置一个异常指针:
 
@@ -57,7 +57,7 @@ struct promise_type {
 };
 \end{cpp}
 
-必须提供一种在协程接口中处理异常的方法。例如:
+必须提供在协程接口中处理异常的方法。例如:
 
 \begin{cpp}
 class [[nodiscard]] CoroTask {
@@ -79,7 +79,7 @@ class [[nodiscard]] CoroTask {
 
 当然，这些方法也可以进行组合。
 
-注意，在调用unhandled\_exception()而不结束程序之后，协程就结束了。直接调用final\_suspend()，协程会挂起。
+调用unhandled\_exception()而不结束程序之后，协程就结束了。直接调用final\_suspend()，协程会挂起。
 
 若在unhandled\_exception()中抛出或重新抛出异常，协程也会挂起。unhandled\_exception()抛出的任何异常都会忽略。
 

@@ -1,7 +1,7 @@
 
 之前已经介绍了awaiter，让我们更详细的对其进行了解。
 
-\mySubsubsection{15.7.1}{Awaiter接口的详细信息}
+\mySubsubsection{15.7.1}{awaiter接口的详细信息}
 
 “awaiter的特殊成员函数”表再次列出了awaiter必须提供的关键操作。
 
@@ -28,12 +28,12 @@ await\_resume()          & 处理恢复                               \\ \hline
 详细看看awaiter的接口:
 
 \begin{itemize}
-\item 
-\textit{构造函数}
+\item
+\textbf{构造函数}
 
 构造函数允许协程(或任何创建awaiter的地方)向awaiter传递参数，这些参数可用于影响或更改侍者处理挂起和恢复的方式。协程优先级请求的awaiter就是一个例子。
 
-\item 
+\item
 \textbf{bool await\_ready()}
 
 在调用此函数的协程挂起前调用。
@@ -44,18 +44,18 @@ await\_resume()          & 处理恢复                               \\ \hline
 
 通过其返回类型，await\_suspend()也可以发出不接受协程挂起的信号(请注意，true和false在这里具有相反的含义:通过在await\_suspend()中返回true，接受挂起)。不使用await\_ready()接受挂起的好处是，程序完全节省了启动协程挂起的成本。
 
-注意，在这个函数内部，调用它的协程还没有挂起。不要在这里(间接)调用resume()或destroy()，甚至可以在这里调用更复杂的业务逻辑，只要能够确保逻辑不会为这里挂起的协程调用resume()或destroy()。
+在这个函数内部，调用它的协程还没有挂起。不要在这里(间接)调用resume()或destroy()，甚至可以在这里调用更复杂的业务逻辑，只要能够确保逻辑不会为这里挂起的协程调用resume()或destroy()。
 
 \item
 \textbf{auto await\_suspend(awaitHdl)}
 
 在调用此函数的协程挂起后立即调用。awaitHdl是请求挂起的协程(带有co\_await)，其具有等待协程句柄的类型std::coroutine\_handle<PromiseType>。
 
-这里，可以指定下一步要做什么，包括立即恢复挂起的协程或等待的协程，并安排另一个延迟恢复，可以使用特殊的返回类型(这将在下面讨论)。
+可以指定下一步要做什么，包括立即恢复挂起的协程或等待的协程，并安排另一个延迟恢复，可以使用特殊的返回类型(这将在下面讨论)。
 
 甚至可以在这里销毁协程，但必须确保协程没有在其他任何地方使用(例如：调用协程接口中的done())。
 
-\item 
+\item
 \textbf{auto await\_resume()}
 
 当调用此函数的协程在成功挂起后，恢复时调用(即，若协程句柄调用resume())。
@@ -66,17 +66,17 @@ await\_resume()的返回类型是导致暂停的co\_await或co\_yield表达式�
 await\_suspend()是这里的关键函数，其参数和返回值可以有如下变化:
 
 \begin{itemize}
-\item 
+\item
 await\_suspend()的参数可以是:
 
 \begin{itemize}
-\item 
+\item
 使用协程句柄的类型:
 \begin{cpp}
 std::coroutine_handle<PrmType>
 \end{cpp}
 
-\item 
+\item
 使用可用于所有协程句柄的基本类型:
 \begin{cpp}
 std::coroutine_handle<void> (or just std::coroutine_handle<>)
@@ -84,20 +84,20 @@ std::coroutine_handle<void> (or just std::coroutine_handle<>)
 
 这时，无法访问promise。
 
-\item 
+\item
 可以使用auto让编译器确定类型。
 \end{itemize}
 
-\item 
+\item
 await\_suspend()的返回类型可以是:
 \begin{itemize}
-\item 
+\item
 void，在执行await\_suspend()中的语句后继续执行挂起，并返回到协程的调用者。
 
-\item 
-bool，来表明暂停是否真的应该发生。这里，false表示“不再挂起”(这与await\_ready()的布尔返回值相反)。
+\item
+bool，来表明暂停是否真的应该发生，false表示“不再挂起”(这与await\_ready()的布尔返回值相反)。
 
-\item 
+\item
 std::coroutine\_handle<>用于恢复另一个协程。
 
 await\_suspend()的这种使用称为对称传输(symmetric transfer)，稍后将详细描述。
@@ -109,21 +109,21 @@ await\_suspend()的这种使用称为对称传输(symmetric transfer)，稍后�
 此外，请注意以下事项:
 
 \begin{itemize}
-\item 
+\item
 成员函数通常是const，除非awaiter有一个可修改的成员(比如将协程句柄存储在await\_suspend()中，以便在恢复时可用)。
 
-\item 
+\item
 成员函数通常是noexcept(这是允许在final\_suspend()中使用的必要条件)。
 
-\item 
+\item
 成员函数可以是constexpr。
 \end{itemize}
 
 \mySubsubsection{15.7.2}{让co\_await更新正在运行的协程}
 
-因为awaiter可以在挂起时执行代码，所以可以使用它们来改变处理协程的系统的行为。让我们看一个例子，让协程改变它的优先级。
+因为awaiter可以在挂起时执行代码，所以可以使用它们来改变处理协程的系统的行为。让我们看一个例子，让协程改变其优先级。
 
-假设在调度器中管理所有的协程，并使用co\_await更改它们的优先级。为此，首先定义一个默认优先级，并为co\_await定义一些参数来改变优先级:
+假设在调度器中管理所有的协程，并使用co\_await更改其优先级。为此，首先定义一个默认优先级，并为co\_await定义一些参数来改变优先级:
 
 \begin{cpp}
 int CoroPrioDefVal = 10;
@@ -166,12 +166,12 @@ int main()
 {
 	std::cout << "start main()\n";
 	CoroPrioScheduler sched;
-	
+
 	std::cout << "schedule coroutines\n";
 	sched.start(coro(5));
 	sched.start(coro(1));
 	sched.start(coro(4));
-	
+
 	std::cout << "loop until all are processed\n";
 	while (sched.resumeNext()) {
 	}
@@ -182,7 +182,7 @@ int main()
 类CoroPrioScheduler和CoroPrioTask交互如下:
 
 \begin{itemize}
-\item 
+\item
 调度器按优先级顺序存储所有协程，并提供成员来存储新协程、恢复下一个协程和更改协程的优先级:
 
 \begin{cpp}
@@ -197,7 +197,7 @@ class CoroPrioScheduler
 };
 \end{cpp}
 
-\item 
+\item
 调度器的成员函数start()将传递的协程存储在列表中，并将调度器存储在每个任务的promise中:
 
 \begin{cpp}
@@ -215,7 +215,7 @@ class CoroPrioScheduler
 };
 \end{cpp}
 
-\item 
+\item
 类CoroPrioTask赋予类CoroPrioScheduler对句柄的访问权，在promise类型中提供指向调度程序的成员，并允许协程使用CoroPrioRequest的co\_await:
 
 \begin{cpp}
@@ -235,7 +235,7 @@ class CoroPrioTask {
 
 \end{itemize}
 
-协程和调度器之间的接口是CoroPrio类型的awaiter。它的构造函数接受优先级请求，并在挂起时(当我们获得协程句柄时)将其存储在promise中，所以构造函数将请求存储在await\_suspend()中:
+协程和调度器之间的接口是CoroPrio类型的awaiter，其构造函数接受优先级请求，并在挂起时(当我们获得协程句柄时)将其存储在promise中，所以构造函数将请求存储在await\_suspend()中:
 
 \begin{cpp}
 class CoroPrio {
@@ -295,7 +295,7 @@ end main()
 
 \mySubsubsection{15.7.3}{具有等待器的对称传输}
 
-await\_suspend()的返回类型可以是协程句柄，通过立即恢复返回的协程来挂起协程。这种技术被称为对称传输。
+await\_suspend()的返回类型可以是协程句柄，通过立即恢复返回的协程来挂起协程，这种技术称为对称传输。
 
 引入对称传输是为了提高性能并避免协程调用其他协程时堆栈溢出。通常，当使用resume()恢复协程时，程序需要为新协程提供一个新的堆栈帧。若要在await\_suspend()中或在它被调用之后恢复协程，是要付出代价的。通过返回要调用的协程，当前协程的堆栈帧只是替换它的协程，因此不需要新的堆栈帧。
 
@@ -303,7 +303,7 @@ await\_suspend()的返回类型可以是协程句柄，通过立即恢复返回�
 
 这种技术的典型应用是通过使用处理协程的final await来实现的。[这项技术在Lewis Baker和Michael Eiler的文章和电子邮件中得到了极大的帮助。\url{http://lewissbaker.github.io/2020/05/11/understanding_symmetric_transfer}特别提供了详细的动机和解释。]
 
-假设有一个协程，它结束了，然后应该继续使用另一个后续协程，而不将控制权交还给调用者，会遇到以下问题:在final\_suspend()中，协程尚未处于挂起状态。必须等待，直到await\_suspend()调用，以返回可等待对象来处理恢复。这可能看起来如下代码所示:
+假设有一个协程结束了，然后应该继续使用另一个后续协程，而不将控制权交还给调用者，会遇到以下问题:在final\_suspend()中，协程尚未处于挂起状态。必须等待，直到await\_suspend()调用，以返回可等待对象来处理恢复。这可能看起来如下代码所示:
 
 \begin{cpp}
 class CoroTask
@@ -326,7 +326,7 @@ public:
 };
 \end{cpp}
 
-因此，返回一个awaiter，可用于在协程暂停后处理协程。这里，返回的awaiter的类型是FinalAwaiter，可能如下所示:
+返回一个awaiter，可用于在协程暂停后处理协程。这里，返回的awaiter的类型是FinalAwaiter，可能如下所示:
 
 \begin{cpp}
 struct FinalAwaiter {

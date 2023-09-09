@@ -2,10 +2,10 @@
 介绍了使用co\_await的示例之后，还应该介绍协程的其他两个关键字:
 
 \begin{itemize}
-\item 
+\item
 co\_yield允许协程在每次挂起时产生一个值。
 
-\item 
+\item
 co\_return允许协程在其结束时返回一个值。
 \end{itemize}
 
@@ -13,7 +13,7 @@ co\_return允许协程在其结束时返回一个值。
 
 通过使用co\_yield，协程可以在挂起时产生中间结果。
 
-一个明显的例子是“生成”值的协程。作为示例的一个变体，可以循环一些值直到最大值，并将它们输出给协程的调用者，而不是仅仅输出它们。为此，协程看起来如下所示:
+一个明显的例子是“生成”值的协程。作为示例的一个变体，可以循环一些值直到最大值，并将其输出给协程的调用者，而不是仅仅输出。因此，协程看起来如下所示:
 
 \filename{coro/coyield.hpp}
 
@@ -24,11 +24,11 @@ co\_return允许协程在其结束时返回一个值。
 CoroGen coro(int max)
 {
 	std::cout << "            CORO " << max << " start\n";
-	
+
 	for (int val = 1; val <= max; ++val) {
 		// print next value:
 		std::cout << "              CORO " << val << '/' << max << '\n';
-		
+
 		// yield next value:
 		co_yield val; // SUSPEND with value
 	}
@@ -47,7 +47,7 @@ co_yield val; // calls yield_value(val) on promise
 \begin{cpp}
 struct promise_type {
 	int coroValue = 0; // last value from co_yield
-	
+
 	auto yield_value(int val) { // reaction to co_yield
 	coroValue = val; // - store value locally
 	return std::suspend_always{}; // - suspend coroutine
@@ -71,20 +71,20 @@ int main()
 	// start coroutine:
 	auto coroGen = coro(3); // initialize coroutine
 	std::cout << "coro() started\n";
-	
+
 	// loop to resume the coroutine until it is done:
 	while (coroGen.resume()) { // RESUME
 		auto val = coroGen.getValue();
 		std::cout << "coro() suspended with " << val << '\n';
 	}
-	
+
 	std::cout << "coro() done\n";
 }
 \end{cpp}
 
-同样，通过调用coro(3)，初始化协程计数到3。每当我们为返回的协程接口调用resume()时，协程就会“计算”并产生下一个值。
+通过调用coro(3)，初始化协程计数到3，。每当我们为返回的协程接口调用resume()时，协程就会“计算”并产生下一个值。
 
-然而，resume()并不返回产生的值(仍然返回是否有必要再次恢复协程)。要访问下一个值，提供并使用getValue()，所以程序有如下输出:
+resume()并不返回产生的值(仍然返回是否有必要再次恢复协程)，要访问下一个值，需要使用getValue()，所以程序有如下输出:
 
 \begin{shell}
 coro() started
@@ -117,12 +117,12 @@ private:
 public:
 	struct promise_type {
 		int coroValue = 0; // recent value from co_yield
-		
+
 		auto yield_value(int val) { // reaction to co_yield
 			coroValue = val; // - store value locally
 			return std::suspend_always{}; // - suspend coroutine
 		}
-		
+
 		// the usual members:
 		auto get_return_object() { return CoroHdl::from_promise(*this); }
 		auto initial_suspend() { return std::suspend_always{}; }
@@ -130,15 +130,15 @@ public:
 		void unhandled_exception() { std::terminate(); }
 		auto final_suspend() noexcept { return std::suspend_always{}; }
 	};
-	
+
 	// constructors and destructor:
 	CoroGen(auto h) : hdl{h} { }
 	~CoroGen() { if (hdl) hdl.destroy(); }
-	
+
 	// no copying or moving:
 	CoroGen(const CoroGen&) = delete;
 	CoroGen& operator=(const CoroGen&) = delete;
-	
+
 	// API:
 	// - resume the coroutine:
 	bool resume() const {
@@ -148,7 +148,7 @@ public:
 			hdl.resume(); // RESUME
 			return !hdl.done();
 		}
-		
+
 	// - yield value from co_yield:
 	int getValue() const {
 		return hdl.promise().coroValue;
@@ -159,7 +159,7 @@ public:
 通常，这里使用的协程接口的定义遵循协程接口的一般原则。有两点不同:
 
 \begin{itemize}
-\item 
+\item
 promise提供了成员yield\_value()，在到达co\_yield时调用。
 
 \item
@@ -178,7 +178,7 @@ class CoroGen {
 
 \mySamllsection{迭代协程产生的值}
 
-也可以使用一个协程接口，像一个范围一样使用(提供一个API来迭代挂起产生的值):
+也可以使用协程接口，像范围一样使用(提供API来迭代挂起产生的值):
 
 \filename{coro/cororange.cpp}
 
@@ -191,12 +191,12 @@ int main()
 {
 	auto gen = coro(3); // initialize coroutine
 	std::cout << "--- coro() started\n";
-	
+
 	// loop to resume the coroutine for the next value:
 	for (const auto& val : gen) {
 		std::cout << " val: " << val << '\n';
 	}
-	
+
 	std::cout << "--- coro() done\n";
 }
 \end{cpp}
@@ -211,7 +211,7 @@ Generator<int> coro(int max)
 }
 \end{cpp}
 
-如您所见，为传递的类型(本例中为int)的生成器值使用了泛型协程接口。一个非常简单的实现(它显示了这一点，但有一些缺陷)可能如下所示:
+为传递的类型(本例中为int)的生成器值使用了泛型协程接口，一个非常简单的实现(它显示了这一点，但有一些缺陷)可能如下所示:
 
 \filename{coro/generator.hpp}
 
@@ -226,12 +226,12 @@ class [[nodiscard]] Generator {
 	// customization points:
 	struct promise_type {
 		T coroValue{}; // last value from co_yield
-		
+
 		auto yield_value(T val) { // reaction to co_yield
 			coroValue = val; // - store value locally
 			return std::suspend_always{}; // - suspend coroutine
 		}
-		
+
 		auto get_return_object() {
 			return std::coroutine_handle<promise_type>::from_promise(*this);
 		}
@@ -242,17 +242,17 @@ class [[nodiscard]] Generator {
 	};
 private:
 	std::coroutine_handle<promise_type> hdl; // native coroutine handle
-	
+
 public:
-	
+
 	// constructors and destructor:
 	Generator(auto h) : hdl{h} { }
 	~Generator() { if (hdl) hdl.destroy(); }
-	
+
 	// no copy or move supported:
 	Generator(const Generator&) = delete;
 	Generator& operator=(const Generator&) = delete;
-	
+
 	// API to resume the coroutine and access its values:
 	// - iterator interface with begin() and end()
 	struct iterator {
@@ -277,7 +277,7 @@ public:
 		}
 		bool operator== (const iterator& i) const = default;
 	};
-	
+
 	iterator begin() const {
 		if (!hdl || hdl.done()) {
 			return iterator{nullptr};
@@ -286,7 +286,7 @@ public:
 		itor.getNext(); // resume for first value
 		return itor;
 	}
-	
+
 	iterator end() const {
 		return iterator{nullptr};
 	}
@@ -296,16 +296,16 @@ public:
 关键的方法是协程接口提供了成员begin()和end()，以及迭代器来迭代值:
 
 \begin{itemize}
-\item 
+\item
 begin()在恢复第一个值后生成迭代器。迭代器在内部存储协程句柄，以便知道协程的状态。
 
-\item 
+\item
 operator++() 迭代器会返回下一个值。
 
-\item 
-end() 生成一个表示范围结束的状态，它的hdl是null。这也是迭代器在没有更多值时的状态。
+\item
+end() 生成一个表示范围结束的状态，hdl是null。这也是迭代器在没有更多值时的状态。
 
-\item 
+\item
 operator==() 默认通过比较两个迭代器的句柄来比较状态。
 \end{itemize}
 
@@ -342,25 +342,25 @@ int main()
 	std::vector values{0, 8, 15, 47, 11, 42};
 	// start coroutine:
 	auto task = average(std::views::all(values));
-	
+
 	// loop to resume the coroutine until all values have been processed:
 	std::cout << "resume()\n";
 	while (task.resume()) { // RESUME
 		std::cout << "resume() again\n";
 	}
-	
+
 	// print return value of coroutine:
 	std::cout << "result: " << task.getResult() << '\n';
 }
 \end{cpp}
 
-这个程序中，main()启动协程average()，遍历传递的集合中的元素，并将它们的值添加到初始和中。处理完每个元素后，协程挂起。
+main()启动协程average()，遍历传递的集合中的元素，并将它们的值添加到初始和中。处理完每个元素后，协程挂起。
 
 最后，协例程通过将总和除以元素数量返回平均值。
 
 注意，需要co\_return来返回协程的结果，不允许使用return。
 
-协程接口是在ResultTask类中定义的，该类是根据返回值的类型参数化的。这个接口提供resume()，以便在协程挂起时恢复它。此外，还提供了getResult()来请求协程完成后的返回值。
+协程接口是在ResultTask类中定义的，该类是根据返回值的类型参数化的。这个接口提供resume()，以便在协程挂起时恢复，所以还提供了getResult()来请求协程完成后的返回值。
 
 协同程序接口ResultTask<>如下所示:
 
@@ -375,23 +375,23 @@ public:
 	// customization points:
 	struct promise_type {
 		T result{}; // value from co_return
-		
+
 		void return_value(const auto& value) { // reaction to co_return
 			result = value; // - store value locally
 		}
-		
+
 		auto get_return_object() {
 			return std::coroutine_handle<promise_type>::from_promise(*this);
 		}
-		
+
 		auto initial_suspend() { return std::suspend_always{}; }
 		void unhandled_exception() { std::terminate(); }
 		auto final_suspend() noexcept { return std::suspend_always{}; }
 	};
-	
+
 private:
 	std::coroutine_handle<promise_type> hdl; // native coroutine handle
-	
+
 public:
 	// constructors and destructor:
 	// - no copying or moving is supported
@@ -399,7 +399,7 @@ public:
 	~ResultTask() { if (hdl) hdl.destroy(); }
 	ResultTask(const ResultTask&) = delete;
 	ResultTask& operator=(const ResultTask&) = delete;
-	
+
 	// API:
 	// - resume() to resume the coroutine
 	bool resume() const {
@@ -409,7 +409,7 @@ public:
 		hdl.resume(); // RESUME
 		return !hdl.done();
 	}
-	
+
 	// - getResult() to get the last value from co_yield
 	T getResult() const {
 		return hdl.promise().result;
@@ -419,7 +419,7 @@ public:
 
 同样，该定义遵循协程接口的一般原则。
 
-但这次我们支持返回值，所以在promise类型中，不再提供自定义点return\_void()。相反，提供了return\_value()，当协程到达co\_return表达式时调用:
+但这次支持返回值，所以在promise类型中，不再提供自定义点return\_void()。相反，提供了return\_value()，当协程到达co\_return表达式时调用:
 
 \begin{cpp}
 template<typename T>
@@ -451,7 +451,7 @@ class ResultTask {
 
 \mySamllsection{return\_void() 和 return\_value()}
 
-请注意，若协程以有时可能返回值，有时可能不返回值的方式实现，则这是未定义的行为。则这个协程是无效的:
+若协程以有时可能返回值，有时可能不返回值的方式实现，则这是未定义行为。则这个协程无效:
 
 \begin{cpp}
 ResultTask<int> coroUB( ... )

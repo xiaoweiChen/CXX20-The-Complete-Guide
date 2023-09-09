@@ -1,22 +1,22 @@
-到目前为止，在所有示例中，协程接口都是由协程返回的。但也可以实现协程，以便它们使用在其他地方创建的接口。考虑以下示例(第一个协程示例的修改版本):
+所有示例中，协程接口都是由协程返回的。但也可以实现协程，以便它们使用在其他地方创建的接口。考虑以下示例(第一个协程示例的修改版本):
 
 \begin{cpp}
 void coro(int max, CoroTask&)
 {
 	std::cout << "CORO " << max << " start\n";
-	
+
 	for (int val = 1; val <= max; ++val) {
 		// print next value:
 		std::cout << "CORO " << val << '/' << max << '\n';
-		
+
 		co_await std::suspend_always{}; // SUSPEND
 	}
-	
+
 	std::cout << "CORO " << max << " end\n";
 }
 \end{cpp}
 
-这里，协程将CoroTask类型的协程接口作为参数，但必须指定将参数用作协程接口。这是通过模板std::coroutine\_traits<>的特化来完成。模板参数必须指定签名(返回类型和参数类型)，并且在内部，必须将类型成员promise\_type映射到协程接口参数的类型成员:
+协程将CoroTask类型的协程接口作为参数，但必须指定将参数用作协程接口。通过模板std::coroutine\_traits<>的特化完成，模板参数必须指定签名(返回类型和参数类型)，并且在内部，必须将类型成员promise\_type映射到协程接口参数的类型成员:
 
 \begin{cpp}
 template<>
@@ -33,19 +33,19 @@ class CoroTask {
 	public:
 	// required type for customization:
 	struct promise_type {
-		promise_type(int, CoroTask& ct) { // init passed coroutine interface	
+		promise_type(int, CoroTask& ct) { // init passed coroutine interface
 			ct.hdl = CoroHdl::from_promise(*this);
 		}
 		void get_return_object() { // nothing to do anymore
 		}
 		...
 	};
-		
+
 private:
 	// handle to allocate state (can be private):
 	using CoroHdl = std::coroutine_handle<promise_type>;
 	CoroHdl hdl;
-	
+
 public:
 	// constructor and destructor:
 	CoroTask() : hdl{} { // enable coroutine interface without handle

@@ -38,7 +38,7 @@ CoroPoolTask runAsync(std::string id)
 	co_await print(id + "b", "end ");
 	syncOut() << "===== " << id << " resume "
 			  << "   on thread " << std::this_thread::get_id() << std::endl;
-	
+
 	syncOut() << "===== " << id << " done" << std::endl;
 }
 \end{cpp}
@@ -58,9 +58,9 @@ CoroPoolTask runAsync(std::string id)
 
 这样做的效果是，协程print()将被安排在线程池中，在不同的线程中运行。此外，co\_await阻塞直到print()完成。
 
-注意，print()需要一个co\_return来确保它被编译器视为协程。若没有这个，就不会有任何co\_关键字，编译器(假设这是一个普通的函数)会抱怨有返回类型，但没有返回语句。
+print()需要一个co\_return来确保它被编译器视为协程。若没有这个，就不会有任何co\_关键字，编译器(假设这是一个普通的函数)会抱怨有返回类型，但没有返回语句。
 
-还要注意，使用辅助函数syncOut()，会产生一个std::osyncstream，以确保来自不同线程的并发输出逐行同步。
+使用辅助函数syncOut()，会产生一个std::osyncstream，以确保来自不同线程的并发输出逐行同步。
 
 假设按如下方式调用协程runAsync():
 
@@ -76,21 +76,21 @@ int main()
 	syncOut() << "**** main() on thread " << std::this_thread::get_id()
 			  << std::endl;
 	CoroPool pool{4};
-	
+
 	// start main coroutine and run it in coroutine pool:
 	syncOut() << "runTask(runAsync(1))" << std::endl;
 	CoroPoolTask t1 = runAsync("1");
 	pool.runTask(std::move(t1));
-	
+
 	// wait until all coroutines are done:
 	syncOut() << "\n**** waitUntilNoCoros()" << std::endl;
 	pool.waitUntilNoCoros();
-	
+
 	syncOut() << "\n**** main() done" << std::endl;
 }
 \end{cpp}
 
-这里，首先使用CoroPoolTask接口为所有协程创建一个CoroPool类型的线程池:
+首先使用CoroPoolTask接口为所有协程创建一个CoroPool类型的线程池:
 
 \begin{cpp}
 CoroPool pool{4};
@@ -111,7 +111,7 @@ pool.runTask(std::move(t1));
 pool.runTask(runAsync("1"));
 \end{cpp}
 
-在我们结束这个项目。协程池会阻塞，直到所有调度的协程都处理完:
+结束这个项目时，协程池会阻塞，直到所有调度的协程都处理完:
 
 \begin{cpp}
 pool.waitUntilNoCoros();
@@ -134,20 +134,20 @@ runTask(runAsync(1))
 **** main() done
 \end{shell}
 
-如您所见，这里使用不同的线程:
+这里使用不同的线程:
 
 \begin{itemize}
-\item 
+\item
 协程runAsync()在与main()不同的线程上启动。
 
-\item 
+\item
 调用的协程print()从第三个线程开始
 
-\item 
+\item
 第二次调用协程print()是从第四个线程开始的
 \end{itemize}
 
-然而，每次调用print()时，runAsync()都会改变线程。通过使用co\_await，这些调用挂起runAsync()并在另一个线程上调用print()(挂起调度池中被调用的协程)。print()结束时，调用协同程序runAsync()在print()运行的同一线程上恢复。
+然而，每次调用print()时，runAsync()都会改变线程。通过使用co\_await，这些调用挂起runAsync()并在另一个线程上调用print()(挂起调度池中调用的协程)。print()结束时，调用协同程序runAsync()在print()运行的同一线程上恢复。
 
 作为一种变体，还可以启动并调度四次协程runAsync():
 
@@ -163,17 +163,17 @@ int main()
 	syncOut() << "**** main() on thread " << std::this_thread::get_id()
 			  << std::endl;
 	CoroPool pool{4};
-	
+
 	// start multiple coroutines and run them in coroutine pool:
 	for (int i = 1; i <= 4; ++i) {
 		syncOut() << "runTask(runAsync(" << i << "))" << std::endl;
 		pool.runTask(runAsync(std::to_string(i)));
 	}
-	
+
 	// wait until all coroutines are done:
 	syncOut() << "\n**** waitUntilNoCoros()" << std::endl;
 	pool.waitUntilNoCoros();
-	
+
 	syncOut() << "\n**** main() done" << std::endl;
 }
 \end{cpp}
@@ -219,10 +219,10 @@ runTask(runAsync(4))
 输出现在变化更大，因为有使用下一个可用线程的并发协程。总的来说，其有相同的行为:
 
 \begin{itemize}
-\item 
+\item
 每当协程调用print()时，都会调度并可能在不同的线程上启动(若没有其他线程可用，则可能是同一个线程)。
 
-\item 
+\item
 每当print()完成时，调用协同程序runAsync()直接在print()运行的同一个线程上恢复，所以每次调用print()时，runAsync()都改变了运行线程。
 \end{itemize}
 
@@ -257,14 +257,14 @@ public:
 	struct promise_type {
 		CoroPool* poolPtr = nullptr; // if not null, lifetime is controlled by pool
 		CoroHdl contHdl = nullptr; // coro that awaits this coro
-		
+
 		CoroPoolTask get_return_object() noexcept {
 			return CoroPoolTask{CoroHdl::from_promise(*this)};
 		}
 		auto initial_suspend() const noexcept { return std::suspend_always{}; }
 		void unhandled_exception() noexcept { std::exit(1); }
 		void return_void() noexcept { }
-		
+
 		auto final_suspend() const noexcept {
 			struct FinalAwaiter {
 				bool await_ready() const noexcept { return false; }
@@ -281,7 +281,7 @@ public:
 			return FinalAwaiter{}; // AFTER suspended, resume continuation if there is one
 		}
 	};
-	
+
 	explicit CoroPoolTask(CoroHdl handle)
 	: hdl{handle} {
 	}
@@ -298,7 +298,7 @@ public:
 			t.hdl = nullptr;
 	}
 	CoroPoolTask& operator= (CoroPoolTask&&) = delete;
-	
+
 	// Awaiter for: co_await task()
 	// - queues the new coro in the pool
 	// - sets the calling coro as continuation
@@ -332,7 +332,7 @@ public:
 			threads.push_back(std::move(worker_thread));
 		}
 	}
-	
+
 	~CoroPool() {
 		for (auto& t : threads) { // request stop for all threads
 			t.request_stop();
@@ -347,7 +347,7 @@ public:
 
 	CoroPool(CoroPool&) = delete;
 	CoroPool& operator=(CoroPool&) = delete;
-	
+
 	void runTask(CoroPoolTask&& coroTask) noexcept {
 		auto hdl = std::exchange(coroTask.hdl, nullptr); // pool takes ownership of hdl
 		if (coroTask.hdl.done()) {
@@ -357,7 +357,7 @@ public:
 			schedule coroutine in the pool
 		}
 	}
-	
+
 	// runCoro(): let pool run (and control lifetime of) coroutine
 	// called from:
 	// - pool.runTask(CoroPoolTask)
@@ -371,7 +371,7 @@ public:
 			corosCV.notify_one(); // and let one thread resume it
 		}
 	}
-	
+
 	void threadLoop(std::stop_token st) {
 		while (!st.stop_requested()) {
 			// get next coro task from the queue:
@@ -386,10 +386,10 @@ public:
 				coro = coros.back();
 				coros.pop_back();
 			}
-			
+
 			// resume it:
 			coro.resume(); // RESUME
-			
+
 			// NOTE: The coro initially resumed on this thread might NOT be the coro finally called.
 			// If a main coro awaits a sub coro, then the thread that finally resumed the sub coro
 			// resumes the main coro as its continuation.
@@ -409,7 +409,7 @@ public:
 		std::this_thread::sleep_for(std::chrono::milliseconds{100});
 		}
 	}
-	
+
 	void waitUntilNoCoros() {
 		int num = numCoros.load();
 		while (num > 0) {
@@ -432,13 +432,13 @@ void CoroPoolTask::CoAwaitAwaiter::await_suspend(CoroHdl awaitingHdl) noexcept
 CoroPoolTask和CoroPool两个类需要谨慎地使用:
 
 \begin{itemize}
-\item 
+\item
 CoroPoolTask用于将协程初始化为要调用的任务。任务应该在池中调度，然后由池控制它，直到销毁。
 
-\item 
-CoroPool实现了一个最小的线程池，可以运行调度的协程。此外，还提供了一个非常小的API
+\item
+CoroPool实现了一个最小的线程池，可以运行调度的协程，还提供了一个非常小的API
 \begin{itemize}
-\item 
+\item
 阻塞，直到所有计划的协程完成
 
 \item
@@ -446,14 +446,14 @@ CoroPool实现了一个最小的线程池，可以运行调度的协程。此外
 \end{itemize}
 \end{itemize}
 
-让我们详细地看一下代码。
+详细地看一下代码。
 
 \mySamllsection{类CoroPoolTask}
 
 类CoroPoolTask提供了一个协程接口来运行具有以下特性的任务:
 
 \begin{itemize}
-\item 
+\item
 每个协程都知道有一个指向线程池的指针，这个指针在线程池控制协程时初始化:
 
 \begin{cpp}
@@ -468,8 +468,8 @@ class [[nodiscard]] CoroPoolTask
 };
 \end{cpp}
 
-\item 
-每个协程都有一个可选持续的成员，如前所述:
+\item
+每个协程都有一个可选持续的成员:
 
 \begin{cpp}
 class [[nodiscard]] CoroPoolTask
@@ -499,11 +499,11 @@ class [[nodiscard]] CoroPoolTask
 };
 \end{cpp}
 
-\item 
+\item
 每个协程都有一个co\_await()运算符，则co\_await任务()使用一个特殊的awaiter，因此co\_await在将传递的协程调度到池中，并以当前协程作为可持续成员后挂起当前协程。
 \end{itemize}
 
-下面是实现的操作符co\_await()的工作原理。以下是有关守则:
+下面是实现的操作符co\_await()的工作原理:
 
 \begin{cpp}
 class [[nodiscard]] CoroPoolTask
@@ -544,20 +544,20 @@ CoroPoolTask runAsync(std::string id)
 \item
 print()作为协程调用并初始化。
 
-\item 
+\item
 对于返回的CoroPoolTask类型的协程接口，调用操作符co\_await()。
 
-\item 
+\item
 操作符co\_await()接受用于初始化CoAwaitAwaiter类型的awaiter的句柄，所以新的协程print()将成为该await而的成员newwhdl。
 
-\item 
+\item
 std::exchange()可确保在初始化的协程接口中，句柄HDL变为nullptr，这样析构函数就不会调用destroy()。
 
-\item 
+\item
 runAsync()使用由操作符co\_await()初始化的awaiter挂起，该操作符以协同程序runAsync()的句柄作为参数调用await\_suspend()。
 
-\item 
-在await\_suspend()中，我们将传递的挂起的runAsync()作为持续存储，并在池中调度newHdl(print())，以便由其中一个线程恢复。
+\item
+await\_suspend()中，将传递的挂起的runAsync()作为持续存储，并在池中调度newHdl(print())，以便由其中一个线程恢复。
 \end{itemize}
 
 \mySamllsection{类CoroPool}
@@ -567,7 +567,7 @@ CoroPool通过结合本文和本书其他部分介绍的一些特性来实现其
 首先让看一下其成员:
 
 \begin{itemize}
-\item 
+\item
 与其他线程池一样，这个类有一个使用新线程类std::jthread的线程成员，这样我们就不必处理异常，可以发出停止信号:
 
 \begin{cpp}
@@ -576,9 +576,9 @@ std::list<std::jthread> threads; // list of threads
 
 因为在初始化之后使用线程的唯一其他时刻是在shutdown()期间，所以不需要同步，其首先会连接所有线程(信号停止之后)。不支持复制和移动池(简单起见，可以很容易地提供移动支持)。
 
-请注意，为了获得更好的性能，析构函数在开始join()之前首先请求所有线程停止。
+为了获得更好的性能，析构函数在开始join()之前首先请求所有线程停止。
 
-\item 
+\item
 然后，有一个具有相应同步成员的协程队列要处理:
 
 \begin{cpp}
@@ -587,7 +587,7 @@ std::mutex corosMx;
 std::condition_variable_any corosCV;
 \end{cpp}
 
-\item 
+\item
 为了避免过早停止池，池还跟踪池拥有的协程总数:
 
 \begin{cpp}
@@ -600,19 +600,19 @@ std::atomic<int> numCoros = 0; // counter for all coros owned by the pool
 成员函数runCoro()是调度协程恢复的关键函数，接受接口CoroPoolTask的协程句柄作为参数。有两种方法可以调度协程接口本身:
 
 \begin{itemize}
-\item 
+\item
 调用runTask()
 
-\item 
+\item
 使用co\_await task()
 \end{itemize}
 
 这两种方法都将协程句柄移动到池中，这样池就有责任在不再使用该句柄时destroy()该句柄。
 
-然而，实现正确的时刻调用destroy()(并调整协程的总数)并不容易正确和安全地完成。协程应该最终挂起，这就排除了在任务的final\_suspend()或final awaiter的await\_suspend()中执行此操作，所以跟踪和销毁工作如下所示:
+实现正确的时刻调用destroy()(并调整协程的总数)并不容易正确和安全地完成。协程应该最终挂起，这就排除了在任务的final\_suspend()或final awaiter的await\_suspend()中执行此操作，所以跟踪和销毁工作如下所示:
 
 \begin{itemize}
-\item 
+\item
 每次将协程句柄传递给池时，将增加协程的数量:
 
 \begin{cpp}
@@ -622,8 +622,8 @@ void runCoro(CoroPoolTask::CoroHdl coro) noexcept {
 }
 \end{cpp}
 
-\item 
-在线程的任何恢复完成后，将检查协程和可能的延续是否已经完成。注意，根据任务的最后一个等待器的await\_suspend()，协程帧会自动调用持续。
+\item
+线程的恢复完成后，将检查协程和可能的延续是否已经完成。根据任务的最后一个等待器的await\_suspend()，协程帧会自动调用持续。
 
 因此，在每次恢复完成后，会递归地迭代所有的可持续对象以销毁所有已完成的协程:
 
@@ -642,7 +642,7 @@ destroyDone(coro); // recursively destroy coroutines done
 
 因为Lambda是递归使用的，所以必须将其转发声明为std::function<>。
 
-\item 
+\item
 最后，用原子类型的新线程同步特性唤醒所有等待的waitUntilNoCoros():
 
 \begin{cpp}
@@ -657,13 +657,13 @@ void waitUntilNoCoros() {
 }
 \end{cpp}
 
-\item 
+\item
 若池销毁了，也可在所有线程完成后销毁所有剩余的协程句柄。
 \end{itemize}
 
 \mySamllsection{同步等待异步协程}
 
-实际的协程池会更复杂，并使用额外的技巧来使代码更健壮和安全。
+实际的协程池会更复杂，需要使用额外的技巧来使代码更健壮和安全。
 
 例如，池可以提供一种调度任务并等待其结束的方法，对于CoroPool来说，看起来如下所示:
 
@@ -694,7 +694,7 @@ class CoroPool
 
 这里我们使用一个二值信号量，就可以发出传递任务结束的信号，并在另一个线程中等待它。
 
-请注意，必须注意信号的确切内容，信号表明我们已经落后于执行了co\_await调用的任务，所以也可以在await\_ready()中发出信号:
+必须注意信号的确切内容，信号表明已经落后于执行了co\_await调用的任务，所以也可以在await\_ready()中发出信号:
 
 \begin{cpp}
 bool await_ready() {
@@ -714,16 +714,16 @@ C++标准委员会正致力于在未来的库中提供更好的解决方案。
 对于一个能够以安全和灵活的方式并发运行协程的程序，至少需要以下组件:
 
 \begin{itemize}
-\item 
+\item
 一种任务类型，允许将协程链接在一起
 
-\item 
+\item
 允许启动多个独立运行的协程，并在稍后汇入
 
-\item 
+\item
 比如syncWait()，允许同步函数阻塞等待异步函数
 
-\item 
+\item
 允许多个协程在较少数量的线程上复用
 \end{itemize}
 

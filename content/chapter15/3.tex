@@ -33,15 +33,15 @@ operator delete(ptr, sz) & 定义协程释放内存的方式               \\ \h
 
 其中一些函数是强制性的，一些函数取决于协程是产生中间结果还是最终结果，还有一些函数是可选的。
 
-\mySubsubsection{15.3.1}{强制性Promise操作}
+\mySubsubsection{15.3.1}{强制性promise操作}
 
-对于协程promise，需要以下成员函数。否则，代码就会无法编译，或者会出现未定义的行为。
+对于协程promise，需要以下成员函数。否则，代码就会无法编译，或者会出现未定义行为。
 
 \mySamllsection{构造函数}
 
 协程promise的构造函数在协程初始化时由协程框架调用。
 
-编译器可以使用构造函数用一些参数初始化协程状态。为此，构造函数的签名必须与调用协程时传递给协程的参数相匹配。这种技术特别适用于协同程序特征。
+编译器可以使用构造函数用一些参数初始化协程状态，因此构造函数的签名必须与调用协程时传递给协程的参数相匹配。这种技术特别适用于协同程序特征。
 
 \mySamllsection{get\_return\_object()}
 
@@ -58,7 +58,7 @@ class CoroTask {
 	struct promise_type;
 	using CoroHdl = std::coroutine_handle<promise_type>;
 	CoroHdl hdl;
-	
+
 	struct promise_type {
 		auto get_return_object() { // init and return the coroutine interface
 			return CoroTask{CoroHdl::from_promise(*this)};
@@ -72,7 +72,7 @@ class CoroTask {
 原则上，get\_return\_object()可以有不同的返回类型:
 
 \begin{itemize}
-\item 
+\item
 get\_return\_object()通过使用协程句柄显式初始化协程接口(如上所述)来返回协程接口。
 
 \item
@@ -83,14 +83,14 @@ get\_return\_object()通过使用协程句柄显式初始化协程接口(如上�
 因此，最好避免使用这种方法。
 
 \item
-在极少数情况下，甚至可以不返回任何东西，并将返回类型指定为void。使用协同程序特征就是一个例子。
+极少数情况下，甚至可以不返回任何东西，并将返回类型指定为void。使用协程特征就是一个例子。
 \end{itemize}
 
 \mySamllsection{initial\_suspend()}
 
-Initial \_suspend()定义协程的初始挂起点，主要用于指定协程是在初始化后自动挂起(惰性启动)，还是立即启动(急切启动)。
+initial\_suspend()定义协程的初始挂起点，主要用于指定协程是在初始化后自动挂起(惰性启动)，还是立即启动(急切启动)。
 
-该函数被协程的promise prm调用，如下所示:
+协程的promise prm会使用该函数，如下所示:
 
 \begin{cpp}
 co_await prm.initial_suspend();
@@ -101,7 +101,7 @@ co_await prm.initial_suspend();
 通常，initial\_suspend()会返回
 
 \begin{itemize}
-\item 
+\item
 std::suspend\_always\{\}，若协程体较晚/惰性地启动，或者
 
 \item
@@ -135,7 +135,7 @@ final\_suspend()定义协程的最终挂起点，并像initial\_suspend()一样�
 co_await prm.final_suspend();
 \end{cpp}
 
-这个函数在调用return\_void()、return\_value()或未处理的\ exception()后由try块外的协程框架调用，try块包含了协程体。因为final\_suspend()在try代码块之外，所以必须是noexcept。
+这个函数在调用return\_void()、return\_value()或unhandled\_exception()后由try块外的协程框架调用，try块包含了协程体。因为final\_suspend()在try代码块之外，所以必须是noexcept。
 
 这个成员函数的名称有一点误导，因为它给人的印象是，也可以在这里返回std::suspend\_never\{\}来强制在到达协程末尾后再次执行。然而，在最终挂起点恢复真正挂起的协程是未定义的行为。对于挂起的协程，唯一能做的就是销毁它。
 
@@ -163,27 +163,27 @@ class CoroTask {
 
 \mySamllsection{unhandled\_exception()}
 
-unhandled \_exception()定义协程抛出异常时的反应，该函数在协程框架的catch子句中调用。
+或unhandled\_exception()定义协程抛出异常时的反应，该函数在协程框架的catch子句中调用。
 
 对异常的可能反应如下所示:
 
 \begin{itemize}
-\item 
+\item
 忽略异常
 
-\item 
+\item
 本地处理异常
 
-\item 
+\item
 结束或终止程序(例如，通过调用std::terminate())
 
-\item 
+\item
 使用std::current\_exception()存储异常以供以后使用
 \end{itemize}
 
 稍后将在单独的小节中讨论实现这些反应的方法。
 
-任何情况下，在不结束程序的情况下调用此函数后，将直接调用final\_suspend()，并挂起协程。
+在不结束程序的情况下调用此函数后，将直接调用final\_suspend()，并挂起协程。
 
 若在unhandled\_exception()中抛出或重新抛出异常，协程也会挂起。
 
@@ -196,14 +196,14 @@ unhandled \_exception()定义协程抛出异常时的反应，该函数在协程
 必须实现两个成员函数中的一个来处理return语句和协程的结束。
 
 \begin{itemize}
-\item 
+\item
 \textbf{return\_void()}
 
-在协程到达终点时调用(到达协程体的终点或到达不带参数的co\_return语句)。
+协程到达终点时调用(到达协程体的终点或到达不带参数的co\_return语句)。
 
 有关详细信息，请参阅第一个协程示例。
 
-\item 
+\item
 \textbf{return\_value(Type)}
 
 当协程到达带有参数的co\_return语句时调用，传递的参数必须或必须转换为指定的类型。
@@ -211,7 +211,7 @@ unhandled \_exception()定义协程抛出异常时的反应，该函数在协程
 有关详细信息，请参阅带有co\_return的协程示例。
 \end{itemize}
 
-若协程的实现方式有时可能返回值，有时可能不返回值，这是未定义的行为。考虑一下这个例子:
+若协程的实现方式有时可能返回值，有时可能不返回值，这是未定义行为。考虑下面的例子:
 
 \begin{cpp}
 ResultTask<int> coroUB( ... )
@@ -222,11 +222,11 @@ ResultTask<int> coroUB( ... )
 }
 \end{cpp}
 
-这个协程无效。不允许同时拥有return\_void()和return\_value()。[关于是否允许promise在未来的C++标准中同时具有return\_void()和return\_value()的讨论正在进行。]
+这个协程无效，不允许同时拥有return\_void()和return\_value()。[关于是否允许promise在未来的C++标准中同时具有return\_void()和return\_value()的讨论正在进行。]
 
 不幸的是，若只提供return\_value(int)成员函数，这段代码甚至可能会编译并运行，编译器甚至可能不会对此发出警告，但这种情况有望很快改变。
 
-注意，这里可以重载不同类型的return\_value() (void除外)或使其泛型:
+这里可以重载不同类型的return\_value() (void除外)或使其泛型:
 
 \begin{cpp}
 struct promise_type {

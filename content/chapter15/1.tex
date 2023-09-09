@@ -2,29 +2,29 @@
 协程具有以下属性和限制:
 
 \begin{itemize}
-\item 
+\item
 协程不允许有返回语句。
 
-\item 
+\item
 协程不能是constexpr或consteval。
 
-\item 
+\item
 协程不能有返回类型auto或其他占位符类型。
 
-\item 
+\item
 main()不能是协程。
 
-\item 
+\item
 构造函数或析构函数不可为协程。
 \end{itemize}
 
 协程可以是静态的。协程若不是构造函数或析构函数，可以是成员函数。
 
-协程甚至可以是Lambda，但在这种情况下，必须小心。
+协程甚至可以是Lambda，但在这种情况下，必须谨慎使用。
 
 \mySubsubsection{15.1.1}{Lambda协程}
 
-协程可以是Lambda，也可以像这样实现我们的第一个协程示例:
+协程可以是Lambda，也可以像这样实现第一个协程示例:
 
 \begin{cpp}
 auto coro = [] (int max) -> CoroTask {
@@ -74,5 +74,5 @@ coroTask.resume(); // OK
 
 还可以通过引用将str传递给getCoro()，并确保只要使用协程，str就存在。
 
-但不能将两个初始化组合到一个语句中，因为很容易出现更微妙的生命周期问题。因此，强烈建议不要在协程Lambda中使用捕获。
+但不能将两个初始化组合到一个语句中，因为很容易出现更微妙的生命周期问题，所以强烈建议不要在协程Lambda中使用捕获。
 
