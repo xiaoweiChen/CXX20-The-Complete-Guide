@@ -1,29 +1,28 @@
 
-C++20为聚合提供了一些改进。对于泛型代码，我们现在有:
+C++20为聚合提供了一些改进。对于泛型代码，现在有:
 
 \begin{itemize}
-\item 
+\item
 对聚合使用类模板参数推导(CTAD)
 
-\item 
+\item
 聚合可以用作非类型模板参数(NTTP)。
 \end{itemize}
 
 本节将介绍前者。
 
-请注意，聚合还有其他新特性:
+聚合还有其他新特性:
 
 \begin{itemize}
-\item 
+\item
 (部分)支持指定初始化式(特定成员的初始值)
 
-\item 
+\item
 可以用圆括号初始化聚合
 
-\item 
+\item
 聚合的固定定义和std::is\_default\_constructible<>
 \end{itemize}
-
 
 \mySubsubsection{22.2.1}{聚合的类模板参数推导(CTAD)}
 
@@ -44,7 +43,7 @@ Type<int> t1{42};
 Type t2{42}; // deduces Type<int> since C++17
 \end{cpp}
 
-然而，即使对于简单的聚合，也不支持根据对象初始化方式进行类似的推断:
+即使对于简单的聚合，也不支持根据对象初始化方式进行类似的推导:
 
 \begin{cpp}
 template<typename T>
@@ -83,13 +82,13 @@ Aggr<int> a1{42}; // OK
 Aggr a2{42}; // OK since C++20 even without deduction guide
 \end{cpp}
 
-注意，当使用括号初始化聚合时，此功能也有效:
+当使用括号初始化聚合时，此功能也有效:
 
 \begin{cpp}
 Aggr a3(42); // OK since C++20 even without deduction guide
 \end{cpp}
 
-推导规则可以很微妙，如下例所示:
+推导规则可以很微妙:
 
 \begin{cpp}
 template<typename T>
@@ -115,7 +114,7 @@ C c6 = {1, 2, 3}; // ERROR: don’t know how many values S<T> needs
 C<int> c7 = {1, 2, 3}; // OK
 \end{cpp}
 
-注意，类模板参数推导甚至适用于具有可变数量元素的聚合:
+类模板参数推导甚至适用于具有可变数量元素的聚合:
 
 \begin{cpp}
 // aggregate with variadic number of base types:

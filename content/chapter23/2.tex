@@ -18,16 +18,16 @@ void foo()
 静态consteval函数std::source\_location::current()为std::source\_location类型的当前源位置生成一个对象，其接口如下所示:
 
 \begin{itemize}
-\item 
+\item
 file\_name()可产生文件的名称。
 
-\item 
+\item
 function\_name()生成函数的名称(若在函数之外调用则为空)。
 
-\item 
+\item
 line()生成行号(当行号未知时可能为0)。
 
-\item 
+\item
 column()生成行中的列(当列号未知时可能为0)。
 \end{itemize}
 
@@ -47,7 +47,7 @@ function: foo
 line/col: 8/35
 \end{shell}
 
-注意，通过在形参声明中使用std::source\_location::current()作为默认实参，将获得函数调用的位置。例如:
+通过在形参声明中使用std::source\_location::current()作为默认实参，将获得函数调用的位置。例如:
 
 \begin{cpp}
 void bar(std::source_location sl = std::source_location::current())

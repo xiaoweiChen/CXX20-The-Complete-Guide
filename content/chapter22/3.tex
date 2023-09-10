@@ -21,9 +21,9 @@ public:
 };
 \end{cpp}
 
-保存T类型值的类模板Wrapper<>有一个泛型构造函数，则可以用任何可以隐式转换为T的类型初始化该值。若没有从U到T的隐式转换，则构造函数是显式的。
+保存T类型值的类模板Wrapper<>有一个泛型构造函数，则可以用可以隐式转换为T的类型初始化该值。若没有从U到T的隐式转换，则构造函数是显式的。
 
-因此，只有在启用了隐式类型转换的情况下，才能初始化类型的Wrapper。例如:
+只有在启用了隐式类型转换的情况下，才能初始化类型的Wrapper。例如:
 
 \filename{lang/explicitwrapper.cpp}
 
@@ -45,7 +45,7 @@ int main()
 	Wrapper<std::string> ws1{"hello"};
 	Wrapper<std::string> ws2 = "hello"; // OK
 	printStringWrapper("hello"); // OK
-	
+
 	// NO implicit conversion from size to vector<string>:
 	std::vector<std::string> v1{42u};
 	std::vector<std::string> v2 = 42u; // ERROR: explicit
@@ -58,14 +58,14 @@ int main()
 为了演示条件显式的效果，对字符串和字符串的vector使用Wrapper<>:
 
 \begin{itemize}
-\item 
+\item
 对于std::string类型，构造函数支持从字符串字面值进行隐式转换，所以Wrapper<>类型的构造函数不是显式的，其作用是传递字符串字面值来复制初始化字符串包装器，或者将字符串字面值传递给接受字符串包装器的函数。[记住，复制初始化(initialization with =)和参数传递需要隐式转换。]
 
 \item
 对于std::vector<std::string>类型，接受无符号大小的构造函数在C++标准库中声明为显式，所以std::is\_convertible<>从大小转换为向量为false，Wrapper<>构造函数变为显式。也不能传递size来初始化string类型vector的包装器，也不能将size传递给接受该包装器类型的函数。
 \end{itemize}
 
-任何可以使用explicit的地方都可以使用条件显式，也可以使用它使转换操作符显式条件化:
+可以使用explicit的地方都可以使用条件显式，也可以使用它使转换操作符显式条件化:
 
 \begin{cpp}
 template<typename T>
@@ -80,7 +80,7 @@ class MyType {
 
 \mySubsubsection{22.3.1}{标准库中的条件显式}
 
-C++标准库在几个地方使用了条件显式。例如，std::pair<>和std::tuple<>使用它来支持稍微不同类型的对和元组的赋值，前提是存在可用的隐式转换。
+C++标准库在几个地方使用了条件显式。例如，std::pair<>和std::tuple<>用它来支持稍微不同类型的对和元组的赋值，前提是存在可用的隐式转换。
 
 例如:
 
@@ -108,7 +108,7 @@ coll2.insert({"XI", 11}); // ERROR: no implicit conversion that fits
 coll2.insert({"XI", std::chrono::month{11}}); // OK (inserts elem with string and month)
 \end{cpp}
 
-std::pair<>的这种行为并不新鲜。但在C++20前，标准库的实现必须使用SFINAE来实现explicit的条件行为(声明两个构造函数，若不满足条件则禁用其中一个)。
+std::pair<>的这种行为并不新鲜。在C++20前，标准库的实现必须使用SFINAE来实现explicit的条件行为(声明两个构造函数，若不满足条件则禁用其中一个)。
 
 另一个例子，std::span<>的构造函数是条件显式的:
 

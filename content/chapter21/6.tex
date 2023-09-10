@@ -21,9 +21,9 @@ int f(int n)
 }
 \end{cpp}
 
-例如，这可能会迫使编译器生成直接处理else分支的汇编代码，同时跳转到后面的then情况的汇编命令。
+这可能会迫使编译器生成直接处理else分支的汇编代码，同时跳转到后面的then情况的汇编命令。
 
-可能有，但不保证有相同的效果:
+但不保证有相同的效果:
 
 \begin{cpp}
 int f(int n)
@@ -56,13 +56,13 @@ int g(int n)
 
 这些属性的效果特定于编译器，不能保证这些属性的影响。
 
-在使用这些属性时应该小心，并仔细检查它们的效果。通常，编译器更了解如何优化代码，若过度使用这些属性可能会适得其反。
+在使用这些属性时应该谨慎，并仔细检查它们的效果。通常，编译器更了解如何优化代码，若过度使用这些属性可能会适得其反。
 
 \mySubsubsection{21.6.2}{属性[[no\_unique\_address]]}
 
 类通常具有影响行为但不提供状态的成员，例如：无序容器的哈希函数、std::unique\_ptr的delete函数，或者容器或字符串的标准分配器。它们提供的只是成员函数(和静态成员)，而不是非静态数据成员。
 
-然而，成员通常需要内存，即使他们不存储任何东西。例如，下面的代码:
+然而，成员通常需要内存，即使他们不存储。例如，下面的代码:
 
 \begin{cpp}
 struct Empty {}; // empty class: size is usually 1
@@ -105,7 +105,7 @@ std::cout << "sizeof(EbasedI): " << sizeof(EbasedI) << '\n';
 sizeof(EbasedI): 4
 \end{shell}
 
-然而，这种解决方法有点笨拙，可能并不总是有效。例如，若空基类是final，则不能使用EBCO。
+这种解决方法有点笨拙，可能并不总是有效。例如，若空基类是final，则不能使用EBCO。
 
 自C++20起，有一种不同的方法可以获得相同的效果。只需要用属性[[no\_unique\_address]]声明不提供状态的成员:
 
@@ -131,7 +131,7 @@ sizeof(EattrI): 4
 sizeof(IattrE): 4
 \end{shell}
 
-请注意，编译器不需要遵循此属性。
+编译器不需要遵循此属性。
 
 标记为[[no\_unique\_address]]的成员在初始化时仍会视为成员:
 
@@ -152,7 +152,7 @@ struct OnlyEmpty {
 std::is_empty_v<OnlyEmpty> // might yield true or false
 \end{cpp}
 
-最后，请注意Visual C++目前忽略了这个属性。原因是Visual C++最初允许这个属性不遵守它，现在遵守它变成了一个ABI中断。不过，Visual C++可能会在未来的ABI版本中支持它。在此之前，可以使用[[msvc::no\_unique\_address]]代替:
+最后，请注意Visual C++目前忽略了这个属性。原因是Visual C++最初允许不遵守这个属性，现在遵守它变成了一个ABI中断。不过，Visual C++可能会在未来的ABI版本中支持。在此之前，可以使用[[msvc::no\_unique\_address]]代替:
 
 \begin{cpp}
 struct EattrI { // also works for Visual C++
@@ -168,13 +168,13 @@ C++17引入了属性[[nodiscard]]，若没有使用函数的返回值，可以�
 当返回值未被使用时，[[nodiscard]]通常用来表示错误行为。不当行为可能是:
 
 \begin{itemize}
-\item 
+\item
 内存泄漏，例如：不使用返回的已分配内存。
 
-\item 
+\item
 意外或非直观的行为，例如：在不使用返回值时获得不同/意外的行为
 
-\item 
+\item
 不必要的开销，例如：若返回值未被使用，则使用no-op的行为
 \end{itemize}
 
@@ -188,9 +188,9 @@ class MyType {
 	...
 	[[nodiscard("Possible memory leak")]] // OK, since C++20
 	char* release();
-	
+
 	void clear();
-	
+
 	[[nodiscard("Did you mean clear()?")]] // OK, since C++20
 	bool empty() const;
 };

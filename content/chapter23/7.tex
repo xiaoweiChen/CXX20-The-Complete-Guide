@@ -4,13 +4,13 @@
 
 \mySubsubsection{23.7.1}{支持范围}
 
-正如在范围一章中所讨论的，对于许多算法，现在都支持:
+对于许多算法，现在都支持:
 
 \begin{itemize}
-\item 
+\item
 用于将整个范围(容器，视图)作为单个参数传递
 
-\item 
+\item
 用于将投影参数作为单个参数传递
 \end{itemize}
 
@@ -19,14 +19,14 @@
 对于以下算法，目前还不支持范围:
 
 \begin{itemize}
-\item 
+\item
 数值算法(如accumulate())
 
-\item 
+\item
 并行执行算法
 
-\item 
-算法lexicography \_compare\_three\_way()
+\item
+算法lexicographical\_compare\_three\_way()
 \end{itemize}
 
 有关所有标准算法的范围支持的更多详细信息，请参阅算法概述。
@@ -73,7 +73,7 @@ lexicographical\_compare\_three\_way() & 使用运算符对两个范围排序 \t
 int main()
 {
 	std::vector coll{0, 8, 15, 47, 11};
-	
+
 	std::cout << std::ranges::min(coll) << '\n';
 	std::cout << std::ranges::max(coll) << '\n';
 	auto [min, max] = std::ranges::minmax(coll);
@@ -89,7 +89,7 @@ int main()
 0 47
 \end{shell}
 
-注意，std中没有接受两个迭代器的相应算法。只有函数接受两个值或一个std::initializer\_list<>(和一个比较条件)作为参数。与往常一样，范围库还为其提供了传递投影的选项.
+std中没有接受两个迭代器的相应算法，只有函数接受两个值或一个std::initializer\_list<>(和一个比较条件)作为参数。与往常一样，范围库还为其提供了传递投影的选项.
 
 \mySamllsection{shift\_left() 和shift\_right()}
 
@@ -116,13 +116,13 @@ void print (const auto& coll)
 int main()
 {
 	std::vector coll{1, 2, 3, 4, 5, 6, 7, 8};
-	
+
 	print(coll);
-	
+
 	// shift one element to the front (returns new end):
 	std::shift_left(coll.begin(), coll.end(), 1);
 	print(coll);
-	
+
 	// shift three elements to the back (returns new begin):
 	auto newbeg = std::shift_right(coll.begin(), coll.end(), 3);
 	print(coll);
@@ -145,14 +145,13 @@ int main()
 
 为了以返回一种新的比较类别类型的方式比较两个不同容器中的元素，C++20引入了std::lexicographical\_compare\_three\_way()算法，在<=>操作符的章节中进行了描述。
 
-注意，对于这个算法，还不支持范围。既不能将范围作为单个参数传递，也不能传递投影参数(这可能是一个疏忽)。
+对于这个算法，还不支持范围。既不能将范围作为单个参数传递，也不能传递投影参数(这可能是一个疏忽)。
 
 \mySubsubsection{23.7.2}{unseq算法执行策略}
 
 C++17为新引入的并行算法引入了各种执行策略，可以启用并行计算并允许线程并行地操作多个数据项(称为向量化或SIMD处理)。
 
-但不能允许算法在多个数据项上操作，而是限制算法仅使用一个线程。为此，C++20现在提供了执行策略std::execution::unseq。与往常一样，新执行策略是命名空间std::execution中对应的惟一类unsequenced\_policy的constexpr对象。“执行策略”表列出了现在支持的所有标准化执行策略。
-
+但不能允许算法在多个数据项上操作，而是限制算法仅使用一个线程，因此C++20现在提供了执行策略std::execution::unseq。与往常一样，新执行策略是命名空间std::execution中对应的惟一类unsequenced\_policy的constexpr对象。“执行策略”表列出了现在支持的所有标准化执行策略。
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -176,7 +175,7 @@ std::execution::par\_unseq & 用多个线程并行计算多个值        \\ \hli
 
 非顺序执行策略允许在单个执行线程中交错执行传递给访问元素的操作，不应该将此策略用于阻塞同步(例如使用互斥锁)，这可能会导致死锁。
 
-下面是一个使用它的例子:
+下面是一个使用的例子:
 
 \filename{lib/unseq.cpp}
 
@@ -194,14 +193,14 @@ int main (int argc, char** argv)
 	if (argc > 1) {
 		numElems = std::atoi(argv[1]);
 	}
-	
+
 	// init vector of different double values:
 	std::vector<double> coll;
 	coll.reserve(numElems);
 	for (int i=0; i<numElems; ++i) {
 		coll.push_back(i * 4.37);
 	}
-	
+
 	// process square roots:
 	// - allow SIMD processing but only one thread
 	std::for_each(std::execution::unseq, // since C++20
@@ -209,7 +208,7 @@ int main (int argc, char** argv)
 				  [](auto& val) {
 					val = std::sqrt(val);
 				  });
-				  
+
 	for (double value : coll) {
 		std::cout << value << '\n';
 	}

@@ -1,30 +1,30 @@
 
-C++20中，字符串类型的某些方面发生了变化。这些更改影响字符串(类型std::basic\_string<>及其实例化，如std::string)，字符串视图(std::basic\_string\_view<>及其实例化，如std::string\_view)，或两者兼而有之。
+C++20中，字符串类型的某些方面发生了变化。这些更改影响字符串(类型std::basic\_string<>及其实例化，如std::string)，字符串视图(std::basic\_string\_view<>及其实例化，如std::string\_view)，或两者都有。
 
 实际上，C++20为字符串类型引入了以下改进:
 
 \begin{itemize}
-\item 
+\item
 所有字符串类型现在都支持太空船操作符<=>，则现在只声明==和<=>操作符，不再声明!=、<、<=、>和>=。
 
-\item 
+\item
 所有字符串类型现在都提供了新的成员函数，ends\_with()，ends\_with()。
 
-\item 
-对于字符串，成员函数reserve()不能再用于请求缩小字符串的容量(为值分配的内存)。由于这个原因，不能再向reserve()传递任何参数。
+\item
+对于字符串，成员函数reserve()不能再用于请求缩小字符串的容量(为值分配的内存)。由于这个原因，不能再向reserve()传递参数。
 
-\item 
-对于UTF-8字符，C++现在提供了字符串类型std::u8string和std::u8string\_view。它们定义为std::basic\_string<>和std::basic\_string\_view<>，用于新的UTF-8字符类型char8\_t。由于这个原因，返回UTF-8字符串的库函数现在具有返回类型std::u8string。注意，当切换到C++20时，此更改可能会破坏现有的代码。
+\item
+对于UTF-8字符，C++现在提供了字符串类型std::u8string和std::u8string\_view。它们定义为std::basic\_string<>和std::basic\_string\_view<>，用于新的UTF-8字符类型char8\_t，返回UTF-8字符串的库函数现在具有返回类型std::u8string。当切换到C++20时，此更改可能会破坏现有的代码。
 
-\item 
+\item
 字符串(std::string和std::basic\_string<>的其他实例)现在是constexpr，则可以在编译时使用字符串。
 
-注意，不能在编译时和运行时同时使用std::string，但有几种方法可以将编译时字符串导出到运行时。
+不能在编译时和运行时同时使用std::string，但有几种方法可以将编译时字符串导出到运行时。
 
-\item 
+\item
 字符串视图现在标记为视图和租借范围。
 
-\item 
+\item
 为类型std::u8string和std::u8string\_view以及std::pmr::string、std::pmr::u8string、std::pmr::u16string、std::pmr::u32string和std::pmr::wstring添加了标准哈希函数。
 \end{itemize}
 
@@ -32,7 +32,7 @@ C++20中，字符串类型的某些方面发生了变化。这些更改影响字
 
 \mySubsubsection{23.1.1}{字符串成员starts\_with()和ends\_with()}
 
-字符串和字符串视图现在都有新的成员函数，starts\_with()和ends\_with()。它们提供了一种简单的方法来根据特定的字符序列检查字符串的开头和结尾字符。可以对单个字符、字符数组、字符串或字符串视图进行比较。
+字符串和字符串视图现在都有新的成员函数，starts\_with()和ends\_with()。它们提供了一种简单的方法，根据特定的字符序列检查字符串的开头和结尾字符。可以对单个字符、字符数组、字符串或字符串视图进行比较。
 
 例如:
 
@@ -69,7 +69,7 @@ void modifyString(std::string& s)
 
 这样做的原因是释放内存可能需要一些时间，则在移植代码时，此调用的性能可能会有很大差异。
 
-因此，reserve()需要传递参数:
+reserve()需要传递参数:
 
 \begin{cpp}
 s.reserve(); // ERROR since C++20

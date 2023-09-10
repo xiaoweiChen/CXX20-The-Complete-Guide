@@ -2,13 +2,13 @@
 C++20为处理位提供了更好、更清晰的支持:
 
 \begin{itemize}
-\item 
+\item
 缺少底层位操作
 
-\item 
+\item
 位的强制转换
 
-\item 
+\item
 检查平台的端序
 \end{itemize}
 
@@ -16,7 +16,7 @@ C++20为处理位提供了更好、更清晰的支持:
 
 \mySubsubsection{23.5.1}{位操作}
 
-硬件通常对位操作有特殊的支持，比如“左移”或“右移”。然而，C++20之前，C++开发者不能直接访问这些指令，新引入的位操作为底层CPU的位指令提供了一个直接的API。
+硬件通常对位操作有特殊的支持，比如“左移”或“右移”。C++20之前，C++开发者不能直接访问这些指令，新引入的位操作为底层CPU的位指令提供了一个直接的API。
 
 “位操作”表列出了C++20引入的所有标准化的位操作，其在头文件<bit>中作为命名空间std中的独立函数提供。
 
@@ -82,8 +82,8 @@ int main()
 00110100  52
 10000110 134
 00011010  26
-4 
-1 
+4
+1
 3
 false
 00001000  8
@@ -91,16 +91,16 @@ false
 4
 \end{shell}
 
-注意事项如下所示:
+注意事项如下:
 
 \begin{itemize}
-\item 
+\item
 只有当传递的类型是无符号整型时，才提供所有这些函数。
 
-\item 
-位移函数也取负n，则意味着改变了方向。
+\item
+位移函数也取负n，则改变了方向。
 
-\item 
+\item
 所有返回计数的函数的返回类型都是int。唯一的例外是bit\_width()，会返回传递类型的值，这是标准中的不一致(我认为是错误)。当将其作为int类型使用或直接打印时，可能必须使用静态强制转换。
 \end{itemize}
 
@@ -112,7 +112,7 @@ false
 1000000000000110 32774
 0000000000011010    26
 12
-1 
+1
 3
 false
 0000000000001000     8
@@ -120,10 +120,10 @@ false
 4
 \end{shell}
 
-还要注意，这些函数仅为无符号整型定义。所以:
+这些函数仅为无符号整型定义。所以:
 
 \begin{itemize}
-\item 
+\item
 不能对有符号整型使用位操作:
 
 \begin{cpp}
@@ -152,7 +152,6 @@ auto b2 = std::rotl(b1, 2); // ERROR
 \end{itemize}
 
 “位操作的硬件支持”表，摘自\url{http://wg21.link/p0553r4}，列出了一些新的位操作到现有硬件的可能映射。
-
 
 % Please add the following required packages to your document preamble:
 % \usepackage{longtable}
@@ -196,17 +195,17 @@ auto bi = std::bit_cast<int>(b8); // ERROR: wrong number of bits
 C++20引入了一个新的实用程序枚举类型std::endian，可用于检查执行环境的端序。其引入了三个枚举值:
 
 \begin{itemize}
-\item 
+\item
 std::endian::big，一个代表“大端”的值(标量类型存储时，最重要的字节放在第一位，其余字节按降序排列)。
 
-\item 
+\item
 std::endian::little，一个代表“l小端”的值(标量类型将最低有效位字节放在首位，其余字节按升序存储)。
 
-\item 
+\item
 std::endian::native，用于指定执行环境的端序
 \end{itemize}
 
-若所有标量类型都是大端字节数，std::endian::native等于std::endian::big。若所有标量类型都是little-endian, std::endian::native等于std::endian::little。否则，std::endian::native的值既不是std::endian::big，也不是std::endian::little。
+若所有标量类型都是大端字节数，std::endian::native等于std::endian::big。若所有标量类型都是little-endian, std::endian::native等于std::endian::little。std::endian::native的值既不是std::endian::big，也不是std::endian::little。
 
 若所有标量类型的大小都为1，则std::endian::little、std::endian::big和std::endian::native都具有相同的值。
 

@@ -2,23 +2,23 @@
 C++20为聚合提供了一些改进，这些改进将在本节中介绍:
 
 \begin{itemize}
-\item 
+\item
 (部分)支持指定初始化式(特定成员的初始值)
 
-\item 
+\item
 可以用圆括号初始化聚合
 
-\item 
+\item
 固定聚合的定义和std::is\_default\_constructible<>
 \end{itemize}
 
-此外，本书的其他部分描述了聚合在泛型代码中的使用:
+本书的其他部分描述了聚合在泛型代码中的使用:
 
 \begin{itemize}
-\item 
+\item
 对聚合使用类模板参数推导(CTAD)
 
-\item 
+\item
 聚合可以用作非类型模板参数(NTTP)。
 \end{itemize}
 
@@ -26,7 +26,7 @@ C++20为聚合提供了一些改进，这些改进将在本节中介绍:
 
 对于聚合，C++20提供了一种方法来指定应该用传递的初始值初始化哪个成员，但只能使用它来跳过参数。
 
-例如，假设有以下聚合类型:
+假设有以下聚合类型:
 
 \begin{cpp}
 struct Value {
@@ -49,25 +49,25 @@ Value v3{.precision = 8, .unit = "$"}; // OK (first member has default value)
 注意以下限制:
 
 \begin{itemize}
-\item 
+\item
 必须使用=或\{\}传递初始值。
 
-\item 
+\item
 可以跳过会员，但必须遵循其顺序。按名称初始化的成员的顺序必须与声明中的顺序匹配。
 
-\item 
+\item
 必须对所有参数使用指定初始化式，或者不使用指定初始化式。不允许混合初始化。
 
-\item 
+\item
 不支持对数组使用指定初始化。
 
-\item 
+\item
 可以使用指定初始化式嵌套初始化，但不能直接使用.mem.mem。
 
-\item 
+\item
 初始化带有圆括号的聚合时，不能使用指定初始化器。
 
-\item 
+\item
 指定初始化式也可以用在联合体中。
 \end{itemize}
 
@@ -103,7 +103,6 @@ Data d2{.val = {.y{42}}}; // OK
 \begin{cpp}
 Data d2{.val.y = 42}; // ERROR
 \end{cpp}
-
 
 \mySubsubsection{21.5.2}{用圆括号聚合初始化}
 
@@ -146,7 +145,7 @@ Aggr a12(("hi", 42)); // ERROR
 
 使用内括号甚至可以编译，其用作使用逗号操作符的表达式周围的圆括号。
 
-注意，现在甚至可以使用圆括号来初始化一个边界未知的数组:
+现在可以使用圆括号来初始化边界未知的数组:
 
 \begin{cpp}
 int a1[]{1, 2, 3}; // OK since C++11
@@ -155,7 +154,7 @@ int a3[] = {1, 2, 3}; // OK
 int a4[] = (1, 2, 3); // still ERROR
 \end{cpp}
 
-然而，不支持"大括号省略"(没有嵌套的大括号可以省略):
+然而，不支持"省略大括号"(没有嵌套的大括号可以省略):
 
 \begin{cpp}
 struct Arr {
@@ -168,7 +167,7 @@ Arr arr3{{1, 2, 3}}; // OK
 Arr arr4({1, 2, 3}); // OK (even before C++20)
 \end{cpp}
 
-因此，要初始化std::arrays，仍然必须使用大括号:
+要初始化std::arrays，仍须使用大括号:
 
 \begin{cpp}
 std::array<int,3> a1{1, 2, 3}; // OK: shortcut for std::array{{1, 2, 3}}
@@ -189,10 +188,10 @@ auto p1 = new Aggr{"Rome", 200}; // OK since C++11
 auto p2 = new Aggr("Rome", 200); // OK since C++20 (ERROR before C++20)
 \end{cpp}
 
-这有助于支持在类型中使用聚合，这些类型在内部调用new时使用括号将值存储在现有内存中，就像容器和智能指针的情况一样。事实上，自C++20起，以下是可能的:
+这有助于支持在类型中使用聚合，这些类型在内部调用new时使用括号将值存储在现有内存中，就像容器和智能指针的情况一样。自C++20起，以下是可能的情况:
 
 \begin{itemize}
-\item 
+\item
 现在可以对聚合使用std::make\_unique<>()和std::make\_shared<>():
 
 \begin{cpp}
@@ -202,7 +201,7 @@ auto sp = std::make_shared<Aggr>("Rome", 200); // OK since C++20
 
 C++20之前，无法对聚合使用这些辅助函数。
 
-\item 
+\item
 现在可以将新值放置到聚合容器中:
 
 \begin{cpp}
@@ -211,7 +210,7 @@ cont.emplace_back("Rome", 200); // OK since C++20
 \end{cpp}
 \end{itemize}
 
-请注意，仍然有一些类型不能用括号初始化，但可以用花括号初始化:作用域枚举(枚举类类型)。类型std::byte (C++17引入)就是一个例子:
+仍然有一些类型不能用括号初始化，但可以用花括号初始化:作用域枚举(枚举类类型)。类型std::byte (C++17引入)就是一个例子:
 
 \begin{cpp}
 std::byte b1{0}; // OK
@@ -234,20 +233,20 @@ ca.push_back({1, 2, 3}); // still OK
 引入圆括号初始化的建议列出了以下设计准则:
 
 \begin{itemize}
-\item 
+\item
 Type(val)的现有含义都不应该改变。
 
-\item 
-括号初始化和括号初始化应尽可能相似，但也应尽可能不同，以符合现有的括号列表和括号列表的心智模型。
+\item
+括号初始化和括号初始化应尽可能相似，但也应尽可能不同，以符合现有的括号列表和括号列表的模型。
 \end{itemize}
 
 实际上，带花括号的聚合初始化和带圆括号的聚合初始化有以下区别:
 
 \begin{itemize}
-\item 
+\item
 带圆括号的初始化不会检测窄化转换。
 
-\item 
+\item
 用圆括号初始化允许所有隐式转换(不仅是从派生类到基类)。
 
 \item
@@ -278,7 +277,7 @@ std::vector<Aggr> cont;
 cont.emplace_back("Rome", 1.9); // initializes with 1
 \end{cpp}
 
-注意，emplace函数永远不会检测窄化。
+emplace函数永远不会检测窄化。
 
 处理隐式转换时的区别示例如下:
 
@@ -294,9 +293,9 @@ Aggr a7{o}; // ERROR: no implicit conversion supported
 Aggr a8(o); // OK, implicit conversion possible
 \end{cpp}
 
-注意，聚合本身不能定义转换，因为聚合不能有用户定义的构造函数。
+聚合本身不能定义转换，因为聚合不能有用户定义的构造函数。
 
-缺少大括号省略和大括号初始化的复杂规则导致以下行为:
+缺少大括号省略和大括号初始化的复杂规则，会导致以下行为:
 
 \begin{cpp}
 Aggr a01{"x", 65}; // init string with "x" and int with 65
@@ -321,7 +320,7 @@ Aggr a61{{{{'x', 65}}}}; // ERROR
 Aggr a62({{{'x', 65}}}); // OK even before C++20: init string with ’x’ and 65
 \end{cpp}
 
-当执行复制初始化(用=初始化)时，显式很重要，使用空括号可能会产生不同的效果，如下所示:
+当执行复制初始化(用=初始化)时，显式很重要，使用空括号可能会产生不同的效果:
 
 \begin{cpp}
 struct C {
@@ -343,9 +342,9 @@ auto a5 = A{}; // ERROR: cannot call explicit constructor
 auto a6 = A(); // OK: can call explicit constructor
 \end{cpp}
 
-然而，这在C++20中并不新鲜，在C++20之前就已经支持a6的初始化了。
+这在C++20中并不新鲜，在C++20之前就已经支持a6的初始化了。
 
-最后，若对具有右值引用成员的聚合使用圆括号进行初始化，则初始值的生存期不会延长。因此，不应该传递临时对象(右值):
+最后，若对具有右值引用成员的聚合使用圆括号进行初始化，则初始值的生存期不会延长，所以不应该传递临时对象(右值):
 
 \begin{cpp}
 struct A {
@@ -368,7 +367,7 @@ std::cout << a3.r << '\n'; // OK
 
 \mySubsubsection{21.5.3}{聚合体的定义}
 
-再一次，聚合的定义在C++20中发生了变化。这一次，修改逆转了C++11中出现的扩展，结果证明这是一个错误。从C++11到C++17，不允许使用用户提供的构造函数。基于这个原因，下面是聚合的合法定义:
+聚合的定义在C++20中发生了变化，修改逆转了C++11中出现的扩展，结果证明这是一个错误。从C++11到C++17，不允许使用用户提供的构造函数。基于这个原因，下面是聚合的合法定义:
 
 \begin{cpp}
 struct A { // aggregate from C++11 until C++17
@@ -408,9 +407,9 @@ A a1; // ERROR
 A a2{}; // ERROR since C++20
 \end{cpp}
 
-因此，如上所述，对于类型A和D，类型特性std::is\_default\_constructible\_v<>将不再为true。
+如上所述，对于类型A和D，类型特性std::is\_default\_constructible\_v<>将不再为true。
 
-但请注意，一些程序员在创建聚合类型的对象时确实使用此特性来强制(可能为空)花括号(这确实可确保始终对成员进行初始化)。对于它们来说，获得相同行为的解决方法是从基类型派生，如下所示:
+一些开发者在创建聚合类型的对象时确实使用此特性来强制(可能为空)花括号(这确实可确保始终对成员进行初始化)。对于它们来说，获得相同行为的解决方法是从基类型派生:
 
 \begin{cpp}
 struct MustInit {
@@ -428,27 +427,27 @@ A a2{}; // OK
 总而言之，自C++20起，聚合的定义如下:
 
 \begin{itemize}
-\item 
+\item
 一个数组
 
 \item
 或者一个类型(类、结构或联合):
 
 \begin{itemize}
-\item 
+\item
 没有用户声明的构造函数
 
 \item
 using声明没有继承构造函数
 
 \item
-没有私有或受保护的非静态数据成员
+没有private或proctected的非静态数据成员
 
 \item
 没有虚函数
 
 \item
-没有虚拟、私有或受保护的基类
+没有virtual、private或proctected的基类
 \end{itemize}
 
 \end{itemize}
@@ -456,11 +455,11 @@ using声明没有继承构造函数
 为了初始化聚合，需要应用以下附加限制:
 
 \begin{itemize}
-\item 
-没有私有或受保护的基类成员
+\item
+没有private或proctected的基类成员
 
-\item 
-没有私有或受保护的构造函数
+\item
+没有private或proctected的构造函数
 \end{itemize}
 
 

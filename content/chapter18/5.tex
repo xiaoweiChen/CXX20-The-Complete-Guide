@@ -1,5 +1,5 @@
 
-C++20开始，编译时函数可以分配内存，前提是这些内存在编译时也被释放。由于这个原因，现在可以在编译时使用字符串或vector，但有一个重要的限制:在编译时创建的字符串或vector不能在运行时使用，原因是在编译时分配的内存也必须在编译时释放。
+C++20开始，编译时函数可以分配内存，前提是这些内存在编译时也释放。由于这个原因，现在可以在编译时使用字符串或vector，但有一个重要的限制:在编译时创建的字符串或vector不能在运行时使用，原因是在编译时分配的内存也必须在编译时释放。
 
 \mySubsubsection{18.5.1}{在编译时使用vector}
 
@@ -17,17 +17,17 @@ template<std::ranges::input_range T>
 constexpr auto modifiedAvg(const T& rg)
 {
 	using elemType = std::ranges::range_value_t<T>;
-	
+
 	// initialize compile-time vector with passed elements:
 	std::vector<elemType> v{std::ranges::begin(rg),
 							std::ranges::end(rg)};
-		
+
 	// perform several modifications:
 	v.push_back(elemType{});
 	std::ranges::sort(v);
 	auto newEnd = std::unique(v.begin(), v.end());
 	...
-	
+
 	// return average of modified vector:
 	auto sum = std::accumulate(v.begin(), newEnd,
 								elemType{});
@@ -37,7 +37,7 @@ constexpr auto modifiedAvg(const T& rg)
 
 这里，用constexpr定义modifiedAvg()，以便在编译时调用。在内部，使用std::vector<> v，用传递的范围的元素初始化，可以使用vector的全部API(特别是插入和删除元素)。例如，插入一个元素，对元素排序，并使用unique()删除连续的重复项。所有这些算法现在都是constexpr的，因此可以在编译时使用。
 
-但在最后，不返回vector，只返回在编译时向量的帮助下计算出来的值。
+但在最后，只返回编译时vector下计算出来的值。
 
 可以在编译时调用这个函数:
 
@@ -51,13 +51,13 @@ constexpr auto modifiedAvg(const T& rg)
 int main()
 {
 	constexpr std::array orig{0, 8, 15, 132, 4, 77};
-	
+
 	constexpr auto avg = modifiedAvg(orig);
 	std::cout << "average: " << avg << '\n';
 }
 \end{cpp}
 
-由于avg是用constexpr声明的，所以modiedavg()是在编译时求值的。
+由于avg是用constexpr声明的，所以modiedavg()在编译时求值。
 
 也可以用consteval声明modifiedAvg()，因为不会在运行时复制元素，所以可以按值传递参数:
 
@@ -66,7 +66,7 @@ template<std::ranges::input_range T>
 consteval auto modifiedAvg(T rg)
 {
 	using elemType = std::ranges::range_value_t<T>;
-	
+
 	// initialize compile-time vector with passed elements:
 	std::vector<elemType> v{std::ranges::begin(rg),
 							std::ranges::end(rg)};
@@ -84,7 +84,7 @@ int main()
 }
 \end{cpp}
 
-出于同样的原因，编译时函数只能在编译时使用返回值时向调用者返回一个vector:
+出于同样的原因，编译时函数只能在编译时使用返回值时返回一个vector:
 
 \filename{comptime/returnvector.cpp}
 
@@ -96,7 +96,7 @@ constexpr auto returnVector()
 	std::vector<int> v{0, 8, 15};
 	v.push_back(42);
 	...
-	
+
 	return v;
 }
 
@@ -105,7 +105,7 @@ constexpr auto returnVectorSize()
 	auto coll = returnVector();
 	return coll.size();
 }
-	
+
 int main()
 {
 	// constexpr auto coll = returnVector(); // ERROR
@@ -116,7 +116,7 @@ int main()
 
 \mySubsubsection{18.5.2}{编译时返回集合}
 
-虽然不能返回编译时的vector，以便在运行时使用它，但有一种方法可以返回编译时计算的元素集合:可以返回std::array<>。唯一的问题是需要知道数组的大小，因为大小不能通过vector的大小初始化:
+虽然不能返回编译时的vector，以便在运行时使用，但有一种方法可以返回编译时计算的元素集合:可以返回std::array<>。唯一的问题是需要知道数组的大小，因为大小不能通过vector的大小初始化:
 
 \begin{cpp}
 std::vector v;
@@ -151,7 +151,7 @@ consteval auto mergeValues(T rg, auto... vals)
 }
 \end{cpp}
 
-在consteval函数中使用vector将传入的可变数量的实参与传入范围的元素合并，并对它们全排序。但可将结果集合作为std::array返回，以便将其传递给运行时上下文。例如，下面的程序可以很好地使用这个函数:
+在consteval函数中使用vector将传入的可变数量的实参与传入范围的元素合并，并对其全排序。但可将结果集合作为std::array返回，以便将其传递给运行时上下文。例如，下面的程序可以很好地使用这个函数:
 
 \filename{comptime/mergevalues.cpp}
 
@@ -164,10 +164,10 @@ int main()
 {
 	// compile-time initialization of array:
 	constexpr std::array orig{0, 8, 15, 132, 4, 77, 3};
-	
+
 	// initialization of sorted extended array:
 	auto merged = mergeValues(orig, 42, 4);
-	
+
 	// print elements:
 	for(const auto& i : merged) {
 		std::cout << i << ' ';
@@ -197,11 +197,11 @@ consteval auto mergeValuesSz(T rg, auto... vals)
 	// create compile-time vector from passed range:
 	std::vector<std::ranges::range_value_t<T>> v{std::ranges::begin(rg),
 												 std::ranges::end(rg)};
-												 
+
 	(... , v.push_back(vals)); // merge all passed parameters
-	
+
 	std::ranges::sort(v); // sort all elements
-	
+
 	// return extended collection as array and its size:
 	constexpr auto maxSz = std::ranges::size(rg) + sizeof...(vals);
 	std::array<std::ranges::range_value_t<T>, maxSz> arr{};
@@ -212,7 +212,7 @@ consteval auto mergeValuesSz(T rg, auto... vals)
 
 此外，可使用std::ranges::unique\_copy()来删除排序后的连续重复项，并返回数组和结果元素的数量。
 
-注意，应该用\{\}声明arr，以确保数组中的所有值都初始化。编译时函数不允许产生未初始化的内存。
+注意，应该用\{\}声明arr，以确保数组中的所有值都初始化，编译时函数不允许产生未初始化的内存。
 
 现在可以这样使用返回值:
 
@@ -228,11 +228,11 @@ int main()
 {
 	// compile-time initialization of array:
 	constexpr std::array orig{0, 8, 15, 132, 4, 77, 3};
-	
+
 	// initialization of sorted extended array:
 	auto tmp = mergeValuesSz(orig, 42, 4);
 	auto merged = std::views::counted(tmp.first.begin(), tmp.second);
-	
+
 	// print elements:
 	for(const auto& i : merged) {
 		std::cout << i << ' ';
@@ -240,9 +240,9 @@ int main()
 }
 \end{cpp}
 
-通过使用视图适配器std::views:: counts()，可以很容易地将返回的数组和返回的元素大小结合起来，作为一个范围在数组中使用。
+通过使用视图适配器std::views::counted()，可以将返回的数组和返回的元素大小结合起来，作为一个范围在数组中使用。
 
-现在程序的输出是:
+现在程序的输出为:
 
 \begin{shell}
 0 3 4 8 15 42 77 132
@@ -250,9 +250,9 @@ int main()
 
 \mySubsubsection{18.5.3}{编译时使用字符串}
 
-对于编译时字符串，现在所有的操作都是constexpr，所以现在可以在编译时使用std::string，也可以使用任何其他字符串类型，例如std::u8string。
+对于编译时字符串，现在所有的操作都是constexpr，所以现在可以在编译时使用std::string，也可以使用其他字符串类型，例如std::u8string。
 
-但也有一个限制，即不能在运行时使用编译时字符串。例如:
+但这也有一个限制，即不能在运行时使用编译时字符串。例如:
 
 \begin{cpp}
 consteval std::string returnString()
@@ -283,7 +283,7 @@ consteval void useStringInConsteval()
 
 不能通过使用data()或c\_str()或std::string\_view返回编译时字符串来解决这个问题，可将返回在编译时分配的内存地址。若发生这种情况，编译器会引发编译时错误。
 
-然而，可以使用与上面描述的向量相同的技巧。可以将string对象转换为固定大小的数组，并返回数组和vector对象的大小。
+然而，可以使用与上面描述的vector相同的技巧。可以将string对象转换为固定大小的数组，并返回数组和vector对象的大小。
 
 下面是一个完整的例子:
 
@@ -302,13 +302,13 @@ consteval auto toRuntimeString(std::string s)
 {
 	// ensure the size of the exported array is large enough:
 	assert(s.size() <= MaxSize);
-	
+
 	// create a compile-time array and copy all characters into it:
 	std::array<char, MaxSize+1> arr{}; // ensure all elems are initialized
 	for (int i = 0; i < s.size(); ++i) {
 		arr[i] = s[i];
 	}
-	
+
 	// return the compile-time array and the string size:
 	return std::pair{arr, s.size()};
 }
@@ -340,7 +340,7 @@ int main()
 同样，这里定义了两个辅助函数来将编译时字符串导出为运行时字符串:
 
 \begin{itemize}
-\item 
+\item
 编译时函数toRuntimeString()将字符串转换为std::array<>，并返回该数组和字符串的大小:
 
 \begin{cpp}
@@ -348,20 +348,20 @@ template<int MaxSize>
 consteval auto toRuntimeString(std::string s)
 {
 	assert(s.size() <= MaxSize); // ensure array size fits
-	
+
 	// create a compile-time array and copy all characters into it:
 	std::array<char, MaxSize+1> arr{}; // ensure all elems are initialized
 	for (int i = 0; i < s.size(); ++i) {
 		arr[i] = s[i];
 	}
-	
+
 	return std::pair{arr, s.size()}; // return array and size
 }
 \end{cpp}
 
-通过使用assert()，再次检查数组的大小是否足够大。以同样的方式，可以在编译时确定有没有浪费太多的内存。
+使用assert()，再次检查数组的大小是否足够大。以同样的方式，可以在编译时确定有没有浪费太多的内存。
 
-\item 
+\item
 运行时函数fromComptimeString()接受返回的数组和大小，初始化运行时字符串并返回:
 
 \begin{cpp}
@@ -372,7 +372,7 @@ std::string fromComptimeString(const auto& dataAndSize)
 }
 \end{cpp}
 
-该函数的测试用例使用辅助函数asString()，可以在编译时和运行时使用它将整型值转换为字符串。
+该函数的测试用例使用辅助函数asString()，可以在编译时和运行时使用将整型值转换为字符串。
 
 该程序有以下输出:
 

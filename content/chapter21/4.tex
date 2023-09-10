@@ -11,10 +11,10 @@ const char8_t* s = u8"K\u00F6ln"; // character sequence with UTF-8 encoding for 
 这种类型的引入是一个突破性的变化:
 
 \begin{itemize}
-\item 
+\item
 u8字符字面量现在使用char8\_t，而非char
 
-\item 
+\item
 对于UTF-8字符串，现在使用新的类型std::u8string和std::u8string\_view
 \end{itemize}
 
@@ -31,7 +31,7 @@ auto sv = u8"K\u00F6ln"sv; // string view with UTF-8 encoding for Köln
 c和s的类型在这里发生了变化:
 
 \begin{itemize}
-\item 
+\item
 C++20之前，这相当于:
 
 \begin{cpp}
@@ -42,7 +42,7 @@ std::string s2 = u8"K\u00F6ln"s; // UTF-8 string type before C++20
 std::string_view sv = u8"K\u00F6ln"s; // UTF-8 string view type before C++20
 \end{cpp}
 
-\item 
+\item
 自C++20起，这相当于:
 
 \begin{cpp}
@@ -55,10 +55,10 @@ std::u8string_view sv = u8"K\u00F6ln"sv; // UTF-8 string view type since C++20
 
 \end{itemize}
 
-这个改变的原因很简单:我们现在可以为UTF-8字符和字符串实现特殊的行为:
+这个改变的原因很简单:现在可以为UTF-8字符和字符串实现特殊的行为:
 
 \begin{itemize}
-\item 
+\item
 可以重载UTF-8字符序列:
 
 \begin{cpp}
@@ -73,7 +73,7 @@ void store(const char8_t* s)
 }
 \end{cpp}
 
-\item 
+\item
 可以在泛型代码中实现特殊行为:
 
 \begin{cpp}
@@ -90,31 +90,31 @@ void store(const CharT* s)
 
 \end{itemize}
 
-仍然只能在char8\_t类型的对象中存储一个字节的UTF-8字符(记住，UTF-8字符具有可变宽度):
+只能在char8\_t类型的对象中存储一个字节的UTF-8字符(记住，UTF-8字符具有可变宽度):
 
 \begin{itemize}
-\item 
+\item
 符号@的十进制值为64(十六进制0x40)，可以将其值存储在char8\_t中。因此，u8字符字面量定义良好:
 
 \begin{cpp}
 char8_t c = u8'@'; // OK (c has value 64)
 \end{cpp}
 
-\item 
+\item
 欧洲货币Euro(€)由三个编码单位组成:226 130 172(十六进制:0xE2 0x82 0xAC)，所以不能将其值存储在char8\_t中:
 
 \begin{cpp}
 char8_t cEuro = u8'€'; // ERROR: invalid character literal
 \end{cpp}
 
-相反，必须初始化一个字符序列或UTF-8字符串:
+必须初始化一个字符序列或UTF-8字符串:
 
 \begin{cpp}
 const char8_t* cEuro = u8"\u20AC"; // OK
 std::u8string sEuro = u8"\u20AC"; // OK
 \end{cpp}
 
-这里，使用Unicode符号来指定UTF-8字符的值，这会创建一个包含四个const char8\_t(包括末尾的null字符)的数组，然后用它来初始化euro和sEuro。
+使用Unicode符号来指定UTF-8字符的值，这会创建一个包含四个const char8\_t(包括末尾的null字符)的数组，然后来初始化euro和sEuro。
 
 若编译器在源代码中接受字符e(必须支持带有字符集的源文件编码，如UTF-8或ISO-8859-15)，甚至可以直接在字面量中使用这个符号:
 
@@ -123,17 +123,17 @@ const char8_t* cEuro = u8"€"; // OK if valid character for the compiler
 std::u8string sEuro = u8"€"; // OK if valid character for the compiler
 \end{cpp}
 
-但是，由于该源代码不可移植，应该使用Unicode字符(例如使用\verb|\|u20AC表示€符号)。
+由于该源代码不可移植，应该使用Unicode字符(例如使用\verb|\|u20AC表示€符号)。
 
 \end{itemize}
 
-请注意，C++标准库中的一些内容已相应更改:
+C++标准库中的一些内容已相应更改:
 
 \begin{itemize}
-\item 
+\item
 添加了新字符类型char8\_t的重载
 
-\item 
+\item
 使用或返回UTF-8字符串的函数使用新的UTF-8字符串类型
 \end{itemize}
 
@@ -144,43 +144,42 @@ std::cout << "char8_t has "
 		  << std::numeric_limits<char8_t>::digits << " bits\n";
 \end{cpp}
 
-
 \mySubsubsection{21.4.1}{C++标准库中对char8\_t的更改}
 
 C++标准库更改了以下内容以支持char8\_t:
 
 \begin{itemize}
-\item 
+\item
 现在提供了u8string(定义为std::basic\_string<char8\_t>)
 
-\item 
+\item
 现在提供了u8string\_view(定义为std::basic\_string\_view<char8\_t>)
 
-\item 
+\item
 现在定义了Std::numeric\_limits<char8\_t>
 
-\item 
+\item
 现在定义了std::char\_traits<char8\_t>
 
-\item 
+\item
 现在提供了char8\_t字符串和字符串视图的哈希函数
 
-\item 
+\item
 现在提供了std::mbrtoc8()和c8rtomb()
 
-\item 
+\item
 现在提供了用于char8\_t和char16\_t或char32\_t之间转换的编解码facet
 
-\item 
+\item
 对于文件系统路径，u8string()现在返回std::u8string，而非std::string
 
-\item 
+\item
 现在提供了std::atomic<char8\_t>
 \end{itemize}
 
-请注意，当使用C++20编译现有代码时，这些更改可能会破坏现有代码，这将在后面讨论。
+当使用C++20编译现有代码时，这些更改可能会破坏现有代码，这将在后面讨论。
 
-\mySubsubsection{21.4.2}{向后兼容性的损坏}
+\mySubsubsection{21.4.2}{向后兼容性的破坏}
 
 由于C++20更改了返回UTF-8字符串的UTF-8字面值和签名的类型，使用UTF-8字符的代码可能不再编译。
 
@@ -199,12 +198,11 @@ char* cp = &c; // OK in C++17, ERROR since C++20
 std::cout << c; // OK in C++17, ERROR since C++20
 \end{cpp}
 
-
 \mySamllsection{使用新字符串类型的错误代码}
 
 特别是，返回UTF-8字符串的代码现在可能会导致问题。
 
-例如，下面的代码不再编译，因为u8string()现在返回std::u8string，而非std::string:
+下面的代码不再编译，因为u8string()现在返回std::u8string，而非std::string:
 
 \begin{cpp}
 // iterate over directory entries:
@@ -230,7 +228,7 @@ for (const auto& entry : fs::directory_iterator(path)) {
 
 \mySamllsection{对UTF-8字符串的错误代码I/O}
 
-也可以不再输出UTF-8字符或字符串到std::cout(或任何其他标准输出流):
+也可以不再输出UTF-8字符或字符串到std::cout(或其他标准输出流):
 
 \begin{cpp}
 std::cout << u8"text"; // OK in C++17, ERROR since C++20
@@ -286,7 +284,7 @@ std::cout << s; // OK in C++17, ERROR since C++20
 
 若想知道为什么C++20没有为UTF-8字符提供工作输出操作符，这是一个相当复杂的问题，我们根本没有足够的时间来解决。可以在这里阅读更多内容:\url{http://stackoverflow.com/a/58895428}。
 
-因为当大量使用UTF-8字符时，使用reinterpret\_cast<>可能无法扩展，Tom Honermann编写了一个指南，关于如何处理C++20之前和之后的UTF-8字符代码:“P1423R3 char8\_t向后兼容性修复”。若要处理UTF-8字符和字符串，一定要阅读它，可以从\url{http://wg21.link/p1423}下载到。
+因为当大量使用UTF-8字符时，使用reinterpret\_cast<>可能无法扩展，Tom Honermann编写了一个指南，关于如何处理C++20之前和之后的UTF-8字符代码:“P1423R3 char8\_t向后兼容性修复”。若要处理UTF-8字符和字符串，一定要阅读，可以从\url{http://wg21.link/p1423}下载到。
 
 
 

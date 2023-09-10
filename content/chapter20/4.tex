@@ -10,10 +10,10 @@
 
 该特性特别用于处理间接可读类型的两个对象的值类型，与传统的迭代器特征(std::iterator\_traits<>)相比，这个特征可以正确地处理新的迭代器类别。
 
-请注意，与名为type的成员没有相应的数据结构std::iter\_difference。相反，类型特性是通过尝试使用新辅助类型std::incrementable\_traits<>的成员difference\_type来定义的，该成员difference\_type已经定义如下:
+与名为type的成员没有相应的数据结构std::iter\_difference。相反，类型特性是通过尝试使用新辅助类型std::incrementable\_traits<>的成员difference\_type来定义的，该成员difference\_type已经定义如下:
 
 \begin{itemize}
-\item 
+\item
 若特化，则使用std::incrementable\_traits<T>::difference\_type。
 
 \item
@@ -47,22 +47,22 @@ using T5 = std::iter_difference_t<std::chrono::sys_seconds>; // ERROR
 
 该特性特别用于处理间接可读类型的值类型，与传统的迭代器特性(std::iterator\_traits<>)相比，这个特性可以正确处理新迭代器的类别。
 
-注意，在名为type的成员中没有相应的数据结构std::iter\_value。相反，类型特性是通过尝试使用新的辅助类型std::indirectly\_readable\_traits<>的成员value\_type来定义的，该成员值已经定义如下:
+名为type的成员中没有相应的数据结构std::iter\_value。相反，类型特性是通过尝试使用新的辅助类型std::indirectly\_readable\_traits<>的成员value\_type来定义的，该成员值已经定义如下:
 
 \begin{itemize}
-\item 
+\item
 若特化，则使用std::indirectly\_readable\_traits<T>::value\_type。
 
-\item 
-对于原始指针，使用它所引用的非const/volatile类型。
+\item
+对于原始指针，使用引用的非const/volatile类型。
 
-\item 
+\item
 否则，若定义了，则使用remove\_cv\_t<T::value\_type>。
 
-\item 
+\item
 否则，若定义了，则使用remove\_cv\_t<T::element\_type>。
 
-\item 
+\item
 对于const T，使用T的值类型。
 \end{itemize}
 
@@ -80,7 +80,7 @@ using T5 = std::iter_value_t<int>; // ERROR
 
 \mySamllsection{std::iter\_reference\_t<T>}
 
-生成对应于可解引用指针/迭代器类型T的左值引用类型。其等价于：
+生成对应于可解引用指针/迭代器类型T的左值引用类型。等价于：
 
 \begin{cpp}
 decltype(*declval<T&>())
@@ -96,7 +96,7 @@ decltype(std::ranges::iter_move(declval<T&>()))
 
 这些特性是专门用来处理间接可写类型的值类型的，与传统的迭代器特征(std::iterator\_traits<>)不同，这些特征可以正确处理新的迭代器类别。
 
-请注意，没有带有类型成员的相应数据结构std::iter\_value。相反，这些特征是按照上面描述的那样直接定义。
+没有带有类型成员的相应数据结构std::iter\_value。相反，这些特征是按照上面描述的那样直接定义。
 
 例如:
 

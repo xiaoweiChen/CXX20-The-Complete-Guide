@@ -4,7 +4,7 @@
 
 \mySamllsection{std::remove\_cvref\_t<T>}
 
-生成类型T，而不是引用、顶层const或volatile。
+生成类型T，而不是引用、const或volatile。
 
 表达式为
 
@@ -56,7 +56,7 @@ std::unwrap_ref_decay_t<int[4]> // int*
 
 \mySamllsection{std::common\_reference\_t<T...>}
 
-生成所有类型T…的通用类型(若有的话)，可以给它赋值。因此，给定类型T1、T2和T3, 特性生成的类型可以同时赋值这三种类型。理想情况下，其是引用类型。但弱涉及到类型转换并创建临时对象，则为值类型。
+生成所有类型T…的通用类型(若有的话)，可以给它赋值。因此，给定类型T1、T2和T3, 特性生成的类型可以同时赋值这三种类型。理想情况下，是引用类型。但若涉及到类型转换并创建临时对象，则为值类型。
 
 例如:
 
@@ -80,7 +80,7 @@ std::common_reference_t<char, std::string> // ERROR
 这个类型特性有大量的用例:
 
 \begin{itemize}
-\item 
+\item
 可以禁用使用参数来推断模板参数。例如:
 
 \begin{cpp}
@@ -97,8 +97,8 @@ insert(coll, 42); // OK: type of 42 not used to deduce type T
 
 若只使用const T\&声明形参值，则编译器会引发错误，其会为类型T推断出两种不同的类型。
 
-\item 
-可以使用它作为构建块来定义生成类型的类型特征。例如，可以简单地定义一个类型特性来删除常量化:[可参见CppCon 2014 (\url{http: //www.youtube.com/watch?v=Am2is2QCvxY})上Walter E. Brown的演讲现代模板元编程]。
+\item
+可以使用它作为构建块来定义生成类型的类型特征，可以简单地定义一个类型特性来删除常量化:[可参见CppCon 2014 (\url{http: //www.youtube.com/watch?v=Am2is2QCvxY})上Walter E. Brown的演讲现代模板元编程]。
 
 \begin{cpp}
 template<typename T>

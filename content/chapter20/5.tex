@@ -1,7 +1,7 @@
 
 一些情况下，了解两个类型或指向类型的指针是否可以安全地相互转换很重要。C++标准使用术语“布局兼容”来表示这一点。
 
-为了检查类成员之间的布局兼容关系，C++20还引入了两个新的普通函数。这个好处是可以在运行时上下文中使用。
+为了检查类成员之间的布局兼容关系，C++20还引入了两个新的普通函数，可以在运行时上下文中使用。
 
 \mySubsubsection{20.5.1}{is\_layout\_compatible\_v<>}
 
@@ -28,22 +28,22 @@ class Type {
 std::is_layout_compatible_v<Data, Type> // true
 \end{cpp}
 
-请注意，对于布局兼容性来说，仅仅是类型和位的粗略匹配完全不够。根据语言规则:
+对于布局兼容性来说，仅仅是类型和位的粗略匹配完全不够。根据语言规则:
 
 \begin{itemize}
-\item 
+\item
 有符号类型永远不会与无符号类型的布局兼容。
 
-\item 
+\item
 char甚至不兼容有符号char和无符号char的布局。
 
-\item 
+\item
 引用与非引用的布局永不兼容。
 
-\item 
+\item
 不同(甚至是布局兼容)类型的数组永远不与布局兼容。
 
-\item 
+\item
 枚举类型永远不会与其基础类型的布局兼容。
 \end{itemize}
 
@@ -67,9 +67,9 @@ std::is_layout_compatible_v<char, char&> // false
 
 \mySamllsection{std::is\_pointer\_interconvertible\_base\_of<Base, Der>}
 
-yields true if a pointer to type Der can safely be converted to a pointer to its base type Base with reinterpret\_cast.
+若使用reinterpret\_cast可以安全地将指向Der类型的指针，并转换为指向其基类型base的指针，则返回true。
 
-If both have the same type, the trait always yields true.
+若两者具有相同的类型，则该特性返回true。
 
 例如:
 
@@ -93,7 +93,7 @@ template<typename S1, typename S2, typename M1, typename M2>
 constexpr bool is_corresponding_member(M1 S1::*m1, M2 S2::*m2) noexcept;
 \end{cpp}
 
-返回m1和m2是否指向S1和S2的布局兼容成员，所以这些成员和这些成员前面的所有成员必须布局兼容。当且仅当S1和S2是标准布局类型，M1和M2是对象类型，且M1和M2不为空时，函数产生true。
+返回m1和m2是否指向S1和S2的布局兼容成员，所以这些成员和这些成员前面的所有成员必须布局兼容。当且仅当S1和S2是标准布局类型，M1和M2是对象类型，且M1和M2不为空时，函数返回true。
 
 例如:
 
@@ -116,7 +116,7 @@ template<typename S, typename M>
 constexpr bool is_pointer_interconvertible_with_class(M S::*m) noexcept;
 \end{cpp}
 
-返回类型s的每个对象，s是否与其子对象的s指针可互换。当且仅当S是标准布局类型，M是对象类型，且M不为空时，该函数产生true。
+返回类型s的每个对象，s是否与其子对象的s指针可互换。当且仅当S是标准布局类型，M是对象类型，且M不为空时，该函数返回true。
 
 例如:
 
@@ -136,9 +136,9 @@ std::is_pointer_interconvertible_with_class<DB1B2, int>(&B1::x) // false
 std::is_pointer_interconvertible_with_class<DB1B2, int>(&DB1B2::x) // false
 \end{cpp}
 
-C++20标准在注释中解释了后两个语句为假的原因:
+C++20标准在注释中解释了后两个语句为false的原因:
 
-指针到成员表达式\&C::b的类型，并不总是指向C成员的指针。当将这些函数与继承结合使用时，可能会导致令人惊讶的结果:
+指针到成员表达式\&C::b的类型，并不总是指向C成员的指针。当将这些函数与继承结合使用时，会导致令人惊讶的结果:
 
 \begin{cpp}
 struct A { int a; }; // a standard-layout class

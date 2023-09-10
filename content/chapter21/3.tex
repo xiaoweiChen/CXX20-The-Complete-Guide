@@ -32,7 +32,7 @@ namespace MyProject {
 MyProject::Status s = MyProject::done; // OK
 \end{cpp}
 
-对于公开的枚举值，甚至依赖于参数的查找(ADL)也可以正常工作。例如，可以将上面的例子扩展为如下例子:
+对于公开的枚举值，甚至依赖于参数的查找(ADL)也可以正常工作。可以将上面的例子扩展为如下例子:
 
 \begin{cpp}
 namespace MyProject {
@@ -49,7 +49,7 @@ foo(MyProject::done); // OK: calls MyProject::foo() with MyProject::Task::Status
 foo(MyScope::done); // OK: calls MyProject::foo() with MyProject::Task::Status::done
 \end{cpp}
 
-请注意，ADL通常不使用类型别名:
+ADL通常不使用类型别名:
 
 \begin{cpp}
 namespace MyScope {

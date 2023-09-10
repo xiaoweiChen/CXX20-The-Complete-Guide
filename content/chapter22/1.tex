@@ -27,26 +27,26 @@ T::value_type getElem(const T& cont, typename T::iterator pos)
 }
 \end{cpp}
 
-注意，参数pos和变量elem仍然需要typename，可以跳过typename的地方是:
+参数pos和变量elem仍然需要typename，可以跳过typename的地方是:
 
 \begin{itemize}
-\item 
+\item
 当声明返回类型时(局部前向声明除外)
 
-\item 
+\item
 在类模板中声明成员时
 
-\item 
+\item
 在类模板中声明成员函数或友元函数的形参时
 
-\item 
+\item
 声明require表达式的参数时
 
-\item 
+\item
 对于别名声明中的类型
 \end{itemize}
 
-特别是，当声明一个类模板时，可以在大多数情况下跳过typename:
+当声明一个类模板时，可以在大多数情况下跳过typename:
 
 \begin{cpp}
 template<typename T>
@@ -60,66 +60,66 @@ public:
 };
 \end{cpp}
 
-然而，由于隐式typename的规则在某种程度上非常微妙，因此在使用模板形参的类型成员时(至少在类模板之外)，可能仍然总是使用typename。
+由于隐式typename的规则在某种程度上非常微妙，因此在使用模板形参的类型成员时(至少在类模板之外)，可能仍然使用typename。
 
 \mySubsubsection{22.1.1}{隐式类型名的详情}
 
 自C++20起，以下情况为模板形参使用类型成员时，可以跳过typename:
 
 \begin{itemize}
-\item 
+\item
 在别名声明中(即，使用using声明类型名称时);注意，带typedef的类型声明仍然需要typename
 
-\item 
+\item
 当定义或声明函数的返回类型时(除非声明发生在函数或块范围内)
 
-\item 
+\item
 声明尾步返回类型时
 
-\item 
+\item
 当指定static\_cast、const\_cast、reinterpret\_cast或dynamic\_cast的目标类型时
 
-\item 
+\item
 指定类型时
 
-\item 
+\item
 在类中
 
 \begin{itemize}
-\item 
+\item
 声明数据成员时
 
-\item 
+\item
 声明成员函数的返回类型时
 
-\item 
+\item
 声明成员函数或友元函数或Lambda的形参(默认实参可能仍然需要)时
 \end{itemize}
 
-\item 
+\item
 在require表达式中声明参数类型时
 
-\item 
+\item
 为模板的类型参数声明默认值时
 
-\item 
+\item
 声明非类型模板形参的类型时
 \end{itemize}
 
 注意，C++20之前，typename在一些其他情况下是不必要的:
 
 \begin{itemize}
-\item 
+\item
 指定继承类的基类型时
 
-\item 
+\item
 在构造函数中将初始值传递给基类时
 
-\item 
+\item
 在类声明中使用类型成员时
 \end{itemize}
 
-下面的例子演示了上面的大多数情况(这里，TYPENAME表示自C++20以来可选填的地方):
+下面的例子演示了上面的大多数情况(TYPENAME表示自C++20以来可选填的地方):
 
 \begin{cpp}
 template<typename T,

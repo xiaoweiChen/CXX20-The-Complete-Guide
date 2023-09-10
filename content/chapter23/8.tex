@@ -1,23 +1,23 @@
 字符串成员函数starts\_with()和ends\_with()由Mikhail Maltsev在\url{http://wg21.link/p0457r2}中提出。
 
-字符串的reserve()函数的限制最早是由Andrew Luo在\url{http://wg21.link/lwg2968}中提出的。最终接受的提案是由Mark Zeren和Andrew Luo在\url{http://wg21.link/p0966r1}上制定的。
+字符串的reserve()函数的限制最早是由Andrew Luo在\url{http://wg21.link/lwg2968}中提出，最终接受的提案是由Mark Zeren和Andrew Luo在\url{http://wg21.link/p0966r1}上制定。
 
-访问源位置最早是由Robert Douglas在\url{http://wg21.link/n3972}中提出的。最终接受的提案是由Robert Douglas、Corentin Jabot、Daniel Kr{\"u}gler和Peter Sommerlad在\url{http://wg21.link/p1208r6}上制定的。
+访问源位置最早是由Robert Douglas在\url{http://wg21.link/n3972}中提出，最终接受的提案是由Robert Douglas、Corentin Jabot、Daniel Kr{\"u}gler和Peter Sommerlad在\url{http://wg21.link/p1208r6}上制定。
 
 采用Federico Kircheis在\url{http://wg21.link/p0586r2}中提出的安全整型比较函数。
 
-ssize()函数作为比较有符号索引和无符号索引大小的问题已经讨论了很长时间。我们希望让所有size()函数产生一个带符号的值;但是，存在向后兼容性问题。作为对std::span建议使用带符号大小类型的回应，ssize()首先由Robert Douglas、Nevin Liber和Marshall Clow在\url{http://wg21.link/p1089r0}中提出。最终接受的提案由Jorg Brown在\url{http://wg21.link/p1227r2}中阐述。std::ranges::ssize()后来由Hannes Hauswedell、Jorg Brown和Casey Carter在\url{http://wg21.link/p1970r2}中添加。
+ssize()函数作为比较有符号索引和无符号索引大小的问题已经讨论了很长时间。我们希望让所有size()函数产生一个带符号的值，但存在向后兼容性问题。作为对std::span建议使用带符号大小类型的回应，ssize()首先由Robert Douglas、Nevin Liber和Marshall Clow在\url{http://wg21.link/p1089r0}中提出。最终接受的提案由Jorg Brown在\url{http://wg21.link/p1227r2}中阐述。std::ranges::ssize()后来由Hannes Hauswedell、Jorg Brown和Casey Carter在\url{http://wg21.link/p1970r2}中添加。
 
-数学常数最初是由Lev Minkovsky在\url{http://wg21.link/p0631r0}中提出的。最终接受的提案是由Lev Minkovsky和John McFarlane在\url{http://wg21.link/p0631r8}上提出的。
+数学常数最初是由Lev Minkovsky在\url{http://wg21.link/p0631r0}中提出，最终接受的提案是由Lev Minkovsky和John McFarlane在\url{http://wg21.link/p0631r8}上提出。
 
-位操作最早是由Matthew Fioravante在\url{http://wg21.link/n3864}上提出的。最终被接受的措辞由Jens Maurer在\url{http://wg21.link/p0553r4}和\url{http://wg21.link/p0556r3}中制定。这些名字后来由Vincent Reverdy在\url{http://wg21.link/p1956r1}上提出修改。
+位操作最早是由Matthew Fioravante在\url{http://wg21.link/n3864}上提出，最终接受的提案由Jens Maurer在\url{http://wg21.link/p0553r4}和\url{http://wg21.link/p0556r3}中制定。这些名字后来由Vincent Reverdy在\url{http://wg21.link/p1956r1}上提出修改。
 
-std::bit＿cast<>()是JF Bastien在\url{http://wg21.link/p0476r2}中提出的。
+std::bit＿cast<>()是JF Bastien在\url{http://wg21.link/p0476r2}中提出。
 
-std::endian最早由Howard Hinnant在\url{http://wg21.link/p0463r0}中提出。最终接受的提案是Howard Hinnant在\url{http://wg21.link/p0463r1}中提出的。头文件后来由Walter E. Brown和Arthur O 'Dwyer在\url{http://wg21.link/p1612r1}中修正。
+std::endian最早由Howard Hinnant在\url{http://wg21.link/p0463r0}中提出，最终接受的提案是Howard Hinnant在\url{http://wg21.link/p0463r1}中提出。头文件后来由Walter E. Brown和Arthur O 'Dwyer在\url{http://wg21.link/p1612r1}中修正。
 
-头文件<version>是由Alan Talbot在\url{http://wg21.link/p0754r2}中提出的。
+头文件<version>是由Alan Talbot在\url{http://wg21.link/p0754r2}中提出。
 
-新算法shift\_left()和shift\_right()被Dan Raviv在\url{http://wg21.link/p0769r2}中提出。在\url{http://wg21.link/p0896r4}中提出的ranges库中引入了新的范围最小/最大算法。
+新算法shift\_left()和shift\_right()由Dan Raviv在\url{http://wg21.link/p0769r2}中提出，在\url{http://wg21.link/p0896r4}中提出的范围库中引入了新的范围最小/最大算法。
 
-unseq执行策略首先由Arch D. Robison、Pablo Halpern、Robert Geva和Clark Nelson在\url{http://wg21.link/p0076r0}上提出。最终接受的提案是由Alisdair Meredith和Pablo Halpern在\url{http://wg21.link/p1001r2}上制定的。
+unseq执行策略首先由Arch D. Robison、Pablo Halpern、Robert Geva和Clark Nelson在\url{http://wg21.link/p0076r0}上提出，最终接受的提案是由Alisdair Meredith和Pablo Halpern在\url{http://wg21.link/p1001r2}上制定。

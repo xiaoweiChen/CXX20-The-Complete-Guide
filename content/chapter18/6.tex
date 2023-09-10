@@ -6,20 +6,20 @@
 自C++20起，以下语言特性可以在编译时函数中使用(无论是用constexpr还是consteval声明):
 
 \begin{itemize}
-\item 
+\item
 现在可以在编译时使用堆内存。
 
-\item 
+\item
 支持运行时多态性:
 
 \begin{itemize}
-\item 
+\item
 可以使用虚函数。
 
-\item 
+\item
 可以使用dynamic\_cast。
 
-\item 
+\item
 可以使用typeid。
 \end{itemize}
 
@@ -34,7 +34,7 @@
 
 \mySubsubsection{18.6.2}{constexpr的库扩展}
 
-C++标准库扩展了可以在编译时使用的实用程序。
+C++标准库扩展了可以在编译时使用的工具。
 
 \mySamllsection{constexpr算法和工具}
 
@@ -47,19 +47,19 @@ C++标准库扩展了可以在编译时使用的实用程序。
 几种类型的C++标准库现在更好地支持constexpr，以便在编译时可以(更好地)使用对象:
 
 \begin{itemize}
-\item 
+\item
 vector和字符串现在可以在编译时使用。
 
-\item 
+\item
 一些std::complex<>操作变成了constexpr。
 
-\item 
+\item
 std::optional<>和std::variant<>中添加了两个缺失的constexpr。
 
-\item 
+\item
 constexpr添加到std::invoke()，std::ref()，std::cref()，mem\_fn()，not\_fn()，std::bind()和std::bind\_front()中，
 
-\item 
+\item
 pointer\_traits中，用于原始指针的pointer\_to()现在可以在编译时使用。
 \end{itemize}
 
