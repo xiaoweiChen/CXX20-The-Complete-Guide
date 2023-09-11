@@ -84,7 +84,7 @@ requires std::integral<std::remove_reference_t<decltype(*std::declval<T>())>>
 ...
 \end{cpp}
 
-注意，操作符*通常产生一个非整型的引用，所以做了以下工作:
+解引用操作符通常产生一个非整型的引用，所以:
 
 \begin{itemize}
 \item

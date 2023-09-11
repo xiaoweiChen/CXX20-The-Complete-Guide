@@ -12,7 +12,7 @@ template< ... >
 concept name = ... ;
 \end{cpp}
 
-等号是必需的(不能在没有定义的情况下声明一个概念，也不能在这里使用大括号)。等号之后，可以指定任何转换为true或false的编译时表达式。
+等号是必需的(不能在没有定义的情况下声明一个概念，也不能在这里使用大括号)。等号之后，可以指定可转换为true或false的编译时表达式。
 
 概念很像bool类型的constexpr变量模板，但没有显式指定类型:
 
@@ -51,9 +51,9 @@ inline constexpr bool IsOrHasThisOrThat = ... ;
 
 \begin{itemize}
 \item
-概念并不表示代码，没有类型、存储、生存期或与对象相关的任何其他属性。
+概念并不表示代码，没有类型、存储、生命周期或与对象相关的其他属性。
 
-通过在编译时为特定模板参数实例化它们，实例化只会变为true或false，所以可以在任何可以使用true或false的地方使用，可以得到这些字面量的所有属性。
+通过在编译时为特定模板参数实例化它们，实例化只会变为true或false，所以可以在使用true或false的地方使用，可以得到这些字面量的所有属性。
 
 \item
 概念不必声明为内联的，其隐式内联。
@@ -135,7 +135,7 @@ class Memory {
 };
 \end{cpp}
 
-注意，不这样写:
+注意，不能这样写:
 
 \begin{cpp}
 template<typename T, PowerOf2 auto Val>

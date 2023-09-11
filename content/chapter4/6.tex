@@ -2,10 +2,10 @@
 
 \begin{itemize}
 \item
-在模板类型参数的声明中
+模板类型参数的声明中
 
 \item
-在用auto声明的调用参数的声明中
+用auto声明的调用参数的声明中
 
 \item
 作为复合需求中的一个需求
@@ -29,7 +29,7 @@ concept MyConcept = requires(T x) {
 	};
 \end{cpp}
 
-这里，使用一元约束，对表达式返回的单个参数或类型调用一元约束。
+使用一元约束，对表达式返回的单个参数或类型调用一元约束。
 
 \mySamllsection{具有多参数的类型约束}
 
@@ -77,7 +77,7 @@ void foo(const std::integral auto& val)
 }
 \end{cpp}
 
-然而，也可以对auto使用类型约束:
+也可以对auto使用类型约束:
 
 \begin{itemize}
 \item

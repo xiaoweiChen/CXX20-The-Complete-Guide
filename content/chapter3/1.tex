@@ -123,9 +123,9 @@ auto maxValue(T a, T b) // maxValue() for pointers (higher priority)
 }
 \end{cpp}
 
-重载一旦使用引用和非引用就可能出现歧义，所以要谨慎。
+重载使用引用和非引用就可能出现歧义，所以要谨慎。
 
-通过使用概念，甚至可以使用某些约束，但这需要使用包含其他概念的概念。
+使用概念，甚至可以使用某些约束，但这需要使用包含其他概念的概念。
 
 \mySamllsection{类型约束}
 
@@ -139,7 +139,7 @@ auto maxValue(T a, T b)
 }
 \end{cpp}
 
-此外，在使用auto声明参数时，可以将该概念用作类型约束:
+使用auto声明参数时，可以将该概念用作类型约束:
 
 \begin{cpp}
 auto maxValue(IsPointer auto a, IsPointer auto b)
@@ -157,7 +157,7 @@ auto maxValue3(const IsPointer auto& a, const IsPointer auto& b)
 }
 \end{cpp}
 
-注意，通过直接约束这两个形参，我们改变了模板的规范:不再要求a和b必须具有相同的类型，只要求两者都是类指针对象就好。
+通过直接约束这两个形参，改变了模板的规范:不再要求a和b必须具有相同的类型，只要求两者都是类指针对象就好。
 
 当使用模板语法时，等效代码如下所示:
 
@@ -215,7 +215,7 @@ requires IsComparableWith<decltype(*a), decltype(*b)>
 }
 \end{cpp}
 
-这里，使用后面的requires子句，可以在参数列表之后指定。好处是可以使用一个参数的名称，甚至可以组合多个参数名称来制定约束。
+使用后面的requires子句，可以在参数列表之后指定。好处是可以使用一个参数的名称，甚至可以组合多个参数名称来制定约束。
 
 \mySamllsection{标准概念}
 
@@ -229,17 +229,17 @@ requires std::totally_ordered_with<decltype(*a), decltype(*b)>
 }
 \end{cpp}
 
-概念std::totally\_ordered\_with接受两个模板形参，用于检查传递的类型的值是否与操作符==、!=、<、<=、>和>=可比较。
+概念std::totally\_ordered\_with接受两个模板形参，用于检查传递的类型的值是否支持可比较操作符==、!=、<、<=、>和>=。
 
-标准库为常见约束提供了许多标准概念，它们在命名空间std中提供(有时使用子命名空间)。
+标准库为常见约束提供了许多标准概念，在命名空间std中提供(有时使用子命名空间)。
 
-例如，还可以使用概念std::three\_way\_comparable\_with，这要求支持操作符<=>(为概念提供了名称)。要检查是否支持对相同类型的两个对象进行比较，可以使用std::totally\_ordered这个概念。
+还可以使用概念std::three\_way\_comparable\_with，这要求支持操作符<=>(为概念提供名称)。要检查是否支持对相同类型的两个对象进行比较，可以使用std::totally\_ordered这个概念。
 
 \mySamllsection{requires表达式}
 
-目前为止，maxValue()模板不适用于非原始指针的类指针类型，例如：智能指针。若代码也要为这些类型编译，最好将指针定义为可以调用操作符*的对象。
+maxValue()模板不适用于非原始指针的类指针类型，例如：智能指针。若代码也要为这些类型编译，最好将指针定义为可以调用解引用操作符的对象。
 
-C++20起，很容易指定:
+C++20中，就很容易指定:
 
 \begin{cpp}
 template<typename T>
@@ -248,7 +248,7 @@ concept IsPointer = requires(T p) { *p; }; // expression *p has to be well-forme
 
 这个概念没有对原始指针使用类型特性，而是提出了一个简单的要求:表达式*p必须对类型T的对象p有效。
 
-这里，再次使用requires关键字来引入一个requires表达式，其可以定义类型和参数的一个或多个需求。通过声明类型为T的形参p，就可以指定必须支持这种对象的哪些操作。
+再使用requires关键字来引入一个requires表达式，其可以定义类型和参数的一个或多个需求。通过声明类型为T的形参p，就可以指定必须支持这种对象的哪些操作。
 
 还可以要求多个操作、类型成员以及表达式产生约束类型。例如:
 
@@ -265,7 +265,7 @@ concept IsPointer = requires(T p) {
 
 \begin{itemize}
 \item
-该类型必须支持操作符*。
+该类型必须支持解引用操作符。
 
 \item
 该类型必须支持小于操作符，该操作符必须产生bool类型。
@@ -274,11 +274,11 @@ concept IsPointer = requires(T p) {
 该类型的对象必须与nullptr比较。
 \end{itemize}
 
-注意，不需要两个T类型的形参来检查是否可以调用小于操作符，运行时值无关紧要，但对于如何指定表达式产生的结果有一些限制(例如，不能只指定bool而，不指定std::same\_as<>)。
+不需要两个T类型的形参来检查是否可以调用小于操作符，运行时值无关紧要，但对于如何指定表达式产生的结果有一些限制(例如，不能只指定bool而，不指定std::same\_as<>)。
 
-这里不要求p是一个等于nullptr的指针，只要求可以将p与nullptr进行比较。通常，这就排除了迭代器，它们不能与nullptr进行比较(除非碰巧实现为原始指针，例如std::array<>类型通常就是这种情况)。
+这里不要求p是一个等于nullptr的指针，只要求可以将p与nullptr进行比较。这就排除了迭代器，其不能与nullptr进行比较(除非碰巧实现为原始指针，例如std::array<>类型通常就是这种情况)。
 
-同样，这是一个编译时约束，对生成的代码没有影响，只决定代码编译哪种类型，所以将形参p声明为值还是引用就无关紧要了。
+这是一个编译时约束，对生成的代码没有影响，只决定代码编译哪种类型，所以将形参p声明为值还是引用就无关紧要了。
 
 也可以直接在requires子句中使用requires表达式作为临时约束(这看起来有点滑稽，但当理解了requires子句和requires表达式之间的区别，并且两者都需要关键字requires，就有意义了):
 
@@ -293,7 +293,7 @@ auto maxValue(T a, T b)
 
 \mySamllsection{使用概念的完整例子}
 
-现在，已经介绍了所有必要的内容，再来看一个完整的示例程序，用于计算普通值和指针类对象的最大值:
+已经介绍了所有必要的内容，再来看一个完整的示例程序，用于计算普通值和指针类对象的最大值:
 
 \filename{lang/maxvalue.cpp}
 
@@ -335,7 +335,7 @@ int main()
 }
 \end{cpp}
 
-注意，不能使用maxValue()来检查两个迭代器值的最大值:
+不能使用maxValue()来检查两个迭代器值的最大值:
 
 \begin{cpp}
 std::vector coll{0, 8, 15, 11, 47};
@@ -346,7 +346,7 @@ if (pos != coll.end()) {
 }
 \end{cpp}
 
-原因是我们要求形参与nullptr可比较，而迭代器不需要支持nullptr。这是否是一个设计问题？所以对于概念的定义非常重要。
+原因是要求形参与nullptr可比较，而迭代器不需要支持nullptr。这是否是一个设计问题？所以对于概念的定义非常重要。
 
 
 

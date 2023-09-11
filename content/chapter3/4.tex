@@ -81,7 +81,7 @@ template<std::incrementable T>
 void algo2(T beg, T end); // multi-pass algorithm
 \end{cpp}
 
-注意，这里对算法使用了不同的名称。由于无法检查约束的语义差异，因此开发者可以决定不传递输入流迭代器:
+这里对算法使用了不同的名称。由于无法检查约束的语义差异，因此开发者可以决定不传递输入流迭代器:
 
 \begin{cpp}
 algo1(std::istream_iterator<int>{std::cin}, // OK
@@ -108,12 +108,12 @@ algo(std::istream_iterator<int>{std::cin}, // OOPS: calls the wrong overload
 	 std::istream_iterator<int>{});
 \end{cpp}
 
-这里有一个解决方案，因为对于这种语义差异，C++98已经引入了迭代器特性，迭代器概念使用了这些特性。若使用这些概念(或相应的范围概念)，一切都会很好:
+这里有一个解决方案，因为对于这种语义差异，C++98已经引入了迭代器特性，迭代器概念使用了这些特性。若使用这些概念(或相应的范围概念)，就没有问题了:
 
 \begin{cpp}
 template<std::input_iterator T>
 void algo(T beg, T end); // single-pass implementation
-	
+
 template<std::forward_iterator T>
 void algo(T beg, T end); // multi-pass implementation
 

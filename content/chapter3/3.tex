@@ -20,7 +20,7 @@
 约束可用于重载或特化泛型代码，以便针对不同的类型编译不同的代码。
 \end{itemize}
 
-通过逐步开发另一个示例来进一步了解这些原因，还可以引入一些关于约束、需求和概念的更多细节。
+通过逐步开发另一个示例来进一步了解这些原因，还可以引入一些关于约束、需求和概念的细节信息。
 
 \mySubsubsection{3.3.1}{理解代码和错误消息}
 
@@ -49,7 +49,7 @@ void add(Coll& coll, const T& val)
 若传递的实参具有元素类型Coll，则该类型必须支持复制(使用传递值初始化)。
 \end{itemize}
 
-若违反这些要求中的任意一个，代码将无法编译。例如:
+若违反这些要求中的一个，代码将无法编译。例如:
 
 \begin{cpp}
 std::vector<int> vec;
@@ -63,7 +63,6 @@ std::vector<std::atomic<int>> aiVec;
 std::atomic<int> ai{42};
 add(aiVec, ai); // ERROR: cannot copy/move atomics
 \end{cpp}
-
 
 当编译失败时，错误消息会非常清楚，例如：模板的参数类型没有找到成员push\_back()时:
 
@@ -136,7 +135,7 @@ prog.cpp:9:16: note: the required expression ’c.push_back(v)’ is invalid
 \end{shell}
 }
 
-然而，在传递原子类型时，仍然会在std::vector<>的代码深处检测可复制性检查(这一次是在检查概念时，而不是在编译代码时)。
+在传递原子类型时，仍然会在std::vector<>的代码深处检测可复制性检查(这一次是在检查概念时，而不是在编译代码时)。
 
 当指定使用push\_back()的基本约束作为要求时，情况会有所改善:
 
@@ -149,9 +148,9 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-这里，使用标准概念std::convertible\_to来要求，(隐式或显式)将传递的实参T的类型转换为集合的元素类型。
+使用标准概念std::convertible\_to来要求，(隐式或显式)将传递的实参T的类型转换为集合的元素类型。
 
-现在，若违背需求，就可以得到一条错误消息，其中包含违反的概念和位置。例如[这只是一种可能的消息例子，不一定与特定编译器的情况相匹配]:
+若违背需求，就会得到一条错误消息，其中包含违反的概念和位置。例如[这只是一种可能的消息例子，不一定与特定编译器的情况相匹配]:
 
 {\footnotesize
 \begin{shell}
@@ -179,7 +178,7 @@ prog.cpp:25:18: required from here
 
 \mySubsubsection{3.3.2}{使用概念禁用泛型代码}
 
-假设想为上面介绍的add()函数模板提供一个特殊的实现。在处理浮点值时，应该发生一些不同的或额外的事情。
+假设为上面介绍的add()函数模板提供一个特殊的实现。在处理浮点值时，应该发生一些不同的事。
 
 一种简单的方法可能是为double重载函数模板:
 
@@ -198,7 +197,7 @@ void add(Coll& coll, double val) // for floating-point value types
 }
 \end{cpp}
 
-正如预期的那样，当传递一个double类型的参数作为第二个参数时，调用第二个函数;否则，使用泛型参数:
+当传递一个double类型的参数作为第二个参数时，调用第二个函数;否则，使用泛型参数:
 
 \begin{cpp}
 std::vector<int> iVec;
@@ -227,11 +226,11 @@ add(dVec, f); // OOPS: calls 1st add() for T being float
 调用普通函数优于调用函数模板。
 \end{itemize}
 
-这里，重载解析必须在调用类型转换和调用函数模板之间做出决定。按照规则，优先选择带有模板参数的版本。
+重载解析必须在调用类型转换和调用函数模板之间做出决定。按照规则，优先选择带有模板参数的版本。
 
 \mySamllsection{修复重载解析}
 
-错误的重载解析的修复非常简单。不需要用特定类型声明第二个形参，只需要求要插入的值为浮点类型即可。为此，可以使用新的标准概念std::floating\_point来约束浮点值的函数模板:
+错误的重载解析的修复非常简单。不需要用特定类型声明第二个形参，只需要求要插入的值为浮点类型即可，可以使用新的标准概念std::floating\_point来约束浮点值的函数模板:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -243,7 +242,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-因为使用的概念只适用于单个模板形参，所以也可以使用速记表示法:
+因为使用的概念只适用于单个模板形参，所以可以使用速记表示法:
 
 \begin{cpp}
 template<typename Coll, std::floating_point T>
@@ -264,7 +263,7 @@ void add(auto& coll, const std::floating_point auto& val)
 }
 \end{cpp}
 
-对于add()，现在有两个可以调用的函数模板:一个不带特定需求，一个带特定需求:
+对于add()，现在有两个可以调用的函数模板:一个不带特定需求，另一个带特定需求:
 
 \begin{cpp}
 uirement:
@@ -296,7 +295,7 @@ add(dVec, 0.7); // OK: calls add() for floating-point types
 
 若两个重载或特化都有约束，重载解析可以决定哪一个更好，这一点很重要。为了支持这一点，签名不应有太大的差异。
 
-若签名差异太大，则可能不适用更受约束的重载。例如，如声明浮点值的重载以按值接受实参，则传递浮点值会产生二义性:
+若签名差异太大，则可能不适用更受约束的重载。例如，声明浮点值的重载以按值接受实参，则传递浮点值会产生二义性:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -316,7 +315,7 @@ std::vector<double> dVec;
 add(dVec, 0.7); // ERROR: both templates match and no preference
 \end{cpp}
 
-后一项声明不再是前一项声明的特例，只有两个不同的函数模板，都可以调用。
+后一项声明不再是前一项声明的特例，只有两个不同的函数模板都可以使用。
 
 若确实希望使用不同的签名，则必须约束第一个函数模板不能用于浮点值。
 
@@ -332,15 +331,15 @@ add(iVec, 1.9); // OOPS: add 1
 
 原因是有从double到int的隐式类型转换(由于与编程语言C兼容)，这种可能丢失部分值的隐式转换称为数据窄化。所以上面的代码在插入之前编译，会将值1.9转换为1。
 
-若不希望数据窄化，可有多个选项。一种选择是通过要求传递的值类型与集合的元素类型匹配，来完全禁用类型转换:
+若不希望数据窄化，有多个选项。一种选择是通过要求传递的值类型与集合的元素类型匹配，完全禁用类型转换:
 
 \begin{cpp}
 requires std::same_as<typename Coll::value_type, T>
 \end{cpp}
 
-但是，这也会禁用有用和安全的类型转换。
+但这也会禁用有用和安全的类型转换。
 
-出于这个原因，最好定义一个概念来确定一个类型是否可以在不缩小的情况下转换为另一个类型，这在一个简短的棘手需求中是可能的[感谢Giuseppe D 'Angelo和Zhihao Yuan在\url{http://wg21.link/p0870}中介绍检查窄化转换的技巧]:
+出于这个原因，最好定义一个概念来确定一个类型是否可以在不缩小的情况下转换为另一个类型，这在一个简短的需求中是可能的[感谢Giuseppe D 'Angelo和Zhihao Yuan在\url{http://wg21.link/p0870}中介绍检查窄化转换的技巧]:
 
 \begin{cpp}
 template<typename From, typename To>
@@ -352,7 +351,7 @@ concept ConvertsWithoutNarrowing =
 	};
 \end{cpp}
 
-然后，可以使用这个概念来制定相应的约束:
+可以使用这个概念来制定相应的约束:
 
 \begin{cpp}
 template<typename Coll, typename T>
@@ -365,7 +364,7 @@ void add(Coll& coll, const T& val)
 
 \mySamllsection{包含约束}
 
-定义上面的窄化转换的概念可能就足够了，而不需要std::convertible\_to概念，剩下的部分会隐式地检查:
+定义上面的窄化转换的概念可能就足够了，而不需要std::convertible\_to概念，剩下的部分会进行隐式检查:
 
 \begin{cpp}
 template<typename From, typename To>
@@ -374,7 +373,7 @@ concept ConvertsWithoutNarrowing = requires (From&& x) {
 };
 \end{cpp}
 
-但若ConvertsWithoutNarrowing概念也检查std::convertible\_to概念，则有一个重要的好处，编译器可以检测到ConvertsWithoutNarrowing比std::convertible\_to更受约束。术语是ConvertsWithoutNarrowing包含std::convertible\_to。
+若ConvertsWithoutNarrowing概念也检查std::convertible\_to概念，编译器可以检测到ConvertsWithoutNarrowing比std::convertible\_to更受约束。术语是ConvertsWithoutNarrowing包含std::convertible\_to。
 
 这允许开发者做以下事情:
 
@@ -412,7 +411,7 @@ void foo(F, T)
 支持传递一个集合(容器或范围)来插入多个值。
 \end{itemize}
 
-这些是不同的函数，应该有不同的名字，通常使用不同的名字会更好。然而，C++标准库是一个很好的例子，说明如果协调不同的API。例如，可以使用相同的泛型代码遍历所有容器，尽管在内部，容器使用非常不同的方式转到下一个元素并访问其值。
+这些是不同的函数，应该有不同的名字，通常使用不同的名字会更好。C++标准库是一个很好的例子，说明如果协调不同的API。例如，可以使用相同的泛型代码遍历所有容器，尽管在内部，容器使用非常不同的方式转到下一个元素并访问其值。
 
 \mySamllsection{使用概念调用不同的函数}
 
@@ -425,7 +424,7 @@ concept SupportsPushBack = requires(Coll c, T v) {
 };
 \end{cpp}
 
-注意，也可以定义一个只需要集合作为模板形参的概念:
+也可以定义一个只需要集合作为模板形参的概念:
 
 \begin{cpp}
 template<typename Coll>
@@ -434,7 +433,7 @@ concept SupportsPushBack = requires(Coll coll, Coll::value_type val) {
 };
 \end{cpp}
 
-注意，不必在这里使用typename来使用Coll::value\_type。从C++20开始，当上下文明确限定成员必须是类型时，不再需要typename。
+不必在这里使用typename来使用Coll::value\_type。从C++20开始，当上下文明确限定成员必须是类型时，不再需要typename。
 
 还有其他方式来声明这个概念:
 
@@ -449,9 +448,9 @@ concept SupportsPushBack = requires(Coll coll) {
 };
 \end{cpp}
 
-这里，可以看到概念和需求的定义并没有创建代码，是一个未求值的上下文，可以使用std::declval<>()来表示“假设有一个这种类型的对象”，无论将coll声明为值，还是非const引用都无关紧要。
+可以看到概念和需求的定义并没有创建代码，是一个未求值的上下文，可以使用std::declval<>()来表示“假设有一个这种类型的对象”，无论将coll声明为值，还是非const引用都无关紧要。
 
-注意，这里的\&很重要。若没有\&，只需要使用移动语义插入一个右值(比如一个临时对象)。对于\&，我们创建了一个左值，因此需要push\_back()进行复制。
+这里的\&很重要。若没有\&，只需要使用移动语义插入一个右值(比如一个临时对象)。对于\&，我们创建了一个左值，因此需要push\_back()进行复制。
 
 \item
 可以使用std::ranges::range\_value\_t来代替value\_type的成员:
@@ -463,7 +462,7 @@ concept SupportsPushBack = requires(Coll coll) {
 };
 \end{cpp}
 
-通常，当需要集合的元素类型时，使用std::ranges::range\_value\_t<>使代码更具泛型(例如，也适用于原始数组)。因为这里需要成员push\_back()，所以也需要成员的value\_type。
+当需要集合的元素类型时，使用std::ranges::range\_value\_t<>使代码更具泛型(例如，也适用于原始数组)。因为这里需要成员push\_back()，所以也需要成员的value\_type。
 
 \end{itemize}
 
@@ -486,7 +485,7 @@ void add(Coll& coll, const T& val)
 
 这里不需要命名需求SupportsInsert，因为带有附加需求的add()更特殊，所以重载解析更偏向它。但只有少数容器支持只使用一个参数调用insert()，为了避免其他重载和add()调用的问题，最好在这里也有一个约束。
 
-因为这里将需求定义为一个概念，甚至可以将它用作模板形参的类型约束:
+这里将需求定义为一个概念，甚至可以将它用作模板形参的类型约束:
 
 \begin{cpp}
 template<SupportsPushBack Coll, typename T>
@@ -526,7 +525,7 @@ else {
 
 \mySamllsection{组合requires和if constexpr}
 
-甚至可以跳过引入概念，直接将requires表达式作为条件传递给编译时if:
+甚至可以跳过引入的概念，直接将requires表达式作为条件传递给编译时if:
 
 \begin{cpp}
 if constexpr (requires { coll.push_back(val); }) {
@@ -541,7 +540,7 @@ else {
 
 \mySamllsection{概念与变量模板}
 
-你可能想知道，为什么使用概念比使用bool类型的变量模板更好(就像类型特性一样)，比如:
+为什么使用概念比使用bool类型的变量模板更好(就像类型特性一样)，比如:
 
 \begin{cpp}
 template<typename T>
@@ -563,7 +562,7 @@ constexpr bool SupportsPushBack = requires(T coll) {
 若使用特殊需求，可以与编译时一起使用。
 \end{itemize}
 
-若不需要这些，那么选择概念定义还是bool类型的变量模板的问题就变得有趣了，稍后将详细讨论这个问题。
+若不需要这些，选择概念定义还是bool类型的变量模板的问题就变得有趣了，稍后将详细讨论这个问题。
 
 \mySamllsection{插入单个和多个值}
 
@@ -617,7 +616,7 @@ void add(Coll& coll, const T& val)
 }
 \end{cpp}
 
-要禁用窄化转换，可以使用std::ranges::range\_value\_t将范围的元素类型传递给ConvertsWithoutNarrowing。std::ranges::range\_value\_t是另一个range工具，用于在迭代范围时获取元素的类型。
+要禁用窄化转换，可以使用std::ranges::range\_value\_t将范围的元素类型传递给ConvertsWithoutNarrowing。std::ranges::range\_value\_t是另一个范围工具，用于在迭代范围时获取元素的类型。
 
 也可以在requires从句中将它们组合在一起:
 
@@ -696,26 +695,26 @@ int main()
 {
 	std::vector<int> iVec;
 	add(iVec, 42); // OK: calls push_back() for T being int
-	
+
 	std::set<int> iSet;
 	add(iSet, 42); // OK: calls insert() for T being int
-	
+
 	short s = 42;
 	add(iVec, s); // OK: calls push_back() for T being short
-	
+
 	long long ll = 42;
 	// add(iVec, ll); // ERROR: narrowing
 	// add(iVec, 7.7); // ERROR: narrowing
-	
+
 	std::vector<double> dVec;
 	add(dVec, 0.7); // OK: calls push_back() for floating-point types
 	add(dVec, 0.7f); // OK: calls push_back() for floating-point types
 	// add(dVec, 7); // ERROR: narrowing
-	
+
 	// insert collections:
 	add(iVec, iSet); // OK: insert set elements into a vector
 	add(iSet, iVec); // OK: insert vector elements into a set
-	
+
 	// can even insert raw array:
 	int vals[] = {0, 8, 18};
 	add(iVec, vals); // OK
@@ -727,7 +726,7 @@ int main()
 
 \mySubsubsection{3.3.5}{以前的解决方法}
 
-C++20前，约束模板已经成为可能。但这样做的方法通常不容易使用，并且可能存在明显的缺点。
+C++20前，约束模板已经成为可能。这样做的方法通常不容易使用，并且可能存在明显的缺点。
 
 \mySamllsection{SFINAE}
 
@@ -749,9 +748,9 @@ auto add(Coll& coll, const T& val) -> decltype(coll.insert(val))
 }
 \end{cpp}
 
-因为把这里的push\_back()调用作为第一个模板声明的一部分，所以若不支持push\_back()，则忽略此模板。对应的声明在insert()的第二个模板中是必需的(重载解析不会忽略返回类型，若两个函数模板都可以使用，则会报错)。
+因为把这里的push\_back()作为第一个模板声明的一部分，所以若不支持push\_back()，则忽略此模板。对应的声明在insert()的第二个模板中是必需的(重载解析不会忽略返回类型，若两个函数模板都可以使用，则会报错)。
 
-然而，这是放置需求的一种隐蔽的方式，开发者可能很容易忽略它。
+这是放置需求的一种隐蔽的方式，开发者可能很容易忽略。
 
 \mySamllsection{std::enable\_if<>}
 
@@ -773,7 +772,7 @@ void add(Coll& coll, const T& val)
 
 诀窍是插入一个额外的模板参数，以便能够使用特性std::enable\_if<>。若特性没有禁用模板，将产生void(可以指定它产生另一种类型，作为可选的第二个模板参数)。
 
-这样的代码也很难编写和阅读，并且有一些缺点。例如，要用不同的约束提供add()的另一个重载，还需要另一个模板参数。否则，将对同一个函数进行两次不同的重载，因为对于编译器std::enable\_if<>不会更改签名。此外，对于每个调用，只有一个不同的重载是可用的。
+这样的代码也很难编写和阅读，并且有一些缺点。要用不同的约束提供add()的另一个重载，还需要另一个模板参数。否则，将对同一个函数进行两次不同的重载，因为对于编译器std::enable\_if<>不会更改签名。此外，对于每个调用，只有一个不同的重载是可用的。
 
 概念提供了一种更具可读性的表述约束的方式。包括只满足一个约束，具有不同约束的模板的重载就不会违反一个定义规则，只要一个约束包含另一个约束，甚至可以满足多个约束。
 

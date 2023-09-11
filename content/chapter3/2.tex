@@ -85,7 +85,7 @@ template<std::ranges::range T>
 constexpr bool IsIntegralValType = std::integral<std::ranges::range_value_t<T>>;
 \end{cpp}
 
-同样，这相当于以下内容:
+这相当于:
 
 \begin{cpp}
 template<typename T>
@@ -121,11 +121,11 @@ class ValOrColl {
 	ValOrColl(T&& val)
 	: value{std::move(val)} {
 	}
-	
+
 	void print() const {
 		std::cout << value << '\n';
 	}
-	
+
 	void print() const requires std::ranges::range<T> {
 		for (const auto& elem : value) {
 			std::cout << elem << ' ';
@@ -135,11 +135,11 @@ class ValOrColl {
 };
 \end{cpp}
 
-这里，定义了一个类ValOrColl，可以保存一个值或一个值的集合，作为T类型的值。提供了两个print()成员函数，类使用标准概念std::ranges::range来决定使用哪一个:
+定义了一个类ValOrColl，可以保存一个值或一个值的集合，作为T类型的值。提供了两个print()成员函数，类使用标准概念std::ranges::range来决定使用哪一个:
 
 \begin{itemize}
 \item
-若类型T是一个集合，则满足约束，所以两个print()成员函数都可用。但重载解析首选第二个print()，将遍历集合的元素，因为该成员函数有约束。
+若类型T是一个集合，则满足约束，所以两个print()成员函数都可用。但重载解析首选第二个print()，因为该成员函数有约束，将遍历集合的元素。
 
 \item
 若类型T不是集合，则只有第一个print()可用，因此可以使用。
@@ -169,7 +169,7 @@ int main()
 1 2 3 4
 \end{shell}
 
-注意，这种方式只能约束模板，不能使用requires来约束普通函数:
+这种方式只能约束模板，不能使用requires来约束普通函数:
 
 \begin{cpp}
 void foo() requires std::numeric_limits<char>::is_signed // ERROR

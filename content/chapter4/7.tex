@@ -48,7 +48,7 @@ template<typename T>
 concept GeoObject = requires(T obj) {
 						obj.draw();
 					};
-					
+
 // declared in another header file:
 template<typename T>
 concept Cowboy = requires(T obj) {
@@ -71,9 +71,9 @@ void print(T) {
 }
 \end{cpp}
 
-对于Circle或Rectangle(都有draw()成员函数)，我们不希望这样，因为Cowboy的概念更特殊，所以对print()的调用更倾向于对Cowboy的print()调用，所以希望看到在本例中有两个可能的print()函数发生冲突。
+对于Circle或Rectangle(都有draw()成员函数)，我们不希望这样，因为Cowboy的概念更特殊，对print()的调用更倾向于对Cowboy的print()调用，所以希望看到在本例中有两个可能的print()函数发生冲突。
 
-检查假设的工作只针对概念进行评估。若没有使用任何概念，则具有不同约束的重载不明确:
+检查假设的工作只针对概念进行评估。若没有使用概念，则具有不同约束的重载不明确:
 
 \begin{cpp}
 template<typename T>
@@ -140,7 +140,7 @@ template<typename T>
 concept ContCopy = std::ranges::contiguous_range<T> && std::copyable<T>;
 \end{cpp}
 
-现在，当为这两个概念重载两个函数，并传递一个同时适合这两个概念的对象时，这并不具有二义性:
+当为这两个概念重载两个函数，并传递一个同时适合这两个概念的对象时，这并不具有二义性:
 
 \begin{cpp}
 template<RgSwap T>
@@ -160,17 +160,17 @@ foo1(std::vector<int>{}); // OK: both fit, ContCopy is more constrained
 
 \begin{itemize}
 \item
-contiguous\_range概念是根据input\_range概念定义的。
+contiguous\_range概念是根据input\_range概念定义。
 
 (包含random\_access\_range，包含bidirectional\_range，包含forward\_range，包含input\_range。)
 
 \item
-copyable概念是根据可交换的概念来定义的。
+copyable概念是根据可交换的概念来定义。
 
 (包含movable，也就包含着可互换。)
 \end{itemize}
 
-但使用以下声明，当两个概念都适合时，就会产生歧义:
+使用以下声明，当两个概念都适合时，就会产生歧义:
 
 \begin{cpp}
 template<typename T>
@@ -198,7 +198,7 @@ concept ContMove = std::ranges::contiguous_range<T> && std::movable<T>;
 
 \mySubsubsection{4.7.2}{定义交换概念}
 
-要正确地实现假设，必须非常谨慎。一个很好的例子是std::same\_as概念的实现，检查两个模板形参是否具有相同的类型。
+要正确地实现假设，必须非常谨慎。一个例子是std::same\_as概念的实现，检查两个模板形参是否具有相同的类型。
 
 为了理解为什么定义概念并不简单，假设定义了概念SameAs:
 
@@ -207,7 +207,7 @@ template<typename T, typename U>
 concept SameAs = std::is_same_v<T, U>; // define concept SameAs
 \end{cpp}
 
-这个定义对于这样的情况是够用的:
+这个定义对于这样的情况足够了:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -264,7 +264,7 @@ template<typename T, typename U>
 concept SameAs = SameAsHelper<T, U> && SameAsHelper<U, T>; // make commutative
 \end{cpp}
 
-现在，对于IsSame<>，参数的顺序不再重要:
+对于IsSame<>，参数的顺序不再重要:
 
 \begin{cpp}
 template<typename T, typename U>
@@ -286,7 +286,7 @@ foo(1, 2); // OK: second foo() preferred
 
 编译器可以发现第一个构建块SameAs<U,T>是SameAs定义的子概念的一部分，因此其他构建块SameAs<T,U>和std::integral<T>是扩展，所以第二个foo()更优先使用。
 
-C++20标准库提供的概念(请参见std::same\_as)中就包含了类似这样棘手的细节，所以应该在适合需求时使用，而不是定义自己的概念。
+C++20标准库提供的概念(请参见std::same\_as)中就包含了类似这样的细节，所以应该在适合需求时使用，而不是定义自己的概念。
 
 \begin{cpp}
 template<typename T, typename U>
@@ -306,7 +306,7 @@ void foo(T, U)
 foo(1, 2); // OK: second foo() preferred
 \end{cpp}
 
-对于自定义的概念，请考虑尽可能更多的使用方法(和滥用)，越多越好。就像任何好的软件一样，概念也需要好的设计和测试用例。
+对于自定义的概念，请考虑尽可能更多的使用方法(和滥用)，越多越好。就像任何好软件一样，概念也需要好的设计和测试用例。
 
 
 
