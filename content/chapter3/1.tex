@@ -11,12 +11,11 @@ T maxValue(T a, T b) {
 
 此函数模板可以为具有相同类型的两个实参调用，前提是对形参执行的操作(使用小于操作符进行比较，并进行复制)有效。
 
-当传递的是两个指针时，将比较它们的地址，而不是所引用的值。
+当传递的是两个指针时，将比较其地址，而不是所引用的值。
 
 \mySubsubsection{3.1.1}{逐步完善模板}
 
 \mySamllsection{使用requires子句}
-
 
 为了解决这个问题，可以为模板配置一个约束，这样在传递原始指针时就不可用了:
 
@@ -44,14 +43,14 @@ std::cout << maxValue(&x, &y) << '\n'; // ERROR: constraint not met
 
 \mySamllsection{定义和使用概念}
 
-可能，要不止一次地需要指针约束，所以可以为约束引入一个概念:
+可能要不止一次地需要指针约束，所以可以为约束引入一个概念:
 
 \begin{cpp}
 template<typename T>
 concept IsPointer = std::is_pointer_v<T>;
 \end{cpp}
 
-概念是一个模板，应用于传递的模板参数的一个或多个需求引入一个名称，以便可以将这些需求用作约束。在等号之后(这里不能使用大括号)，必须将需求指定为在编译时求值的布尔表达式，则要求用于特化IsPointer<>的模板实参必须是裸指针。
+概念是一个模板，应用于传递的模板参数的一个或多个需求引入名称，以便可以将这些需求用作约束。在等号之后(这里不能使用大括号)，必须将需求指定为在编译时求值的布尔表达式，则要求用于特化IsPointer<>的模板实参必须是裸指针。
 
 可以使用这个概念来约束maxValue()模板:
 
@@ -326,11 +325,11 @@ int main()
 	int y = 77;
 	std::cout << maxValue(x, y) << '\n'; // maximum value of ints
 	std::cout << maxValue(&x, &y) << '\n'; // maximum value of where the pointers point to
-	
+
 	int* xp = &x;
 	int* yp = &y;
 	std::cout << maxValue(&xp, &yp) << '\n'; // maximum value of pointer to pointer
-	
+
 	double d = 49.9;
 	std::cout << maxValue(xp, &d) << '\n'; // maximum value of int and double pointer
 }

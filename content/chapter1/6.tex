@@ -112,21 +112,21 @@ Child c1, c2;
 c1 == c2; // ERROR
 \end{cpp}
 
-因此，还必须在基类中提供默认操作符==，但若不希望基类为public提供操作符==，那么显而易见的方法是在基类中添加protected的默认操作符==:
+还必须在基类中提供默认操作符==，但若不希望基类为public提供==操作符，那么可在基类中添加protected的默认操作符==:
 
 \begin{cpp}
 struct Base {
 	protected:
 	bool operator==(const Base& other) const = default;
 };
-struct 
+struct
 Child : Base {
 	int i;
 	bool operator==(const Child& other) const = default;
 };
 \end{cpp}
 
-但在这种情况下，派生类的默认比较不起作用。其会被当前实现默认操作符的指定行为的编译器拒绝，这里的默认操作符过于严格。这个问题有望很快得到解决(参见\url{http://wg21.link/cwg2568})。
+这时，派生类的默认比较不起作用。其会由当前实现默认操作符的指定行为的编译器拒绝，这里的默认操作符过于严格。这个问题有望很快得到解决(参见\url{http://wg21.link/cwg2568})。
 
 作为一种解决方法，开发者必须自己实现派生操作符。
 

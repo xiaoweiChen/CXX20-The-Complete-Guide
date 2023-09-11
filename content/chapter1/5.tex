@@ -1,5 +1,5 @@
 
-泛型代码中，使用<=>就有了一些挑战了。可能存在提供操作符<=>的类型，也可能存在提供偏或全基本比较操作符的类型。
+泛型代码中，使用<=>会有一些挑战。可能存在提供操作符<=>的类型，也可能存在提供偏或全基本比较操作符的类型。
 
 \mySubsubsection{1.5.1}{compare\_three\_way}
 
@@ -44,7 +44,7 @@ struct Value {
 
 \mySubsubsection{1.5.2}{算法lexicographical\_compare\_three\_way()}
 
-为了能够比较两个范围并产生匹配比较类别的值，C++20还引入了lexicographical\_compare\_three\_way()算法。该算法对于为集合成员实现operator<=>特别有帮助。
+为了能够比较两个范围并产生匹配比较类别的值，C++20还引入了lexicographical\_compare\_three\_way()算法。该算法对于为集合成员实现<=>操作符特别有帮助。
 
 例如:
 
@@ -66,13 +66,13 @@ int main()
 {
 	std::vector v1{0, 8, 15, 47, 11};
 	std::vector v2{0, 15, 8};
-	
+
 	auto r1 = std::lexicographical_compare(v1.begin(), v1.end(),
 										   v2.begin(), v2.end());
-										   
+
 	auto r2 = std::lexicographical_compare_three_way(v1.begin(), v1.end(),
 													 v2.begin(), v2.end());
-													 
+
 	std::cout << "r1: " << r1 << '\n';
 	std::cout << "r2: " << r2 << '\n';
 }

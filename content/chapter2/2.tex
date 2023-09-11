@@ -5,7 +5,7 @@
 
 使用auto参数，实现具有循环依赖关系的代码会容易得多。
 
-考虑两个使用其他类的对象的类。要使用另一个类的对象，需要定义它们的类型，前向声明是不够的(除非只声明引用或指针):
+考虑两个使用其他类的对象的类。要使用另一个类的对象，需要定义它们的类型，前置声明是不够的(除非只声明引用或指针):
 
 \begin{cpp}
 class C2; // forward declaration
@@ -15,7 +15,7 @@ class C1 {
 	void foo(const C2& c2) const { // OK
 		c2.print(); // ERROR: C2 is incomplete type
 	}
-	
+
 	void print() const;
 };
 
@@ -30,7 +30,7 @@ class C2 {
 
 虽然可以在类定义中实现C2::foo()，但不能实现C1::foo()，因为要检查C2.print()的调用是否有效，编译器需要知道类C2的定义。
 
-因此，必须在声明两个类结构之后实现C2::foo():
+必须在声明两个类结构之后实现C2::foo():
 
 \begin{cpp}
 class C2;
@@ -54,7 +54,7 @@ inline void C1::foo(const C2& c2) const { // implementation (inline if in header
 }
 \end{cpp}
 
-因为泛型函数在调用时检查泛型形参的成员，所以使用auto可以实现:
+泛型函数在调用时检查泛型形参的成员，所以可以使用auto实现:
 
 \begin{cpp}
 class C1 {
@@ -62,7 +62,7 @@ class C1 {
 	void foo(const auto& c2) const {
 		c2.print(); // OK
 	}
-	
+
 	void print() const;
 };
 
@@ -163,7 +163,7 @@ auto printFunc = [] (const auto& arg) {
 printFunc.operator()<std::string>("hello"); // call lambda compiled for std::string
 \end{cpp}
 
-对于泛型Lambda表达式，函数调用运算符operator()为泛型。所以必须将请求的类型作为参数传递给operator()，以显式指定模板形参。
+对于泛型Lambda表达式，运算符operator()为模板。所以必须将请求的类型作为参数传递给operator()，以显式指定模板形参。
 \end{itemize}
 
 

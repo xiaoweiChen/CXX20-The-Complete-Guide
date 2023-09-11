@@ -1,6 +1,5 @@
 最后，介绍一下如何使用重写支持的比较操作符，对表达式进行求值。
 
-
 \mySamllsection{相等操作符}
 
 编译
@@ -49,7 +48,7 @@ operator!=(x, y) // calling a free-standing operator!= for x and y
 42 != y // 42 implicitly converts to the type of y
 \end{cpp}
 
-这种情况下，编译器会按顺序调用:
+编译器会按顺序调用:
 
 \begin{itemize}
 \item
@@ -59,13 +58,13 @@ operator!=(x, y) // calling a free-standing operator!= for x and y
 独立的或成员操作符==(注意，成员操作符==可以使用默认的<=>成员生成)[最初的C++20标准在\url{http://wg21.link/p2468r2}中进行了修复。]
 \end{itemize}
 
-注意，重写的表达式永远不会尝试调用成员操作符!=。
+重写表达式永远不会调用成员操作符!=。
 
 \mySamllsection{关系操作符}
 
 对于关系操作符，有类似的行为，只是重写的语句返回到新的操作符<=>并将结果与0进行比较。操作符的行为类似于一个三方比较函数，表示less时返回负值，表示equal时返回0，表示greater时返回正值(返回值不是数值，只是一个支持相应比较的值)。
 
-例如，编译
+编译
 
 \begin{cpp}
 x <= y

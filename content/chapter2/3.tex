@@ -55,7 +55,7 @@ foo("hello", 42, '?'); // x has type const char*, T and y are int, z is char
 foo<long>("hello", 42, '?'); // x has type const char*, T and y are long, z is char
 \end{cpp}
 
-因此，以下声明是等价的(除了没有为使用auto命名的类型):
+因此，以下声明是等价的(除了没有为使用auto的类型命名):
 
 \begin{cpp}
 template<typename T>
@@ -110,7 +110,7 @@ int main()
 }
 \end{cpp}
 
-addValInto()的第二次声明中只对第一个参数使用auto，所以模板参数的顺序不同。由于C++20接受\url{http://wg21.link/p2113r0}，因为重载解析不会优先于第二个声明，而非第一个声明，所以会得到一个歧义错误。[并不是所有的编译器都能正确处理这个问题。]
+addValInto()的第二次声明中只对第一个参数使用auto，所以模板参数的顺序不同。C++20接受\url{http://wg21.link/p2113r0}，因为重载解析不会优先于第二个声明，而非第一个声明，所以会得到一个歧义错误。[并不是所有的编译器都能正确处理这个问题。]
 
 因此，在混合模板参数和自动参数时要谨慎。理想情况下，与声明保持一致。
 
