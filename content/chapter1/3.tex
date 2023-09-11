@@ -81,7 +81,7 @@ class Type {
 	public:
 	[[nodiscard]] virtual std::strong_ordering
 		operator<=> (const Type&) const requires(!std::same_as<T,bool>) = default;
-	
+
 	[[nodiscard]] virtual bool
 		operator== (const Type&) const requires(!std::same_as<T,bool>) = default;
 };
@@ -115,7 +115,7 @@ int main()
 {
 	std::vector<Coord> coll{ {0, 5, 5}, {5, 0, 0}, {3, 5, 5},
 							 {3, 0, 0}, {3, 5, 7} };
-							 
+
 	std::sort(coll.begin(), coll.end());
 	for (const auto& elem : coll) {
 		std::cout << elem.x << '/' << elem.y << '/' << elem.z << '\n';
@@ -142,17 +142,17 @@ int main()
 若为成员或基类定义了操作符<=>，则调用该操作符。
 
 \item
-否则，使用r==和<操作符来决定是否(从成员或基类的角度)
+否则，使用==和<操作符来决定(从成员或基类的角度)
 
 \begin{itemize}
 \item
-对象是相等/等价的(运算符==产生true)
+对象相等/等价(运算符==产生true)
 
 \item
 对象有“大”有“小”
 
 \item
-对象是无序的(仅在检查偏排序时)
+对象无序(仅在检查偏排序时)
 \end{itemize}
 
 这种情况下，调用这些操作符的默认<=>操作符的返回类型不能为auto。
