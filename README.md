@@ -10,6 +10,8 @@
 >
 > <p align="right"> — 云风，程序员修炼之道第2版译者</p>
 
+PDF可在本库的[Release页面](https://github.com/xiaoweiChen/CXX20-The-Complete-Guide/releases)获取。
+
 ## 本书概述
 
 C++20的所有新语言和库特性(对于那些了解之前C++以前版本的人)。
