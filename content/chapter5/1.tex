@@ -26,7 +26,7 @@
 uniform\_random\_bit\_generator在<random>中定义。
 \end{itemize}
 
-几乎所有的概念都定义在命名空间std中，唯一的例外是range概念，它定义在命名空间std::ranges中。
+几乎所有的概念都定义在命名空间std中，唯一的例外是范围概念，它定义在命名空间std::ranges中。
 
 \begin{longtable}[c]{|l|l|}
 \hline
@@ -79,7 +79,7 @@ uniform\_random\_bit\_generator在<random>中定义。
 \begin{tabular}[c]{@{}l@{}}range\\ output\_range\\ input\_range\\ forward\_range\\ bidirectional\_range\\ random\_access\_range\\ contiguous\_range\\ sized\_range\\ common\_range\\ borrowed\_range\\ view\\ vieable\_range\end{tabular} &
 \begin{tabular}[c]{@{}l@{}}类型是一个范围\\ 类型是要写入的范围\\ 类型是要读取的范围\\ 类型是一个可多次读取的范围\\ 类型是向前和向后读取的范围\\ 类型是一个支持在元素上跳跃的范围\\ 类型是在连续内存中包含元素的范围\\ 类型是一个大小支持范围\\ 类型是一系列迭代器和相同类型的哨兵\\ 类型是左值或借用的范围\\ 类型是视图\\ 类型或可以转换为视图\end{tabular} \\ \hline
 \begin{tabular}[c]{@{}l@{}}indirectly\_writable\\ indirectly\_readable\\ indirectly\_movable\\ indirectly\_movable\_storable\\ indirectly\_copyable\\ indirectly\_copyable\_storable\\ indirectly\_swappable\\ indirectly\_comparable\end{tabular} &
-\begin{tabular}[c]{@{}l@{}}类型可用于写入它所引用的位置\\ 类型可用于从其所引用的位置进行读取\\ 类型是指可移动的对象\\ 类型是指支持临时的可移动对象\\ 类型指的是可复制对象\\ 类型是指支持临时对象的可复制对象\\ 类型指的是可交换的对象\\ 类型指的是可比较的对象\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}类型可用于写入所引用的位置\\ 类型可用于从其所引用的位置进行读取\\ 类型是指可移动的对象\\ 类型是指支持临时的可移动对象\\ 类型指的是可复制对象\\ 类型是指支持临时对象的可复制对象\\ 类型指的是可交换的对象\\ 类型指的是可比较的对象\end{tabular} \\ \hline
 \begin{tabular}[c]{@{}l@{}}input\_output\_iterator\\ output\_iterator\\ input\_iterator\\ forward\_iterator\\ bidirectional\_iterator\\ random\_access\_iterator\\ contiguous\_interator\\ sentinel\_for\\ sized\_sentinel\_for\end{tabular} &
 \begin{tabular}[c]{@{}l@{}}类型是一个迭代器\\ 类型是一个输出迭代器\\ 类型(至少)是输入迭代器\\ 类型(至少)是前向迭代器\\ 类型(至少)是一个双向迭代器\\ 类型(至少)是一个随机访问迭代器\\ 类型是指向连续内存中元素的迭代器\\ 类型可以用作迭代器类型的标记\\ 类型可以用作迭代器类型的哨点，距离计算的成本较低\end{tabular} \\ \hline
 \begin{tabular}[c]{@{}l@{}}permutable\\ mergeable\\ sortable\end{tabular} &

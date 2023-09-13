@@ -113,7 +113,7 @@ T既不是引用，也不是函数，也不是void
 需要满足std::copy\_constructible<T>
 
 \item
-std::assignable\_from用于任意T，T\&，const T，以及const T\&转换为T\&
+std::assignable\_from用于任意T类型，T\&，const T，以及const T\&转换为T\&
 
 \item
 需要满足std::swappable<T>
@@ -145,7 +145,7 @@ T既不是引用，也不是函数，也不是void
 需要满足std::copy\_constructible<T>
 
 \item
-std::assignable\_from用于任意T，T\&，const T，以及const T\&转换为T\&
+std::assignable\_from用于任意T类型，T\&，const T，以及const T\&转换为T\&
 
 \item
 需要满足std::swappable<T>
@@ -183,7 +183,7 @@ T既不是引用，也不是函数，也不是void
 需要满足std::copy\_constructible<T>
 
 \item
-std::assignable\_from用于任意T，T\&，const T，以及const T\&转换为T\&
+std::assignable\_from用于任意T类型，T\&，const T，以及const T\&转换为T\&
 
 \item
 需要满足std::swappable<T>
@@ -262,7 +262,7 @@ T既不是引用，也不是函数，也不是void
 要求:
 \begin{itemize}
 \item
-需要满足std::destructible<T> 
+需要满足std::destructible<T>
 
 \item
 类型特性std::is\_constructible\_v<T, Args...>为true
@@ -363,13 +363,13 @@ std::common\_reference\_with<To, From>满足类型的const左值引用
 T的==操作符应该是对称的和可传递的:
 \begin{itemize}
 \item
-当t2==t1时，t1==t2为真
+当t2==t1时，t1==t2为true
 
 \item
-若t1==t2和t2==t3为真，则t1==t3为真
+若t1==t2和t2==t3为true，则t1==t3为true
 \end{itemize}
 
-但这是在编译时无法检查的语义约束。
+但该语义约束在编译时无法检查。
 
 \item
 要求:
@@ -400,7 +400,7 @@ T的==操作符应该是对称的和可传递的:
 保证类型T的对象可与==、!=、<、<=、>和>=操作符进行比较，以便两个值总是相互等于、小于或大于对方。
 
 \item
-这个概念并没有声称类型T具有所有值的总顺序，即使浮点值没有顺序，但表达式std::totally\_ordered<double>的结果仍然为true:
+这个概念并没有声称类型T具有所有值的总顺序，即使浮点值没有顺序，但表达式std::totally\_ordered<double>的结果仍为true:
 
 \begin{cpp}
 std::totally_ordered<double> // true
@@ -447,10 +447,10 @@ std::totally_ordered<std::complex<int>> // false
 这个概念在头文件<compare>中定义。
 
 \item
-注意，这个概念并不包含std::equality\_comparable，因为后者要求==操作符只对两个相等的对象产生真值。对于弱序或偏序，情况可能不是这样。
+这个概念并不包含std::equality\_comparable，因为后者要求==操作符只对两个相等的对象产生真值。对于弱序或偏序，情况可能不是这样。
 
 \item
-注意，这个概念并不暗示和包含std::totally\_ordered，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
+这个概念并不暗示和包含std::totally\_ordered，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
 
 \item
 要求:
@@ -459,7 +459,7 @@ std::totally_ordered<std::complex<int>> // false
 与==、!=、<、<=、>和>=操作符的所有比较都会产生可转换为bool的值
 
 \item
-与<=>操作符的任何比较都会产生一个比较类别(至少是Cat)。
+与<=>操作符的比较都会产生一个比较类别(至少是Cat)。
 \end{itemize}
 \end{itemize}
 
@@ -473,10 +473,10 @@ std::totally_ordered<std::complex<int>> // false
 这个概念在头文件<compare>中定义。
 
 \item
-注意，这个概念并不包含std::equality\_comparable\_with，因为后者要求==操作符只对两个相等的对象产生真值。对于弱序或偏序，情况可能并不是这样。
+这个概念并不包含std::equality\_comparable\_with，因为后者要求==操作符只对两个相等的对象产生真值。对于弱序或偏序，情况可能并不是这样。
 
 \item
-注意，这个概念并不暗示和包含std::totally\_ordered\_with，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
+这个概念并不暗示和包含std::totally\_ordered\_with，因为后者要求比较类别是std::strong\_ordering或std::weak\_ordering。
 
 \item
 要求:
@@ -488,7 +488,7 @@ std::three\_way\_comparable满足T1和T2(以及Cat)的值和公共引用
 与==、!=、<、<=、>和>=操作符的所有比较都会产生可转换为bool的值
 
 \item
-与<=>操作符的任何比较都会产生一个比较类别(至少是Cat)。
+与<=>操作符的比较都会产生一个比较类别(至少是Cat)。
 
 \item
 与T1和T2的顺序无关

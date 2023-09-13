@@ -27,7 +27,7 @@ Lambda表达式
 Op可以是函数、函数对象、Lambda或指向成员的指针。
 
 \item
-要证明操作和传递的参数都没有修改，可以使用std::regular\_invocable代替，这两个概念之间只有语义上的差异，不能在编译时进行检查，所以概念上的差异只说明了意图。
+要保证操作和传递的参数都没有修改，可以使用std::regular\_invocable代替，这两个概念之间只有语义上的差异，不能在编译时进行检查，所以概念上的差异只说明了意图。
 
 \item
 例如:
@@ -75,7 +75,7 @@ std::invoke(op, args)对Op类型和ArgTypes...类型的args有效
 Op可以是函数、函数对象、Lambda或指向成员的指针。
 
 \item
-注意，std::invocable与std::invocable概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只是证明了意图。
+std::invocable与std::invocable概念区别纯粹是语义上的，不能在编译时检查，所以概念差异只是证明了意图。
 
 \item
 要求:
@@ -115,7 +115,7 @@ std::invoke(op, args)对Op类型和ArgTypes...类型的args有效
 调用既不改变所传递操作的状态，也不改变所传递参数的状态。
 
 \item
-注意，std::equivalence\_relation和std::strict\_weak\_order的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
+std::equivalence\_relation和std::strict\_weak\_order的区别纯粹在语义上，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
@@ -137,7 +137,7 @@ std::invoke(op, args)对Op类型和ArgTypes...类型的args有效
 调用既不改变所传递操作的状态，也不改变所传递参数的状态。
 
 \item
-注意，std::relation和std::strict\_weak\_order的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
+std::relation和std::strict\_weak\_order区别纯粹在语义上，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
@@ -159,7 +159,7 @@ std::invoke(op, args)对Op类型和ArgTypes...类型的args有效
 调用既不改变所传递操作的状态，也不改变所传递参数的状态。
 
 \item
-注意，std::relation和std::equivalence\_relation的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
+std::relation和std::equivalence\_relation的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
@@ -204,7 +204,7 @@ Op::min()小于Op::max()
 保证可以用Pos所引用的值调用Op。
 
 \item
-请注意，与indirectly\_regular\_unary\_invocable概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
+与indirectly\_regular\_unary\_invocable概念的区别纯粹在语义上，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
@@ -230,7 +230,7 @@ Op::min()小于Op::max()
 保证可以使用Pos所引用的值调用Op，并且调用不会改变Op的状态。
 
 \item
-请注意，与std::indirect\_unary\_invocable概念的区别是纯语义的，不能在编译时检查，所以概念差异只能说明意图。
+与std::indirect\_unary\_invocable概念的区别纯粹在语义上，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
@@ -242,7 +242,7 @@ Op::min()小于Op::max()
 满足std::copy\_constructible<Op>
 
 \item
-Op\&和Pos的值，以及(常见)引用类型都满足std::regular\ _invocation
+Op\&和Pos的值，以及(常见)引用类型都满足std::regular\_invocation
 
 \item
 同时使用值和引用调用Op的结果是，具有共同的引用类型
@@ -302,7 +302,7 @@ Pos1和Pos2满足了std::indirect\_readable
 确保可以调用二元谓词Pred来检查Pos1和Pos1/Pos2的两个值是否相等。
 
 \item
-注意，与std::indirectly\_strict\_weak\_order概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
+与std::indirectly\_strict\_weak\_order概念的区别纯粹在语义上，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
@@ -317,7 +317,7 @@ Pos1和Pos2满足了std::indirect\_readable
 若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-所有这些对Pred的调用都会产生一个可以作为布尔值的值
+这些对Pred的调用都会产生一个可以作为布尔值的值
 \end{itemize}
 \end{itemize}
 
@@ -328,7 +328,7 @@ Pos1和Pos2满足了std::indirect\_readable
 保证可以调用二元谓词Pred来检查Pos1和Pos1/Pos2的两个值是否具有严格的弱序。
 
 \item
-注意，与std::indirect\_equivalence\_relation概念的区别纯粹是语义上的，不能在编译时检查，所以概念差异只能说明意图。
+与std::indirect\_equivalence\_relation概念的区别纯粹在语义上，不能在编译时检查，所以概念差异只能说明意图。
 
 \item
 要求:
@@ -343,7 +343,7 @@ Pos1和Pos2满足了std::indirect\_readable
 若Pred\&是Pos1的值或(通用)引用类型，以及Pos2的值或(通用)引用类型，则满足std::predicate
 
 \item
-所有这些对Pred的调用都会产生一个可以作为布尔值的值
+这些对Pred的调用都会产生一个可以作为布尔值的值
 \end{itemize}
 \end{itemize}
 
